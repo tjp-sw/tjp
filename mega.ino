@@ -4,30 +4,34 @@
 
 IPAddress brain(169,254,136,0);
 
-byte node_number = 5;	// get this from eeprom
+byte node_number = 5;	// TODO: get this from eeprom
 
-int led = 13;
-int led_state = LOW;	// off
+int led_state;
+unsigned long loop_start_time_msec;
+unsigned long next_connect_msec;
 
 EthernetClient remote;
 
 void setup() {
   // Open serial communications and wait for port to open:
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);	// wait for Leonardo serial port to connect
-  }
+  //while (!Serial) {
+  //  delay(10);	// wait for Leonardo serial port to connect
+  //}
 
-  pinMode(led, OUTPUT);
-  digitalWrite(led, led_state);
+  pinMode(LED_BUILTIN, OUTPUT);
+  led_state = LOW;	// off
+  digitalWrite(LED_BUILTIN, led_state);
 
-  for (int addr = 0; addr < 512; addr++) {
-    byte val = EEPROM.read(addr);
-    if (val != 255) {
-      Serial.print("EEPROM[");
-      Serial.print(addr, HEX);
-      Serial.print("] = ");
-      Serial.println(val, HEX);
+  if (Serial) {
+    for (int addr = 0; addr < 512; addr++) {
+      byte val = EEPROM.read(addr);
+      if (val != 255) {
+        Serial.print("EEPROM[");
+        Serial.print(addr, HEX);
+        Serial.print("] = ");
+        Serial.println(val, HEX);
+      }
     }
   }
 
@@ -37,15 +41,20 @@ void setup() {
   self[3] = node_number;	// unique host
   Ethernet.begin(mac, self);	// initialize Ethernet shield
 
-  Serial.print("node ");
-  Serial.print(node_number, DEC);
-  Serial.print(" initialization complete at ");
-  Serial.print(double(millis()) / 1000.0, 2);
-  Serial.println(" seconds");
+  if (Serial) {
+    Serial.print("node ");
+    Serial.print(node_number, DEC);
+    Serial.print(" initialization complete at ");
+    Serial.print(double(millis()) / 1000.0, 2);
+    Serial.println(" seconds");
+  }
+
+  next_connect_msec = 500 + millis();	// 1/2 second in the future; TODO: randomize
 }
 
 void loop()
 {
+  loop_start_time_msec = millis();
   if (remote.connected()) {
     int len = remote.available();
     if (len > 0) {
@@ -54,9 +63,14 @@ void loop()
       for (int i=0; i < len; i++) {
         msg += char(remote.read());
       }
-      String editorial = "client received '" + msg + "' at " + String(millis() / 1000, DEC) + " seconds";
-      Serial.println(editorial.c_str());
-      editorial = "acknowledged: " + msg;
+      if (Serial) {
+        Serial.print("client received '");
+        Serial.print(msg);
+        Serial.print("' at ");
+        Serial.print(millis() / 1000, DEC);
+        Serial.println(" seconds");
+      }
+      String editorial = "acknowledged: " + msg;
       remote.print(editorial.c_str());
 
       if (led_state == LOW) {
@@ -64,21 +78,34 @@ void loop()
       } else {
         led_state = LOW;
       }
-      digitalWrite(led, led_state);
+      digitalWrite(LED_BUILTIN, led_state);
     }
   } else {
     if (remote) {
-      Serial.println("disconnected");
-    }
-    remote.stop();
-    delay(10000);	// ten seconds
-    if (remote.connect(brain, 3528)) {
-      Serial.print("connected, my IP address is ");
-      Serial.println(Ethernet.localIP());
-      String hello = "I am node " + String(node_number, DEC) + " at " + String(millis() / 1000, DEC) + " seconds";
-      remote.print(hello.c_str());
+      if (Serial) {
+        Serial.println("disconnected");
+      }
+      remote.stop();
+      next_connect_msec = 10000 + loop_start_time_msec;	// 10 seconds in the future; TODO: randomize
+    } else if (loop_start_time_msec >= next_connect_msec) {
+      if (remote.connect(brain, 3528)) {
+        if (Serial) {
+          Serial.print("connected, my IP address is ");
+          Serial.println(Ethernet.localIP());
+        }
+        String hello = "I am node " + String(node_number, DEC) + " at " + String(millis() / 1000, DEC) + " seconds";
+        remote.print(hello.c_str());
+      } else {
+        if (Serial) {
+          Serial.println("connection failed");
+        }
+        next_connect_msec = 10000 + loop_start_time_msec;	// 10 seconds in the future; TODO: randomize
+      }
     } else {
-      Serial.println("connection failed");
+      if (Serial) {
+        Serial.print(".");
+      }
+      delay(1000);	// 1 sec
     }
   }
 }
