@@ -65,9 +65,8 @@ void setup() {
   next_connect_msec = 500 + millis();	// 1/2 second in the future; TODO: randomize
 }
 
-void loop()	// up to 13,000 loops per second
+void do_network()
 {
-  loop_start_time_msec = millis();
   if (remote.connected()) {
     int len = remote.available();
     if (len > 0) {
@@ -107,4 +106,10 @@ void loop()	// up to 13,000 loops per second
       }
     }
   }
+}
+
+void loop()	// up to 13,000 loops per second
+{
+  loop_start_time_msec = millis();
+  do_network();
 }
