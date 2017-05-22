@@ -65,6 +65,21 @@ void setup() {
   next_connect_msec = 500 + millis();	// 1/2 second in the future; TODO: randomize
 }
 
+void do_led()
+{
+  int new_led_state;
+  if ((loop_start_time_msec / 500) % 2 == 0) {	// current half second even/odd
+    new_led_state = HIGH;
+  } else {
+    new_led_state = LOW;
+  }
+
+  if (new_led_state != led_state) {		// flash at 1 Hz, 50% duty cycle
+    led_state = new_led_state;
+    digitalWrite(LED_BUILTIN, led_state);
+  }
+}
+
 void do_network()
 {
   if (remote.connected()) {
@@ -82,13 +97,6 @@ void do_network()
       }
       editorial = "acknowledged: " + msg;
       remote.print(editorial.c_str());
-
-      if (led_state == LOW) {
-        led_state = HIGH;
-      } else {
-        led_state = LOW;
-      }
-      digitalWrite(LED_BUILTIN, led_state);
     }
   } else {
     if (remote) {
@@ -111,5 +119,6 @@ void do_network()
 void loop()	// up to 13,000 loops per second
 {
   loop_start_time_msec = millis();
+  do_led();
   do_network();
 }
