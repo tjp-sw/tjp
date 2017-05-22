@@ -8,6 +8,7 @@ byte node_number = 5;	// TODO: get this from eeprom
 
 boolean serial0_is_enabled;	// cannot detect at run time
 int led_state;
+unsigned int led_program;
 unsigned long loop_start_time_msec;
 unsigned long next_connect_msec;
 
@@ -35,6 +36,7 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   led_state = LOW;	// off
   digitalWrite(LED_BUILTIN, led_state);
+  led_program = 2;	// default program selection
 
   // show any EEPROM bytes that are not the default value
   if (serial0_is_enabled) {
@@ -67,16 +69,44 @@ void setup() {
 
 void do_led()
 {
-  int new_led_state;
-  if ((loop_start_time_msec / 500) % 2 == 0) {	// current half second even/odd
-    new_led_state = HIGH;
-  } else {
+  int new_led_state = led_state;	// default to current state
+
+  if (led_program == 0) {		// steady off
     new_led_state = LOW;
+  } else if (led_program == 1) {	// steady on
+    new_led_state = HIGH;
+  } else if (led_program == 2) {	// flash at 1 Hz, 50% duty cycle
+    if ((loop_start_time_msec / 500) % 2 == 0) {	// current half second even/odd
+      new_led_state = HIGH;
+    } else {
+      new_led_state = LOW;
+    }
+  } else if (led_program < 10) {	// flash a few times and pause
+    unsigned long step = (loop_start_time_msec / 200) % ((led_program + 1) * 2);
+    if (step == 1 || step % 2 == 0) {	// leave LED off once per cycle
+      new_led_state = LOW;
+    } else {
+      new_led_state = HIGH;
+    }
   }
 
-  if (new_led_state != led_state) {		// flash at 1 Hz, 50% duty cycle
+  if (led_state != new_led_state) {
     led_state = new_led_state;
     digitalWrite(LED_BUILTIN, led_state);
+  }
+}
+
+void do_command(String command)
+{
+  if (command == "AllLEDoff") {
+    led_program = 0;
+  } else if (command == "SetAnimation") {
+    led_program = 1;
+  } else {
+    long number = command.toInt();
+    if (2 <= number && number < 10) {
+      led_program = number;
+    }
   }
 }
 
@@ -97,6 +127,7 @@ void do_network()
       }
       editorial = "acknowledged: " + msg;
       remote.print(editorial.c_str());
+      do_command(msg);
     }
   } else {
     if (remote) {
@@ -106,7 +137,7 @@ void do_network()
     } else if (loop_start_time_msec >= next_connect_msec) {
       if (remote.connect(brain, 3528)) {
         print_status("connected to brain");
-        String hello = "I am node " + String(node_number, DEC) + " at " + String(millis() / 1000, DEC) + " seconds";
+        String hello = "I am node " + String(node_number, DEC) + " at " + String(millis() / 1000, DEC) + " seconds running LED program " + String(led_program, DEC);
         remote.print(hello.c_str());
       } else {
         print_status("connection to brain failed");
