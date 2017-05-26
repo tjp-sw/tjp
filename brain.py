@@ -53,6 +53,7 @@ control_messages = {
     'disconnect':	do_disconnect,
     'list':		do_list,
     'quit':		do_quit,
+    'reconnect':	do_unimplemented,
     'send':		do_send,
     }
 

@@ -125,9 +125,15 @@ void do_network()
         editorial = "received '" + msg + "'";
         print_status(editorial.c_str());
       }
-      editorial = "acknowledged: " + msg;
-      remote.print(editorial.c_str());
-      do_command(msg);
+      if (msg == "reconnect") {
+        print_status("disconnecting from brain");
+        remote.stop();
+        next_connect_msec = 10000 + loop_start_time_msec;	// 10 seconds in the future; TODO: randomize
+      } else {
+        editorial = "acknowledged: " + msg;
+        remote.print(editorial.c_str());
+        do_command(msg);
+      }
     }
   } else {
     if (remote) {
