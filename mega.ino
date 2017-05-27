@@ -1,13 +1,13 @@
 #include <SPI.h>
 #include <EEPROM.h>
 #include <Ethernet.h>
+#include "tjp.h"
 
 #define	MAX_PARAMS	2	// allow up to 2 command parameters
 
 IPAddress brain(169,254,136,0);
 
-byte node_number = 5;	// TODO: get this from eeprom
-
+byte node_number;
 boolean serial0_is_enabled;	// cannot detect at run time
 int led_state;
 unsigned int led_program;
@@ -32,7 +32,8 @@ void print_status(const char* status)
   }
 }
 
-void setup() {
+void setup()
+{
   serial0_is_enabled = false;	// change to true for debugging
   if (serial0_is_enabled) {
     Serial.begin(115200);
@@ -48,20 +49,8 @@ void setup() {
   digitalWrite(LED_BUILTIN, led_state);
   led_program = 2;	// default program selection
 
-  // show any EEPROM bytes that are not the default value
-  if (serial0_is_enabled) {
-    for (int addr = 0; addr < 512; addr++) {
-      byte val = EEPROM.read(addr);
-      if (val != 255) {
-        Serial.print("EEPROM[");
-        Serial.print(addr, HEX);
-        Serial.print("] = ");
-        Serial.println(val, HEX);
-      }
-    }
-  }
-
   // establish MAC address and IP address of this device
+  node_number = EEPROM.read(TJP_NODE_ID);
   byte mac[] = { 0x35, 0x28, 0x35, 0x28, 0x00, node_number };
   IPAddress self = brain;	// same network
   self[3] = node_number;	// unique host
