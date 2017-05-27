@@ -2,6 +2,8 @@
 #include <EEPROM.h>
 #include <Ethernet.h>
 
+#define	MAX_PARAMS	2	// allow up to 2 command parameters
+
 IPAddress brain(169,254,136,0);
 
 byte node_number = 5;	// TODO: get this from eeprom
@@ -11,15 +13,21 @@ int led_state;
 unsigned int led_program;
 unsigned long loop_start_time_msec;
 unsigned long next_connect_msec;
+unsigned long long epoch_msec;
 
 EthernetClient remote;
+
+const unsigned long now_sec(const unsigned long when_msec)
+{
+  return (unsigned long)((epoch_msec + when_msec) / 1000);
+}
 
 void print_status(const char* status)
 {
   if (serial0_is_enabled) {
     Serial.print(status);
     Serial.print(" at ");
-    Serial.print(double(millis()) / 1000.0, 2);
+    Serial.print(now_sec(millis()), DEC);
     Serial.println(" seconds");
   }
 }
@@ -31,6 +39,8 @@ void setup() {
   } else {
     Serial.end();
   }
+
+  epoch_msec = 0;
 
   // turn off the LED
   pinMode(LED_BUILTIN, OUTPUT);
@@ -96,9 +106,59 @@ void do_led()
   }
 }
 
-void do_command(String command)
+const unsigned long long atoull(const char* string)	// ascii to unsigned long long
 {
-  if (command == "AllLEDoff") {
+  char c;
+  unsigned long long value = 0;
+  while (c = *string++) {
+    if (c < '0' or '9' < c) {
+      print_status("bad integer string");
+      break;
+    }
+    value *= 10;
+    value += (c - '0');
+  }
+  return value;
+}
+
+void do_command(const String message)
+{
+  // parse out a command and an array of up to MAX_PARAMS parameters
+  String command, parameters[MAX_PARAMS];
+  int parameter_count = 0;
+  int separator = message.indexOf(' ');	// find the space separator, if any
+  if (separator >= 0) {
+    command = message.substring(0, separator);
+    String remaining = message.substring(separator + 1);
+    int limit = MAX_PARAMS - 1;
+    while (parameter_count < limit) {
+      separator = remaining.indexOf(' ');
+      if (separator < 0) {
+	break;
+      }
+      parameters[parameter_count] = remaining.substring(0, separator);
+      parameter_count += 1;
+      remaining = remaining.substring(separator + 1);
+    }
+    parameters[parameter_count] = remaining;
+    parameter_count += 1;
+  } else {
+    command = message;
+  }
+
+  if (serial0_is_enabled) {
+    String s = "command parsed as '" + command + "' [";
+    for (int i=0; i < parameter_count; i++) {
+      s += " '" + parameters[i] + "'";
+    }
+    s += "]";
+    print_status(s.c_str());
+  }
+
+  if (command == "time" && parameter_count == 1) {
+    epoch_msec = atoull(parameters[0].c_str()) / 1000 - loop_start_time_msec;
+    print_status("time set");
+  } else if (command == "AllLEDoff") {
     led_program = 0;
   } else if (command == "SetAnimation") {
     led_program = 1;
@@ -130,9 +190,9 @@ void do_network()
         remote.stop();
         next_connect_msec = 10000 + loop_start_time_msec;	// 10 seconds in the future; TODO: randomize
       } else {
-        editorial = "acknowledged: " + msg;
-        remote.print(editorial.c_str());
         do_command(msg);
+        editorial = "acknowledged: " + msg + " at " + String(now_sec(loop_start_time_msec), DEC);
+        remote.print(editorial.c_str());
       }
     }
   } else {
@@ -143,7 +203,7 @@ void do_network()
     } else if (loop_start_time_msec >= next_connect_msec) {
       if (remote.connect(brain, 3528)) {
         print_status("connected to brain");
-        String hello = "I am node " + String(node_number, DEC) + " at " + String(millis() / 1000, DEC) + " seconds running LED program " + String(led_program, DEC);
+        String hello = "I am node " + String(node_number, DEC) + " at " + String(now_sec(millis()), DEC) + " seconds running LED program " + String(led_program, DEC);
         remote.print(hello.c_str());
       } else {
         print_status("connection to brain failed");

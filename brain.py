@@ -34,6 +34,16 @@ def do_send(ignored, message):
         if s not in writing:
             writing.append(s)
 
+# almost the same as do_send() above, but
+# send the very latest timestamp to each remote
+def do_time(ignored, neglected):
+    global message_queues, writing
+    for s in message_queues:
+        # send microseconds, which is all the precision we have
+        message_queues[s].put('time %u' % int(time.time() * 1000000.0))
+        if s not in writing:
+            writing.append(s)
+
 def do_unimplemented(cmd, param):
     if param:
         do_send(False, '%s %s' % (cmd, param))
@@ -55,6 +65,7 @@ control_messages = {
     'quit':		do_quit,
     'reconnect':	do_unimplemented,
     'send':		do_send,
+    'time':		do_time,
     }
 
 # listen for TCP connections on the specified port
