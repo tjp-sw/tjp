@@ -7,7 +7,7 @@
 
 IPAddress brain(169,254,136,0);
 
-byte node_number;
+uint8_t node_number;
 boolean serial0_is_enabled;	// cannot detect at run time
 int led_state;
 unsigned int led_program;

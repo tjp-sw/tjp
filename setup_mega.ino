@@ -8,7 +8,7 @@ void scan_eeprom(const boolean write)
 {
   // show any EEPROM bytes that are not the default value
   for (int addr = 0; addr < EEPROM_SIZE; addr++) {
-    byte val = EEPROM.read(addr);
+    uint8_t val = EEPROM.read(addr);
     if (val != EEPROM_DEFAULT) {
       Serial.print("EEPROM[0x");
       Serial.print(addr, HEX);
