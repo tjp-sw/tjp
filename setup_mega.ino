@@ -44,52 +44,111 @@ void print_menu()
   Serial.print("Choose a number: ");
 }
 
+String serial_data;
+unsigned long last_serial_data_msec;
+int input_state;
+uint8_t new_tjp_node_id;
+
 void setup()
 {
   Serial.begin(115200);
   Serial.println("This is the Mega setup program.");
+  serial_data = "";
+  last_serial_data_msec = millis();
+  input_state = 0;
+  new_tjp_node_id = 0;
   print_menu();
+}
+
+void check_for_serial_input()
+{
+  int len = Serial.available();
+  if (len > 0) {
+    last_serial_data_msec = millis();
+    while (len-- > 0) {
+      char c = Serial.read();
+      Serial.print(c);	// echo to console
+      serial_data += c;
+    }
+  }
+}
+
+const String get_serial()
+{
+  String data = "";
+  if (serial_data.length() > 0 && (millis() - last_serial_data_msec) >= 2) {
+    data += serial_data;	// copy
+    serial_data = "";
+    Serial.println();
+  }
+  return data;
+}
+
+void process_serial_input()
+{
+  const String msg = get_serial();
+  if (msg.length() > 0) {
+    switch (input_state) {
+      case 0: {	// main menu response
+        const long number = msg.toInt();
+        switch (number) {
+          case 1:
+            scan_eeprom(false);
+            break;
+          case 2:
+            scan_eeprom(true);
+            break;
+          case 3:
+            input_state = 1;
+            Serial.print("Enter new TJP node ID: ");
+            break;
+          default:
+            Serial.print("unexpected number ");
+            Serial.println(number, DEC);
+            break;
+        }
+        break;
+      }
+      case 1:	// new TJP node ID has been entered
+        new_tjp_node_id = msg.toInt();
+        if (new_tjp_node_id == EEPROM.read(TJP_NODE_ID)) {
+          Serial.print(new_tjp_node_id, DEC);
+          Serial.println(" is the current value.");
+          input_state = 0;
+        } else if (0 < new_tjp_node_id && new_tjp_node_id < 255) {
+          input_state = 2;
+          Serial.print("Really change TJP node ID to ");
+          Serial.print(new_tjp_node_id, DEC);
+          Serial.print(" [y/n]? ");
+        } else {
+          Serial.println("TJP node ID must be from 1 to 254");
+          input_state = 0;
+        }
+        break;
+      case 2:	// confirmation
+        if (msg.equalsIgnoreCase("y")) {
+          EEPROM.write(TJP_NODE_ID, new_tjp_node_id);
+          Serial.println("Done.");
+        } else {
+          Serial.println("Canceled.");
+        }
+        input_state = 0;
+        break;
+      default:
+        Serial.print("unexpected input state ");
+        Serial.println(input_state, DEC);
+        input_state = 0;
+        break;
+    }
+
+    if (input_state == 0) {
+      print_menu();
+    }
+  }
 }
 
 void loop()
 {
-  int len = Serial.available();
-  if (len > 0) {
-    // wait briefly for more data
-    while (true) {
-      delay(10);
-      int newlen = Serial.available();
-      if (newlen > len) {
-        len = newlen;
-      } else {
-        break;
-      }
-    }
-
-    String msg = "";
-    msg.reserve(len + 1);		// pre-allocate the needed space
-    for (int i=0; i < len; i++) {
-      msg += char(Serial.read());
-    }
-    Serial.println(msg.c_str());	// echo to console
-
-    const long number = msg.toInt();
-    switch (number) {
-      case 1:
-        scan_eeprom(false);
-        break;
-      case 2:
-        scan_eeprom(true);
-        break;
-      case 3:
-        Serial.println("3 is not implemented yet");
-        break;
-      default:
-        Serial.print("unexpected number ");
-        Serial.println(number, DEC);
-        break;
-    }
-
-    print_menu();
-  }
+  check_for_serial_input();
+  process_serial_input();
 }
