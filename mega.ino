@@ -1,6 +1,7 @@
 #include <SPI.h>
 #include <EEPROM.h>
 #include <Ethernet.h>
+#include <limits.h>		// provides LONG_MAX
 #include "tjp.h"
 
 #define	MAX_PARAMS	2	// allow up to 2 command parameters
@@ -32,6 +33,13 @@ void print_status(const char* status)
   }
 }
 
+void delay_next_network_connection(uint8_t seconds)
+{
+  // ensure that the minimum delay is 2 msec
+  // add up to 1 second of addtional random delay
+  next_connect_msec = millis() + (unsigned long)seconds * 1000 + 2 + random(998);
+}
+
 void setup()
 {
   serial0_is_enabled = false;	// change to true for debugging
@@ -45,12 +53,18 @@ void setup()
 
   // turn off the LED
   pinMode(LED_BUILTIN, OUTPUT);
-  led_state = LOW;	// off
+  led_state = LOW;		// off
   digitalWrite(LED_BUILTIN, led_state);
-  led_program = 2;	// default program selection
+  led_program = 2;		// default program selection
+
+  // seed the random number generator with some supposedly unpredictable values
+  node_number = EEPROM.read(TJP_NODE_ID);
+  randomSeed(micros() + node_number);
+  for (int pin = 0; pin <= 15; pin++) {
+    randomSeed(random(LONG_MAX) + analogRead(pin));
+  }
 
   // establish MAC address and IP address of this device
-  node_number = EEPROM.read(TJP_NODE_ID);
   byte mac[] = { 0x35, 0x28, 0x35, 0x28, 0x00, node_number };
   IPAddress self = brain;	// same network
   self[3] = node_number;	// unique host
@@ -58,12 +72,14 @@ void setup()
   remote.stop();		// initialize connection state as disconnected
 
   if (serial0_is_enabled) {
+    Serial.print("a random 4-digit number is ");
+    Serial.println(random(10000), DEC);
     Serial.print("node ");
     Serial.print(node_number, DEC);
     print_status(" initialization complete");
   }
 
-  next_connect_msec = 500 + millis();	// 1/2 second in the future; TODO: randomize
+  delay_next_network_connection(1);
 }
 
 void do_led()
@@ -177,7 +193,7 @@ void do_network()
       if (msg == "reconnect") {
         print_status("disconnecting from brain");
         remote.stop();
-        next_connect_msec = 10000 + loop_start_time_msec;	// 10 seconds in the future; TODO: randomize
+        delay_next_network_connection(10);
       } else {
         do_command(msg);
         editorial = "acknowledged: " + msg + " at " + String(now_sec(loop_start_time_msec), DEC);
@@ -188,7 +204,7 @@ void do_network()
     if (remote) {
       print_status("disconnected from brain");
       remote.stop();
-      next_connect_msec = 10000 + loop_start_time_msec;	// 10 seconds in the future; TODO: randomize
+      delay_next_network_connection(10);
     } else if (loop_start_time_msec >= next_connect_msec) {
       if (remote.connect(brain, 3528)) {
         print_status("connected to brain");
@@ -196,7 +212,7 @@ void do_network()
         remote.print(hello.c_str());
       } else {
         print_status("connection to brain failed");
-        next_connect_msec = 10000 + loop_start_time_msec;	// 10 seconds in the future; TODO: randomize
+        delay_next_network_connection(10);
       }
     }
   }
