@@ -6,7 +6,8 @@
 
 #define	MAX_PARAMS	2	// allow up to 2 command parameters
 
-IPAddress brain(169,254,136,0);
+IPAddress       brain(169,254,136,0);
+IPAddress subnet_mask(255,255,0,0);
 
 uint8_t node_number;
 boolean serial0_is_enabled;	// cannot detect at run time
@@ -67,8 +68,11 @@ void setup()
   // establish MAC address and IP address of this device
   byte mac[] = { 0x35, 0x28, 0x35, 0x28, 0x00, node_number };
   IPAddress self = brain;	// same network
+  self[2] = node_number;	// unique host
   self[3] = node_number;	// unique host
-  Ethernet.begin(mac, self);	// initialize Ethernet shield
+  // initialize Ethernet shield
+  // Ethernet.begin(mac, ip, dns, gateway, subnet);
+  Ethernet.begin(mac, self, brain, brain, subnet_mask);
   remote.stop();		// initialize connection state as disconnected
 
   if (serial0_is_enabled) {
