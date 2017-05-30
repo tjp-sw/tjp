@@ -34,11 +34,15 @@ def do_send(ignored, message):
         if s not in writing:
             writing.append(s)
 
-# almost the same as do_send() above, but
-# send the very latest timestamp to each remote
-def do_time(ignored, neglected):
+# almost the same as do_send() above, but send the very latest
+# timestamp to each remote or just the specified remote
+def do_time(socket, neglected):
     global message_queues, writing
-    for s in message_queues:
+    if socket == 'time':
+        list = message_queues
+    else:
+        list = [socket]
+    for s in list:
         # send microseconds, which is all the precision we have
         message_queues[s].put('time %u' % int(time.time() * 1000000.0))
         if s not in writing:
@@ -124,6 +128,7 @@ while running:
                 message_queues[remote] = Queue.Queue()	# create outgoing FIFO queue
                 remote_name[remote] = '%s:%d' % addr	# addr is the same as remote.getpeername()
                 print 'connection from', remote_name[remote]
+                do_time(remote, False);			# synchronize time immediately
             else:
                 try:
                     message = s.recv(1024)
