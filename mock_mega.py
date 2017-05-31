@@ -4,12 +4,12 @@ import socket, random, sys, time
 MAX_PARAMS = 2		# allow up to 2 command parameters
 
 # declare global variables with bogus values
-remote = False
-server = False
-id = False
-loop_start_time_msec = False
-unix_epoch_msec = False	# unix time this process started
-epoch_msec = False	# process start time as received from brain
+remote = None
+server = None
+id = None
+loop_start_time_msec = None
+unix_epoch_msec = None	# unix time this process started
+epoch_msec = None	# process start time as received from brain
 
 def now_sec(when_msec):
     return long((epoch_msec + when_msec) / 1000)
@@ -58,14 +58,14 @@ def do_command(message):
         print 'node', id, 'received', command, repr(parameters)
 
 def setup():
-    global id, remote, server, unix_epoch_msec
+    global epoch_msec, id, remote, server, unix_epoch_msec
 
     unix_epoch_msec = time.time() * 1000.0
     epoch_msec = long(0)
 
     id = '%04.0f' % (10000 * random.random())	# 4-digit (with leading zeroes) random number
     server = ('localhost', 3528)
-    remote = False
+    remote = None
 
 def loop():
     global loop_start_time_msec, remote
@@ -81,7 +81,7 @@ def loop():
             else:
                 print 'node', id, 'closing %s:%d' % remote.getsockname(), 'to %s:%d' % remote.getpeername()
                 remote.close()
-                remote = False
+                remote = None
                 time.sleep(10)
         else:
             try:

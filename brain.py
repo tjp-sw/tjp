@@ -50,9 +50,9 @@ def do_time(socket, neglected):
 
 def do_unimplemented(cmd, param):
     if param:
-        do_send(False, '%s %s' % (cmd, param))
+        do_send(None, '%s %s' % (cmd, param))
     else:
-        do_send(False, cmd)
+        do_send(None, cmd)
 
 control_messages = {
     'SetAllAudio':	do_unimplemented,
@@ -100,7 +100,7 @@ def disconnect(socket, msg):
     del message_queues[socket]
     del remote_name[socket]
 
-do_list(False,False)
+do_list(None, None)
 print sorted(control_messages.keys())
 running = True
 while running:
@@ -115,7 +115,7 @@ while running:
                     command, parameters = string.split(message, None, 1)	# one word separated by whitespace from the parameter(s)
                 except ValueError:				# no whitespace
                     command = message
-                    parameters = False
+                    parameters = None
                 try:
                     function = control_messages[command]
                     function(command, parameters)
@@ -128,13 +128,13 @@ while running:
                 message_queues[remote] = Queue.Queue()	# create outgoing FIFO queue
                 remote_name[remote] = '%s:%d' % addr	# addr is the same as remote.getpeername()
                 print 'connection from', remote_name[remote]
-                do_time(remote, False);			# synchronize time immediately
+                do_time(remote, None);			# synchronize time immediately
             else:
                 try:
                     message = s.recv(1024)
                 except:
                     print sys.exc_value
-                    message = False
+                    message = None
                 if message:
                     print 'received', repr(message), 'from', remote_name[s]
                 else:
@@ -165,7 +165,7 @@ while running:
 
     except:
         print sys.exc_value
-        do_disconnect(False, False)	# TODO: be more selective
+        do_disconnect(None, None)	# TODO: be more selective
 
 for s in sources:
     s.close()
