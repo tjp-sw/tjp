@@ -1,103 +1,104 @@
 #!/usr/bin/python
-import socket, random, sys, time
-
-MAX_PARAMS = 2		# allow up to 2 command parameters
+import socket, random, struct, sys, time
 
 # declare global variables with bogus values
 remote = None
 server = None
-id = None
+mega_number = None
 loop_start_time_msec = None
 unix_epoch_msec = None	# unix time this process started
 epoch_msec = None	# process start time as received from brain
+network_data = None
 
 def now_sec(when_msec):
     return long((epoch_msec + when_msec) / 1000)
 
-def atol(string):
-    reference_value = long(string)
-    value = long(0)
-    for digit in string:
-        value *= 10
-        value += int(digit)
-    if value != reference_value:
-        print 'node', id, 'atol got', value, 'instead of', reference_value
-    return reference_value
-
 def millis():
     return long(time.time() * 1000.0 - unix_epoch_msec)
 
-def do_command(message):
-    # parse out a command and an array of up to MAX_PARAMS parameters
-    parameters = []
-    parameter_count = 0
-    separator = message.find(' ')
-    if separator >= 0:
-        command = message[:separator]
-        remaining = message[separator + 1:]
-        limit = MAX_PARAMS - 1
-        while parameter_count < limit:
-            separator = remaining.find(' ')
-            if separator < 0:
+def process_commands():
+    global network_data
+
+    while len(network_data) > 0:
+        print 'mega', mega_number, 'looking at', repr(network_data)
+        size = 1
+        command = network_data[0:1]
+        if command == 'p':
+            size += 1	# unsigned 8-bit integer
+
+            if len(network_data) >= size:
+                print 'new program %u' % struct.unpack_from('>B', network_data, 1)
+            else:
+                print 'command', command, 'needs', size, 'bytes but only', len(network_data), 'available'
                 break
-            parameters.append(remaining[:separator])
-            parameter_count += 1
-            remaining = remaining[separator + 1:]
-        parameters.append(remaining)
-        parameter_count += 1
-    else:					# no whitespace
-        command = message
-    print 'node', id, "command parsed as '" + command + "'", repr(parameters)
+        elif command == 'r':
+            global remote
 
-    if command == 'time' and parameter_count == 1:
-        global epoch_msec
+            print 'mega', mega_number, 'closing %s:%d' % remote.getsockname(), 'to %s:%d' % remote.getpeername()
+            remote.close()
+            remote = None
+            network_data = None
+            time.sleep(10)
+            break
+        elif command == 't':
+            global epoch_msec
+            size += 8	# unsigned 64-bit integer
 
-        epoch_msec = atol(parameters[0]) / 1000 - loop_start_time_msec
-        print 'node', id, 'time set at %u seconds' % now_sec(millis())
-    else:
-        print 'node', id, 'received', command, repr(parameters)
+            if len(network_data) >= size:
+                epoch_msec = struct.unpack_from('>Q', network_data, 1)[0] / 1000 - loop_start_time_msec
+                print 'mega', mega_number, 'time set at %u seconds' % now_sec(millis())
+            else:
+                print 'command', command, 'needs', size, 'bytes but only', len(network_data), 'available'
+                break
+        else:
+            print 'mega', mega_number, 'received unknown command', repr(command)
+        network_data = network_data[size:]
 
 def setup():
-    global epoch_msec, id, remote, server, unix_epoch_msec
+    global epoch_msec, mega_number, network_data, remote, server, unix_epoch_msec
 
     unix_epoch_msec = time.time() * 1000.0
     epoch_msec = long(0)
 
-    id = '%04.0f' % (10000 * random.random())	# 4-digit (with leading zeroes) random number
+    mega_number = int(100 * random.random() + 100)	# random number from 100 through 199
     server = ('localhost', 3528)
     remote = None
+    network_data = None
 
 def loop():
-    global loop_start_time_msec, remote
+    global loop_start_time_msec, network_data, remote
 
-    loop_start_time_msec = long(-1)		# not valid
+    loop_start_time_msec = None
     try:
         if remote:
             message = remote.recv(1024)
-            if message and message != 'reconnect':
+            if message:
                 loop_start_time_msec = millis()
-                do_command(message)
-                remote.sendall('acknowledged: ' + message + (' at %u' % now_sec(loop_start_time_msec)))
+                network_data += message
+                process_commands()
             else:
-                print 'node', id, 'closing %s:%d' % remote.getsockname(), 'to %s:%d' % remote.getpeername()
+                print 'mega', mega_number, 'closing %s:%d' % remote.getsockname(), 'to %s:%d' % remote.getpeername()
                 remote.close()
                 remote = None
+                network_data = None
                 time.sleep(10)
         else:
             try:
                 time.sleep(random.random())
                 remote = socket.create_connection(server)
-                print 'node', id, 'connected %s:%d' % remote.getsockname(), 'to %s:%d' % remote.getpeername()
-                remote.sendall('I am node %s at %u seconds' % (id, now_sec(millis())))
+                network_data = ''
+                print 'mega', mega_number, 'connected %s:%d' % remote.getsockname(), 'to %s:%d' % remote.getpeername()
+                remote.sendall(struct.pack('>cB', 'm', mega_number))
             except:
-                print 'node', id, sys.exc_value, 'by %s:%d' % server
+                print 'mega', mega_number, sys.exc_value, 'by %s:%d' % server
                 time.sleep(10)
 
     except KeyboardInterrupt:
         raise
 
     except:
-        print 'node', id, sys.exc_value, 'by %s:%d' % server
+        print 'mega', mega_number, sys.exc_value, 'by %s:%d' % server
+        time.sleep(1)
 
 setup()
 while 1:
@@ -109,4 +110,4 @@ while 1:
 
 if remote:
     remote.close()
-print '\nnode', id, 'over and out'
+print '\nmega', mega_number, 'over and out'

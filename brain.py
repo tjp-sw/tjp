@@ -1,6 +1,11 @@
 #!/usr/bin/python
 import Queue	# thread safe
-import select, socket, string, sys, time
+import select, socket, string, struct, sys, time
+
+mega_to_node_map = {
+    5: 2,
+    7: 3,
+    }
 
 # close all TCP connections and continue to run
 def do_disconnect(ignored, neglected):
@@ -44,32 +49,35 @@ def do_time(socket, neglected):
         list = [socket]
     for s in list:
         # send microseconds, which is all the precision we have
-        message_queues[s].put('time %u' % int(time.time() * 1000000.0))
+        # network byte order, a character and 64-bit unsigned integer
+        message_queues[s].put(struct.pack('>cQ', 't', int(time.time() * 1000000.0)))
         if s not in writing:
             writing.append(s)
 
-def do_unimplemented(cmd, param):
+# a command and optional 8-bit unsigned integer
+def do_simple(cmd, param):
     if param:
-        do_send(None, '%s %s' % (cmd, param))
+        do_send(None, struct.pack('>cB', cmd[0:1], ord(param) - ord('0')))
     else:
-        do_send(None, cmd)
+        do_send(None, cmd[0:1])
 
 control_messages = {
-    'SetAllAudio':	do_unimplemented,
-    'SetAudioCh':	do_unimplemented,
-    'SetVolCh':		do_unimplemented,
-    'MuteAllAudio':	do_unimplemented,
-    'SetAnimation':	do_unimplemented,
-    'SetDynAnimation':	do_unimplemented,
-    'AllLEDoff':	do_unimplemented,
-    'CheckHandStat':	do_unimplemented,
-    'CheckAudioIn':	do_unimplemented,
-    'disconnect':	do_disconnect,
-    'list':		do_list,
-    'quit':		do_quit,
-    'reconnect':	do_unimplemented,
-    'send':		do_send,
-    'time':		do_time,
+#    'SetAllAudio':	do_unimplemented,
+#    'SetAudioCh':	do_unimplemented,
+#    'SetVolCh':		do_unimplemented,
+#    'MuteAllAudio':	do_unimplemented,
+    'SetAnimation':	(do_simple, 'program', None),
+#    'SetDynAnimation':	do_unimplemented,
+    'AllLEDoff':	(do_simple, 'program', '0'),
+#    'CheckHandStat':	do_unimplemented,
+#    'CheckAudioIn':	do_unimplemented,
+    'disconnect':	(do_disconnect, None, None),
+    'list':		(do_list, None, None),
+   'node':		(do_simple, None, None),
+    'quit':		(do_quit, None, None),
+    'reconnect':	(do_simple, None, None),
+    'send':		(do_send, None, None),
+    'time':		(do_time, None, None),
     }
 
 # listen for TCP connections on the specified port
@@ -117,7 +125,12 @@ while running:
                     command = message
                     parameters = None
                 try:
-                    function = control_messages[command]
+                    action = control_messages[command]
+                    function = action[0]
+                    if action[1]:
+                        command = action[1]
+                    if action[2]:
+                        parameters = action[2]
                     function(command, parameters)
                 except KeyError:
                     print sorted(control_messages.keys())	# unrecognized
@@ -136,7 +149,17 @@ while running:
                     print sys.exc_value
                     message = None
                 if message:
-                    print 'received', repr(message), 'from', remote_name[s]
+                    if message[0:1] == 'm':
+                        mega_number = ord(message[1:2])
+                        try:
+                            node_number = mega_to_node_map[mega_number]
+                        except KeyError:
+                            node_number = None
+                        print 'mega', mega_number, '( node ', repr(node_number), ') is at', remote_name[s]
+                        if node_number:
+                            do_simple('node', chr(ord('0') + node_number))
+                    else:
+                        print 'received', repr(message), 'from', remote_name[s]
                 else:
                     disconnect(s, 'remote closed')
 
