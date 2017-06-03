@@ -2,22 +2,11 @@
 Simple test routine, it runs a green dot through the strips.
  */
 
-void run_dot_green(){
-   
-word i;   
-   for( i= 0; i<(NUM_LEDS_PER_STRIP * 4); i++)
-   {
-    if (cntr_test == i){
-      leds_node[i] = CRGB::Green;
-    }
-    else
-    leds_node[i] = CRGB::Black;
-   }
-   if (cntr_test >= (NUM_LEDS_PER_STRIP * 4)) {
-      cntr_test = 0; } else
-      {
-        cntr_test = cntr_test + 1;
-      }
-   
+void run_dot_green() {   
+  uint16_t pixelOffset = loop_count % NUM_LEDS;
 
+  leds_node(0, pixelOffset-1) = CRGB::Black;
+  leds_node[pixelOffset] = CRGB::Green;
+  leds_node(pixelOffset+1, LEDS_PER_NODE) = CRGB::Black;
 }
+

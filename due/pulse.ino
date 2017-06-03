@@ -2,14 +2,15 @@
 Simple test routine, it pulses with music.
  */
 
-void pulse(){
-   
-word i;   
-   for( i= 0; i<(NUM_LEDS_PER_STRIP * 4); i++)
-   {
+void pulse() {
+  /*
+  for(int i = 0; i < NUM_LEDS; i++)
+  {
+    leds[i].setRGB(0, 0, frequencies_one[3]);
+  }
+  */
 
-    leds_node[i].setRGB(0,0,Frequencies_One[3]);
-      }
-   
-
+  // A faster way
+  CRGB temp = CRGB(0, 0, frequencies_one[3]);
+  leds_node(0, LEDS_PER_NODE) = temp;
 }
