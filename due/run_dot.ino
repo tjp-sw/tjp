@@ -9,15 +9,15 @@ void run_dot() {
   for(int i = 0; i < NUM_LEDS; i++)
   {
     if (pixelOffset == i)
-      leds[i] = CRGB::Red;
+      leds_node[i] = CRGB::Red;
     else
-      leds[i] = CRGB::Black;
+      leds_node[i] = CRGB::Black;
   }
 */
-unsigned long now = millis();
+
   // faster
-  leds_node(0, pixelOffset-1) = CRGB::Black;
-  leds_node[pixelOffset] = CRGB::Red;
-  leds_node(pixelOffset+1, LEDS_PER_NODE) = CRGB::Black;
+  leds_node_all(0, pixelOffset-1) = CRGB::Black;
+  leds_node_all[pixelOffset] = CRGB::Red;
+  leds_node_all(pixelOffset+1, LEDS_PER_NODE) = CRGB::Black;
 }
 
