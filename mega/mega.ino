@@ -51,7 +51,7 @@ void setup()
   }
 
   epoch_msec = 0;
-  node_number = 255;  // invalid
+  node_number = 255;		// invalid
 
   // turn off the LED
   pinMode(LED_BUILTIN, OUTPUT);
@@ -97,13 +97,19 @@ void do_led()
   } else if (led_program == 9) {	// steady on
     new_led_state = HIGH;
   } else if (led_program == 8) {	// flash at 1 Hz, 50% duty cycle
-    if ((loop_start_time_msec / 500) % 2 == 0) {	// current half second even/odd
+    if (((epoch_msec + loop_start_time_msec) / 500) % 2 == 0) {	// current half second even/odd
       new_led_state = HIGH;
     } else {
       new_led_state = LOW;
     }
+  } else if (led_program == 7) {
+      if (node_number != 255) {
+        led_program = node_number;	// signal the node number
+      } else {
+        led_program = 8;		// default program
+      }
   } else if (led_program < 10) {	// flash a few times and pause
-    unsigned long step = (loop_start_time_msec / 200) % ((led_program + 1) * 2);
+    unsigned long step = ((epoch_msec + loop_start_time_msec) / 200) % ((led_program + 1) * 2);
     if (step == 1 || step % 2 == 0) {	// leave LED off once per cycle
       new_led_state = LOW;
     } else {
@@ -133,7 +139,7 @@ void process_commands()
         if (network_data.length() >= size) {
           if (command == 'n') {
             node_number = network_data[1];
-            led_program = node_number;  // signal the node number
+            led_program = node_number;	// signal the node number
           } else if (command == 'p') {
             led_program = network_data[1];
           } else {
@@ -209,7 +215,7 @@ void do_heartbeat()
     if (node_number == 255 && loop_start_time_msec % 1000 == 0) {
       char mega_message[3] = {'m', mega_number, '\0'};
       remote.print(mega_message);
-      delay(1);  // advance to the next millisecond
+      delay(1);	// advance to the next millisecond
       print_status("announcing");
     }
   }
