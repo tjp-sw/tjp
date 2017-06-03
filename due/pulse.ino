@@ -12,5 +12,6 @@ void pulse() {
 
   // A faster way
   CRGB temp = CRGB(0, 0, frequencies_one[3]);
-  leds_node(0, LEDS_PER_NODE) = temp;
+  for(int i = 0; i < NUM_RINGS; i++)
+    leds_2d[i](0, LEDS_PER_RING) = temp;
 }
