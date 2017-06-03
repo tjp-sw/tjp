@@ -31,10 +31,14 @@ def do_quit(ignored, neglected):
     running = False
 
 # send the same message to all TCP connections
-def do_send(ignored, message):
+def do_send(socket, message):
     global message_queues, writing
     # print 'sending', repr(message)
-    for s in message_queues:
+    if socket:
+        list = [socket]
+    else:
+        list = message_queues
+    for s in list:
         message_queues[s].put(message)
         if s not in writing:
             writing.append(s)
@@ -154,10 +158,13 @@ while running:
                         try:
                             node_number = mega_to_node_map[mega_number]
                         except KeyError:
-                            node_number = None
+                            if mega_number >= 100:	# mock_mega
+                                node_number = mega_number % 6 + 10
+                            else:
+                                node_number = None
                         print 'mega', mega_number, '( node ', repr(node_number), ') is at', remote_name[s]
                         if node_number:
-                            do_simple('node', chr(ord('0') + node_number))
+                            do_send(s, struct.pack('>cB', 'n', node_number))
                     else:
                         print 'received', repr(message), 'from', remote_name[s]
                 else:

@@ -5,6 +5,7 @@ import socket, random, struct, sys, time
 remote = None
 server = None
 mega_number = None
+node_number = None
 loop_start_time_msec = None
 unix_epoch_msec = None	# unix time this process started
 epoch_msec = None	# process start time as received from brain
@@ -23,11 +24,18 @@ def process_commands():
         print 'mega', mega_number, 'looking at', repr(network_data)
         size = 1
         command = network_data[0:1]
-        if command == 'p':
+        if command == 'n' or command == 'p':
             size += 1	# unsigned 8-bit integer
 
             if len(network_data) >= size:
-                print 'new program %u' % struct.unpack_from('>B', network_data, 1)
+                parameter = struct.unpack_from('>B', network_data, 1)
+                if command == 'n':
+                    node_number = parameter
+                    print 'mega', mega_number, 'is node %u' % node_number
+                elif command == 'p':
+                    print 'new program %u' % parameter
+                else:
+                    print 'mega', mega_number, 'neither n nor p'
             else:
                 print 'command', command, 'needs', size, 'bytes but only', len(network_data), 'available'
                 break
