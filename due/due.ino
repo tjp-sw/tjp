@@ -51,7 +51,6 @@ uint8_t high_band_emphasis = 0; // 0 or 1                                   //
 #define LEDS_PER_NODE (LEDS_PER_STRIP * STRIPS_PER_NODE)              //
 #define NUM_LEDS (LEDS_PER_NODE * NUM_NODES)                          //
 #define NUM_RINGS (RINGS_PER_NODE * NUM_NODES)                        //
-#define STRIPS_PER_RING (STRIPS_PER_NODE / RINGS_PER_NODE)            //
 #define LEDS_PER_RING (NUM_LEDS / NUM_RINGS)                          //
 #define HALF_RING (LEDS_PER_RING/2)                                   //
                                                                       //
