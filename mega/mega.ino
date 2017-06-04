@@ -34,6 +34,17 @@ void print_status(const char* status)
   }
 }
 
+void print_status(const char* status, const long value)
+{
+  if (serial0_is_enabled) {
+    Serial.print(status);
+    Serial.print(value, DEC);
+    Serial.print(" at ");
+    Serial.print(now_sec(millis()), DEC);
+    Serial.println(" seconds");
+  }
+}
+
 void delay_next_network_connection(uint8_t seconds)
 {
   // ensure that the minimum delay is 2 msec
@@ -77,13 +88,8 @@ void setup()
   remote.stop();		// initialize connection state as disconnected
   network_data = "";
 
-  if (serial0_is_enabled) {
-    Serial.print("a random 4-digit number is ");
-    Serial.println(random(10000), DEC);
-    Serial.print("mega ");
-    Serial.print(mega_number, DEC);
-    print_status(" initialization complete");
-  }
+  print_status("a random 4-digit number is ", random(10000));
+  print_status("initialization is complete for mega ", (long)mega_number);
 
   delay_next_network_connection(1);
 }
@@ -126,10 +132,7 @@ void do_led()
 void process_commands()
 {
   while (network_data.length() > 0) {
-    if (serial0_is_enabled) {
-      String s = "looking at " + String(network_data.length(), DEC) + " bytes";
-      print_status(s.c_str());
-    }
+    print_status("bytes available: ", (long)network_data.length());
     int size = 1;
     char command = network_data[0];
     switch (command) {
@@ -158,6 +161,7 @@ void process_commands()
       case 't':
         size += 8;	// unsigned 64-bit integer
         if (network_data.length() >= size) {
+          const unsigned long long old_epoch_msec = epoch_msec;
           int i = 1;
           epoch_msec = (uint8_t)network_data[i++];
           while (i < size) {
@@ -166,7 +170,13 @@ void process_commands()
           }
           epoch_msec /= 1000;	// convert microseconds to milliseconds
           epoch_msec -= loop_start_time_msec;
-          print_status("time set");
+          if (epoch_msec > old_epoch_msec) {
+            print_status("time advanced ", long(epoch_msec - old_epoch_msec));
+	  } else if (epoch_msec < old_epoch_msec) {
+            print_status("time set back ", long(old_epoch_msec - epoch_msec));
+	  } else {
+            print_status("time unchanged!");	// unlikely
+	  }
         } else {
           print_status("insufficient time data");
         }

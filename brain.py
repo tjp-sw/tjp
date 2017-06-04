@@ -30,7 +30,7 @@ def do_quit(ignored, neglected):
     global running
     running = False
 
-# send the same message to all TCP connections
+# send a message to one remote or all
 def do_send(socket, message):
     global message_queues, writing
     # print 'sending', repr(message)
@@ -43,12 +43,15 @@ def do_send(socket, message):
         if s not in writing:
             writing.append(s)
 
+next_timesync_sec = 0.0
+
 # almost the same as do_send() above, but send the very latest
 # timestamp to each remote or just the specified remote
 def do_time(socket, neglected):
-    global message_queues, writing
+    global message_queues, next_timesync_sec, writing
     if socket == 'time':
         list = message_queues
+        next_timesync_sec = time.time() + 31	# half a minute in the future
     else:
         list = [socket]
     for s in list:
@@ -117,8 +120,14 @@ print sorted(control_messages.keys())
 running = True
 while running:
     try:
+        if len(message_queues) == 0:
+            timeout = None	# wait indefinitely when there are no remotes
+        else:
+            timeout = next_timesync_sec - time.time()
+            if timeout <= 0:
+                timeout = 0.01
         # could generate writing list here from nonempty message_queues
-        readable, writable, oops = select.select(sources, writing, sources)
+        readable, writable, oops = select.select(sources, writing, sources, timeout)
 
         for s in readable:
             if s is sys.stdin:
@@ -189,6 +198,9 @@ while running:
 
         for s in oops:
             disconnect(s, sys.exc_value)
+
+        if time.time() > next_timesync_sec:
+            do_time('time', None)
 
     except KeyboardInterrupt:
         running = False
