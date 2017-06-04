@@ -10,10 +10,13 @@ typedef void (*sparkle_f_ptr)();
                                                             //
 // Timing settings                                          //
 #define REFRESH_TIME 50 // 20 frames per second             //
-#define SHOW_TIME 15000 // 15 seconds per show              //
+#define ANIMATION_TIME 15000 // 15 seconds per animation    //
                                                             //
 // Node-specific                                            //
 #define NODE_ID 0 // Change in code running on each node    //
+                                                            //
+// Due controlled versus pi controlled animation choices    //
+#define PI_CONTROLLED                                       //
 //----------------------------------------------------------//
 
 // Debugging globals -------------//
@@ -54,10 +57,14 @@ uint8_t high_band_emphasis = 0; // 0 or 1                                   //
 #define LEDS_PER_RING (NUM_LEDS / NUM_RINGS)                                  //
 #define HALF_RING (LEDS_PER_RING/2)                                           //
                                                                               //
+//  Stand-in colors  until we get official colors from Dan                    //
+const CRGB sanctioned_colors[] = {CRGB::Red, CRGB::Orange, CRGB::Yellow,      //
+  CRGB::Green, CRGB::Blue, CRGB::Purple};                                     //
+                                                                              //
 // Globals                                                                    //
-bool new_show_triggered;                                                      //
-word current_show, loop_count;                                                //
-unsigned long current_time, show_saved_time, refresh_saved_time;              //
+bool new_animation_triggered;                                                      //
+word current_animation, loop_count;                                           //
+unsigned long current_time, animation_saved_time, refresh_saved_time;         //
                                                                               //
 // LED array and additional ways to reference it                              //
 CRGB leds_raw[NUM_RINGS][LEDS_PER_RING];                                      //
@@ -122,24 +129,37 @@ CRGBSet leds[NUM_RINGS] = {                                                   //
 //----------------------------------------------------------------------------//
 
 
+//  Show parameters coming from the pi ---------------------------------------//
+#define NUM_PARAMETERS 9                                                      //
+#define NUM_COLORS_PER_PALETTE 3                                              //
+                                                                              //
+//  Indices into show_parameters[] which holds information from the pi        //
+#define ANIMATION_INDEX 0   // which animation to play                        //
+#define BEAT_EFFECT_INDEX 1   // how to respond to beat                       //
+#define PALETTE_INDEX 2   // which color palette to use                       //
+#define NUM_COLORS_INDEX 3   // how many colors to use out of this palette    //
+#define COLOR_THICKNESS_INDEX 4   // how many consecutive lit LEDs in a row   //
+#define BLACK_THICKNESS_INDEX 5   // how many dark LEDs between lit ones      //
+#define INTRA_RING_MOTION_INDEX 6   // 0 none, 1 CW, 2 CCW, 3 split           //
+#define INTRA_RING_SPEED_INDEX 7   // fixme: still need to decide on units    //
+#define COLOR_CHANGE_STYLE_INDEX 8                                            //
+                // 0 none, 1 cycle thru selected, 2 cycle thru palette        //
+                                                                              //
+//  Evolving parameters defining the show                                     //
+int show_parameters[NUM_PARAMETERS];                                          //
+int show_colors[NUM_COLORS_PER_PALETTE];                                      //
+//----------------------------------------------------------------------------//
 
-// -------------------------- put your animation constants / macros here --------------------------------------------------
 
-// Sparkle constants
+//  Sparkle layer ------------------------------------------------------------//
 #define MAX_SPARKLE_INTENSITY 250 // fixme: these should be color dependent to avoid color drift at high intensity
 #define MIN_SPARKLE_INTENSITY 50
 #define NUM_SPARKLE_FNS 10
 
 
-// Diane: Trying the same with a 2D array. We'll eventually have 4 long strips, and 3 rings worth of LEDs per strip.
-CRGB sparkle[NUM_RINGS][LEDS_PER_RING];
-
-
-//---------------------------------------- Declare your variables here ------------------------------------------------------------
-
-
-// Diane's additions
+//  Sparkle layer variables
 int sparkle_count = 0;
+CRGB sparkle[NUM_RINGS][LEDS_PER_RING];  // Sparkle LED layer as a 2D array.
 boolean is_set[STRIPS_PER_NODE][LEDS_PER_STRIP];
 boolean increasing[STRIPS_PER_NODE][LEDS_PER_STRIP];
 
@@ -227,11 +247,14 @@ void loop() {                                                                   
   //  Reads spectrum analyzer                                                             //
   read_frequencies();                                                                     //
                                                                                           //
-  //  Select animation                                                                    //
-  update_current_show();                                                                  //
+  #ifdef PI_CONTROLLED  //  Get updated parameters from the pi                            // 
+    update_parameters();                                                                  //
+  #else                                                                                   //
+    update_current_animation();  //  Select animation                                     //                    //
+  #endif                                                                                  //
                                                                                           //
   //  Draw animation                                                                      //
-  draw_current_show();                                                                    //
+  draw_current_animation();                                                               //
                                                                                           //
   // Write LEDs                                                                           //
   LEDS.show();                                                                            //
@@ -250,28 +273,35 @@ void loop() {                                                                   
 }                                                                                         //
 //----------------------------------------------------------------------------------------//
 
+// Updates show parameters coming from the pi
+void update_parameters() {
+    // Will update arrays show_parameters[] and show_colors[]
+    // I don't know how this will work yet - have to learn from Jeff how these will be passed
+}
+ 
 // Selects the animation
-void update_current_show() {
-  //  If a show has played long enough randomly choose another show
-  //  You can also force a show by uncommenting the last line of code 
+void update_current_animation() {
+  //  If an animation has played long enough randomly choose another animation. 
+
+  //  You can also force an animation by uncommenting the last line of code 
   //  nested in this for loop.
   
-  //  Use this global to: SS_PIN_RESET anything that has to do with a show.
-  new_show_triggered = current_time - show_saved_time >= SHOW_TIME;
+  //  Use this global to: SS_PIN_RESET anything that has to do with an animation.
+  new_animation_triggered = current_time - animation_saved_time >= ANIMATION_TIME;
   
-  if (new_show_triggered)
+  if (new_animation_triggered)
   {
-    show_saved_time = current_time;
+    animation_saved_time = current_time;
     loop_count = 0;
     
     //  Change the second number as more shows are added.
-    current_show = random8(1,4);  // current_show is a random number from 1 to (2nd number - 1)
-    //  uncomment next line if you want to force a show
-    //current_show = 3;
+    current_animation = random8(1,4);  // current_animation is a random number from 1 to (2nd number - 1)
+    //  uncomment next line if you want to force an animation
+    // current_animation = 3;
 
     #ifdef DEBUG
       Serial.print("New show started: ");
-      Serial.println(current_show);
+      Serial.println(current_animation);
     #endif
   }
   
@@ -283,14 +313,14 @@ void update_current_show() {
 }
 
 // Draws the current animation
-void draw_current_show() {
+void draw_current_animation() {
   //  If pixel refresh time has expired update the LED pattern
   if (current_time - refresh_saved_time > REFRESH_TIME)
   {
     refresh_saved_time = current_time;
   
-    // This is where you would add a new show.
-    switch (current_show)  {   
+    // This is where you would add a new animation.
+    switch (current_animation)  {   
       case 1:
         run_dot();
         break;
