@@ -10,7 +10,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import animation
 time.time()
-
+import threading
 # import not_yet_used
 
 # ----------------------------------------------------------------------------------------
@@ -60,38 +60,6 @@ TOTAL_RINGS = NUM_NODES * RINGS_PER_NODE
 STRIPS_PER_NODE = RINGS_PER_NODE / RINGS_PER_STRIP
 LIGHTS_PER_STRIP = LIGHTS_PER_RING * RINGS_PER_STRIP
 
-# pre-chosen rgb values of pleasing colors from each chakra in linear order: r, o, y, g, b, p, w
-# will probably pull this out of the database
-# COLOR_ARRAY = [
-#    [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3],
-#    [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3],
-#    [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3],
-#    [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3],
-#    [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3],
-#    [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3],
-#    [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3],
-#    [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3],
-#    [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3],
-#    [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3],
-#    [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3],
-#    [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3],
-#    [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]
-#]
-
-# Temporary placeholder choices until I get final choices from Lee and Dan
-# sanctioned_colors[num_color_families * colors_per_family][rgb]
-# all in one list, red then orange then yellow....
-# 3 days for now
-# SANCTIONED_COLORS = [[178, 34, 34], [255, 0, 0], [128, 0, 0], [165, 42, 42], [222, 30, 30], [240, 128, 128], [205, 92, 92], [170, 0, 0], [188, 100, 100],
-#    [255, 127, 122], [255, 127, 80], [255, 69, 0], [233, 150, 122], [255, 99, 71], [250, 128, 114], [255, 165, 0], [255, 140, 0], [205, 133, 63],
-#    [255, 215, 0], [255, 250, 240], [255, 255, 0], [175, 175, 0], [50, 50, 0], [238, 232, 270], [240, 250, 205], [240, 230, 140], [250, 250, 210]]
-
-# These are just standard ROYGBV for now
-SANCTIONED_COLORS = [[255,0,0], [255, 127, 0],[255, 255, 0], [0, 255, 0], [0, 0, 255], [148, 0, 211]]
-
-#PALETTE = [SANCTIONED_COLORS[0], SANCTIONED_COLORS[7], SANCTIONED_COLORS[14],
-#           [SANCTIONED_COLORS[1], SANCTIONED_COLORS[8], SANCTIONED_COLORS[15]],
-#           [SANCTIONED_COLORS[2], SANCTIONED_COLORS[9], SANCTIONED_COLORS[16]]]
 
 # Non-Color Animation Parameter Constants
 #
@@ -102,7 +70,7 @@ SANCTIONED_COLORS = [[255,0,0], [255, 127, 0],[255, 255, 0], [0, 255, 0], [0, 0,
 NUM_ANIMATIONS = 4
 NUM_BEAT_EFFECTS = 1
 NUM_PARAMETERS = 9
-NUM_COLORS_PER_PALETTE = 3
+NUM_COLORS_PER_PALETTE = 7
 
 ANIMATION_INDEX = 0  # which animation to play
 BEAT_EFFECT_INDEX = 1  # how to respond to beat
@@ -224,6 +192,9 @@ def conductor(sunrise_time, sunset_time, sunrise_meditation_duration, sunset_med
     beginning_of_time = sunrise_time[1]
     # sunrise and sunset are correct here
 
+    # fixme: start led thread and sound thread
+
+
     current_time = time.time()
     today = int((current_time - beginning_of_time) / seconds_per_day) + 1
 
@@ -279,7 +250,11 @@ def edm_program():
         show_parameters[i] = randint(lower[i], upper[i])
 
     # choose which colors out of the chosen palette to use
-    show_colors = sample(range(0,5), show_parameters[NUM_COLORS_INDEX])
+    # show_parameters[NUM_COLORS_INDEX] returns how many colors to use in the current animation
+    show_colors = sample(range(1, 7), show_parameters[NUM_COLORS_INDEX])
+
+    # fixme: Jeff: here's where parameters -> due is called
+    send_due_parameters()
 
     temporary_counter = 0
     current_time = time.time()
@@ -304,9 +279,18 @@ def edm_program():
                 # choose which colors out of the chosen palette to use
                 show_colors = sample(range(0, 5), show_parameters[NUM_COLORS_INDEX])
 
+        # fixme: Jeff: here's where parameters -> due is called
+        send_due_parameters()
+
         time.sleep(3)
         current_time = time.time()
         temporary_counter += 1
+
+
+#  fixme: Jeff, here is a place for the code to send the parameters to the due
+#  parameters are in 2 arrays; show_parameters[NUM_PARAMETERS] and SHOW_COLORS[NUM_COLORS_PER_PALETTE]
+def send_due_parameters():
+
 
 
 # ------------------------------------------------- scale() -----------------------------------------------
