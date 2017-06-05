@@ -46,7 +46,7 @@ uint8_t high_band_emphasis = 0; // 0 or 1                                   //
 
 // LEDs ----------------------------------------------------------------------//
 // Physical constants                                                         //
-#define NUM_NODES 6                                                           //
+#define NUM_NODES 6  // fixme: for SN RG; 6 for final structure               //
 #define RINGS_PER_NODE 12                                                     //
 #define STRIPS_PER_NODE 4                                                     //
 #define LEDS_PER_STRIP 1260                                                   //
@@ -57,12 +57,8 @@ uint8_t high_band_emphasis = 0; // 0 or 1                                   //
 #define LEDS_PER_RING (NUM_LEDS / NUM_RINGS)                                  //
 #define HALF_RING (LEDS_PER_RING/2)                                           //
                                                                               //
-//  Stand-in colors  until we get official colors from Dan                    //
-const CRGB sanctioned_colors[] = {CRGB::Red, CRGB::Orange, CRGB::Yellow,      //
-  CRGB::Green, CRGB::Blue, CRGB::Purple};                                     //
-                                                                              //
 // Globals                                                                    //
-bool new_animation_triggered;                                                      //
+bool new_animation_triggered;                                                 //
 word current_animation, loop_count;                                           //
 unsigned long current_time, animation_saved_time, refresh_saved_time;         //
                                                                               //
@@ -124,34 +120,57 @@ CRGBSet leds[NUM_RINGS] = {                                                   //
   CRGBSet(leds_raw[64], LEDS_PER_RING), CRGBSet(leds_raw[65], LEDS_PER_RING), // 
   CRGBSet(leds_raw[66], LEDS_PER_RING), CRGBSet(leds_raw[67], LEDS_PER_RING), //
   CRGBSet(leds_raw[68], LEDS_PER_RING), CRGBSet(leds_raw[69], LEDS_PER_RING), // 
-  CRGBSet(leds_raw[70], LEDS_PER_RING), CRGBSet(leds_raw[71], LEDS_PER_RING), //
+  CRGBSet(leds_raw[70], LEDS_PER_RING), CRGBSet(leds_raw[71], LEDS_PER_RING) //
 };                                                                            //
 //----------------------------------------------------------------------------//
 
 
-//  Show parameters coming from the pi ---------------------------------------//
-#define NUM_PARAMETERS 9                                                      //
-#define NUM_COLORS_PER_PALETTE 3                                              //
-                                                                              //
-//  Indices into show_parameters[] which holds information from the pi        //
-#define ANIMATION_INDEX 0   // which animation to play                        //
-#define BEAT_EFFECT_INDEX 1   // how to respond to beat                       //
-#define PALETTE_INDEX 2   // which color palette to use                       //
-#define NUM_COLORS_INDEX 3   // how many colors to use out of this palette    //
-#define COLOR_THICKNESS_INDEX 4   // how many consecutive lit LEDs in a row   //
-#define BLACK_THICKNESS_INDEX 5   // how many dark LEDs between lit ones      //
-#define INTRA_RING_MOTION_INDEX 6   // 0 none, 1 CW, 2 CCW, 3 split           //
-#define INTRA_RING_SPEED_INDEX 7   // fixme: still need to decide on units    //
-#define COLOR_CHANGE_STYLE_INDEX 8                                            //
-                // 0 none, 1 cycle thru selected, 2 cycle thru palette        //
-                                                                              //
-//  Evolving parameters defining the show                                     //
-int show_parameters[NUM_PARAMETERS];                                          //
-int show_colors[NUM_COLORS_PER_PALETTE];                                      //
-//----------------------------------------------------------------------------//
+//  Show parameters coming from the pi ----------------------------------------//
+#define NUM_PARAMETERS 9                                                       //
+#define NUM_COLORS_PER_PALETTE 7                                               //
+                                                                               //
+//  Indices into show_parameters[] which holds information from the pi         //
+#define ANIMATION_INDEX 0   // which animation to play                         //
+#define BEAT_EFFECT_INDEX 1   // how to respond to beat                        //
+#define PALETTE_INDEX 2   // which color palette to use                        //
+#define NUM_COLORS_INDEX 3   // how many colors to use out of this palette     //
+#define COLOR_THICKNESS_INDEX 4   // how many consecutive lit LEDs in a row    //
+#define BLACK_THICKNESS_INDEX 5   // how many dark LEDs between lit ones       //
+#define INTRA_RING_MOTION_INDEX 6   // 0 none, 1 CW, 2 CCW, 3 split            //
+#define INTRA_RING_SPEED_INDEX 7   // fixme: still need to decide on units     //
+#define COLOR_CHANGE_STYLE_INDEX 8                                             //
+                // 0 none, 1 cycle thru selected, 2 cycle thru palette         //
+                                                                               //
+//  Evolving parameters defining the show                                      //
+int show_parameters[NUM_PARAMETERS];                                           //
+int show_colors[NUM_COLORS_PER_PALETTE];                                       //
+//-----------------------------------------------------------------------------//
 
 
-//  Sparkle layer ------------------------------------------------------------//
+// Color palette choices ------------------------------------------------------//
+// Eventually this may be stored in the database if space issues arise
+const CRGB icy_bright[NUM_COLORS_PER_PALETTE] = 
+    {CRGB(255,255,255), CRGB(254,207,241),                // light
+    CRGB(255,108,189), CRGB(0,172,238), CRGB(44,133,215),    //  medium
+    CRGB(114,78,184), CRGB(227,0,141)};                   // dark
+
+const CRGB watermelon[NUM_COLORS_PER_PALETTE] = 
+    {CRGB(47,192,9), CRGB(70,190,31),                     // light
+    CRGB(47,192,9), CRGB(72,160,50), CRGB(148,33,137),    //  medium
+    CRGB(120,86,103), CRGB(14,139,0)};                 // dark
+
+const CRGB fruit_loop[NUM_COLORS_PER_PALETTE] = 
+{CRGB(255,247,0), CRGB(255,127,14),                   // light
+    CRGB(188,0,208), CRGB(255,65,65), CRGB(255,73,0),     //  medium
+    CRGB(178,6,88), CRGB(162,80,204)};                // dark
+    
+// const *CRGB palette[3] = { icy_bright, watermelon, fruit_loop};
+
+                                                                              //
+//-----------------------------------------------------------------------------//
+
+
+//  Sparkle layer -------------------------------------------------------------//
 #define MAX_SPARKLE_INTENSITY 250 // fixme: these should be color dependent to avoid color drift at high intensity
 #define MIN_SPARKLE_INTENSITY 50
 #define NUM_SPARKLE_FNS 10
@@ -189,7 +208,7 @@ void sparkle_twinkle();
 //    sparkle_fn[5] = sparkle_warp_speed;
 //    sparkle_fn[6] = comet;
 //    sparkle_fn[7] = sparkle_3_circle;
-//    sparkle_fn[8] = sparkle_torus_knot();
+//    sparkle_fn[8] = sparkle_torus_knot;
 
 
 
@@ -248,6 +267,7 @@ void loop() {                                                                   
   read_frequencies();                                                                     //
                                                                                           //
   #ifdef PI_CONTROLLED  //  Get updated parameters from the pi                            // 
+    // fixme Jeff: this is where the parameters from the pi should be read in
     update_parameters();                                                                  //
   #else                                                                                   //
     update_current_animation();  //  Select animation                                     //                    //
@@ -256,6 +276,12 @@ void loop() {                                                                   
   //  Draw animation                                                                      //
   draw_current_animation();                                                               //
                                                                                           //
+  //  Create sparkle layer (phase 2)                                                      //
+  // sparkle_fn[show_parameters[SPARKLE_INDEX]];                                          //
+                                                                                          //
+  //  Overlay sparkle layer atop background (phase 2)                                     //
+  // overlay();                                                                           // 
+                                                                                          //                                                                           //
   // Write LEDs                                                                           //
   LEDS.show();                                                                            //
   #ifdef DEBUG_TIMING                                                                     //
