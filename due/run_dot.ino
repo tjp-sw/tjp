@@ -6,12 +6,15 @@ void run_dot() {
   uint16_t pixelOffset = loop_count % NUM_LEDS;
 
 /*    
-  for(int i = 0; i < NUM_LEDS; i++)
+  for(int i = 0; i < RINGS_PER_NODE; i++)
   {
-    if (pixelOffset == i)
-      leds_node[i] = CRGB::Red;
-    else
-      leds_node[i] = CRGB::Black;
+    for(int j = 0; j < LEDS_PER_RING; j++)
+    {
+      if (pixelOffset == i * LEDS_PER_RING + j)
+        leds_node[i][j] = CRGB::Red;
+      else
+        leds_node[i][j] = CRGB::Black;
+    }
   }
 */
 

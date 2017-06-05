@@ -6,7 +6,7 @@ void pulse() {
   /*
   for(int i = 0; i < NUM_LEDS; i++)
   {
-    leds_raw[i].setRGB(0, 0, frequencies_one[3]);
+    leds_all[i].setRGB(0, 0, frequencies_one[3]);
   }
   */
 
