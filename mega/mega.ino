@@ -9,8 +9,8 @@ IPAddress subnet_mask(255,255,0,0);
 
 uint8_t mega_number;
 uint8_t node_number;
-boolean serial0_is_enabled;	// cannot detect at run time
-int led_state;
+bool serial0_is_enabled;	// cannot detect at run time
+uint8_t led_state;
 uint8_t led_program;
 unsigned long loop_start_time_msec;
 unsigned long next_connect_msec;
@@ -19,7 +19,7 @@ String network_data;
 
 EthernetClient remote;
 
-const unsigned long now_sec(const unsigned long when_msec)
+unsigned long now_sec(const unsigned long when_msec)
 {
   return (unsigned long)((epoch_msec + when_msec) / 1000);
 }
@@ -133,7 +133,7 @@ void process_commands()
 {
   while (network_data.length() > 0) {
     print_status("bytes available: ", (long)network_data.length());
-    int size = 1;
+    unsigned int size = 1;
     char command = network_data[0];
     switch (command) {
       case 'n':
@@ -162,7 +162,7 @@ void process_commands()
         size += 8;	// unsigned 64-bit integer
         if (network_data.length() >= size) {
           const unsigned long long old_epoch_msec = epoch_msec;
-          int i = 1;
+          unsigned int i = 1;
           epoch_msec = (uint8_t)network_data[i++];
           while (i < size) {
             epoch_msec *= 256;
@@ -223,7 +223,7 @@ void do_heartbeat()
 {
   if (remote.connected()) {
     if (node_number == 255 && loop_start_time_msec % 1000 == 0) {
-      char mega_message[3] = {'m', mega_number, '\0'};
+      const char mega_message[3] = {'m', (char)mega_number, '\0'};
       remote.print(mega_message);
       delay(1);	// advance to the next millisecond
       print_status("announcing");
