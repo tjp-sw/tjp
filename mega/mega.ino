@@ -4,6 +4,8 @@
 #include <limits.h>		// provides LONG_MAX
 #include "tjp.h"
 
+#define  Due  Serial3
+
 IPAddress       brain(169,254,136,0);
 IPAddress subnet_mask(255,255,0,0);
 
@@ -16,6 +18,10 @@ unsigned long loop_start_time_msec;
 unsigned long next_connect_msec;
 unsigned long long epoch_msec;
 String network_data;
+
+unsigned long due_last_input_msec;
+unsigned long due_last_output_msec;
+String due_data;
 
 EthernetClient remote;
 
@@ -60,6 +66,11 @@ void setup()
   } else {
     Serial.end();
   }
+
+  Due.begin(115200);
+  due_last_input_msec = 0;
+  due_last_output_msec = 0;
+  due_data = "";
 
   epoch_msec = 0;
   node_number = 255;		// invalid
@@ -129,22 +140,24 @@ void do_led()
   }
 }
 
-void process_commands()
+void process_commands(String& input)
 {
-  while (network_data.length() > 0) {
-    print_status("bytes available: ", (long)network_data.length());
-    unsigned int size = 1;
-    char command = network_data[0];
+  while (input.length() > 0) {
+    print_status("bytes available: ", (long)input.length());
+    size_t size = 1;
+    char command = input[0];
     switch (command) {
       case 'n':
       case 'p':
         size += 1;	// unsigned 8-bit integer
-        if (network_data.length() >= size) {
+        if (input.length() >= size) {
           if (command == 'n') {
-            node_number = network_data[1];
+            node_number = input[1];
             led_program = node_number;	// signal the node number
+            Due.write((uint8_t *)input.c_str(), size);
           } else if (command == 'p') {
-            led_program = network_data[1];
+            led_program = input[1];
+            Due.write((uint8_t *)input.c_str(), size);
           } else {
             print_status("neither n nor p");
           }
@@ -160,13 +173,13 @@ void process_commands()
         break;
       case 't':
         size += 8;	// unsigned 64-bit integer
-        if (network_data.length() >= size) {
+        if (input.length() >= size) {
           const unsigned long long old_epoch_msec = epoch_msec;
           unsigned int i = 1;
-          epoch_msec = (uint8_t)network_data[i++];
+          epoch_msec = (uint8_t)input[i++];
           while (i < size) {
             epoch_msec *= 256;
-            epoch_msec += (uint8_t)network_data[i++];
+            epoch_msec += (uint8_t)input[i++];
           }
           epoch_msec /= 1000;	// convert microseconds to milliseconds
           epoch_msec -= loop_start_time_msec;
@@ -177,6 +190,7 @@ void process_commands()
 	  } else {
             print_status("time unchanged!");	// unlikely
 	  }
+          Due.write((uint8_t *)input.c_str(), size);
         } else {
           print_status("insufficient time data");
         }
@@ -185,7 +199,7 @@ void process_commands()
         print_status("unknown command");
         break;
     }
-    network_data = network_data.substring(size);
+    input = input.substring(size);
   }
 }
 
@@ -199,7 +213,7 @@ void do_network_input()
       while (len-- > 0) {
         network_data += (char)remote.read();
       }
-      process_commands();
+      process_commands(network_data);
     }
   } else {
     if (remote) {
@@ -216,6 +230,22 @@ void do_network_input()
         delay_next_network_connection(10);
       }
     }
+  }
+}
+
+void do_due_input()
+{
+  int len = Due.available();
+  if (len > 0) {
+    due_last_input_msec = loop_start_time_msec;
+    // pre-allocate the needed space
+    due_data.reserve(due_data.length() + len);
+    while (len-- > 0) {
+      due_data += (char)Due.read();
+    }
+  }
+  if (due_data.length() > 0 && loop_start_time_msec >= due_last_input_msec + 2) {
+    process_commands(due_data);
   }
 }
 
@@ -236,5 +266,6 @@ void loop()	// up to 13,000 loops per second
   loop_start_time_msec = millis();
   do_led();
   do_network_input();
+  do_due_input();
   do_heartbeat();
 }
