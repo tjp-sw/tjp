@@ -1,3 +1,4 @@
+
 #include <FastLED.h>
 typedef void (*sparkle_f_ptr)();     
 
@@ -92,13 +93,13 @@ CRGBSet leds[NUM_RINGS] = {                                                   //
   CRGBSet(leds_raw[10], LEDS_PER_RING), CRGBSet(leds_raw[11], LEDS_PER_RING)  //
 };                                                                            //
 //----------------------------------------------------------------------------//
-
-
+    
 //  Show parameters coming from the pi ---------------------------------------//
 #define NUM_PARAMETERS 9                                                      //
 #define NUM_COLORS_PER_PALETTE 3                                              //
                                                                               //
 //  Indices into show_parameters[] which holds information from the pi        //
+//  Note: These are only *indices*, not values. Don't change these            //
 #define ANIMATION_INDEX 0   // which animation to play                        //
 #define BEAT_EFFECT_INDEX 1   // how to respond to beat                       //
 #define PALETTE_INDEX 2   // which color palette to use                       //
@@ -114,6 +115,32 @@ CRGBSet leds[NUM_RINGS] = {                                                   //
 int show_parameters[NUM_PARAMETERS];                                          //
 int show_colors[NUM_COLORS_PER_PALETTE];                                      //
 //----------------------------------------------------------------------------//
+
+
+//  Initialize these parameters manually for  testing ---------------------------------------------------//
+//  See above for definitions                                                                            //
+                                                                                                         //
+                                                                                                         //
+//--------------------------------------------------------------------------------------------------------//
+
+
+// Color palette choices ------------------------------------------------------//
+// Eventually this may be stored in the database if space issues arise
+CRGB icy_bright[9] = 
+    {CRGB(255,255,255), CRGB(254,207,241),                // light
+    CRGB(255,108,189), CRGB(0,172,238), CRGB(44,133,215),    //  medium
+    CRGB(114,78,184), CRGB(227,0,141)};                   // dark
+
+CRGB watermelon[9] = 
+    {CRGB(47,192,9), CRGB(70,190,31),                     // light
+    CRGB(47,192,9), CRGB(72,160,50), CRGB(148,33,137),    //  medium
+    CRGB(120,86,103), CRGB(14,139,0)};                 // dark
+
+CRGB fruit_loop[9] = 
+{CRGB(255,247,0), CRGB(255,127,14),                   // light
+    CRGB(188,0,208), CRGB(255,65,65), CRGB(255,73,0),     //  medium
+    CRGB(178,6,88), CRGB(162,80,204)};                // dark
+
 
 //  Base layer ---------------------------------------------------------------//
 CRGBPalette256 current_palette;                                               //
@@ -132,24 +159,8 @@ CRGB sparkle[NUM_RINGS][LEDS_PER_RING];  // Sparkle LED layer as a 2D array.
 boolean sparkle_is_set[STRIPS_PER_NODE][LEDS_PER_STRIP];
 boolean increasing[STRIPS_PER_NODE][LEDS_PER_STRIP];
 
-void sparkle_twinkle_init();
-void sparkle_twinkle();
-
-// array of sparkle setup functions
-   sparkle_f_ptr sparkle_init[] = { sparkle_twinkle_init };
-//      void (*sparkle_init_fn[NUM_SPARKLE_FNS])();
-//      sparkle_init_fn[0] = sparkle_twinkle_init;
-//      sparkle_init_fn[1] = sparkle_rain_init;
-//    sparkle_init_fn[2] = sparkle_glitter_init;
-//    sparkle_init_fn[3] = sparkle_wind_init;
-//    sparkle_init_fn[4] = sparkle_wiggle_wind_init;
-//    sparkle_init_fn[5] = sparkle_warp_speed_init;
-//    sparkle_init_fn[6] = comet_init;
-//    sparkle_init_fn[7] = sparkle_3_circle_init;
-//    sparkle_init_fn[8] = sparkle_torus_knot_init;
-
 // array of sparkle functions to make it easier to choose one randomly
-   sparkle_f_ptr sparkle_fn[] = { sparkle_twinkle };
+//   sparkle_f_ptr sparkle_fn[] = { sparkle_rain() };
 //   sparkle_fn[0] = sparkle_twinkle;
 //    sparkle_fn[1] = sparkle_rain;
 //    sparkle_fn[2] = sparkle_glitter;
@@ -194,13 +205,7 @@ void loop() {                                                                   
   current_time = millis();                                                                //
                                                                                           //
   //  Select animation, other parameters                                                  //                                                                                 //  
-  #if defined(PI_CONTROLLED)                                                              // 
-    update_parameters();                                                                  //
- // #elif defined(CYCLE)                                                                  //
- //   update_current_animation();                                                         //
-  #else                                                                                   //
-    current_animation = 5;                                        // ********** test specific animation here ********** //
-  #endif                                                                                  //
+  update_parameters();                                                                    //    
                                                                                           //
   //  Draw animation                                                                      //
   draw_current_animation();                                                               //
@@ -222,37 +227,53 @@ void loop() {                                                                   
 }                                                                                         //
 //----------------------------------------------------------------------------------------//
 
-// Updates show parameters coming from the pi
-void update_parameters() {
-    // Will update arrays show_parameters[] and show_colors[]
-    // I don't know how this will work yet - have to learn from Jeff how these will be passed
-}
- 
-// Selects the animation
-void update_current_animation() {
-  //  If an animation has played long enough randomly choose another animation. 
 
-  //  You can also force an animation by uncommenting the last line of code 
-  //  nested in this for loop.
+// Updates show_parameters[] and show_colors[] coming from the pi, or manually
+void update_parameters() {
+
+    #ifdef PI_CONTROLLED
+      // fixme: Jeff: 
+      
+    #elif defined(CYCLE)
+      cycle_through_animations();
+      
+    #else
+      // set parameters manually for testing                             ***** set parameters manually here *****
+      show_parameters[ANIMATION_INDEX] = 0;      // <--- this is where you enter your animation number         //
+      show_parameters[BEAT_EFFECT_INDEX] = 0;                                                                  //
+      show_parameters[PALETTE_INDEX] = 1;                                                                      //
+      show_parameters[NUM_COLORS_INDEX] = 3;                                                                   //
+      show_parameters[COLOR_THICKNESS_INDEX] = 5;                                                              //
+      show_parameters[BLACK_THICKNESS_INDEX] = 3;                                                              //
+      show_parameters[INTRA_RING_MOTION_INDEX] = 1;                                                            //
+      show_parameters[INTRA_RING_SPEED_INDEX ] = 2;                                                            //
+      show_parameters[COLOR_CHANGE_STYLE_INDEX] = 0;                                                           //
+                                                                                                               //
+      // can choose 0 to 6 as indices into current palette                                                     //
+      // 0,1 light, 2,3,4 mid, 5,6 dark                                                                        //
+      show_colors[0] = 1;                                                                                      //                                                                                                                   //
+      show_colors[1] = 3;                                                                                      //
+      show_colors[2] = 5;                                                                                      //
+    #endif
+      
+
+}
+
+ 
+// Cycles through the animations, running each for ANIMATION_TIME seconds
+void cycle_through_animations() {
+  //  If an animation has played long enough randomly choose another animation. 
   
   //  Use this global to: SS_PIN_RESET anything that has to do with an animation.
   new_animation_triggered = current_time - animation_saved_time >= ANIMATION_TIME;
-
 
   if (new_animation_triggered)
   {
     animation_saved_time = current_time;
     loop_count = 0;
     
-    //  Change the second number as more shows are added.
     // current_animation = random8(0, 4);  // current_animation is a random number from 0 to (2nd number - 1)
-    // current_animation = ++current_animation % 4;
-    //  uncomment next line if you want to force an animation
-    
-/////////////////////////////////////////////////////////////
-//            select specific animation 
-/////////////////////////////////////////////////////////////
-//    current_animation = 4;
+    current_animation = ++current_animation % 4;
 
     #ifdef DEBUG
       Serial.print("New show started: ");
@@ -266,6 +287,7 @@ void update_current_animation() {
     last_debug_time = now;
   #endif
 }
+
 
 // Draws the current animation
 void draw_current_animation() {
@@ -296,7 +318,20 @@ void draw_current_animation() {
         sparkle_rain();
         break;
 
-      default:
+      case 5:
+        sparkle_3_circles();
+        break;
+
+      case 6:
+        sparkle_warp_speed();
+        break;
+
+
+      case 7:
+        snake();
+        break;      
+        
+        default:
         run_dot();
     }
   }
