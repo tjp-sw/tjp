@@ -1,7 +1,5 @@
 
-void alex(){
-  
-}
+
 /*
  * Function takes in a number of leds to color with built in fastled rainbow function
  * Takes in a integer to sparkle, adds blinking white lights, to the array

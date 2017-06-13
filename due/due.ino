@@ -106,9 +106,10 @@ CRGBSet leds[NUM_RINGS] = {                                                   //
 #define NUM_COLORS_INDEX 3   // how many colors to use out of this palette        //
 #define COLOR_THICKNESS_INDEX 4   // how many consecutive lit LEDs in a row       //
 #define BLACK_THICKNESS_INDEX 5   // how many dark LEDs between lit ones          //
-#define INTRA_RING_MOTION_INDEX 6   // 0 none, 1 CW, 2 CCW, 3 split               //
+#define INTRA_RING_MOTION_INDEX 6   // -1 CCW, 0 none, 1 CW, 2 split              //
 #define INTRA_RING_SPEED_INDEX 7   // fixme: still need to decide on units        //
 #define COLOR_CHANGE_STYLE_INDEX 8                                                //
+#define RING_OFFSET_INDEX 9
                 // 0 none, 1 cycle thru selected, 2 cycle thru palette            //
                                                                                   //
 //  Evolving parameters defining the show                                         //
@@ -152,8 +153,9 @@ CRGBPalette256 current_palette;                                               //
 #define MAX_SPARKLE_INTENSITY 250 // fixme: these should be color dependent to avoid color drift at high intensity
 #define MIN_SPARKLE_INTENSITY 50
 #define NUM_SPARKLE_FNS 10
-
-
+ 
+int current_ring, current_pixel, current_coin_bottom;
+  
 //  Sparkle layer variables
 int sparkle_count = 0;
 CRGB sparkle_color = CRGB::Purple;
@@ -236,25 +238,26 @@ void update_parameters() {
     #ifdef PI_CONTROLLED
       // fixme: Jeff: 
       
-    #elif defined(CYCLE)
-      cycle_through_animations();
+//    #elif defined(CYCLE)
+  //    cycle_through_animations();
       
     #else
       // set parameters manually for testing                   ********** set parameters manually here **********
-      show_parameters[ANIMATION_INDEX] = 0;      // <--- this is where you enter your animation number         //
+      show_parameters[ANIMATION_INDEX] = 5;      // <--- this is where you enter your animation number         //
       show_parameters[BEAT_EFFECT_INDEX] = 0;                                                                  //
-      show_parameters[PALETTE_INDEX] = 1;                                                                      //
+      show_parameters[PALETTE_INDEX] = 2;                                                                      //
       show_parameters[NUM_COLORS_INDEX] = 3;                                                                   //
       show_parameters[COLOR_THICKNESS_INDEX] = 5;                                                              //
-      show_parameters[BLACK_THICKNESS_INDEX] = 3;                                                              //
+      show_parameters[BLACK_THICKNESS_INDEX] = 8;                                                              //
       show_parameters[INTRA_RING_MOTION_INDEX] = 1;                                                            //
       show_parameters[INTRA_RING_SPEED_INDEX ] = 2;                                                            //
       show_parameters[COLOR_CHANGE_STYLE_INDEX] = 0;                                                           //
+      show_parameters[RING_OFFSET_INDEX] = 6;
                                                                                                                //
       // can choose 0 to 6 as indices into current palette                                                     //
       // 0,1 light, 2,3,4 mid, 5,6 dark                                                                        //
-      show_colors[0] = 1;                                                                                      //                                                                                                                   //
-      show_colors[1] = 3;                                                                                      //
+      show_colors[0] = 3;                                                                                      //                                                                                                                   //
+      show_colors[1] = 0;                                                                                      //
       show_colors[2] = 5;                                                                                      //
     #endif
       
@@ -293,6 +296,9 @@ void cycle_through_animations() {
 
 // Draws the current animation
 void draw_current_animation() {
+
+  current_animation = show_parameters[ANIMATION_INDEX];
+  
   //  If pixel refresh time has expired update the LED pattern
   if (current_time - refresh_saved_time > REFRESH_TIME)
   {
@@ -300,15 +306,11 @@ void draw_current_animation() {
   
     // This is where you would add a new animation.
     switch (current_animation)  {   
-      case 0:
-        run_dot();
+      case 0:  // fixme: make these last 2 parameters more generic
+        basicGradient(show_colors[0], show_colors[1], 2, 4);
         break;
   
       case 1:
-        run_dot_green();
-        break;
-
-      case 2:
         Fire();
         break;
         
@@ -316,24 +318,26 @@ void draw_current_animation() {
         pulse();
         break; 
 
-      case 4:
-        sparkle_rain();
+      case 4:  
+        sparkle_count = 0;
+        sparkle_rain();      // diane
         break;
 
       case 5:
-        sparkle_3_circles();
+        sparkle_count = 0;
+        sparkle_3_circles();  // diane
         break;
 
       case 6:
-        sparkle_warp_speed();
+        sparkle_count = 0;
+        sparkle_warp_speed();  // diane
         break;
 
-
       case 7:
-        snake();
-        break;      
-        
-        default:
+        snake();  // diane
+        break;    
+
+      default:
         run_dot();
     }
   }
