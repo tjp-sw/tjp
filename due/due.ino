@@ -94,27 +94,29 @@ CRGBSet leds[NUM_RINGS] = {                                                   //
 };                                                                            //
 //----------------------------------------------------------------------------//
     
-//  Show parameters coming from the pi ---------------------------------------//
-#define NUM_PARAMETERS 9                                                      //
-#define NUM_COLORS_PER_PALETTE 3                                              //
-                                                                              //
-//  Indices into show_parameters[] which holds information from the pi        //
-//  Note: These are only *indices*, not values. Don't change these            //
-#define ANIMATION_INDEX 0   // which animation to play                        //
-#define BEAT_EFFECT_INDEX 1   // how to respond to beat                       //
-#define PALETTE_INDEX 2   // which color palette to use                       //
-#define NUM_COLORS_INDEX 3   // how many colors to use out of this palette    //
-#define COLOR_THICKNESS_INDEX 4   // how many consecutive lit LEDs in a row   //
-#define BLACK_THICKNESS_INDEX 5   // how many dark LEDs between lit ones      //
-#define INTRA_RING_MOTION_INDEX 6   // 0 none, 1 CW, 2 CCW, 3 split           //
-#define INTRA_RING_SPEED_INDEX 7   // fixme: still need to decide on units    //
-#define COLOR_CHANGE_STYLE_INDEX 8                                            //
-                // 0 none, 1 cycle thru selected, 2 cycle thru palette        //
-                                                                              //
-//  Evolving parameters defining the show                                     //
-int show_parameters[NUM_PARAMETERS];                                          //
-int show_colors[NUM_COLORS_PER_PALETTE];                                      //
-//----------------------------------------------------------------------------//
+//  Show parameters coming from the pi -------------------------------------------//
+#define NUM_PARAMETERS 9                                                          //
+#define NUM_COLORS_PER_PALETTE 3                                                  //
+                                                                                  //
+//  Indices into show_parameters[] which holds information from the pi            //
+//  Note: These are only *indices*, not values. Don't change these                //
+#define ANIMATION_INDEX 0   // which animation to play                            //
+#define BEAT_EFFECT_INDEX 1   // how to respond to beat                           //
+#define PALETTE_INDEX 2   // which color palette to use                           //
+#define NUM_COLORS_INDEX 3   // how many colors to use out of this palette        //
+#define COLOR_THICKNESS_INDEX 4   // how many consecutive lit LEDs in a row       //
+#define BLACK_THICKNESS_INDEX 5   // how many dark LEDs between lit ones          //
+#define INTRA_RING_MOTION_INDEX 6   // 0 none, 1 CW, 2 CCW, 3 split               //
+#define INTRA_RING_SPEED_INDEX 7   // fixme: still need to decide on units        //
+#define COLOR_CHANGE_STYLE_INDEX 8                                                //
+                // 0 none, 1 cycle thru selected, 2 cycle thru palette            //
+                                                                                  //
+//  Evolving parameters defining the show                                         //
+int show_parameters[NUM_PARAMETERS];                                              //
+                                                                                  //
+// array of show_parameters[NUM_COLORS_INDEX] colors chosen out of given palette  //
+int show_colors[NUM_COLORS_PER_PALETTE];                                          //   
+//--------------------------------------------------------------------------------//
 
 
 //  Initialize these parameters manually for  testing ---------------------------------------------------//
@@ -238,7 +240,7 @@ void update_parameters() {
       cycle_through_animations();
       
     #else
-      // set parameters manually for testing                             ***** set parameters manually here *****
+      // set parameters manually for testing                   ********** set parameters manually here **********
       show_parameters[ANIMATION_INDEX] = 0;      // <--- this is where you enter your animation number         //
       show_parameters[BEAT_EFFECT_INDEX] = 0;                                                                  //
       show_parameters[PALETTE_INDEX] = 1;                                                                      //
