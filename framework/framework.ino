@@ -95,6 +95,7 @@ void setup()
     randomSeed(random(LONG_MAX) + analogRead(pin));
   }
 
+  delay(50);			// extra time for Ethernet shield to power on
   // establish MAC address and IP address of this device
   byte mac[] = { 0x35, 0x28, 0x35, 0x28, 0x00, mega_number };
   IPAddress self = brain;	// same network
