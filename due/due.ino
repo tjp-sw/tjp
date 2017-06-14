@@ -74,15 +74,11 @@ uint8_t high_band_emphasis = 0; // 0 or 1                                     //
 #define HALF_RING (LEDS_PER_RING/2)                                           //
 #define HALF_VISIBLE (VISIBLE_LEDS_PER_RING/2)                                //
                                                                               //
-//  Stand-in colors  until we get official colors from Dan                    //
-const CRGB sanctioned_colors[] = {CRGB::Red, CRGB::Orange, CRGB::Yellow,      //
-  CRGB::Green, CRGB::Blue, CRGB::Purple};                                     //
-                                                                              //
 // Globals                                                                    //
 bool new_animation_triggered;                                                 //
 uint8_t current_animation = 0;                                                //
 uint32_t loop_count = 0;                                                      //
-unsigned long current_time=0, animation_saved_time=0;                         //
+unsigned long current_time=0, animation_saved_time=0, refresh_saved_time=0;   //
                                                                               //
 // LED actual data                                                            //
 CRGB leds_raw[NUM_RINGS][LEDS_PER_RING];                                      //
@@ -107,37 +103,30 @@ CRGBSet leds[NUM_RINGS] = {                                                   //
 };                                                                            //
 //----------------------------------------------------------------------------//
     
-//  Show parameters coming from the pi -------------------------------------------//
-#define NUM_PARAMETERS 9                                                          //
-#define NUM_COLORS_PER_PALETTE 3                                                  //
-                                                                                  //
-//  Indices into show_parameters[] which holds information from the pi            //
-//  Note: These are only *indices*, not values. Don't change these                //
-#define ANIMATION_INDEX 0   // which animation to play                            //
-#define BEAT_EFFECT_INDEX 1   // how to respond to beat                           //
-#define PALETTE_INDEX 2   // which color palette to use                           //
-#define NUM_COLORS_INDEX 3   // how many colors to use out of this palette        //
-#define COLOR_THICKNESS_INDEX 4   // how many consecutive lit LEDs in a row       //
-#define BLACK_THICKNESS_INDEX 5   // how many dark LEDs between lit ones          //
-#define INTRA_RING_MOTION_INDEX 6   // -1 CCW, 0 none, 1 CW, 2 split              //
-#define INTRA_RING_SPEED_INDEX 7   // fixme: still need to decide on units        //
-#define COLOR_CHANGE_STYLE_INDEX 8                                                //
-#define RING_OFFSET_INDEX 9
-                // 0 none, 1 cycle thru selected, 2 cycle thru palette            //
-                                                                                  //
-//  Evolving parameters defining the show                                         //
-int show_parameters[NUM_PARAMETERS];                                              //
-                                                                                  //
-// array of show_parameters[NUM_COLORS_INDEX] colors chosen out of given palette  //
-int show_colors[NUM_COLORS_PER_PALETTE];                                          //   
-//--------------------------------------------------------------------------------//
+//  Show parameters coming from the pi -----------------------------------------------------//
+#define NUM_PARAMETERS 9                                                                    //
+#define NUM_COLORS_PER_PALETTE 3                                                            //
+                                                                                            //
+//  Indices into show_parameters[] which holds information from the pi                      //
+//  Note: These are only *indices*, not values. Don't change these                          //
+#define ANIMATION_INDEX 0   // which animation to play                                      //
+#define BEAT_EFFECT_INDEX 1   // how to respond to beat                                     //
+#define PALETTE_INDEX 2   // which color palette to use                                     //
+#define NUM_COLORS_INDEX 3   // how many colors to use out of this palette                  //
+#define COLOR_THICKNESS_INDEX 4   // how many consecutive lit LEDs in a row                 //
+#define BLACK_THICKNESS_INDEX 5   // how many dark LEDs between lit ones                    //
+#define INTRA_RING_MOTION_INDEX 6   // -1 CCW, 0 none, 1 CW, 2 split                        //
+#define INTRA_RING_SPEED_INDEX 7   // fixme: still need to decide on units                  //
+#define COLOR_CHANGE_STYLE_INDEX 8   // 0 none, 1 cycle thru selected, 2 cycle thru palette //                                          //
+#define RING_OFFSET_INDEX 9  // how far one ring pattern is rotated from neighbor -10 -> 10 //
+                                                                                            //
+//  Evolving parameters defining the show                                                   //
+int show_parameters[NUM_PARAMETERS];                                                        //
+                                                                                            //
+// array of show_parameters[NUM_COLORS_INDEX] colors chosen out of given palette            //
+int show_colors[NUM_COLORS_PER_PALETTE];                                                    //   
+//------------------------------------------------------------------------------------------//
 
-
-//  Initialize these parameters manually for  testing ---------------------------------------------------//
-//  See above for definitions                                                                            //
-                                                                                                         //
-                                                                                                         //
-//-------------------------------------------------------------------------------------------------------//
 
 
 // Color palette choices ------------------------------------------------------//
@@ -198,8 +187,6 @@ void setup() {                                                                  
     Serial.flush();                                                                                         //
   #endif                                                                                                    //
                                                                                                             //
-  setup_spectrum_shield();                                                                                  //
-                                                                                                            //
   // Initialize digital pin LED_BUILTIN as an output                                                        //
   pinMode(LED_BUILTIN, OUTPUT);                                                                             //
                                                                                                             //
@@ -211,7 +198,6 @@ void setup() {                                                                  
   LEDS.clear();                                                                                             //
 }                                                                                                           //
 //----------------------------------------------------------------------------------------------------------//
-
 
 // the loop function runs over and over again forever ------------------------------------//
 void loop() {                                                                             //
@@ -235,8 +221,8 @@ void loop() {                                                                   
     last_debug_time = now;                                                                //
   #endif                                                                                  //
                                                                                           //
-  //  Select animation, other parameters                                                  //                                                                                 //  
-  update_parameters();                                                                    //    
+  //  Select animation, other parameters                                                  //                                                   //
+  update_parameters();                                                                    //
   #ifdef DEBUG_TIMING                                                                     //
     now = millis();                                                                       //
     serial_val[1] = now - last_debug_time;                                                //
@@ -245,16 +231,11 @@ void loop() {                                                                   
                                                                                           //
   //  Draw animation                                                                      //
   draw_current_animation();                                                               //
-  #ifdef DEBUG_TIMING                                                                     //
-    now = millis();                                                                       //
-    serial_val[2] = now - last_debug_time;                                                //
-    last_debug_time = now;                                                                //
-  #endif                                                                                  //
                                                                                           //
   // Write LEDs                                                                           //
   LEDS.show();                                                                            //
   #ifdef DEBUG_TIMING                                                                     //
-    now = millis();                                                                       //
+    unsigned long now = millis();                                                         //
     serial_val[3] = now - last_debug_time;                                                //
     last_debug_time = now;                                                                //
   #endif                                                                                  //
@@ -289,16 +270,18 @@ void update_parameters() {
       show_parameters[INTRA_RING_MOTION_INDEX] = 1;                                                            //
       show_parameters[INTRA_RING_SPEED_INDEX ] = 2;                                                            //
       show_parameters[COLOR_CHANGE_STYLE_INDEX] = 0;                                                           //
-      show_parameters[RING_OFFSET_INDEX] = 6;
-                                                                                                               //
+      show_parameters[RING_OFFSET_INDEX] = 6;                                                                  //
+                                                                                                               //                                                                           //
       // can choose 0 to 6 as indices into current palette                                                     //
       // 0,1 light, 2,3,4 mid, 5,6 dark                                                                        //
       show_colors[0] = 3;                                                                                      //                                                                                                                   //
       show_colors[1] = 0;                                                                                      //
       show_colors[2] = 5;                                                                                      //
-    #endif
-      
-
+                                                                                                               //  
+      // fixme: doesn't yet have its own parameter, so just working with ones we have                          //
+      // need colors 0 or 1 from any palette for sparkle color                                                 // 
+      sparkle_color = get_color(PALETTE_INDEX, (INTRA_RING_MOTION_INDEX + 1) % 2);                             //
+    #endif 
 }
 
  
@@ -330,41 +313,65 @@ void draw_current_animation() {
 
   current_animation = show_parameters[ANIMATION_INDEX];
   
-  // This is where you would add a new animation.
-  switch (current_animation)  {   
-    case 0:  // fixme: make these last 2 parameters more generic
-      basicGradient(show_colors[0], show_colors[1], 2, 4);
-      break;
+  //  If pixel refresh time has expired update the LED pattern
+  if (current_time - refresh_saved_time > REFRESH_TIME)
+  {
+    refresh_saved_time = current_time;
   
-    case 1:
-      Fire();
-      break;
+    // This is where you would add a new animation.
+    switch (current_animation)  {   
+      case 0:
+        toms_best();
+        break;
+  
+      case 1:
+        Fire();
+        break;
         
-    case 3:
-      pulse();
-      break; 
+      case 3:
+        snake();  // diane
+        break; 
 
-    case 4:
-      sparkle_count = 0;
-      sparkle_rain();      // diane
-      break;
+      case 4:
+        run_dot();
+        // equalizer();
+        break; 
+        
+      case 5:
+        run_dot();
+        // frequency_pulse();
+        break; 
 
-    case 5:
-      sparkle_count = 0;
-      sparkle_3_circles();  // diane
-      break;
+       case 7:
+          // fixme: make these last 2 parameters more generic
+          basicGradient(show_colors[0], show_colors[1], 2, 4);
+          break;
 
-    case 6:
-      sparkle_count = 0;
-      sparkle_warp_speed();  // diane
-      break;
+      case 8:
+        run_dot();
+        // snake_to_bow();
+        break; 
 
-    case 7:
-      snake();  // diane
-      break;      
+      case 9:  
+        sparkle_count = 0;
+        sparkle_rain();      // diane
+        break;
+
+      case 10:
+        sparkle_count = 0;
+        sparkle_3_circles();  // diane
+        break;
+
+      case 11:
+        sparkle_count = 0;
+        sparkle_warp_speed();  // diane
+        break;
 
       default:
-      run_dot();
+        run_dot();
+    }
   }
 }
+
+
 
