@@ -15,14 +15,6 @@ void rainbow(){
   sparklet(95);
   
 }
-// add popping sparkle effects to the rainbow or current design
-void sparklet(int prob){
-  
-  if(random8() >= prob){
-    leds_all[random16(LEDS_PER_NODE)] += CRGB::White;
-  } 
-
-}
 
 // function that fills an aready with a certain gradient.
 // void basic_gradient(int start, int end, CRGB start_color, CRGB end_color)

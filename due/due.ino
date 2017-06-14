@@ -8,9 +8,12 @@ typedef void (*sparkle_f_ptr)();
 #define DEBUG                                               //
 //#define DEBUG_TIMING                                      //
 //#define DEBUG_LED_ARRAYS                                  //
+//#define DEBUG_PEAKS                                       //
+//#define DEBUG_BPM                                         //
+//#define DEBUG_AUDIO_HOOKS                                 //
                                                             //
 // Timing settings                                          //
-#define REFRESH_TIME 0 // Unlimited frames per second       //
+#define REFRESH_TIME 50 // Max 20 frames per second         //
 #define ANIMATION_TIME 30000 // 30 seconds per animation    //
                                                             //
 // Node-specific                                            //
@@ -28,23 +31,33 @@ typedef void (*sparkle_f_ptr)();
 #endif                            //
 //--------------------------------//
 
-// Spectrum Shield ---------------------------------------------------------//
-// Pin connections                                                          //
-#define SS_PIN_STROBE 4                                                     //
-#define SS_PIN_RESET 5                                                      //
-#define SS_PIN_DC_ONE A0                                                    //
-#define SS_PIN_DC_TWO A1                                                    //
-#define NUM_CHANNELS 7                                                      //
-                                                                            //
-// Globals                                                                  //
-int frequencies_one[NUM_CHANNELS];                                          //
-int frequencies_two[NUM_CHANNELS];                                          //
-int frequencies_avg[NUM_CHANNELS];                                          //
-bool is_beat = false;                                                       //
-uint8_t low_band_emphasis = 0; // 0 or 1                                    //
-uint8_t mid_band_emphasis = 0; // 0, 1, or 2                                //
-uint8_t high_band_emphasis = 0; // 0 or 1                                   //
-//--------------------------------------------------------------------------//
+// Spectrum Shield -----------------------------------------------------------//
+// Pin connections                                                            //
+#define SS_PIN_STROBE 4                                                       //
+#define SS_PIN_RESET 5                                                        //
+#define SS_PIN_DC_ONE A0                                                      //
+#define SS_PIN_DC_TWO A1                                                      //
+#define NUM_CHANNELS 7                                                        //
+                                                                              //
+// Globals                                                                    //
+int frequencies_one[NUM_CHANNELS];                                            //
+int frequencies_two[NUM_CHANNELS];                                            //
+int frequencies_max[NUM_CHANNELS];                                            //
+                                                                              //
+bool is_beat = false;                                                         //
+uint8_t downbeat_proximity = 0; // Up and down from 0-255 with the beat       //
+uint16_t bpm_estimate = 0;                                                    //
+uint8_t bpm_confidence = 0; // <10 is weak, 20 is decent, 30+ is really good  //
+                                                                              //
+#define AUDIO_HOOK_HISTORY_SIZE 200                                           //
+uint16_t overall_volume[AUDIO_HOOK_HISTORY_SIZE];                             //
+uint8_t dominant_channel[AUDIO_HOOK_HISTORY_SIZE];                            //
+float band_distribution[AUDIO_HOOK_HISTORY_SIZE][3]; // Low=0, mid=1, high=2  //
+                                                                              //
+uint8_t low_band_emphasis = 0; // 0 or 1                                      //
+uint8_t mid_band_emphasis = 0; // 0, 1, or 2                                  //
+uint8_t high_band_emphasis = 0; // 0 or 1                                     //
+//----------------------------------------------------------------------------//
 
 // LEDs ----------------------------------------------------------------------//
 // Physical constants                                                         //
@@ -69,7 +82,7 @@ const CRGB sanctioned_colors[] = {CRGB::Red, CRGB::Orange, CRGB::Yellow,      //
 bool new_animation_triggered;                                                 //
 uint8_t current_animation = 0;                                                //
 uint32_t loop_count = 0;                                                      //
-unsigned long current_time=0, animation_saved_time=0, refresh_saved_time=0;   //
+unsigned long current_time=0, animation_saved_time=0;                         //
                                                                               //
 // LED actual data                                                            //
 CRGB leds_raw[NUM_RINGS][LEDS_PER_RING];                                      //
@@ -124,7 +137,7 @@ int show_colors[NUM_COLORS_PER_PALETTE];                                        
 //  See above for definitions                                                                            //
                                                                                                          //
                                                                                                          //
-//--------------------------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------------//
 
 
 // Color palette choices ------------------------------------------------------//
@@ -185,6 +198,8 @@ void setup() {                                                                  
     Serial.flush();                                                                                         //
   #endif                                                                                                    //
                                                                                                             //
+  setup_spectrum_shield();                                                                                  //
+                                                                                                            //
   // Initialize digital pin LED_BUILTIN as an output                                                        //
   pinMode(LED_BUILTIN, OUTPUT);                                                                             //
                                                                                                             //
@@ -197,6 +212,7 @@ void setup() {                                                                  
 }                                                                                                           //
 //----------------------------------------------------------------------------------------------------------//
 
+
 // the loop function runs over and over again forever ------------------------------------//
 void loop() {                                                                             //
   #ifdef DEBUG_LED_ARRAYS                                                                 //
@@ -205,19 +221,40 @@ void loop() {                                                                   
     return;                                                                               //
   #endif                                                                                  //
                                                                                           //
-  //  how many milliseconds have passed since DUE was started                             //
-  current_time = millis();                                                                //
+  //  Using REFRESH_TIME will slow animations, but will be more accurate to final product //
+  unsigned long now = millis();                                                           //
+  if(now - current_time < REFRESH_TIME)                                                   //
+    FastLED.delay(now - current_time);                                                    //
+  current_time = now;                                                                     //
+                                                                                          //
+  // read spectrum shield and do beat detection                                           //
+  loop_spectrum_shield();                                                                 //
+  #ifdef DEBUG_TIMING                                                                     //
+    now = millis();                                                                       //
+    serial_val[0] = now - current_time;                                                   //
+    last_debug_time = now;                                                                //
+  #endif                                                                                  //
                                                                                           //
   //  Select animation, other parameters                                                  //                                                                                 //  
   update_parameters();                                                                    //    
+  #ifdef DEBUG_TIMING                                                                     //
+    now = millis();                                                                       //
+    serial_val[1] = now - last_debug_time;                                                //
+    last_debug_time = now;                                                                //
+  #endif                                                                                  //
                                                                                           //
   //  Draw animation                                                                      //
   draw_current_animation();                                                               //
+  #ifdef DEBUG_TIMING                                                                     //
+    now = millis();                                                                       //
+    serial_val[2] = now - last_debug_time;                                                //
+    last_debug_time = now;                                                                //
+  #endif                                                                                  //
                                                                                           //
   // Write LEDs                                                                           //
   LEDS.show();                                                                            //
   #ifdef DEBUG_TIMING                                                                     //
-    unsigned long now = millis();                                                         //
+    now = millis();                                                                       //
     serial_val[3] = now - last_debug_time;                                                //
     last_debug_time = now;                                                                //
   #endif                                                                                  //
@@ -285,12 +322,6 @@ void cycle_through_animations() {
       Serial.println(current_animation) ;
     #endif
   }
-  
-  #ifdef DEBUG_TIMING
-    unsigned long now = millis();
-    serial_val[1] = now - last_debug_time;
-    last_debug_time = now;
-  #endif
 }
 
 
@@ -299,108 +330,41 @@ void draw_current_animation() {
 
   current_animation = show_parameters[ANIMATION_INDEX];
   
-  //  If pixel refresh time has expired update the LED pattern
-  if (current_time - refresh_saved_time > REFRESH_TIME)
-  {
-    refresh_saved_time = current_time;
+  // This is where you would add a new animation.
+  switch (current_animation)  {   
+    case 0:  // fixme: make these last 2 parameters more generic
+      basicGradient(show_colors[0], show_colors[1], 2, 4);
+      break;
   
-    // This is where you would add a new animation.
-    switch (current_animation)  {   
-      case 0:  // fixme: make these last 2 parameters more generic
-        basicGradient(show_colors[0], show_colors[1], 2, 4);
-        break;
-  
-      case 1:
-        Fire();
-        break;
+    case 1:
+      Fire();
+      break;
         
-      case 3:
-        pulse();
-        break; 
+    case 3:
+      pulse();
+      break; 
 
-      case 4:  
-        sparkle_count = 0;
-        sparkle_rain();      // diane
-        break;
+    case 4:
+      sparkle_count = 0;
+      sparkle_rain();      // diane
+      break;
 
-      case 5:
-        sparkle_count = 0;
-        sparkle_3_circles();  // diane
-        break;
+    case 5:
+      sparkle_count = 0;
+      sparkle_3_circles();  // diane
+      break;
 
-      case 6:
-        sparkle_count = 0;
-        sparkle_warp_speed();  // diane
-        break;
+    case 6:
+      sparkle_count = 0;
+      sparkle_warp_speed();  // diane
+      break;
 
-      case 7:
-        snake();  // diane
-        break;    
+    case 7:
+      snake();  // diane
+      break;      
 
       default:
-        run_dot();
-    }
+      run_dot();
   }
-
-  #ifdef DEBUG_TIMING
-    unsigned long now = millis();
-    serial_val[2] = now - last_debug_time;
-    last_debug_time = now;
-  #endif
-}
-
-// For debugging only, writes all saved variables
-void write_to_serial() {
-  int num_serial_vals = 0;
-  
-  #ifdef DEBUG_TIMING
-    Serial.print("Timing:");
-    num_serial_vals = 4;
-  #endif
-  
-  for(int i = 0; i < num_serial_vals; i++) {
-    Serial.print("\t");
-    Serial.print(serial_val[i]);
-  }
-
-  if(num_serial_vals > 0)
-  {
-    Serial.println();
-    Serial.flush(); // Guarantees buffer will write if future code hangs
-  }
-}
-
-// Used to verify multiple views of LEDs all reference the raw leds_raw[][] array correctly.
-void testLEDs() {
-  /*
-    CRGB leds_raw[NUM_RINGS][LEDS_PER_RING];
-    CRGBSet leds_all(*leds, NUM_LEDS);
-    CRGBSet leds_node(leds_raw[NODE_ID * RINGS_PER_NODE], LEDS_PER_NODE);
-    CRGBSet* leds;
- */
-
-  Serial.println("Testing LEDs");
-
-  leds[20](0, 10) = CRGB(1,2,3);
-  for(int i = 0; i <= 10; i++)
-    Serial.print(leds_raw[20][i] == CRGB(1,2,3) ? "Match1, " : "oops1, ");
-  Serial.println();
-
-  leds_all(LEDS_PER_RING, LEDS_PER_RING+10) = CRGB(4,5,6);
-  for(int i = 0; i <= 10; i++)
-    Serial.print(leds_raw[1][i] == CRGB(4,5,6) ? "Match2, " : "oops2, ");    
-  Serial.println();
-
-  leds_node[2](0, 10) = CRGB(7,8,9);
-  for(int i = 0; i <= 10; i++)
-    Serial.print(leds_raw[NODE_ID*RINGS_PER_NODE+2][i] == CRGB(7,8,9) ? "Match3, " : "oops3, ");
-  Serial.println();
-
-  leds_node_all(3*LEDS_PER_RING, 3*LEDS_PER_RING+10) = CRGB(2,3,4);
-  for(int i = 0; i <= 10; i++)
-    Serial.print(leds_raw[NODE_ID*RINGS_PER_NODE+3][i] == CRGB(2,3,4) ? "Match4, " : "oops4, ");
-  Serial.println();
-
-  Serial.flush();
 }
 
