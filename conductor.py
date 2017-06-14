@@ -236,7 +236,6 @@ def edm_program():
 
     # randomly initialize parameters to animations
     # later these will be based more closely on other inputs
-    # Jeff fixme: show_parameters[] and show_colors[] are the two parameters to be passed to Due
 
     max_palette = 3  # this will vary by time and date at burning man
 
@@ -253,8 +252,7 @@ def edm_program():
     # show_parameters[NUM_COLORS_INDEX] returns how many colors to use in the current animation
     show_colors = sample(range(1, 7), show_parameters[NUM_COLORS_INDEX])
 
-    # fixme: Jeff: here's where parameters -> due is called
-    send_due_parameters()
+    send_due_parameters(show_parameters, show_colors)
 
     temporary_counter = 0
     current_time = time.time()
@@ -279,18 +277,18 @@ def edm_program():
                 # choose which colors out of the chosen palette to use
                 show_colors = sample(range(0, 5), show_parameters[NUM_COLORS_INDEX])
 
-        # fixme: Jeff: here's where parameters -> due is called
-        send_due_parameters()
+        send_due_parameters(show_parameters, show_colors)
 
         time.sleep(3)
         current_time = time.time()
         temporary_counter += 1
 
 
-#  fixme: Jeff, here is a place for the code to send the parameters to the due
-#  parameters are in 2 arrays; show_parameters[NUM_PARAMETERS] and SHOW_COLORS[NUM_COLORS_PER_PALETTE]
-def send_due_parameters():
-
+# "p" array is always length NUM_PARAMETERS
+# "c" array length varies from 1 to NUM_COLORS_PER_PALETTE - 2
+def send_due_parameters(p, c):
+    print 'send to due: params', repr(p), ';', len(c), 'colors', repr(c)
+    return;
 
 
 # ------------------------------------------------- scale() -----------------------------------------------
@@ -341,7 +339,7 @@ def set_parameter_bounds():
 
     # how many colors to use in the animation
     lower[NUM_COLORS_INDEX] = 1
-    upper[NUM_COLORS_INDEX] = NUM_COLORS_PER_PALETTE + 1  # the last color indicates rainbow around structure
+    upper[NUM_COLORS_INDEX] = NUM_COLORS_PER_PALETTE - 2  # the last color indicates rainbow around structure
 
     # which beat effect to use / how to respond to beat with LEDs
     lower[BEAT_EFFECT_INDEX] = 0
