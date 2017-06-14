@@ -268,3 +268,82 @@ int palette_num = show_parameters[PALETTE_INDEX];
   }
 }
 
+
+// hasn't been tested
+void diane_arrow_1() {
+
+  int ring, pixel;
+  int slope = 3;
+
+  for (ring = 0; ring < HALF_VISIBLE / 3; ring++) {
+    for (pixel = HALF_VISIBLE - 3 * ring; pixel <= HALF_VISIBLE + 3 * ring; pixel++) {
+      if (pixel >= ring) {
+        // inside the arrow
+        leds[(ring + loop_count) % NUM_RINGS][pixel] = show_colors[0];
+      }
+      else {
+        // background of arow
+        leds[(ring + loop_count) % NUM_RINGS][pixel] = show_colors[1];
+      }
+    }
+  }
+  for (ring = HALF_VISIBLE / 3; ring < NUM_RINGS; ring++) {
+    for (pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+      leds[(ring + loop_count) % NUM_RINGS][pixel] = show_colors[1];
+
+    }
+  }
+}
+
+// 2 copies of same color arrows, with alternating backgrounds
+// hasn't been tested
+void diane_arrow_2() {
+
+  int ring, pixel;
+  int slope = 6;
+
+  // arrow 1
+  for (ring = 0; ring < HALF_VISIBLE / 6; ring++) {
+    for (pixel = HALF_VISIBLE - 6 * ring; pixel <= HALF_VISIBLE + 6 * ring; pixel++) {
+      if (pixel >= ring) {
+        // inside the arrow
+        leds[(ring + loop_count) % NUM_RINGS][pixel] = show_colors[0];
+      }
+      else {
+        // background of arrow
+        leds[(ring + loop_count) % NUM_RINGS][pixel] = show_colors[1];
+      }
+    }
+  }
+
+  // ring 34 & 35 solid of background color #1
+  for (ring = 34; ring <= 35; ring++) {
+    for (pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+      leds[(34 + loop_count) % NUM_RINGS][pixel] = show_colors[2];
+    }
+  }
+
+  // arrow 2
+  for (ring = HALF_VISIBLE / 6 + 2; ring < 2 * HALF_VISIBLE / 6 + 2; ring++) {
+    for (pixel = HALF_VISIBLE - 6 * ring; pixel <= HALF_VISIBLE + 6 * ring; pixel++) {
+      if (pixel >= ring) {
+        // inside the arrow
+        leds[(ring + loop_count) % NUM_RINGS][pixel] = show_colors[0];
+      }
+      else {
+        // background of arrow
+        leds[(ring + loop_count) % NUM_RINGS][pixel] = show_colors[2];
+      }
+    }
+  }
+
+  // ring 70, 71, 72 solid of background color #2
+  for (ring = 2 * HALF_VISIBLE / 6 + 2; ring <= NUM_RINGS; ring++) {
+    for (pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+      leds[(34 + loop_count) % NUM_RINGS][pixel] = show_colors[2];
+    }
+  }
+
+}
+
+
