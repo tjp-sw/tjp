@@ -106,6 +106,7 @@ CRGBSet leds[NUM_RINGS] = {                                                   //
 //  Show parameters coming from the pi -----------------------------------------------------//
 #define NUM_PARAMETERS 9                                                                    //
 #define NUM_COLORS_PER_PALETTE 3                                                            //
+#define NUM_ANIMATIONS 13                                                                   //
                                                                                             //
 //  Indices into show_parameters[] which holds information from the pi                      //
 //  Note: These are only *indices*, not values. Don't change these                          //
@@ -117,7 +118,7 @@ CRGBSet leds[NUM_RINGS] = {                                                   //
 #define BLACK_THICKNESS_INDEX 5   // how many dark LEDs between lit ones                    //
 #define INTRA_RING_MOTION_INDEX 6   // -1 CCW, 0 none, 1 CW, 2 split                        //
 #define INTRA_RING_SPEED_INDEX 7   // fixme: still need to decide on units                  //
-#define COLOR_CHANGE_STYLE_INDEX 8   // 0 none, 1 cycle thru selected, 2 cycle thru palette //                                          //
+#define COLOR_CHANGE_STYLE_INDEX 8   // 0 none, 1 cycle thru selected, 2 cycle thru palette //
 #define RING_OFFSET_INDEX 9  // how far one ring pattern is rotated from neighbor -10 -> 10 //
                                                                                             //
 //  Evolving parameters defining the show                                                   //
@@ -145,10 +146,6 @@ CRGB fruit_loop[9] =
 {CRGB(255,247,0), CRGB(255,127,14),                   // light
     CRGB(188,0,208), CRGB(255,65,65), CRGB(255,73,0),     //  medium
     CRGB(178,6,88), CRGB(162,80,204)};                // dark
-
-
-//  Base layer ---------------------------------------------------------------//
-CRGBPalette256 current_palette;                                               //
 
 
 //  Sparkle layer ------------------------------------------------------------//
@@ -182,7 +179,7 @@ boolean increasing[STRIPS_PER_NODE][LEDS_PER_STRIP];
 void setup() {                                                                                              //
   // Setup Serial port                                                                                      //
   #ifdef DEBUG                                                                                              //
-    Serial.begin(9600);                                                                                     //
+    Serial.begin(115200);                                                                                     //
     Serial.println("Serial port initialized.");                                                             //
     Serial.flush();                                                                                         //
   #endif                                                                                                    //
@@ -261,11 +258,11 @@ void update_parameters() {
       
     #else
       // set parameters manually for testing                   ********** set parameters manually here **********
-      show_parameters[ANIMATION_INDEX] = 5;      // <--- this is where you enter your animation number         //
+      show_parameters[ANIMATION_INDEX] = 12;      // <--- this is where you enter your animation number        //
       show_parameters[BEAT_EFFECT_INDEX] = 0;                                                                  //
       show_parameters[PALETTE_INDEX] = 2;                                                                      //
       show_parameters[NUM_COLORS_INDEX] = 3;                                                                   //
-      show_parameters[COLOR_THICKNESS_INDEX] = 5;                                                              //
+      show_parameters[COLOR_THICKNESS_INDEX] = 3;                                                              //
       show_parameters[BLACK_THICKNESS_INDEX] = 8;                                                              //
       show_parameters[INTRA_RING_MOTION_INDEX] = 1;                                                            //
       show_parameters[INTRA_RING_SPEED_INDEX ] = 2;                                                            //
@@ -298,7 +295,7 @@ void cycle_through_animations() {
     loop_count = 0;
     
     // current_animation = random8(0, 4);  // current_animation is a random number from 0 to (2nd number - 1)
-    current_animation = ++current_animation % 4;
+    current_animation = ++current_animation % NUM_ANIMATIONS;
 
     #ifdef DEBUG
       Serial.print("New show started: ");
@@ -325,7 +322,7 @@ void draw_current_animation() {
         break;
   
       case 1:
-        Fire();
+        Fire(); // brian
         break;
         
       case 3:
@@ -339,7 +336,6 @@ void draw_current_animation() {
         
       case 5:
         run_dot();
-        // frequency_pulse();
         break; 
 
        case 7:
@@ -367,6 +363,9 @@ void draw_current_animation() {
         sparkle_warp_speed();  // diane
         break;
 
+      case 12:
+        frequency_pulse(); // brian
+        break;
       default:
         run_dot();
     }
