@@ -179,20 +179,19 @@ boolean increasing[STRIPS_PER_NODE][LEDS_PER_STRIP];
 void setup() {                                                                                              //
   // Setup Serial port                                                                                      //
   #ifdef DEBUG                                                                                              //
-    Serial.begin(115200);                                                                                     //
+    Serial.begin(115200);                                                                                   //
     Serial.println("Serial port initialized.");                                                             //
     Serial.flush();                                                                                         //
   #endif                                                                                                    //
                                                                                                             //
-  // Initialize digital pin LED_BUILTIN as an output                                                        //
-  pinMode(LED_BUILTIN, OUTPUT);                                                                             //
-                                                                                                            //
   // Setup LED output ports.                                                                                //
   // This needs to be declared as 8 strips even though we only use 4                                        //
   LEDS.addLeds<WS2811_PORTD, 8>(leds_node_all, LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);              //
-                                                                                                            //                                                                                                            //
+                                                                                                            //
   //  Clear all LEDs                                                                                        //
   LEDS.clear();                                                                                             //
+                                                                                                            //
+  setup_communication();                                                                                    //
 }                                                                                                           //
 //----------------------------------------------------------------------------------------------------------//
 
@@ -218,7 +217,7 @@ void loop() {                                                                   
     last_debug_time = now;                                                                //
   #endif                                                                                  //
                                                                                           //
-  //  Select animation, other parameters                                                  //                                                   //
+  //  Select animation, other parameters                                                  //
   update_parameters();                                                                    //
   #ifdef DEBUG_TIMING                                                                     //
     now = millis();                                                                       //
@@ -236,6 +235,8 @@ void loop() {                                                                   
     serial_val[3] = now - last_debug_time;                                                //
     last_debug_time = now;                                                                //
   #endif                                                                                  //
+                                                                                          //
+  do_communication();                                                                     //
                                                                                           //
   // Serial output for debugging                                                          //
   #ifdef DEBUG                                                                            //
@@ -340,7 +341,7 @@ void draw_current_animation() {
 
        case 7:
           // fixme: make these last 2 parameters more generic
-          basicGradient(show_colors[0], show_colors[1], 2, 4);
+          basicGradient(/* show_colors[0], show_colors[1], 2, 4 */);
           break;
 
       case 8:
