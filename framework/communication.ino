@@ -23,7 +23,7 @@ EthernetClient remote;
 #endif // I_AM_DUE
 
 bool serial0_is_enabled;	// cannot detect at run time
-#ifdef I_AM_MEGA
+#ifndef NUM_CHANNELS
 uint8_t node_number; // Moved to due.ino on Due
 #endif
 uint8_t led_state;
@@ -71,10 +71,14 @@ void delay_next_network_connection(uint8_t seconds)
 
 void setup_communication()
 {
+#ifdef DEBUG			// defined in due.ino
+  serial0_is_enabled = true;
+#else
   serial0_is_enabled = false;	// change to true for debugging
   if (serial0_is_enabled) {
     Serial.begin(115200);
   }
+#endif // DEBUG
 
   NodeMate.begin(115200);
   mate_last_input_msec = 0;
@@ -162,6 +166,18 @@ void process_commands(String& input)
     size_t size = 1;
     char command = input[0];
     switch (command) {
+#ifdef I_AM_MEGA
+      case 'b':
+        size += 55;
+        if (input.length() >= size) {
+          if (remote.connected()) {
+            remote.write(input.c_str(), size);
+          }
+        } else {
+          print_status("insufficient beat data");
+        }
+	break;
+#endif // I_AM_MEGA
 #ifdef I_AM_MEGA
       case 'd': {
         const uint8_t node_message[2] = { 'n', node_number };
@@ -311,12 +327,12 @@ void do_communication()
   do_led();
 }
 
-#ifdef I_AM_DUE
+#ifdef NUM_CHANNELS
 // Send this from the Due that has audio (node_number == 0?), up to the Pi, then back out to all of the nodes
 void send_audio_packet()
 {
   uint8_t audioData[55];
-  audioData[0] = is_beat;
+  audioData[0] = 'b';
   audioData[1] = downbeat_proximity;
   audioData[2] = bpm_estimate;
   audioData[3] = bpm_confidence;
@@ -337,5 +353,6 @@ void send_audio_packet()
     audioData[41 + 2*i] = frequencies_two[i] >> 8;
     audioData[41 + 2*i + 1] = frequencies_two[i] & 0xFF;
   }
+  NodeMate.write(audioData, sizeof audioData);
 }
 #endif
