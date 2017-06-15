@@ -44,7 +44,7 @@ int frequencies_max[NUM_CHANNELS];                                            //
 uint8_t node_number = 255;                                                    //                                                                              
 bool is_beat = false;                                                         //
 uint8_t downbeat_proximity = 0; // Up and down from 0-255 with the beat       //
-uint16_t bpm_estimate = 0;                                                    //
+uint8_t bpm_estimate = 0;                                                    //
 uint8_t bpm_confidence = 0; // <10 is weak, 20 is decent, 30+ is really good  //
                                                                               //
 #define AUDIO_HOOK_HISTORY_SIZE 200                                           //

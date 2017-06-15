@@ -310,3 +310,34 @@ void do_communication()
   do_heartbeat();
   do_led();
 }
+
+#ifdef I_AM_DUE
+// Send this from the Due that has audio (node_number == 0?), up to the Pi, then back out to all of the nodes
+void send_audio_packet()
+{
+  uint8_t audioData[27]; //[42]
+  audioData[0] = is_beat;
+  audioData[1] = downbeat_proximity;
+  audioData[2] = bpm_estimate;
+  audioData[3] = bpm_confidence;
+  audioData[4] = low_band_emphasis;
+  audioData[5] = mid_band_emphasis;
+  audioData[6] = high_band_emphasis;
+  audioData[7] = dominant_channel[0];
+  audioData[8] = overall_volume[0] >> 8;
+  audioData[9] = overall_volume[0] & 0xFF;
+  audioData[10] = band_distribution[0][0] * 255;
+  audioData[11] = band_distribution[0][1] * 255;
+  audioData[12] = band_distribution[0][2] * 255;
+  for(uint8_t i = 0; i < NUM_CHANNELS; i++) {
+    audioData[13 + 2*i] = frequencies_max[i] >> 8;
+    audioData[13 + 2*i + 1] = frequencies_max[i] & 0xFF;
+    
+    // These would be nice to have too but aren't really needed
+    //audioData[27 + 2*i] = frequencies_one[i] >> 8;
+    //audioData[27 + 2*i + 1] = frequencies_one[i] & 0xFF;
+    //audioData[41 + 2*i] = frequencies_two[i] >> 8;
+    //audioData[41 + 2*i + 1] = frequencies_two[i] & 0xFF;
+  }
+}
+#endif
