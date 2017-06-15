@@ -3,12 +3,12 @@
 // as part of "Five Elements" shown here: http://youtu.be/knWiGsmgycY
 
 void Fire() {
-const uint8_t sparkSize_min = 170;
-const uint8_t sparkSize_max = 255;
-
+  const uint8_t sparkSize_min = 170;
+  const uint8_t sparkSize_max = 255;
   
-// Array of temperature readings at each simulation cell
-static byte heat[RINGS_PER_NODE][VISIBLE_LEDS_PER_RING];
+    
+  // Array of temperature readings at each simulation cell
+  static byte heat[RINGS_PER_NODE][VISIBLE_LEDS_PER_RING];
 
   // Step 1.  Cool down every cell a little
     for(int i = 0; i < RINGS_PER_NODE; i++) {
@@ -101,5 +101,141 @@ CRGB GetHeatColor(uint8_t temperature) {
   
   return heatcolor;
 }
+
+
+// Frequency Pulse
+// 7 bands of LEDs, mirrored on each side of the ring. Value of each band scales from 30% to 100% brightness based on the spectrum shield's outputs.
+// Waves of whiteness move along the first dimension and bounce off each other along with the beat
+//
+#define PIXELS_PER_BAND 30
+#define MIN_VAL_FP 64 // Scaled from 0-255, currently 25%
+
+void frequency_pulse() {
+  uint8_t white_ring = RINGS_PER_NODE * downbeat_proximity / 255;
+  if(NODE_ID % 2 == 1)
+    white_ring = RINGS_PER_NODE - 1 - white_ring;
+
+  
+  uint8_t inner_start, inner_end, outer_start, outer_end;
+  
+  for(uint8_t j = 0; j < NUM_CHANNELS-1; j++) {
+    inner_start = PIXELS_PER_BAND * j;
+    inner_end = PIXELS_PER_BAND * (j+1) - 1;
+    outer_start = VISIBLE_LEDS_PER_RING - PIXELS_PER_BAND * j;
+    outer_end = VISIBLE_LEDS_PER_RING - PIXELS_PER_BAND * (j+1) - 1;
+
+    CHSV tempColor = get_color_hsv(show_parameters[PALETTE_INDEX], j % show_parameters[NUM_COLORS_INDEX]);
+    tempColor.value = MIN_VAL_FP + frequencies_max[j] * (255-MIN_VAL_FP) / 255;
+
+    CHSV whiteColor = tempColor;
+    whiteColor.saturation = qsub8(whiteColor.saturation, 128);
+
+    CHSV midColor = tempColor;
+    midColor.saturation = qsub8(whiteColor.saturation, 64);
+    
+    for(uint8_t i = 0; i < RINGS_PER_NODE; i++) {
+      if(i == white_ring) {
+        leds_node[i](inner_start, inner_end) = whiteColor;
+        leds_node[i](outer_start, outer_end) = whiteColor;
+      }
+      else if(show_parameters[COLOR_THICKNESS_INDEX] == 3
+           && (i == white_ring - 1 || i == white_ring + 1
+              || i == 0 && white_ring == NUM_CHANNELS-1
+              || i == NUM_CHANNELS-1 && white_ring == 0)
+              ){
+        leds_node[i](inner_start, inner_end) = midColor;
+        leds_node[i](outer_start, outer_end) = midColor;
+      }
+      else {
+        leds_node[i](inner_start, inner_end) = tempColor;
+        leds_node[i](outer_start, outer_end) = tempColor;
+      }
+    }
+  }
+  
+  // Draw center band (using indexes from last iteration)
+  CHSV tempColor = get_color_hsv(show_parameters[PALETTE_INDEX], (NUM_CHANNELS-1) % show_parameters[NUM_COLORS_INDEX]);
+  tempColor.value = MIN_VAL_FP + frequencies_max[NUM_CHANNELS-1] * (255-MIN_VAL_FP) / 255;
+  
+  for(uint8_t i = 0; i < RINGS_PER_NODE; i++) {
+    leds_node[i](inner_end+1, outer_start-1) = tempColor;
+  }
+}
+
+
+// To do: increase velocity every 30 pixels or so, to get an acceleration effect
+// Collision
+// Comets fly from base of each ring and collide in center with a flash of white
+// Comets trigger every NUM_RINGS cycles, 1 cycle delayed for each ring. This will result in a single ring of white moving through the structure
+void Collision()
+{
+  const uint8_t fadeRate = 48;
+  const uint8_t fadeCycles = 6; // How many cycles to fade from white to black after collision; will also be the tail length
+  const uint8_t patternTime = HALF_VISIBLE + 1 + fadeCycles;
+  
+  static CRGB curColor[NUM_RINGS][patternTime/NUM_RINGS];  // colors of the current comets
+
+  leds_node_all.fadeToBlackBy(fadeRate);
+  for(uint8_t ring = NODE_ID * RINGS_PER_NODE; ring < (NODE_ID + 1) * RINGS_PER_NODE; ring++)
+  {
+    // Start up with only comets from bottom
+    if(loop_count < ring)
+      break;
+      
+    uint8_t ring_offset = (loop_count - ring) % NUM_RINGS; // Each comet on this ring has moved ring_offset pixels from its starting point
+    
+    if(ring_offset == 0) {
+      // Move comets to correct indexes, spawn new comet at [0]
+      for(uint8_t i = patternTime/NUM_RINGS - 1; i > 0; i++)
+      {
+          curColor[ring][i] = curColor[ring][i-1];
+      }
+      curColor[ring][0] = curColor[ring][0] = get_random_palette_color();
+    }
+    
+
+    bool explodeRing = false;
+    for(uint8_t iComet = patternTime/NUM_RINGS - 1; iComet >= 0; iComet--) // From highest numbered comet to lowest
+    {
+      // Start up with only comets from bottom
+      if(loop_count < ring + iComet*NUM_RINGS)
+        continue;
+
+      uint8_t comet_location = NUM_RINGS*iComet + ring_offset; // The position of the current comet
+
+      if(comet_location >= HALF_VISIBLE) {
+          explodeRing = true;
+          break; // No need to draw further comets on this ring; they will be overwritten
+      }
+
+
+      leds[ring][comet_location] = CRGB::White;
+      leds[ring][VISIBLE_LEDS_PER_RING-1 - comet_location] = CRGB::White;
+
+      if(comet_location >= 1) {
+        leds[ring][comet_location - 1] = CRGB::White;
+        leds[ring][VISIBLE_LEDS_PER_RING-1 - comet_location + 1] = CRGB::White;
+      }
+      
+      if(comet_location >= 2) {
+        leds[ring][comet_location - 2] = curColor[ring][iComet];
+        leds[ring][VISIBLE_LEDS_PER_RING-1 - comet_location + 2] = curColor[ring][iComet];
+      }
+    }
+    
+    if(explodeRing) {
+      leds[ring] = CRGB::White; //flash white
+    }
+  }
+}
+
+// Variable spin
+// Each ring rotates pattern (maybe just one black block of pixels) at different rates.
+// Goal is to find cool periods that result in several unique alignments forming
+//
+
+// Spinning dots illusion
+// Fixed color (pink), rotate a black pixel through each ring. It will appear green when you stare straight ahead?
+// 
 
 

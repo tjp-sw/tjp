@@ -37,6 +37,14 @@ CRGB get_color(int palette_num, int color_index) {
   }
 }
 
+// rgb2hsv() is slow, if we start using HSV colors more we should switch to HSVs in the palettes
+CHSV get_color_hsv(int palette_num, int color_index) {
+  return rgb2hsv_approximate(get_color(palette_num, color_index));
+}
+
+CRGB get_random_palette_color() {
+  // To do
+}
 
 #ifdef DEBUG
 // For debugging only, writes all saved variables
