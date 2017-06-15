@@ -176,9 +176,9 @@ int current_ring, current_pixel, current_coin_bottom;
 //  Sparkle layer variables
 int sparkle_count = 0;
 CRGB sparkle_color = CRGB::Purple;
-CRGB sparkle[NUM_RINGS][LEDS_PER_RING];  // Sparkle LED layer as a 2D array.
-boolean sparkle_is_set[STRIPS_PER_NODE][LEDS_PER_STRIP];
-boolean increasing[STRIPS_PER_NODE][LEDS_PER_STRIP];
+CRGB sparkle[RINGS_PER_NODE][VISIBLE_LEDS_PER_RING];  // Sparkle LED layer as a 2D array. Currently only enough RAM for # per node. Could change this from CRGB to a byte that indexes into palette.
+boolean sparkle_is_set[RINGS_PER_NODE][VISIBLE_LEDS_PER_RING];
+boolean increasing[RINGS_PER_NODE][VISIBLE_LEDS_PER_RING];
 
 // array of sparkle functions to make it easier to choose one randomly
 //   sparkle_f_ptr sparkle_fn[] = { sparkle_rain() };
@@ -365,12 +365,12 @@ void draw_current_animation() {
 
     case 6:  
       sparkle_count = 0;
-      //sparkle_rain();      // diane
+      sparkle_rain();      // diane
       break;
 
     case 7:
       sparkle_count = 0;
-      //sparkle_glitter();  // diane
+      sparkle_glitter();  // diane
       break;
 
     case 8:

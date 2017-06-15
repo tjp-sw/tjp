@@ -7,7 +7,7 @@ void sparkle_reset() {
   
   for (int ring = 0; ring < RINGS_PER_NODE; ring++) {
     for (int pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
-      leds[ring][pixel] = CRGB::Black;
+      leds_node[ring][pixel] = CRGB::Black;
       sparkle_is_set[ring][pixel] = false;
     }
   }  
@@ -369,21 +369,21 @@ int palette_num = show_parameters[PALETTE_INDEX];
 
         // first color for color_length pixels
         if (pixel % strip_length < color_length) {
-          leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = get_color(palette_num, show_colors[0]);
+          leds_node[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = get_color(palette_num, show_colors[0]);
         }
 
         // second color for color_length pixels
         else if (pixel % strip_length < 2*color_length) {
-            leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = get_color(palette_num, show_colors[1]);
+            leds_node[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = get_color(palette_num, show_colors[1]);
         }
 
         // third color for color_length pixels
         else if (pixel % strip_length < 3*color_length) {
-            leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = get_color(palette_num, show_colors[2]);
+            leds_node[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = get_color(palette_num, show_colors[2]);
         }
         // black color for color_length pixels
         else {
-          leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = CRGB::Black;
+          leds_node[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = CRGB::Black;
         }
       }
     }
