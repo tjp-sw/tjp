@@ -28,6 +28,8 @@ typedef void (*sparkle_f_ptr)();
 #endif                            //
 //--------------------------------//
 
+uint8_t node_number = 255;
+
 // Spectrum Shield -----------------------------------------------------------//
 // Pin connections                                                            //
 #define SS_PIN_STROBE 4                                                       //
@@ -41,7 +43,6 @@ int frequencies_one[NUM_CHANNELS];                                            //
 int frequencies_two[NUM_CHANNELS];                                            //
 int frequencies_max[NUM_CHANNELS];                                            //
                                                                               //
-uint8_t node_number = 255;                                                    //                                                                              
 bool is_beat = false;                                                         //
 uint8_t downbeat_proximity = 0; // Up and down from 0-255 with the beat       //
 uint8_t bpm_estimate = 0;                                                    //

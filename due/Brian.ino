@@ -167,7 +167,7 @@ void frequency_pulse() {
 // Collision
 // Comets fly from base of each ring and collide in center with a flash of white
 // Comets trigger every NUM_RINGS cycles, 1 cycle delayed for each ring. This will result in a single ring of white moving through the structure
-void Collision()
+void collision()
 {
   const uint8_t fadeRate = 48;
   const uint8_t fadeCycles = 6; // How many cycles to fade from white to black after collision; will also be the tail length
@@ -230,12 +230,93 @@ void Collision()
 }
 
 // Variable spin
-// Each ring rotates pattern (maybe just one black block of pixels) at different rates.
+// Each ring rotates pattern (maybe just one block of pixels) at different rates.
 // Goal is to find cool periods that result in several unique alignments forming
 //
+void variable_spin() {
+  // 6 spin rates, centered at the middle of each node, so node edges line up with each other.
+  // First half of node spins one way, second half the other way. Reverse direction on odd numbered nodes so node edges line up.
+  const uint8_t spinRates[6] = { 2, 3, 4, 6, 8, 12 };
+  static uint16_t centerPoints[12] = { HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE,
+                                       HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE };
+
+  for(uint8_t i = 0; i < 6; i++)
+  {
+    if(loop_count % spinRates[i] == 0) {
+      if(centerPoints[i] == 0) centerPoints[i] = VISIBLE_LEDS_PER_RING - 1;
+      else centerPoints[i]--;
+
+      if(centerPoints[11 - i] == VISIBLE_LEDS_PER_RING - 1) centerPoints[11 - i] = 0;
+      else centerPoints[11 - i]++;
+    }
+  }
+
+  leds_node_all = CRGB::Black;
+  for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+    uint16_t centerPoint = centerPoints[ring % 2 == 0 ? ring : 6];
+    
+  }
+}
+
 
 // Spinning dots illusion
 // Fixed color (pink), rotate a black pixel through each ring. It will appear green when you stare straight ahead?
 // 
 
+// My take on the equalizer
+// Inner ring is left audio channel, outer ring is right audio channel
+// Use a global fade to smoothly dim after sudden spikes
+// Center of ring is the lowest band, other 6 bands occupy 2 rings each
+void equalizer3() {
+  const uint8_t centerBandMinWidth = 10; // Keep this value even
+  const uint8_t centerBandMaxWidth = 40; // Keep this value even
+  const uint8_t minHeight = 20;
+  const uint8_t maxHeight = HALF_VISIBLE - centerBandMaxWidth/2;
+  const uint8_t fadeRate = 64;
+
+/*
+  // Moving average stuff
+  const uint8_t windowSize = 4;  
+  static int innerReads[NUM_CHANNELS][windowSize];
+  static int outerReads[NUM_CHANNELS][windowSize];
+*/
+
+  leds_node_all.fadeToBlackBy(fadeRate);
+
+  CHSV centerColor = get_color_hsv(PALETTE_INDEX, 6);
+  if(frequencies_one[6] >= 255) {
+    centerColor.saturation = 0;
+  }
+  else {
+    centerColor.saturation = 255 - frequencies_max[6] / 255;
+  }
+
+  uint8_t centerBandWidth = centerBandMinWidth + (centerBandMaxWidth - centerBandMinWidth) * downbeat_proximity / 255;
+  if(centerBandWidth % 2 == 1)
+    centerBandWidth++;
+  
+  for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++)
+  {
+    uint8_t channel = ring/2;
+    CRGB thisColor = get_color(PALETTE_INDEX, channel);
+    uint8_t innerHeight, outerHeight;
+    if(frequencies_one[channel] >= 255) {
+      innerHeight = maxHeight;
+    }
+    else {
+      innerHeight = minHeight + (maxHeight - minHeight) * frequencies_one[channel] / 255;
+    }
+    
+    if(frequencies_two[ring/2] >= 255) {
+      outerHeight = maxHeight;
+    }
+    else {
+      outerHeight = minHeight + (maxHeight - minHeight) * frequencies_two[channel] / 255;
+    }
+
+    leds_node[ring](0, innerHeight) = thisColor;
+    leds_node[ring](VISIBLE_LEDS_PER_RING - 1, VISIBLE_LEDS_PER_RING - 1 - outerHeight) = thisColor;
+    leds_node[ring](HALF_VISIBLE - 1 - (centerBandWidth-1)/2, HALF_VISIBLE - 1 + centerBandWidth/2) = centerColor;
+  }
+}
 

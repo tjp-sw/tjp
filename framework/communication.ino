@@ -315,7 +315,7 @@ void do_communication()
 // Send this from the Due that has audio (node_number == 0?), up to the Pi, then back out to all of the nodes
 void send_audio_packet()
 {
-  uint8_t audioData[27]; //[42]
+  uint8_t audioData[56];
   audioData[0] = is_beat;
   audioData[1] = downbeat_proximity;
   audioData[2] = bpm_estimate;
@@ -332,12 +332,10 @@ void send_audio_packet()
   for(uint8_t i = 0; i < NUM_CHANNELS; i++) {
     audioData[13 + 2*i] = frequencies_max[i] >> 8;
     audioData[13 + 2*i + 1] = frequencies_max[i] & 0xFF;
-    
-    // These would be nice to have too but aren't really needed
-    //audioData[27 + 2*i] = frequencies_one[i] >> 8;
-    //audioData[27 + 2*i + 1] = frequencies_one[i] & 0xFF;
-    //audioData[41 + 2*i] = frequencies_two[i] >> 8;
-    //audioData[41 + 2*i + 1] = frequencies_two[i] & 0xFF;
+    audioData[27 + 2*i] = frequencies_one[i] >> 8;
+    audioData[27 + 2*i + 1] = frequencies_one[i] & 0xFF;
+    audioData[41 + 2*i] = frequencies_two[i] >> 8;
+    audioData[41 + 2*i + 1] = frequencies_two[i] & 0xFF;
   }
 }
 #endif

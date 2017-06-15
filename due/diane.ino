@@ -364,26 +364,26 @@ int palette_num = show_parameters[PALETTE_INDEX];
 
   // slow down the animation without using delay()
   if (loop_count % 50 == 0) {
-    for (int ring = 0; ring < RINGS_PER_NODE; ring++) {
+    for (int ring = 0; ring < NUM_RINGS; ring++) {
       for (int pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
 
         // first color for color_length pixels
         if (pixel % strip_length < color_length) {
-          leds_node[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = get_color(palette_num, show_colors[0]);
+          leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = get_color(palette_num, show_colors[0]);
         }
 
         // second color for color_length pixels
         else if (pixel % strip_length < 2*color_length) {
-            leds_node[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = get_color(palette_num, show_colors[1]);
+            leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = get_color(palette_num, show_colors[1]);
         }
 
         // third color for color_length pixels
         else if (pixel % strip_length < 3*color_length) {
-            leds_node[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = get_color(palette_num, show_colors[2]);
+            leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = get_color(palette_num, show_colors[2]);
         }
         // black color for color_length pixels
         else {
-          leds_node[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = CRGB::Black;
+          leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = CRGB::Black;
         }
       }
     }

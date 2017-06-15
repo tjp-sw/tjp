@@ -43,6 +43,6 @@ CHSV get_color_hsv(int palette_num, int color_index) {
 }
 
 CRGB get_random_palette_color() {
-  // To do
+  return get_color(PALETTE_INDEX, random8(0, 7));
 }
 

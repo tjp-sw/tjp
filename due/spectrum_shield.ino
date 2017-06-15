@@ -4,6 +4,7 @@
  * Change delta from unsigned long to uint16_t?
  * Test predictionScore as uint16_t; make sure it doesn't ever overflow in the middle of a calculation
  * In set_audio_hooks(): use a rolling index instead of copying all of the arrays each cycle
+ * Do frequencies[] arrays need to be ints? Would be better as uint8_t, scaling or capping if necessary.
  */
 // ----------------------------------------- Peak/Beat detection ----------------------------------------------------
 #define NOISE_REDUCT 40 // Fixed amount to reduce each spectrum shield read by
