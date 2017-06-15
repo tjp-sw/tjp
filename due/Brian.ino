@@ -230,7 +230,7 @@ void collision()
 }
 
 // Variable spin
-// Each ring rotates pattern (maybe just one block of pixels) at different rates.
+// Each ring rotates one block of 3 pixels at different rates.
 // Goal is to find cool periods that result in several unique alignments forming
 //
 void variable_spin() {
@@ -239,9 +239,12 @@ void variable_spin() {
   const uint8_t spinRates[6] = { 2, 3, 4, 6, 8, 12 };
   static uint16_t centerPoints[12] = { HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE,
                                        HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE };
+  CRGB colors[6];
 
   for(uint8_t i = 0; i < 6; i++)
   {
+    colors[i] = get_color(show_parameters[PALETTE_INDEX], i);
+    
     if(loop_count % spinRates[i] == 0) {
       if(centerPoints[i] == 0) centerPoints[i] = VISIBLE_LEDS_PER_RING - 1;
       else centerPoints[i]--;
@@ -253,8 +256,18 @@ void variable_spin() {
 
   leds_node_all = CRGB::Black;
   for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
-    uint16_t centerPoint = centerPoints[ring % 2 == 0 ? ring : 6];
-    
+    uint16_t centerPoint = centerPoints[ring];
+
+    leds_node[ring][centerPoint] = colors[ring < 6 ? ring : 11 - ring];
+    if(centerPoint == 0)
+      leds_node[ring][VISIBLE_LEDS_PER_RING - 1] = colors[ring < 6 ? ring : 11 - ring];
+    else
+      leds_node[ring][centerPoint-1] = colors[ring < 6 ? ring : 11 - ring];
+
+    if(centerPoint == VISIBLE_LEDS_PER_RING - 1)
+      leds_node[ring][0] = colors[ring < 6 ? ring : 11 - ring];
+    else
+      leds_node[ring][centerPoint+1] = colors[ring < 6 ? ring : 11 - ring];
   }
 }
 
@@ -283,7 +296,7 @@ void equalizer3() {
 
   leds_node_all.fadeToBlackBy(fadeRate);
 
-  CHSV centerColor = get_color_hsv(PALETTE_INDEX, 6);
+  CHSV centerColor = get_color_hsv(show_parameters[PALETTE_INDEX], 6);
   if(frequencies_one[6] >= 255) {
     centerColor.saturation = 0;
   }
@@ -298,7 +311,7 @@ void equalizer3() {
   for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++)
   {
     uint8_t channel = ring/2;
-    CRGB thisColor = get_color(PALETTE_INDEX, channel);
+    CRGB thisColor = get_color(show_parameters[PALETTE_INDEX], channel);
     uint8_t innerHeight, outerHeight;
     if(frequencies_one[channel] >= 255) {
       innerHeight = maxHeight;

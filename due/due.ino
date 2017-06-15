@@ -28,7 +28,11 @@ typedef void (*sparkle_f_ptr)();
 #endif                            //
 //--------------------------------//
 
+#ifdef PI_CONTROLLED
 uint8_t node_number = 255;
+#else
+uint8_t node_number = 0; // For testing
+#endif
 
 // Spectrum Shield -----------------------------------------------------------//
 // Pin connections                                                            //
@@ -244,7 +248,7 @@ void loop() {                                                                   
     last_debug_time = now;                                                                //
   #endif                                                                                  //
                                                                                           //
-  //  Select animation, other parameters                                                  //                                                   //
+  //  Select animation, other parameters                                                  //
   update_parameters();                                                                    //
   #ifdef DEBUG_TIMING                                                                     //
     now = millis();                                                                       //
@@ -303,7 +307,7 @@ void update_parameters() {
                                                                                                                //  
       // fixme: doesn't yet have its own parameter, so just working with ones we have                          //
       // need colors 0 or 1 from any palette for sparkle color                                                 // 
-      sparkle_color = get_color(PALETTE_INDEX, (INTRA_RING_MOTION_INDEX + 1) % 2);                             //
+      sparkle_color = get_color(show_parameters[PALETTE_INDEX], (INTRA_RING_MOTION_INDEX + 1) % 2);                             //
     #endif 
 }
 
