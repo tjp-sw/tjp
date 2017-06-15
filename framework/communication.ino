@@ -67,7 +67,7 @@ void delay_next_network_connection(uint8_t seconds)
 }
 #endif // I_AM_MEGA
 
-void setup()
+void setup_communication()
 {
   serial0_is_enabled = false;	// change to true for debugging
   if (serial0_is_enabled) {
@@ -298,7 +298,7 @@ void do_heartbeat()
   }
 }
 
-void loop()
+void do_communication()
 {
   loop_start_time_msec = millis();
 #ifdef I_AM_MEGA
