@@ -128,7 +128,7 @@ void set_peak_history() {
       if(read_history[i][PEAK_WINDOW_SIZE/2] > PEAK_AVG_FACTOR*average + PEAK_HURDLE_SIZE
       && read_history[i][2] >= read_history[i][0] && read_history[i][2] >= read_history[i][1]
       && read_history[i][2] >= read_history[i][3] && read_history[i][2] >= read_history[i][4])
-    #else if PEAK_WINDOW_SIZE == 7
+    #elif PEAK_WINDOW_SIZE == 7
       uint16_t average = (read_history[i][0] + read_history[i][1] + read_history[i][2] + read_history[i][4] + read_history[i][5] + read_history[i][6]) / 6;
       if(read_history[i][PEAK_WINDOW_SIZE/2] > PEAK_AVG_FACTOR*average + PEAK_HURDLE_SIZE
       && read_history[i][3] >= read_history[i][0] && read_history[i][3] >= read_history[i][1]
