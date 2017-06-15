@@ -1,8 +1,58 @@
-// fixme: generalize for: more colors? different lengths of fade snakes, different offsets
+
+// future enhancements: generalize for more colors? different offsets?
+void toms_best()
+{
+  // an attempt to use the parameter values to choose thickness automatically. could pass this into the function if that's better.
+  int thick = show_parameters[COLOR_THICKNESS_INDEX] * 2;
+  int color_choice = random(show_parameters[NUM_COLORS_INDEX]);
+  CRGB in = show_colors[color_choice];
+  
+  CHSV color = rgb2hsv(in);
+  double brightness = color.v;
+  word half = thick/2; //15
+  //word dim = 255/half; //17
+  double dim = brightness/half; //17
+  word i, j, x;
+  //word brightness = 255;
+  word count = loop_count%420;
+  for (i = 0; i <4; i++) // ring count
+  {
+    for (j = 0; j < (420/thick); j++) //will populate the entire ring
+    {
+      for (x = 0; x < thick; x++) //dimming and brightening
+      {
+        word inc = 0;
+        if (x < thick/2)
+        {
+          //word index = (count +x+j +(j*thick))%420;
+          //leds[i][(count+x+j +(j*thick))%420] = CHSV(225,255,brightness);
+          leds[i][(count+x+j +(j*thick))%420] = CHSV(color.h, color.s, color.v);
+          //brightness = brightness - dim;
+          color.v = color.v - dim;          
+        }
+        else
+        {
+          //leds[i][(count+x+j +(j*thick))%420] = CHSV(225,255,brightness);
+          leds[i][(count+x+j +(j*thick))%420] = color;
+          //brightness = brightness + dim;
+          color.v = color.v + dim;
+        }
+        
+      }
+      
+    }
+    
+  }
+ // delay(1);
+}
+
+
+
+
 // fixme: should change from taking a word between 0 and 255 to using a CRGB, because that's
 //        how we're going to be given the chosen colors
 
-void toms_best()
+void toms_best_old()
 {
   word count = loop_count%420;
   word i, j;
