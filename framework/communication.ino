@@ -23,7 +23,9 @@ EthernetClient remote;
 #endif // I_AM_DUE
 
 bool serial0_is_enabled;	// cannot detect at run time
-uint8_t node_number;
+#ifdef I_AM_MEGA
+uint8_t node_number; // Moved to due.ino on Due
+#endif
 uint8_t led_state;
 uint8_t led_program;
 unsigned long loop_start_time_msec;

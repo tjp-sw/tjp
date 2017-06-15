@@ -13,11 +13,8 @@ typedef void (*sparkle_f_ptr)();
 //#define DEBUG_AUDIO_HOOKS                                 //
                                                             //
 // Timing settings                                          //
-#define REFRESH_TIME 50 // Max 20 frames per second         //
+#define REFRESH_TIME 60 // 16.67 frames per second          //
 #define ANIMATION_TIME 30000 // 30 seconds per animation    //
-                                                            //
-// Node-specific                                            //
-#define NODE_ID 0 // Change in code running on each node    //
                                                             //
 // Due controlled versus pi controlled animation choices    //
 //#define PI_CONTROLLED                                     //
@@ -44,6 +41,7 @@ int frequencies_one[NUM_CHANNELS];                                            //
 int frequencies_two[NUM_CHANNELS];                                            //
 int frequencies_max[NUM_CHANNELS];                                            //
                                                                               //
+uint8_t node_number = 255;                                                    //                                                                              
 bool is_beat = false;                                                         //
 uint8_t downbeat_proximity = 0; // Up and down from 0-255 with the beat       //
 uint16_t bpm_estimate = 0;                                                    //
@@ -62,9 +60,9 @@ uint8_t high_band_emphasis = 0; // 0 or 1                                     //
 // LEDs ----------------------------------------------------------------------//
 // Physical constants                                                         //
 #define NUM_NODES 3                                                           //
-#define RINGS_PER_NODE 4 // This is set up to be 1 strip/ring                 //
+#define RINGS_PER_NODE 12                                                     //
 #define STRIPS_PER_NODE 4                                                     //
-#define LEDS_PER_STRIP 420                                                    //
+#define LEDS_PER_STRIP 1260                                                   //
 #define VISIBLE_LEDS_PER_RING 408                                             //
                                                                               //
 #define LEDS_PER_NODE (LEDS_PER_STRIP * STRIPS_PER_NODE)                      //
@@ -75,22 +73,30 @@ uint8_t high_band_emphasis = 0; // 0 or 1                                     //
 #define HALF_VISIBLE (VISIBLE_LEDS_PER_RING/2)                                //
                                                                               //
 // Globals                                                                    //
-bool new_animation_triggered;                                                 //
+bool new_animation_triggered = false;                                         //
 uint8_t current_animation = 0;                                                //
 uint32_t loop_count = 0;                                                      //
-unsigned long current_time=0, animation_saved_time=0, refresh_saved_time=0;   //
+unsigned long current_time=0, animation_start_time=0;                         //
                                                                               //
 // LED actual data                                                            //
 CRGB leds_raw[NUM_RINGS][LEDS_PER_RING];                                      //
                                                                               //
 // Alternative references to LED data; allows for ranged indexing             //
 CRGBSet leds_all(*leds_raw, NUM_LEDS);                                        //
-CRGBSet leds_node_all(leds_raw[NODE_ID * RINGS_PER_NODE], LEDS_PER_NODE);     //
+CRGBSet leds_node_all(leds_raw[node_number * RINGS_PER_NODE], LEDS_PER_NODE); //
 CRGBSet leds_node[RINGS_PER_NODE] = {                                         //
-  CRGBSet(leds_raw[NODE_ID*RINGS_PER_NODE], LEDS_PER_RING),                   //
-  CRGBSet(leds_raw[NODE_ID*RINGS_PER_NODE+1], LEDS_PER_RING),                 //
-  CRGBSet(leds_raw[NODE_ID*RINGS_PER_NODE+2], LEDS_PER_RING),                 //
-  CRGBSet(leds_raw[NODE_ID*RINGS_PER_NODE+3], LEDS_PER_RING)                  //
+  CRGBSet(leds_raw[node_number*RINGS_PER_NODE], LEDS_PER_RING),               //
+  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+1], LEDS_PER_RING),             //
+  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+2], LEDS_PER_RING),             //
+  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+3], LEDS_PER_RING),             //
+  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+4], LEDS_PER_RING),             //
+  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+5], LEDS_PER_RING),             //
+  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+6], LEDS_PER_RING),             //
+  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+7], LEDS_PER_RING),             //
+  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+8], LEDS_PER_RING),             //
+  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+9], LEDS_PER_RING),             //
+  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+10], LEDS_PER_RING),            //
+  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+11], LEDS_PER_RING)             //
 };                                                                            //
                                                                               //
 CRGBSet leds[NUM_RINGS] = {                                                   //
@@ -99,12 +105,24 @@ CRGBSet leds[NUM_RINGS] = {                                                   //
   CRGBSet(leds_raw[4], LEDS_PER_RING), CRGBSet(leds_raw[5], LEDS_PER_RING),   //
   CRGBSet(leds_raw[6], LEDS_PER_RING), CRGBSet(leds_raw[7], LEDS_PER_RING),   //
   CRGBSet(leds_raw[8], LEDS_PER_RING), CRGBSet(leds_raw[9], LEDS_PER_RING),   //
-  CRGBSet(leds_raw[10], LEDS_PER_RING), CRGBSet(leds_raw[11], LEDS_PER_RING)  //
+  CRGBSet(leds_raw[10], LEDS_PER_RING), CRGBSet(leds_raw[11], LEDS_PER_RING), //
+  CRGBSet(leds_raw[12], LEDS_PER_RING), CRGBSet(leds_raw[13], LEDS_PER_RING), //
+  CRGBSet(leds_raw[14], LEDS_PER_RING), CRGBSet(leds_raw[15], LEDS_PER_RING), //
+  CRGBSet(leds_raw[16], LEDS_PER_RING), CRGBSet(leds_raw[17], LEDS_PER_RING), //
+  CRGBSet(leds_raw[18], LEDS_PER_RING), CRGBSet(leds_raw[19], LEDS_PER_RING), //
+  CRGBSet(leds_raw[20], LEDS_PER_RING), CRGBSet(leds_raw[21], LEDS_PER_RING), //
+  CRGBSet(leds_raw[22], LEDS_PER_RING), CRGBSet(leds_raw[23], LEDS_PER_RING), //
+  CRGBSet(leds_raw[24], LEDS_PER_RING), CRGBSet(leds_raw[25], LEDS_PER_RING), //
+  CRGBSet(leds_raw[26], LEDS_PER_RING), CRGBSet(leds_raw[27], LEDS_PER_RING), //
+  CRGBSet(leds_raw[28], LEDS_PER_RING), CRGBSet(leds_raw[29], LEDS_PER_RING), //
+  CRGBSet(leds_raw[30], LEDS_PER_RING), CRGBSet(leds_raw[31], LEDS_PER_RING), //
+  CRGBSet(leds_raw[32], LEDS_PER_RING), CRGBSet(leds_raw[33], LEDS_PER_RING), //
+  CRGBSet(leds_raw[34], LEDS_PER_RING), CRGBSet(leds_raw[35], LEDS_PER_RING)  //
 };                                                                            //
 //----------------------------------------------------------------------------//
     
 //  Show parameters coming from the pi -----------------------------------------------------//
-#define NUM_PARAMETERS 10                                                                    //
+#define NUM_PARAMETERS 10                                                                   //
 #define NUM_COLORS_PER_PALETTE 3                                                            //
 #define NUM_ANIMATIONS 13                                                                   //
                                                                                             //
@@ -143,7 +161,7 @@ CRGB watermelon[9] =
     CRGB(120,86,103), CRGB(14,139,0)};                 // dark
 
 CRGB fruit_loop[9] = 
-{CRGB(255,247,0), CRGB(255,127,14),                   // light
+   {CRGB(255,247,0), CRGB(255,127,14),                   // light
     CRGB(188,0,208), CRGB(255,65,65), CRGB(255,73,0),     //  medium
     CRGB(178,6,88), CRGB(162,80,204)};                // dark
 
@@ -184,6 +202,13 @@ void setup() {                                                                  
     Serial.flush();                                                                                         //
   #endif                                                                                                    //
                                                                                                             //
+  setup_spectrum_shield();                                                                                  //
+                                                                                                            //
+  show_parameters[ANIMATION_INDEX] = 0; // Initialize to debugging mode                                     //
+                                                                                                            //
+  // Initialize digital pin LED_BUILTIN as an output                                                        //
+  pinMode(LED_BUILTIN, OUTPUT);                                                                             //
+                                                                                                            //
   // Setup LED output ports.                                                                                //
   // This needs to be declared as 8 strips even though we only use 4                                        //
   LEDS.addLeds<WS2811_PORTD, 8>(leds_node_all, LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);              //
@@ -208,6 +233,7 @@ void loop() {                                                                   
   if(now - current_time < REFRESH_TIME)                                                   //
     FastLED.delay(now - current_time);                                                    //
   current_time = now;                                                                     //
+  loop_count = (current_time - animation_start_time) / REFRESH_TIME;                      //
                                                                                           //
   // read spectrum shield and do beat detection                                           //
   loop_spectrum_shield();                                                                 //
@@ -217,7 +243,7 @@ void loop() {                                                                   
     last_debug_time = now;                                                                //
   #endif                                                                                  //
                                                                                           //
-  //  Select animation, other parameters                                                  //
+  //  Select animation, other parameters                                                  //                                                   //
   update_parameters();                                                                    //
   #ifdef DEBUG_TIMING                                                                     //
     now = millis();                                                                       //
@@ -242,8 +268,6 @@ void loop() {                                                                   
   #ifdef DEBUG                                                                            //
     write_to_serial();                                                                    //
   #endif                                                                                  //
-                                                                                          //
-  loop_count++;                                                                           //
 }                                                                                         //
 //----------------------------------------------------------------------------------------//
 
@@ -288,14 +312,14 @@ void cycle_through_animations() {
   //  If an animation has played long enough randomly choose another animation. 
   
   //  Use this global to: SS_PIN_RESET anything that has to do with an animation.
-  new_animation_triggered = current_time - animation_saved_time >= ANIMATION_TIME;
+  new_animation_triggered = current_time - animation_start_time >= ANIMATION_TIME;
 
   if (new_animation_triggered)
   {
-    animation_saved_time = current_time;
+    animation_start_time = current_time;
     loop_count = 0;
     
-    // current_animation = random8(0, 4);  // current_animation is a random number from 0 to (2nd number - 1)
+    // current_animation = random8(0, NUM_ANIMATIONS);  // current_animation is a random number from 0 to (NUM_ANIMATIONS - 1)
     current_animation = ++current_animation % NUM_ANIMATIONS;
 
     #ifdef DEBUG
@@ -311,52 +335,50 @@ void draw_current_animation() {
 
   current_animation = show_parameters[ANIMATION_INDEX];
   
-  //  If pixel refresh time has expired update the LED pattern
-  if (current_time - refresh_saved_time > REFRESH_TIME)
-  {
-    refresh_saved_time = current_time;
-  
-    // This is where you would add a new animation.
-    switch (current_animation)  {   
-      case 0:
-        toms_best(); // erick
-        break;
-  
-      case 1:
-        Fire(); // brian
-        break;
-        
-      case 3:
-        snake();  // diane
-        break; 
+  // This is where you would add a new animation.
+  switch (current_animation)  {   
+    case 0:
+      draw_debug_mode(); // debugging; This should stay as the default animation for setup purposes
+      break;
 
-      case 4:
-        // has the 7 color bands, but doesn't scale with intensity from spectrum shield yet bc
-        // alex couldn't figure out how yet
-        equalizer();  // alex
-        break; 
+    case 1:
+      toms_best(); // erick
+      break;
 
-       case 5:
-          basicGradient(); // alex
-          break;
+    case 2:
+      Fire(); // brian
+      break;
+      
+    case 3:
+      snake();  // diane
+      break; 
 
-      case 6:  
-        sparkle_count = 0;
-        sparkle_rain();      // diane
-        break;
+    case 4:
+      // has the 7 color bands, but doesn't scale with intensity from spectrum shield yet bc
+      // alex couldn't figure out how yet
+      equalizer();  // alex
+      break; 
 
-      case 7:
-        sparkle_count = 0;
-        sparkle_glitter();  // diane
-        break;
+    case 5:
+      basicGradient(); // alex
+      break;
 
-      case 8:
-        frequency_pulse(); // brian
-        break;
-        
-      default:
-        run_dot();
-    }
+    case 6:  
+      sparkle_count = 0;
+      //sparkle_rain();      // diane
+      break;
+
+    case 7:
+      sparkle_count = 0;
+      //sparkle_glitter();  // diane
+      break;
+
+    case 8:
+      frequency_pulse(); // brian
+      break;
+
+    default:
+      draw_debug_mode(); // debugging; This should stay as the default animation for setup purposes
   }
 }
 

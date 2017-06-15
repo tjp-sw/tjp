@@ -112,7 +112,7 @@ CRGB GetHeatColor(uint8_t temperature) {
 
 void frequency_pulse() {
   uint8_t white_ring = RINGS_PER_NODE * downbeat_proximity / 255;
-  if(NODE_ID % 2 == 1)
+  if(node_number % 2 == 1)
     white_ring = RINGS_PER_NODE - 1 - white_ring;
 
   
@@ -176,7 +176,7 @@ void Collision()
   static CRGB curColor[NUM_RINGS][patternTime/NUM_RINGS];  // colors of the current comets
 
   leds_node_all.fadeToBlackBy(fadeRate);
-  for(uint8_t ring = NODE_ID * RINGS_PER_NODE; ring < (NODE_ID + 1) * RINGS_PER_NODE; ring++)
+  for(uint8_t ring = node_number * RINGS_PER_NODE; ring < (node_number + 1) * RINGS_PER_NODE; ring++)
   {
     // Start up with only comets from bottom
     if(loop_count < ring)

@@ -2,7 +2,7 @@ int ring_id = 0;
 int spacing = LEDS_PER_STRIP/7;
 
 
-void equalizer(){
+void equalizer2(){
   //ring_id +=1;
   //ring_id %= 8;//
   ring_id = random(0,7);
