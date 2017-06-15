@@ -315,7 +315,7 @@ void do_communication()
 // Send this from the Due that has audio (node_number == 0?), up to the Pi, then back out to all of the nodes
 void send_audio_packet()
 {
-  uint8_t audioData[56];
+  uint8_t audioData[55];
   audioData[0] = is_beat;
   audioData[1] = downbeat_proximity;
   audioData[2] = bpm_estimate;
