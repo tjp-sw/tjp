@@ -47,6 +47,69 @@ void toms_best()
 }
 
 
+// doesn't get the color exactly right, but Erick is working on it.
+CHSV rgb2hsv(CRGB in)
+{
+  CHSV out;
+  double mini, maxi, delta;
+
+  mini = in.r < in.g ? in.r: in.g;
+  mini = mini < in.b ? mini : in.b;
+
+  maxi = in.r > in.g ? in.r: in.g;
+  maxi = maxi > in.b ? maxi : in.b;
+
+  out.v = maxi;
+  delta = maxi - mini;
+  if (delta < 0.00001)
+  {
+    out.s = 0;
+    out.h = 0;
+    out.h = out.h/1.41176471;
+    out.s = out.s * 255;
+    return out;
+  }
+  if (maxi > 0.0)
+  {
+    out.s = (delta/maxi);
+    out.s = out.s * 255;
+  }
+  else
+  {
+    out.s = 0.0;
+    out.s = out.s * 255;
+    return out;
+  }
+  if (in.r >= maxi)
+  {
+    out.h = (in.g - in.b)/delta;
+    
+  }
+  if (in.g >= maxi)
+  {
+    out.h = 2.0 + (in.b - in.r)/delta;
+  }
+  else
+  {
+    out.h = 4.0 + (in.r-in.g)/delta;
+  }
+  out.h *= 60.0;
+
+  if(out.h < 0.0)
+  {
+    out.h += 360.0;
+  }
+  out.h = out.h/1.41176471;
+  return out;
+  
+}
+
+
+
+
+// fixme: should change from taking a word between 0 and 255 to using a CRGB, because that's
+//        how we're going to be given the chosen colors
+
 
 
 // fixme: should change from taking a word between 0 and 255 to using a CRGB, because that's

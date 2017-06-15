@@ -21,8 +21,20 @@ void sparkle_reset() {
 void sparkle_rain() {
 
   int ring, pixel;
-  int portion = 30; // 1/portion of the structure will be covered in rain
-   
+  
+  // enforce reasonable bounds for rain, 2 <= show_parameters[COLOR_THICKNESS_INDEX] <= 8
+  // fixme: for use as sparkle layer, would want to tamp this down significantly, maybe to 3 or 4
+  if (show_parameters[COLOR_THICKNESS_INDEX] > 8) {
+    show_parameters[COLOR_THICKNESS_INDEX] = 8;
+  }
+  if (show_parameters[COLOR_THICKNESS_INDEX] < 2) {
+    show_parameters[COLOR_THICKNESS_INDEX] = 2;
+  }
+
+  // the higher portion is, the fewer raindrops are formed
+  // 3200 is barely trickle; 1600 sprinkle; 400 rain,  100 heavy rain;  50 deluge; 
+  int portion = 50 * pow(2, (8 - show_parameters[COLOR_THICKNESS_INDEX])); 
+  
   int offset = 40;
   int left_ring_top = HALF_VISIBLE - offset;
   int right_ring_top = HALF_VISIBLE + offset;
@@ -33,7 +45,7 @@ void sparkle_rain() {
   }
 
   // create new raindrops every "portion" cycles; may need to change this constant
-  if (sparkle_count % portion == 0) {
+  if (sparkle_count % (portion) == 0) {
     for (ring = 0; ring < RINGS_PER_NODE; ring++) {
       for (pixel = left_ring_top; pixel < right_ring_top; pixel++) {
         if (random(portion) == 0) {
@@ -79,6 +91,34 @@ void sparkle_rain() {
   overlay();
 }
 
+//---------------------------------- SPARKLE GLITTER ---------------------------
+//  Creates sparkles of glitter randomly all over the structure 
+//
+//  1/portion of the leds should be lit
+
+void sparkle_glitter() {
+
+  int portion = 30; // 1/portion of the structure will be covered in glitter
+
+  sparkle_color =  CRGB::LightYellow; //show_colors[0];
+
+  // if this is the first frame for this sparkle animation, black out old sparkle leds,
+  // then choose random pixels to race around structure
+
+  sparkle_reset();
+
+  for (int ring = 0; ring < RINGS_PER_NODE; ring++) {
+    for (int pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+      if (random(portion) == 0) {
+        sparkle_is_set[ring][pixel] = true;
+        sparkle[ring][pixel] = sparkle_color; // turn on 1/portion of the leds as stars
+      }
+    }
+  }
+  sparkle_count++;
+  overlay();
+}
+
 
 //---------------------------------- SPARKLE 3 CIRCLES ---------------------------
 // Highlights the 3 most prominent circles on the torus
@@ -87,7 +127,7 @@ void sparkle_rain() {
 // fixme: allow speed to change as parameter
 // fixme: add 3rd circle
 
-void sparkle_3_circles() {
+/* void sparkle_3_circles() {
 
   int ring, pixel;
 
@@ -103,6 +143,9 @@ void sparkle_3_circles() {
      current_ring = random(NUM_RINGS); 
      current_pixel = random(VISIBLE_LEDS_PER_RING);
      current_coin_bottom = random(NUM_RINGS);
+
+     Serial.println(current_ring);
+     Serial.println(current_pixel);
     }
 
     // black out previous sparkle
@@ -125,15 +168,15 @@ void sparkle_3_circles() {
 
   // third circle has a slope of 3
   // work around ring simultaneously from both sides
-  for (ring = 0; ring < NUM_RINGS / 2; ring++) {
-    for (pixel = 0; pixel < HALF_VISIBLE; pixel += 3) {
-      sparkle[(ring + current_coin_bottom) % NUM_RINGS][pixel] = sparkle_color;
-      sparkle_is_set[(ring + current_coin_bottom) % NUM_RINGS][pixel] = true;
+ // for (ring = 0; ring < NUM_RINGS / 2; ring++) {
+ //   for (pixel = 0; pixel < HALF_VISIBLE; pixel += 3) {
+ //     sparkle[(ring + current_coin_bottom) % NUM_RINGS][pixel] = sparkle_color;
+ //     sparkle_is_set[(ring + current_coin_bottom) % NUM_RINGS][pixel] = true;
       
-      sparkle[NUM_RINGS - (ring + current_coin_bottom) % NUM_RINGS][pixel] = sparkle_color;
-      sparkle_is_set[NUM_RINGS - (ring + current_coin_bottom) % NUM_RINGS][pixel] = true;
-    }
-  }
+ //     sparkle[NUM_RINGS - (ring + current_coin_bottom) % NUM_RINGS][pixel] = sparkle_color;
+ //     sparkle_is_set[NUM_RINGS - (ring + current_coin_bottom) % NUM_RINGS][pixel] = true;
+ //   }
+ // }
 
   // move each circle start over one unit
   if (sparkle_count % 50 == 0) {
@@ -145,19 +188,92 @@ void sparkle_3_circles() {
   sparkle_count++;
   overlay();
 }
+*/
+
+
+// Sparkle_twinkle
+//
+// Doesn't work yet
+// Chooses random location for stars, with random starting intensities, 
+// and then randomly and continuously increases or decreases their intensity over time
+
+/*
+ * 
+ *void sparkle_twinkle(){
+
+  int max_twinkle_intensity = 255; 
+  int min_twinkle_intensity = 10; 
+  int portion = 5; // then stars will appear on approx 1/5 of the leds
+  int brightness;
+
+  // if this is the first time through this sparkle, clear the sparkles, 
+  // and choose places and relative intensities for stars
+  if (sparkle_count == 0) {
+    sparkle_reset();
+
+    for (int ring = 0; ring < RINGS_PER_NODE; ring++) {
+      for (int pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+        if (random(portion) == 0) {
+          is_set[strip][pixel] = true;
+
+          // intensity[ring][pixel] = random(MIN_SPARKLE_INTENSITY, MAX_SPARKLE_INTENSITY);
+          brightness = random(0, (int) max_intensity_scalar(sparkle_color) * 100);
+          sparkle[ring][pixel] = scale_color(sparkle_color, start_brightness);  // turn on 1/5 of the leds as stars
+
+          increasing[ring][pixel] = (random(2) == 1);  // randomly choose to increase or decrease intensity
+        }
+      }
+    }
+
+    for (int ring = 0; ring < NUM_RINGS; ring++) {
+        for (int pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+
+            // only change intensity if pixel is chosen as star
+            if (is_set[ring][pixel]) {
+   
+                if (increasing[ring][pixel]) {
+                    if ((current_intensity(sparkle[ring][pixel]) * 1.1) >= max_twinkle_intensity) {
+                        increasing[ring][pixel] = false;
+                    }
+                    else {
+                        sparkle[ring][pixel].red *= 1.1;
+                        sparkle[ring][pixel].blue *= 1.1;
+                        sparkle[ring][pixel].green *= 1.1; 
+                   }
+                }
+
+                else  { // decreasing
+                    if ((current_intensity(sparkle[ring][pixel]) * .9) <= min_twinkle_intensity) {
+                        increasing[ring][pixel] = true;
+                    }
+                    else {
+                       sparkle[ring][pixel].red *= .9;
+                       sparkle[ring][pixel].blue *= .9;
+                       sparkle[ring][pixel].green *= .9; 
+                    }
+                } // end else decreasing
+
+            } // end if pixel chosen as star
+        }
+    }
+}
+*/
 
 
 
 //---------------------------------- SPARKLE WARP SPEED ---------------------------
+//  In progress
 //  Sends sparkles racing around horizontally from ring to ring
 //  When someone is inside it is intended to look like flying through space or that old cheesy 
 //  animation when star trek goes to "warp speed"  
 //
 //  1/portion of the leds should be lit
 
-void sparkle_warp_speed() {
+/*
+ * 
+  void sparkle_warp_speed() {
 
-  int ring, pixel, i;
+  int ring, pixel;
   int portion = 30; // 1/portion of the structure will be covered in stars
   int ring0[VISIBLE_LEDS_PER_RING];
   boolean ring0_is_set[VISIBLE_LEDS_PER_RING];
@@ -176,45 +292,51 @@ void sparkle_warp_speed() {
           sparkle[ring][pixel] = sparkle_color; // turn on 1/portion of the leds as stars
         }
       }
-     }
+    }
   }
 
   // push existing sparkles backwards one ring
   // add temp array to avoid over-write
   // slow down the motion
-  else if (loop_count % 10 == 0) {
+//  else if (loop_count % 10 == 0) {
     
-    // save ring 0 info so it doesn't get overwritten
-    for (i = 0; i < VISIBLE_LEDS_PER_RING; i++) {
-      ring0[i] = sparkle[0][i];
-      ring0_is_set[i] = sparkle_is_set[0][i];
-    }
-
-    // shift all pixels backwards one ring
-    for (ring = 1; ring <= RINGS_PER_NODE ; ring++) {
-      for (pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
-        if (sparkle_is_set[ring][pixel]) {
-          
-          // light sparkle up at next ring
-          sparkle[ring - 1][pixel] = sparkle_color;
-          sparkle_is_set[ring - 1][pixel] = true;
-
-          // turn off sparkle at this ring
-          sparkle[ring][pixel] = CRGB::Black; 
-          sparkle_is_set[ring][pixel] = false;
-         }
-      }
-    }
-    
-    // move ring0 info to last ring
-    for (i = 0; i < VISIBLE_LEDS_PER_RING; i++) {
-      sparkle[RINGS_PER_NODE - 1][i] = ring0[i];
-      sparkle_is_set[RINGS_PER_NODE - 1][i] = ring0_is_set[i];
+  // save ring 0 info so it doesn't get overwritten
+  for (pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+    if (sparkle_is_set[0][pixel]) {
+      ring0[pixel] = sparkle[0][pixel];
+      ring0_is_set[pixel] = sparkle_is_set[0][pixel];
     }
   }
+
+  // shift all pixels backwards one ring
+  for (ring = 1; ring <= RINGS_PER_NODE ; ring++) {
+    for (pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+      if (sparkle_is_set[ring][pixel]) {
+          
+        // light sparkle up at next ring
+        sparkle[ring - 1][pixel] = sparkle_color;
+        sparkle_is_set[ring - 1][pixel] = true;
+
+        // turn off sparkle at this ring
+        sparkle[ring][pixel] = CRGB::Black; 
+        sparkle_is_set[ring][pixel] = false;
+      }
+    }
+  }
+    
+  // move ring0 info to last ring
+  for (pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+    if (sparkle_is_set[3][pixel]) {
+      sparkle[3][pixel] = ring0[pixel];
+      sparkle_is_set[RINGS_PER_NODE - 1][pixel] = ring0_is_set[pixel];
+    }
+  }
+
   sparkle_count++;
   overlay();
+  delay(1000);
 }
+*/
 
 
 //  Sends alternating bands of colors rotating around the rings
