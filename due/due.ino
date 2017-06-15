@@ -104,7 +104,7 @@ CRGBSet leds[NUM_RINGS] = {                                                   //
 //----------------------------------------------------------------------------//
     
 //  Show parameters coming from the pi -----------------------------------------------------//
-#define NUM_PARAMETERS 9                                                                    //
+#define NUM_PARAMETERS 10                                                                    //
 #define NUM_COLORS_PER_PALETTE 3                                                            //
 #define NUM_ANIMATIONS 13                                                                   //
                                                                                             //
@@ -319,7 +319,7 @@ void draw_current_animation() {
     // This is where you would add a new animation.
     switch (current_animation)  {   
       case 0:
-        toms_best();
+        toms_best(); // erick
         break;
   
       case 1:
@@ -331,42 +331,29 @@ void draw_current_animation() {
         break; 
 
       case 4:
-        run_dot();
-        // equalizer();
-        break; 
-        
-      case 5:
-        run_dot();
+        // has the 7 color bands, but doesn't scale with intensity from spectrum shield yet bc
+        // alex couldn't figure out how yet
+        equalizer();  // alex
         break; 
 
-       case 7:
-          // fixme: make these last 2 parameters more generic
-          basicGradient(/* show_colors[0], show_colors[1], 2, 4 */);
+       case 5:
+          basicGradient(); // alex
           break;
 
-      case 8:
-        run_dot();
-        // snake_to_bow();
-        break; 
-
-      case 9:  
+      case 6:  
         sparkle_count = 0;
         sparkle_rain();      // diane
         break;
 
-      case 10:
+      case 7:
         sparkle_count = 0;
-        sparkle_3_circles();  // diane
+        sparkle_glitter();  // diane
         break;
 
-      case 11:
-        sparkle_count = 0;
-        sparkle_warp_speed();  // diane
-        break;
-
-      case 12:
+      case 8:
         frequency_pulse(); // brian
         break;
+        
       default:
         run_dot();
     }
