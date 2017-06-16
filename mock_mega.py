@@ -24,7 +24,14 @@ def process_commands():
         print 'mega', mega_number, 'looking at', repr(network_data)
         size = 1
         command = network_data[0:1]
-        if command == 'n' or command == 'p':
+        if command == 'b':
+            size += 54
+            if len(network_data) >= size:
+                print 'beat:', repr(network_data)
+            else:
+                print 'command', command, 'needs', size, 'bytes but only', len(network_data), 'available'
+                break
+        elif command == 'n' or command == 'p':
             size += 1	# unsigned 8-bit integer
 
             if len(network_data) >= size:
@@ -60,6 +67,7 @@ def process_commands():
                 break
         else:
             print 'mega', mega_number, 'received unknown command', repr(command)
+            remote.sendall('beat, beat, we got the beat yeah we got the beat friend')
         network_data = network_data[size:]
 
 def setup():

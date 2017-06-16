@@ -34,7 +34,7 @@ def do_quit(ignored, neglected):
 def do_send(socket, message):
     global message_queues, writing
     # print 'sending', repr(message)
-    if socket:
+    if socket and socket != 'send':
         list = [socket]
     else:
         list = message_queues
@@ -162,7 +162,11 @@ while running:
                     print sys.exc_value
                     message = None
                 if message:
-                    if message[0:1] == 'm':
+                    if message[0:1] == 'b':
+                        if len(message) == 55:
+                            do_send(None, message)	# relay to all nodes
+                            print 'beat', repr(message), 'from', remote_name[s]
+                    elif message[0:1] == 'm':
                         mega_number = ord(message[1:2])
                         try:
                             node_number = mega_to_node_map[mega_number]
