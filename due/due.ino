@@ -233,18 +233,18 @@ void loop() {                                                                   
     return;                                                                               //
   #endif                                                                                  //
                                                                                           //
-  //  Using REFRESH_TIME will slow animations, but will be more accurate to final product //
-  unsigned long now = millis();                                                           //
-  if(now - current_time < REFRESH_TIME)                                                   //
-    FastLED.delay(now - current_time);                                                    //
-  current_time = now;                                                                     //
+  current_time = millis();                                                                //
   loop_count = (current_time - animation_start_time) / REFRESH_TIME;                      //
+  #ifdef DEBUG_TIMING                                                                     //
+    serial_val[0] = current_time - last_debug_time;                                       //
+    last_debug_time = current_time;                                                       //
+  #endif                                                                                  //
                                                                                           //
-  // read spectrum shield and do beat detection                                           //
+// read spectrum shield and do beat detection                                             //
   loop_spectrum_shield();                                                                 //
   #ifdef DEBUG_TIMING                                                                     //
-    now = millis();                                                                       //
-    serial_val[0] = now - current_time;                                                   //
+    unsigned long now = millis();                                                         //
+    serial_val[1] = now - last_debug_time;                                                //
     last_debug_time = now;                                                                //
   #endif                                                                                  //
                                                                                           //
@@ -252,27 +252,42 @@ void loop() {                                                                   
   update_parameters();                                                                    //
   #ifdef DEBUG_TIMING                                                                     //
     now = millis();                                                                       //
-    serial_val[1] = now - last_debug_time;                                                //
+    serial_val[2] = now - last_debug_time;                                                //
     last_debug_time = now;                                                                //
   #endif                                                                                  //
                                                                                           //
   //  Draw animation                                                                      //
   draw_current_animation();                                                               //
-                                                                                          //
-  // Write LEDs                                                                           //
-  LEDS.show();                                                                            //
   #ifdef DEBUG_TIMING                                                                     //
-    unsigned long now = millis();                                                         //
+    now = millis();                                                                       //
     serial_val[3] = now - last_debug_time;                                                //
     last_debug_time = now;                                                                //
   #endif                                                                                  //
                                                                                           //
-  do_communication();                                                                     //
+  // Write LEDs                                                                           //
+  LEDS.show();                                                                            //
+  #ifdef DEBUG_TIMING                                                                     //
+    now = millis();                                                                       //
+    serial_val[4] = now - last_debug_time;                                                //
+    last_debug_time = now;                                                                //
+  #endif                                                                                  //
+                                                                                          //
+  do_communication();                                                                   //
+  #ifdef DEBUG_TIMING                                                                     //
+    now = millis();                                                                       //
+    serial_val[5] = now - last_debug_time;                                                //
+    last_debug_time = now;                                                                //
+  #endif                                                                                  //
                                                                                           //
   // Serial output for debugging                                                          //
   #ifdef DEBUG                                                                            //
     write_to_serial();                                                                    //
   #endif                                                                                  //
+                                                                                          //
+  // Enforce max refresh rate                                                             //
+  unsigned long temp = millis();                                                          //
+  if(temp - current_time < REFRESH_TIME - 1) // Leave a 1ms buffer                        //
+    delay(REFRESH_TIME + current_time - temp - 1);                                        //
 }                                                                                         //
 //----------------------------------------------------------------------------------------//
 
@@ -307,7 +322,7 @@ void update_parameters() {
                                                                                                                //  
       // fixme: doesn't yet have its own parameter, so just working with ones we have                          //
       // need colors 0 or 1 from any palette for sparkle color                                                 // 
-      sparkle_color = get_color(show_parameters[PALETTE_INDEX], (INTRA_RING_MOTION_INDEX + 1) % 2);                             //
+      sparkle_color = get_color(show_parameters[PALETTE_INDEX], (INTRA_RING_MOTION_INDEX + 1) % 2);            //
     #endif 
 }
 
