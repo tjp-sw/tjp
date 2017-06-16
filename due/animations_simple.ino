@@ -12,7 +12,7 @@ void pulse() {
 
   // A faster way
   for(uint8_t i = 0; i < RINGS_PER_NODE; i++)
-    leds[i] = CRGB(0, 0, frequencies_one[i]);
+    leds[i] = CRGB(0, 0, frequencies_one[i%NUM_CHANNELS]);
 
   // This way works too
   //for(int i = 0; i < NUM_RINGS; i++)

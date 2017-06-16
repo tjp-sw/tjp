@@ -5,9 +5,12 @@ void toms_best()
   // an attempt to use the parameter values to choose thickness automatically. could pass this into the function if that's better.
   int thick = show_parameters[COLOR_THICKNESS_INDEX] * 2;
   int color_choice = random(show_parameters[NUM_COLORS_INDEX]);
-  CRGB in = show_colors[color_choice];
+
+  // Changes:
+  // Using FastLED's rgb2hsv_approximate() in get_color_hsv(), and remember that show_colors[] is an integer, not a CRGB.
+  // Also moved dimming upstream of assigning to leds[][] 
+  CHSV color = get_color_hsv(show_parameters[PALETTE_INDEX], show_colors[color_choice]);
   
-  CHSV color = rgb2hsv(in);
   double brightness = color.v;
   word half = thick/2; //15
   //word dim = 255/half; //17
@@ -26,16 +29,16 @@ void toms_best()
         {
           //word index = (count +x+j +(j*thick))%420;
           //leds[i][(count+x+j +(j*thick))%420] = CHSV(225,255,brightness);
-          leds[i][(count+x+j +(j*thick))%420] = CHSV(color.h, color.s, color.v);
+          color.v = color.v - dim;
+          leds[i][(count+x+j +(j*thick))%420] = color;
           //brightness = brightness - dim;
-          color.v = color.v - dim;          
         }
         else
         {
           //leds[i][(count+x+j +(j*thick))%420] = CHSV(225,255,brightness);
+          color.v = color.v + dim;
           leds[i][(count+x+j +(j*thick))%420] = color;
           //brightness = brightness + dim;
-          color.v = color.v + dim;
         }
         
       }

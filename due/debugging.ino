@@ -6,7 +6,7 @@ void write_to_serial() {
   
   #ifdef DEBUG_TIMING
     Serial.print("Timing:");
-    num_serial_vals = 4;
+    num_serial_vals = 6;
   #endif
   
   for(int i = 0; i < num_serial_vals; i++) {
@@ -56,12 +56,15 @@ void testLEDs() {
 #endif
 
 void draw_debug_mode() {
-  uint8_t spacing = node_number+1; // Spacing tells us which node the Due thinks it is
-  uint8_t offset = loop_count % spacing; // Movement
+  if(loop_count % 2 != 0) return;
+  
+  uint8_t spacing = node_number <= NUM_NODES ? node_number+2 : 8; // Spacing tells us which node the Due thinks it is
+  uint8_t offset = (loop_count/2) % spacing; // Movement
 
   leds_node_all = CRGB::Black;
+
   for(uint8_t i = 0; i < RINGS_PER_NODE; i+=4) {
-    for(uint16_t j = 0; j + offset < VISIBLE_LEDS_PER_RING; j+=spacing) {
+    for(uint16_t j = 0; j+offset < VISIBLE_LEDS_PER_RING; j+=spacing) {
       leds_node[i][j+offset] = CRGB::Red;
       leds_node[i+1][j+offset] = CRGB::Green;
       leds_node[i+2][j+offset] = CRGB::Blue;

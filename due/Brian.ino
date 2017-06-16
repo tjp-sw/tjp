@@ -13,7 +13,7 @@ void Fire() {
   // Step 1.  Cool down every cell a little
     for(int i = 0; i < RINGS_PER_NODE; i++) {
       // Roll a range of cooling through the structure
-      int fireCooling = 2 + (i + loop_count) % 110;
+      int fireCooling = 15 + (i + loop_count) % 72;
       
       for(uint16_t j = 0; j < HALF_VISIBLE; j++) {
         heat[i][j] = qsub8(heat[i][j],  random8(0, fireCooling));
@@ -33,7 +33,7 @@ void Fire() {
     
       // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
       // Roll a range of higher sparking percent through the structure, at 1/7 the rate of the cooling
-      int fireSparking = 60;//(i + RINGS_PER_NODE / 2 + loop_count/7) % 230 + 25; // 10% to 100% chance of sparking
+      int fireSparking = 70;//(i + RINGS_PER_NODE / 2 + loop_count/7) % 230 + 25; // 10% to 100% chance of sparking
       
       if(random8() < fireSparking) {
         int y = random8(7);
