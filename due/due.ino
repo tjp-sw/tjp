@@ -1,4 +1,3 @@
-
 #include <FastLED.h>
 typedef void (*sparkle_f_ptr)();     
 
@@ -140,7 +139,7 @@ CRGBSet leds[NUM_RINGS] = {                                                   //
 #define COLOR_THICKNESS_INDEX 4   // how many consecutive lit LEDs in a row                 //
 #define BLACK_THICKNESS_INDEX 5   // how many dark LEDs between lit ones                    //
 #define INTRA_RING_MOTION_INDEX 6   // -1 CCW, 0 none, 1 CW, 2 split                        //
-#define INTRA_RING_SPEED_INDEX 7   // fixme: still need to decide on units                  //
+#define INTRA_RING_SPEED_INDEX 7   // 0 to 4                                                //
 #define COLOR_CHANGE_STYLE_INDEX 8   // 0 none, 1 cycle thru selected, 2 cycle thru palette //
 #define RING_OFFSET_INDEX 9  // how far one ring pattern is rotated from neighbor -10 -> 10 //
                                                                                             //
@@ -184,6 +183,8 @@ CRGB sparkle_color = CRGB::Purple;
 CRGB sparkle[RINGS_PER_NODE][VISIBLE_LEDS_PER_RING];  // Sparkle LED layer as a 2D array. Currently only enough RAM for # per node. Could change this from CRGB to a byte that indexes into palette.
 boolean sparkle_is_set[RINGS_PER_NODE][VISIBLE_LEDS_PER_RING];
 boolean increasing[RINGS_PER_NODE][VISIBLE_LEDS_PER_RING];
+int temp[VISIBLE_LEDS_PER_RING];
+boolean temp_is_set[VISIBLE_LEDS_PER_RING];
 
 // array of sparkle functions to make it easier to choose one randomly
 //   sparkle_f_ptr sparkle_fn[] = { sparkle_rain() };
@@ -240,7 +241,7 @@ void loop() {                                                                   
     last_debug_time = current_time;                                                       //
   #endif                                                                                  //
                                                                                           //
-// read spectrum shield and do beat detection                                             //
+  // read spectrum shield and do beat detection                                           //
   loop_spectrum_shield();                                                                 //
   #ifdef DEBUG_TIMING                                                                     //
     unsigned long now = millis();                                                         //
@@ -248,8 +249,12 @@ void loop() {                                                                   
     last_debug_time = now;                                                                //
   #endif                                                                                  //
                                                                                           //
-  //  Select animation, other parameters                                                  //
-  update_parameters();                                                                    //
+  //  Communicate with pi if available, select animation, other parameters                //
+  do_communication();   
+  #ifndef PI_CONTROLLED
+    manually_update_parameters();  
+  #endif
+  
   #ifdef DEBUG_TIMING                                                                     //
     now = millis();                                                                       //
     serial_val[2] = now - last_debug_time;                                                //
@@ -272,12 +277,7 @@ void loop() {                                                                   
     last_debug_time = now;                                                                //
   #endif                                                                                  //
                                                                                           //
-  do_communication();                                                                   //
-  #ifdef DEBUG_TIMING                                                                     //
-    now = millis();                                                                       //
-    serial_val[5] = now - last_debug_time;                                                //
-    last_debug_time = now;                                                                //
-  #endif                                                                                  //
+                                                                  //
                                                                                           //
   // Serial output for debugging                                                          //
   #ifdef DEBUG                                                                            //
@@ -293,37 +293,36 @@ void loop() {                                                                   
 
 
 // Updates show_parameters[] and show_colors[] coming from the pi, or manually
-void update_parameters() {
+void manually_update_parameters() {
 
-    #ifdef PI_CONTROLLED
-      // fixme: Jeff: 
-      
-//    #elif defined(CYCLE)
-  //    cycle_through_animations();
+    #ifdef CYCLE
+      cycle_through_animations();
       
     #else
-      // set parameters manually for testing                   ********** set parameters manually here **********
-      show_parameters[ANIMATION_INDEX] = 12;      // <--- this is where you enter your animation number        //
-      show_parameters[BEAT_EFFECT_INDEX] = 0;                                                                  //
-      show_parameters[PALETTE_INDEX] = 2;                                                                      //
-      show_parameters[NUM_COLORS_INDEX] = 3;                                                                   //
-      show_parameters[COLOR_THICKNESS_INDEX] = 3;                                                              //
-      show_parameters[BLACK_THICKNESS_INDEX] = 8;                                                              //
-      show_parameters[INTRA_RING_MOTION_INDEX] = 1;                                                            //
-      show_parameters[INTRA_RING_SPEED_INDEX ] = 2;                                                            //
-      show_parameters[COLOR_CHANGE_STYLE_INDEX] = 0;                                                           //
-      show_parameters[RING_OFFSET_INDEX] = 6;                                                                  //
-                                                                                                               //                                                                           //
-      // can choose 0 to 6 as indices into current palette                                                     //
-      // 0,1 light, 2,3,4 mid, 5,6 dark                                                                        //
-      show_colors[0] = 3;                                                                                      //                                                                                                                   //
-      show_colors[1] = 0;                                                                                      //
-      show_colors[2] = 5;                                                                                      //
-                                                                                                               //  
-      // fixme: doesn't yet have its own parameter, so just working with ones we have                          //
-      // need colors 0 or 1 from any palette for sparkle color                                                 // 
-      sparkle_color = get_color(show_parameters[PALETTE_INDEX], (INTRA_RING_MOTION_INDEX + 1) % 2);            //
+      // choose single animation manually         ********** set parameters manually here **********
+      show_parameters[ANIMATION_INDEX] = 3;    // <--- this is where you enter your animation number        //
     #endif 
+
+    // Manually assign values to the rest of the animation parameters
+    show_parameters[BEAT_EFFECT_INDEX] = 0;                                                                  //
+    show_parameters[PALETTE_INDEX] = 1;                                                                      //
+    show_parameters[NUM_COLORS_INDEX] = 3;                                                                   //
+    show_parameters[COLOR_THICKNESS_INDEX] = 3;                                                              //
+    show_parameters[BLACK_THICKNESS_INDEX] = 8;                                                              //
+    show_parameters[INTRA_RING_MOTION_INDEX] = 1;                                                            //
+    show_parameters[INTRA_RING_SPEED_INDEX ] = 2;                                                            //
+    show_parameters[COLOR_CHANGE_STYLE_INDEX] = 0;                                                           //
+    show_parameters[RING_OFFSET_INDEX] = 10;                                                                  //
+                                                                                                               //                                                                           //
+    // can choose 0 to 6 as indices into current palette                                                     //
+    // 0,1 light, 2,3,4 mid, 5,6 dark                                                                        //
+    show_colors[0] = 0;                                                                                      //                                                                                                                   //
+    show_colors[1] = 3;                                                                                      //
+    show_colors[2] = 6;                                                                                      //
+                                                                                                               //  
+    // fixme: doesn't yet have its own parameter, so just working with ones we have                          //
+    // need colors 0 or 1 from any palette for sparkle color                                                 // 
+    sparkle_color = get_color(show_parameters[PALETTE_INDEX], (INTRA_RING_MOTION_INDEX + 1) % 2);                          
 }
 
  
@@ -362,7 +361,7 @@ void draw_current_animation() {
       break;
 
     case 1:
-      toms_best(); // erick
+      toms_best_old(); // erick
       break;
 
     case 2:
@@ -401,6 +400,4 @@ void draw_current_animation() {
       draw_debug_mode(); // debugging; This should stay as the default animation for setup purposes
   }
 }
-
-
 
