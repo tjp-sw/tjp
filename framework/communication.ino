@@ -22,9 +22,11 @@ EthernetClient remote;
 #define	NodeMate	Serial1
 #endif // I_AM_DUE
 
+enum communication_source { network, mate };
+
 bool serial0_is_enabled;	// cannot detect at run time
 #ifndef NUM_CHANNELS
-uint8_t node_number; // Moved to due.ino on Due
+uint8_t node_number;		// declare here when not part of due.ino
 #endif
 uint8_t led_state;
 uint8_t led_program;
@@ -159,7 +161,7 @@ void do_led()
   }
 }
 
-void process_commands(String& input)
+void process_commands(const int source, String& input)
 {
   while (input.length() > 0) {
     print_status("bytes available: ", (long)input.length());
@@ -170,8 +172,11 @@ void process_commands(String& input)
       case 'b':
         size += 55;
         if (input.length() >= size) {
-          if (remote.connected()) {
-            remote.write(input.c_str(), size);
+          // pass the beat message through in both directions
+          if (source == mate && remote.connected()) {
+            remote.write((uint8_t *)input.c_str(), size);
+          } else if (source == network) {
+            NodeMate.write((uint8_t *)input.c_str(), size);
           }
         } else {
           print_status("insufficient beat data");
@@ -261,7 +266,7 @@ void do_mate_input()
     }
   }
   if (mate_data.length() > 0 && loop_start_time_msec >= mate_last_input_msec + 2) {
-    process_commands(mate_data);
+    process_commands(mate, mate_data);
   }
 }
 
@@ -276,7 +281,7 @@ void do_network_input()
       while (len-- > 0) {
         network_data += (char)remote.read();
       }
-      process_commands(network_data);
+      process_commands(network, network_data);
     }
   } else {
     if (remote) {
