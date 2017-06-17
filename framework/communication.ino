@@ -254,6 +254,10 @@ void process_commands(const int source, String& input)
                 }
                 Serial.println();
               }
+#ifdef NUM_CHANNELS
+              memcpy(show_parameters, params, NUM_PARAMETERS);
+              memcpy(show_colors, colors, NUM_COLORS_PER_PALETTE);
+#endif // NUM_CHANNELS
 #endif // I_AM_DUE
 #ifdef I_AM_MEGA
               NodeMate.write((uint8_t *)input.c_str(), size);
