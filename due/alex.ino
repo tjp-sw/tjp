@@ -75,107 +75,45 @@ void basicGradient(){
 
 // Testing equalizer
 void equalizer(){
-  int color_thickness = show_parameters[COLOR_THICKNESS_INDEX];
+  leds_all = CRGB::Black;
+  
   int palette = show_parameters[PALETTE_INDEX];
-  int spacing = LEDS_PER_NODE/RINGS_PER_NODE;
-  int bound = spacing/14;
-  int my_rand = random(0,bound);
-  CRGB my_colors[7];
-  CRGB temp;
-  // setup colors 
-  for(int i = 0; i<7; i++){
-    temp = get_color(palette,i);
-    my_colors[i] = temp;
+  int bound = HALF_RING/NUM_CHANNELS - 1; // -1 for empty pixel between channels
+
+  CRGB my_colors[7];  
+  // setup colors
+  for(int i = 0; i < NUM_CHANNELS; i++){
+    my_colors[i] = get_color(palette, i);
   }
-  // FIRST HALF OF RING
-  
-  // bottom 1/7
-    fill_solid(&leds_all[0],my_rand,my_colors[0]);
-    fill_solid(&leds_all[spacing],my_rand,my_colors[0]);
-    fill_solid(&leds_all[spacing*2],my_rand,my_colors[0]);
-    fill_solid(&leds_all[spacing*3],my_rand,my_colors[0]);
 
-  // 2/7
-    fill_solid(&leds_all[bound],my_rand,my_colors[1]);
-    fill_solid(&leds_all[spacing +bound],my_rand,my_colors[1]);
-    fill_solid(&leds_all[spacing*2 +bound],my_rand,my_colors[1]);
-    fill_solid(&leds_all[spacing*3 +bound],my_rand,my_colors[1]);
-  
-  // 3/7
-    fill_solid(&leds_all[bound*2],my_rand,my_colors[2]);
-    fill_solid(&leds_all[spacing +bound*2],my_rand,my_colors[2]);
-    fill_solid(&leds_all[spacing*2 +bound*2],my_rand,my_colors[2]);
-    fill_solid(&leds_all[spacing*3 +bound*2],my_rand,my_colors[2]);
+  // setup levels
+  uint16_t heights[NUM_CHANNELS][2];
+  for(uint8_t i = 0; i < NUM_CHANNELS; i++) {
+    heights[i][0] = frequencies_two[i];
+    if(heights[i][0] >= 255)
+      heights[i][0] = bound;
+    else
+      heights[i][0] = heights[i][0] * bound / 255;
+
+    if(heights[i][0] > 0)
+      heights[i][0]--;
     
-  // 4/7
-    fill_solid(&leds_all[bound*3],my_rand,my_colors[3]);
-    fill_solid(&leds_all[spacing +bound*3],my_rand,my_colors[3]);
-    fill_solid(&leds_all[spacing*2 +bound*3],my_rand,my_colors[3]);
-    fill_solid(&leds_all[spacing*3 +bound*3],my_rand,my_colors[3]);
+    heights[i][1] = HALF_RING * ((float)frequencies_one[i] / overall_volume[0]);
+    if(heights[i][1] > 0)
+      heights[i][1]--;
+  }
   
-  // 5/7
-    fill_solid(&leds_all[bound*4],my_rand,my_colors[4]);
-    fill_solid(&leds_all[spacing +bound*4],my_rand,my_colors[4]);
-    fill_solid(&leds_all[spacing*2 +bound*4],my_rand,my_colors[4]);
-    fill_solid(&leds_all[spacing*3 +bound*4],my_rand,my_colors[4]);
-  
-  // 6/7
-    fill_solid(&leds_all[bound*5],my_rand,my_colors[5]);
-    fill_solid(&leds_all[spacing +bound*5],my_rand,my_colors[5]);
-    fill_solid(&leds_all[spacing*2 +bound*5],my_rand,my_colors[5]);
-    fill_solid(&leds_all[spacing*3 +bound*5],my_rand,my_colors[5]);
-  
-  // 7/7
-    fill_solid(&leds_all[bound*6],my_rand,my_colors[6]);
-    fill_solid(&leds_all[spacing +bound*6],my_rand,my_colors[6]);
-    fill_solid(&leds_all[spacing*2 +bound*6],my_rand,my_colors[6]);
-    fill_solid(&leds_all[spacing*3 +bound*6],my_rand,my_colors[6]); 
-
-
- // SECOND HALF OF RING
- // 7/7
-    fill_solid(&leds_all[bound*7],my_rand,my_colors[6]);
-    fill_solid(&leds_all[spacing +bound*7],my_rand,my_colors[6]);
-    fill_solid(&leds_all[spacing*2 +bound*7],my_rand,my_colors[6]);
-    fill_solid(&leds_all[spacing*3 +bound*7],my_rand,my_colors[6]);
- // 6/7   
-    fill_solid(&leds_all[bound*8],my_rand,my_colors[5]);
-    fill_solid(&leds_all[spacing +bound*8],my_rand,my_colors[5]);
-    fill_solid(&leds_all[spacing*2 +bound*8],my_rand,my_colors[5]);
-    fill_solid(&leds_all[spacing*3 +bound*8],my_rand,my_colors[5]);
-// 5/7
-    fill_solid(&leds_all[bound*9],my_rand,my_colors[4]);
-    fill_solid(&leds_all[spacing +bound*9],my_rand,my_colors[4]);
-    fill_solid(&leds_all[spacing*2 +bound*9],my_rand,my_colors[4]);
-    fill_solid(&leds_all[spacing*3 +bound*9],my_rand,my_colors[4]);
-
-// 4/7
-    fill_solid(&leds_all[bound*10],my_rand,my_colors[3]);
-    fill_solid(&leds_all[spacing +bound*10],my_rand,my_colors[3]);
-    fill_solid(&leds_all[spacing*2 +bound*10],my_rand,my_colors[3]);
-    fill_solid(&leds_all[spacing*3 +bound*10],my_rand,my_colors[3]);
-
-// 3/7
-    fill_solid(&leds_all[bound*11],my_rand,my_colors[2]);
-    fill_solid(&leds_all[spacing +bound*11],my_rand,my_colors[2]);
-    fill_solid(&leds_all[spacing*2 +bound*11],my_rand,my_colors[2]);
-    fill_solid(&leds_all[spacing*3 +bound*11],my_rand,my_colors[2]);
-
-// 2/7
-    fill_solid(&leds_all[bound*12],my_rand,my_colors[1]);
-    fill_solid(&leds_all[spacing +bound*12],my_rand,my_colors[1]);
-    fill_solid(&leds_all[spacing*2 +bound*12],my_rand,my_colors[1]);
-    fill_solid(&leds_all[spacing*3 +bound*12],my_rand,my_colors[1]);
-
-// 1/7
-    fill_solid(&leds_all[bound*13],my_rand,my_colors[0]);
-    fill_solid(&leds_all[spacing +bound*13],my_rand,my_colors[0]);
-    fill_solid(&leds_all[spacing*2 +bound*13],my_rand,my_colors[0]);
-    fill_solid(&leds_all[spacing*3 + bound*13],my_rand,my_colors[0]);
-
-
-  
-    
+  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++)
+  {
+    uint16_t curHeight1 = 0;
+    uint16_t curHeight2 = LEDS_PER_RING - 1;
+    for(uint8_t i = 0; i < NUM_CHANNELS; i++) {
+      leds[ring](curHeight1, curHeight1 + heights[i][0]) = my_colors[i];
+      curHeight1 += (heights[i][0] + 2);
+      leds[ring](curHeight2, curHeight2 - heights[i][1]) = my_colors[i];
+      curHeight2 -= (heights[i][1] + 2);
+    }
+  }    
 }
 
 /*

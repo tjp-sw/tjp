@@ -87,7 +87,9 @@ void setup_communication()
   mate_data = "";
 
   epoch_msec = 0;
+  #ifdef PI_CONTROLLED
   node_number = 255;		// invalid
+  #endif
 
   // turn off the LED
   pinMode(LED_BUILTIN, OUTPUT);
@@ -195,7 +197,7 @@ void process_commands(const int source, String& input)
         size += 1;	// unsigned 8-bit integer
         if (input.length() >= size) {
           if (command == 'n') {
-            node_number = input[1];
+            assign_node(input[1]);
             led_program = node_number;	// signal the node number
 #ifdef I_AM_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
@@ -377,6 +379,7 @@ void do_communication()
   do_network_input();
 #endif // I_AM_MEGA
   do_mate_input();
+  send_audio_packet();
   do_heartbeat();
   do_led();
 }

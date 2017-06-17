@@ -120,51 +120,53 @@ CHSV rgb2hsv(CRGB in)
 
 void toms_best_old()
 {
-  word count = loop_count%420;
+  word count = loop_count%LEDS_PER_RING;
   word i, j;
   word x = 155; //must fall between 0 and 255; changes color
-  for(i = 0; i<12; i++)
+  for(i = 0; i < NUM_RINGS; i++)
   {
+    uint8_t value = 225;
+    bool increasing = false;
     for (j = 0; j<21; j++)
     {
-      leds[i][(count +(j*20)+ (i*10))%420] = CHSV(x,255,225);
+      leds[i][(count +(j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,value);
       
-      leds[i][(count + 1 + (j*20)+ (i*10))%420] = CHSV(x,255,225);
+      if(value == 225 || value == 25) value = !value;
+      else if(increasing) value += 25;
       
-      leds[i][(count + 2 + (j*20)+ (i*10))%420] = CHSV(x,255,200);
+      leds[i][(count + 0 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,200);
       
-      leds[i][(count + 3 + (j*20)+ (i*10))%420] = CHSV(x,255,175);
+      leds[i][(count + 1 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,175);
       
-      leds[i][(count + 4 + (j*20)+ (i*10))%420] = CHSV(x,255,150);
+      leds[i][(count + 2 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,150);
       
-      leds[i][(count + 5 + (j*20)+ (i*10))%420] = CHSV(x,255,125);
+      leds[i][(count + 3 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,125);
       
-      leds[i][(count + 6 + (j*20)+ (i*10))%420] = CHSV(x,255,100);
+      leds[i][(count + 4 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,100);
       
-      leds[i][(count + 7 + (j*20)+ (i*10))%420] = CHSV(x,255,75);
+      leds[i][(count + 5 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,75);
       
-      leds[i][(count + 8 + (j*20)+ (i*10))%420] = CHSV(x,255,50);
+      leds[i][(count + 6 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,50);
       
-      leds[i][(count + 9 + (j*20)+ (i*10))%420] = CHSV(x,255,25);
+      leds[i][(count + 7 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,25);
       
-      leds[i][(count + 10 + (j*20)+ (i*10))%420] = CHSV(x,255,25);
+      leds[i][(count + 8 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,25);
       
-      leds[i][(count + 11 + (j*20)+ (i*10))%420] = CHSV(x,255,50);
+      leds[i][(count + 9 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,50);
       
-      leds[i][(count + 12 + (j*20)+ (i*10))%420] = CHSV(x,255,75);
+      leds[i][(count + 10 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,75);
       
-      leds[i][(count + 13+ (j*20)+ (i*10))%420] = CHSV(x,255,100);
+      leds[i][(count + 11+ (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,100);
       
-      leds[i][(count + 14 + (j*20)+ (i*10))%420] = CHSV(x,255,125);
+      leds[i][(count + 12 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,125);
       
-      leds[i][(count + 15 + (j*20)+ (i*10))%420] = CHSV(x,255,150);
+      leds[i][(count + 13 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,150);
       
-      leds[i][(count + 16 + (j*20)+ (i*10))%420] = CHSV(x,255,175);
+      leds[i][(count + 14 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,175);
       
-      leds[i][(count + 17 + (j*20)+ (i*10))%420] = CHSV(x,255,200);
+      leds[i][(count + 15 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,200);
      
-      leds[i][(count + 18 + (j*20)+ (i*10))%420] = CHSV(x,255,225);
-      leds[i][(count + 19 + (j*20)+ (i*10))%420] = CHSV(x,255,225);
+      leds[i][(count + 16 + (j*20)+ (i*10))%LEDS_PER_RING] = CHSV(x,255,200);
       /*
       leds[i]((count+(j*20))%420, (count+2+(j*20))%420) = CRGB(255,0,0);//CRGB::Red; //brightest
       leds[i]((count+3+(j*20))%420, (count+5+(j*20))%420) = CRGB(150,0,0);//CRGB::Red; //brightest

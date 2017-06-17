@@ -6,7 +6,6 @@ typedef void (*sparkle_f_ptr)();
 // Debugging options; comment/uncomment to test diff things //
 #define DEBUG                                               //
 //#define DEBUG_TIMING                                      //
-//#define DEBUG_LED_ARRAYS                                  //
 //#define DEBUG_PEAKS                                       //
 //#define DEBUG_BPM                                         //
 //#define DEBUG_AUDIO_HOOKS                                 //
@@ -16,7 +15,7 @@ typedef void (*sparkle_f_ptr)();
 #define ANIMATION_TIME 30000 // 30 seconds per animation    //
                                                             //
 // Due controlled versus pi controlled animation choices    //
-//#define PI_CONTROLLED                                     //
+#define PI_CONTROLLED                                     //
 //#define CYCLE                                             //
 //----------------------------------------------------------//
 
@@ -48,7 +47,7 @@ int frequencies_max[NUM_CHANNELS];                                            //
                                                                               //
 bool is_beat = false;                                                         //
 uint8_t downbeat_proximity = 0; // Up and down from 0-255 with the beat       //
-uint8_t bpm_estimate = 0;                                                    //
+uint8_t bpm_estimate = 0;                                                     //
 uint8_t bpm_confidence = 0; // <10 is weak, 20 is decent, 30+ is really good  //
                                                                               //
 #define AUDIO_HOOK_HISTORY_SIZE 200                                           //
@@ -66,65 +65,84 @@ uint8_t high_band_emphasis = 0; // 0 or 1                                     //
 #define NUM_NODES 3                                                           //
 #define RINGS_PER_NODE 12                                                     //
 #define STRIPS_PER_NODE 4                                                     //
-#define LEDS_PER_STRIP 1260                                                   //
-#define VISIBLE_LEDS_PER_RING 408                                             //
+#define PHYSICAL_LEDS_PER_RING 420                                            //
+#define LEDS_PER_RING 408                                                     //
                                                                               //
-#define LEDS_PER_NODE (LEDS_PER_STRIP * STRIPS_PER_NODE)                      //
-#define NUM_LEDS (LEDS_PER_NODE * NUM_NODES)                                  //
+#define LEDS_PER_STRIP (2*PHYSICAL_LEDS_PER_RING + LEDS_PER_RING + 1)         //
 #define NUM_RINGS (RINGS_PER_NODE * NUM_NODES)                                //
-#define LEDS_PER_RING (NUM_LEDS / NUM_RINGS)                                  //
-#define HALF_RING (LEDS_PER_RING/2)                                           //
-#define HALF_VISIBLE (VISIBLE_LEDS_PER_RING/2)                                //
+#define LEDS_PER_NODE (LEDS_PER_RING * RINGS_PER_NODE)                        //
+#define PHYSICAL_LEDS_PER_NODE (LEDS_PER_STRIP*STRIPS_PER_NODE)               //
+#define HALF_RING (LEDS_PER_RING/2)                                           //                                                                              //
+#define NUM_LEDS (LEDS_PER_NODE * NUM_NODES)                                  //
                                                                               //
 // Globals                                                                    //
 bool new_animation_triggered = false;                                         //
 uint8_t current_animation = 0;                                                //
 uint32_t loop_count = 0;                                                      //
 unsigned long current_time=0, animation_start_time=0;                         //
-                                                                              //
-// LED actual data                                                            //
-CRGB leds_raw[NUM_RINGS][LEDS_PER_RING];                                      //
-                                                                              //
-// Alternative references to LED data; allows for ranged indexing             //
-CRGBSet leds_all(*leds_raw, NUM_LEDS);                                        //
-CRGBSet leds_node_all(leds_raw[node_number * RINGS_PER_NODE], LEDS_PER_NODE); //
-CRGBSet leds_node[RINGS_PER_NODE] = {                                         //
-  CRGBSet(leds_raw[node_number*RINGS_PER_NODE], LEDS_PER_RING),               //
-  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+1], LEDS_PER_RING),             //
-  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+2], LEDS_PER_RING),             //
-  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+3], LEDS_PER_RING),             //
-  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+4], LEDS_PER_RING),             //
-  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+5], LEDS_PER_RING),             //
-  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+6], LEDS_PER_RING),             //
-  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+7], LEDS_PER_RING),             //
-  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+8], LEDS_PER_RING),             //
-  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+9], LEDS_PER_RING),             //
-  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+10], LEDS_PER_RING),            //
-  CRGBSet(leds_raw[node_number*RINGS_PER_NODE+11], LEDS_PER_RING)             //
-};                                                                            //
-                                                                              //
-CRGBSet leds[NUM_RINGS] = {                                                   //
-  CRGBSet(leds_raw[0], LEDS_PER_RING), CRGBSet(leds_raw[1], LEDS_PER_RING),   //
-  CRGBSet(leds_raw[2], LEDS_PER_RING), CRGBSet(leds_raw[3], LEDS_PER_RING),   //
-  CRGBSet(leds_raw[4], LEDS_PER_RING), CRGBSet(leds_raw[5], LEDS_PER_RING),   //
-  CRGBSet(leds_raw[6], LEDS_PER_RING), CRGBSet(leds_raw[7], LEDS_PER_RING),   //
-  CRGBSet(leds_raw[8], LEDS_PER_RING), CRGBSet(leds_raw[9], LEDS_PER_RING),   //
-  CRGBSet(leds_raw[10], LEDS_PER_RING), CRGBSet(leds_raw[11], LEDS_PER_RING), //
-  CRGBSet(leds_raw[12], LEDS_PER_RING), CRGBSet(leds_raw[13], LEDS_PER_RING), //
-  CRGBSet(leds_raw[14], LEDS_PER_RING), CRGBSet(leds_raw[15], LEDS_PER_RING), //
-  CRGBSet(leds_raw[16], LEDS_PER_RING), CRGBSet(leds_raw[17], LEDS_PER_RING), //
-  CRGBSet(leds_raw[18], LEDS_PER_RING), CRGBSet(leds_raw[19], LEDS_PER_RING), //
-  CRGBSet(leds_raw[20], LEDS_PER_RING), CRGBSet(leds_raw[21], LEDS_PER_RING), //
-  CRGBSet(leds_raw[22], LEDS_PER_RING), CRGBSet(leds_raw[23], LEDS_PER_RING), //
-  CRGBSet(leds_raw[24], LEDS_PER_RING), CRGBSet(leds_raw[25], LEDS_PER_RING), //
-  CRGBSet(leds_raw[26], LEDS_PER_RING), CRGBSet(leds_raw[27], LEDS_PER_RING), //
-  CRGBSet(leds_raw[28], LEDS_PER_RING), CRGBSet(leds_raw[29], LEDS_PER_RING), //
-  CRGBSet(leds_raw[30], LEDS_PER_RING), CRGBSet(leds_raw[31], LEDS_PER_RING), //
-  CRGBSet(leds_raw[32], LEDS_PER_RING), CRGBSet(leds_raw[33], LEDS_PER_RING), //
-  CRGBSet(leds_raw[34], LEDS_PER_RING), CRGBSet(leds_raw[35], LEDS_PER_RING)  //
-};                                                                            //
-//----------------------------------------------------------------------------//
-    
+
+//  LED arrays ---------------------------------------------------------------//
+CRGB leds_raw[LEDS_PER_STRIP*STRIPS_PER_NODE*NUM_NODES]; // 1 - 408 - 12 - 408 - 12 - 408 - 1 - 408 - 12 - 408 - 12 - 408 ...
+CRGBSet leds_all(leds_raw, LEDS_PER_STRIP*STRIPS_PER_NODE*NUM_NODES);
+CRGBSet leds[NUM_RINGS] = {
+  CRGBSet(&leds_raw[1], LEDS_PER_RING),
+  CRGBSet(&leds_raw[1 +                      PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[1 +                    2*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[2 +   LEDS_PER_RING +  2*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[2 +   LEDS_PER_RING +  3*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[2 +   LEDS_PER_RING +  4*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[3 + 2*LEDS_PER_RING +  4*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[3 + 2*LEDS_PER_RING +  5*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[3 + 2*LEDS_PER_RING +  6*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[4 + 3*LEDS_PER_RING +  6*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[4 + 3*LEDS_PER_RING +  7*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[4 + 3*LEDS_PER_RING +  8*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[5 + 4*LEDS_PER_RING +  8*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[5 + 4*LEDS_PER_RING +  9*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[5 + 4*LEDS_PER_RING + 10*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[6 + 5*LEDS_PER_RING + 10*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[6 + 5*LEDS_PER_RING + 11*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[6 + 5*LEDS_PER_RING + 12*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[7 + 6*LEDS_PER_RING + 12*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[7 + 6*LEDS_PER_RING + 13*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[7 + 6*LEDS_PER_RING + 14*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[8 + 7*LEDS_PER_RING + 14*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[8 + 7*LEDS_PER_RING + 15*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[8 + 7*LEDS_PER_RING + 16*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[9 + 8*LEDS_PER_RING + 16*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[9 + 8*LEDS_PER_RING + 17*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[9 + 8*LEDS_PER_RING + 18*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[10+ 9*LEDS_PER_RING + 18*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[10+ 9*LEDS_PER_RING + 19*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[10+ 9*LEDS_PER_RING + 20*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[11+10*LEDS_PER_RING + 20*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[11+10*LEDS_PER_RING + 21*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[11+10*LEDS_PER_RING + 21*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[12+11*LEDS_PER_RING + 22*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[12+11*LEDS_PER_RING + 23*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING),
+  CRGBSet(&leds_raw[12+11*LEDS_PER_RING + 24*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING)
+};
+
+void assign_node(uint8_t node_num) {
+  node_number = node_num;
+  LEDS.addLeds<WS2811_PORTD, 8>(&leds_raw[node_num * PHYSICAL_LEDS_PER_NODE], LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
+  #ifdef DEBUG
+    Serial.println("Assigned node #" + String(node_number));
+    for(int i = 0; i < 4; i ++)
+      leds_raw[node_num * PHYSICAL_LEDS_PER_NODE + LEDS_PER_STRIP*i] = CRGB::Green;
+    LEDS.show();
+    delay(1000);
+    for(int i = 0; i < 4; i ++)
+      leds_all(node_num * PHYSICAL_LEDS_PER_NODE + LEDS_PER_STRIP*i, node_num * PHYSICAL_LEDS_PER_NODE + 5 + LEDS_PER_STRIP*i) = CRGB::Red;
+    LEDS.show();
+    delay(1000);
+    for(int i = 0; i < 4; i ++)
+      leds[node_num * RINGS_PER_NODE + 3*i][-1] = CRGB::Blue;
+    LEDS.show();
+    delay(1000);
+  #endif
+}
+
 //  Show parameters coming from the pi -----------------------------------------------------//
 #define NUM_PARAMETERS 10                                                                   //
 #define NUM_COLORS_PER_PALETTE 3                                                            //
@@ -144,10 +162,10 @@ CRGBSet leds[NUM_RINGS] = {                                                   //
 #define RING_OFFSET_INDEX 9  // how far one ring pattern is rotated from neighbor -10 -> 10 //
                                                                                             //
 //  Evolving parameters defining the show                                                   //
-int show_parameters[NUM_PARAMETERS];                                                        //
+uint8_t show_parameters[NUM_PARAMETERS];                                                        //
                                                                                             //
 // array of show_parameters[NUM_COLORS_INDEX] colors chosen out of given palette            //
-int show_colors[NUM_COLORS_PER_PALETTE];                                                    //   
+uint8_t show_colors[NUM_COLORS_PER_PALETTE];                                                    //   
 //------------------------------------------------------------------------------------------//
 
 
@@ -168,7 +186,22 @@ CRGB fruit_loop[9] =
    {CRGB(255,247,0), CRGB(255,127,14),                   // light
     CRGB(188,0,208), CRGB(255,65,65), CRGB(255,73,0),     //  medium
     CRGB(178,6,88), CRGB(162,80,204)};                // dark
+/*
+CRGB icy_bright[9] = 
+    {CRGB(255,255,255), CRGB(255,255,0),                // light
+    CRGB(255,0,0), CRGB(0,255,255), CRGB(0,255,0),    //  medium
+    CRGB(0,0,0), CRGB(0,0,255)};                   // dark
 
+CRGB watermelon[9] = 
+    {CRGB(0,0,255), CRGB(255,0,255),                // light
+    CRGB(255,0,0), CRGB(80,80,80), CRGB(0,255,0),    //  medium
+    CRGB(0,0,0), CRGB(255,255,255)};                   // dark
+
+CRGB fruit_loop[9] = 
+    {CRGB(255,0,0), CRGB(80,80,80),                // light
+    CRGB(255,255,255), CRGB(255,0,255), CRGB(0,255,0),    //  medium
+    CRGB(0,0,0), CRGB(0,0,255)};                   // dark
+*/
 
 //  Sparkle layer ------------------------------------------------------------//
 #define MAX_SPARKLE_INTENSITY 250 // fixme: these should be color dependent to avoid color drift at high intensity
@@ -180,11 +213,11 @@ int current_ring, current_pixel, current_coin_bottom;
 //  Sparkle layer variables
 int sparkle_count = 0;
 CRGB sparkle_color = CRGB::Purple;
-CRGB sparkle[RINGS_PER_NODE][VISIBLE_LEDS_PER_RING];  // Sparkle LED layer as a 2D array. Currently only enough RAM for # per node. Could change this from CRGB to a byte that indexes into palette.
-boolean sparkle_is_set[RINGS_PER_NODE][VISIBLE_LEDS_PER_RING];
-boolean increasing[RINGS_PER_NODE][VISIBLE_LEDS_PER_RING];
-int temp[VISIBLE_LEDS_PER_RING];
-boolean temp_is_set[VISIBLE_LEDS_PER_RING];
+CRGB sparkle[RINGS_PER_NODE][LEDS_PER_RING];  // Sparkle LED layer as a 2D array. Currently only enough RAM for # per node. Could change this from CRGB to a byte that indexes into palette.
+boolean sparkle_is_set[RINGS_PER_NODE][LEDS_PER_RING];
+boolean increasing[RINGS_PER_NODE][LEDS_PER_RING];
+int temp[LEDS_PER_RING];
+boolean temp_is_set[LEDS_PER_RING];
 
 // array of sparkle functions to make it easier to choose one randomly
 //   sparkle_f_ptr sparkle_fn[] = { sparkle_rain() };
@@ -215,81 +248,81 @@ void setup() {                                                                  
   // Initialize digital pin LED_BUILTIN as an output                                                        //
   pinMode(LED_BUILTIN, OUTPUT);                                                                             //
                                                                                                             //
-  // Setup LED output ports.                                                                                //
-  // This needs to be declared as 8 strips even though we only use 4                                        //
-  LEDS.addLeds<WS2811_PORTD, 8>(leds_node_all, LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);              //
-                                                                                                            //
   //  Clear all LEDs                                                                                        //
   LEDS.clear();                                                                                             //
                                                                                                             //
   setup_communication();                                                                                    //
+  #ifndef PI_CONTROLLED                                                                                     //
+   assign_node(node_number);                                                                                //
+  #endif                                                                                                    //
 }                                                                                                           //
 //----------------------------------------------------------------------------------------------------------//
 
 // the loop function runs over and over again forever ------------------------------------//
-void loop() {                                                                             //
-  #ifdef DEBUG_LED_ARRAYS                                                                 //
-    testLEDs();                                                                           //
-    delay(10000);                                                                         //
-    return;                                                                               //
-  #endif                                                                                  //
-                                                                                          //
-  current_time = millis();                                                                //
-  loop_count = (current_time - animation_start_time) / REFRESH_TIME;                      //
-  #ifdef DEBUG_TIMING                                                                     //
-    serial_val[0] = current_time - last_debug_time;                                       //
-    last_debug_time = current_time;                                                       //
-  #endif                                                                                  //
-                                                                                          //
-  // read spectrum shield and do beat detection                                           //
-  loop_spectrum_shield();                                                                 //
-  #ifdef DEBUG_TIMING                                                                     //
-    unsigned long now = millis();                                                         //
-    serial_val[1] = now - last_debug_time;                                                //
-    last_debug_time = now;                                                                //
-  #endif                                                                                  //
-                                                                                          //
-  //  Communicate with pi if available, select animation, other parameters                //
+void loop() {                                                             
+  current_time = millis();                                                
+  loop_count = (current_time - animation_start_time) / REFRESH_TIME;      
+  #ifdef DEBUG_TIMING                                                     
+    serial_val[0] = current_time - last_debug_time;                       
+    last_debug_time = current_time;                                       
+  #endif                                                                  
+                                                                          
+  // read spectrum shield and do beat detection                           
+  loop_spectrum_shield();                                                 
+  #ifdef DEBUG_TIMING                                                     
+    unsigned long now = millis();                                         
+    serial_val[1] = now - last_debug_time;                                
+    last_debug_time = now;                                                
+  #endif                                                                  
+                                                                          
+  //  Communicate with pi if available, select animation, other parameters
   do_communication();   
   #ifndef PI_CONTROLLED
     manually_update_parameters();  
   #endif
   
-  #ifdef DEBUG_TIMING                                                                     //
-    now = millis();                                                                       //
-    serial_val[2] = now - last_debug_time;                                                //
-    last_debug_time = now;                                                                //
-  #endif                                                                                  //
-                                                                                          //
-  //  Draw animation                                                                      //
-  draw_current_animation();                                                               //
-  #ifdef DEBUG_TIMING                                                                     //
-    now = millis();                                                                       //
-    serial_val[3] = now - last_debug_time;                                                //
-    last_debug_time = now;                                                                //
-  #endif                                                                                  //
-                                                                                          //
-  // Write LEDs                                                                           //
-  LEDS.show();                                                                            //
-  #ifdef DEBUG_TIMING                                                                     //
-    now = millis();                                                                       //
-    serial_val[4] = now - last_debug_time;                                                //
-    last_debug_time = now;                                                                //
-  #endif                                                                                  //
-                                                                                          //
-                                                                  //
-                                                                                          //
-  // Serial output for debugging                                                          //
-  #ifdef DEBUG                                                                            //
-    write_to_serial();                                                                    //
-  #endif                                                                                  //
-                                                                                          //
-  // Enforce max refresh rate                                                             //
-  unsigned long temp = millis();                                                          //
-  if(temp - current_time < REFRESH_TIME - 1) // Leave a 1ms buffer                        //
-    delay(REFRESH_TIME + current_time - temp - 1);                                        //
-}                                                                                         //
-//----------------------------------------------------------------------------------------//
+  #ifdef DEBUG_TIMING                                                     
+    now = millis();                                                       
+    serial_val[2] = now - last_debug_time;                                
+    last_debug_time = now;                                                
+  #endif                                                                  
+                                                                          
+  //  Draw animation                                                      
+  draw_current_animation();                                               
+  #ifdef DEBUG_TIMING                                                     
+    now = millis();                                                       
+    serial_val[3] = now - last_debug_time;                                
+    last_debug_time = now;                                                
+  #endif                                                                  
+
+  #ifdef DEBUG
+    if(node_number < NUM_NODES) {
+      for(int i = 0; i < STRIPS_PER_NODE; i++) {
+        //Serial.println("Setting debug LED " + String(i) + " to palette " + String(show_parameters[PALETTE_INDEX]) + ", color " + String(i));
+        leds_raw[node_number*PHYSICAL_LEDS_PER_NODE + i*LEDS_PER_STRIP] = get_color(show_parameters[PALETTE_INDEX], i);//show_colors[i % 3]);
+      }
+    }
+  #endif
+
+  // Write LEDs                                                           
+  LEDS.show();                                                            
+  #ifdef DEBUG_TIMING                                                     
+    now = millis();                                                       
+    serial_val[4] = now - last_debug_time;                                
+    last_debug_time = now;                                                
+  #endif                                                                  
+                                                                          
+                                                                          
+  // Serial output for debugging                                          
+  #ifdef DEBUG                                                            
+    write_to_serial();                                                    
+  #endif                                                                  
+                                                                          
+  // Enforce max refresh rate                                             
+  unsigned long temp = millis();                                          
+  if(temp - current_time < REFRESH_TIME - 1) // Leave a 1ms buffer        
+    delay(REFRESH_TIME + current_time - temp - 1);                        
+}                                                                         
 
 
 // Updates show_parameters[] and show_colors[] coming from the pi, or manually

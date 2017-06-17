@@ -6,8 +6,8 @@
 void sparkle_reset() {
   
   for (int ring = 0; ring < RINGS_PER_NODE; ring++) {
-    for (int pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
-      leds_node[ring][pixel] = CRGB::Black;
+    for (int pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+      leds[ring][pixel] = CRGB::Black;
       sparkle_is_set[ring][pixel] = false;
     }
   }  
@@ -36,8 +36,8 @@ void sparkle_rain() {
   int portion = 50 * pow(2, (8 - show_parameters[COLOR_THICKNESS_INDEX])); 
   
   int offset = 40;
-  int left_ring_top = HALF_VISIBLE - offset;
-  int right_ring_top = HALF_VISIBLE + offset;
+  int left_ring_top = HALF_RING - offset;
+  int right_ring_top = HALF_RING + offset;
  
   // if this is the first frame for this sparkle animation, black out old sparkle leds
   if (sparkle_count == 0) {
@@ -46,7 +46,7 @@ void sparkle_rain() {
 
   // create new raindrops every "portion" cycles; may need to change this constant
   if (sparkle_count % (portion) == 0) {
-    for (ring = 0; ring < RINGS_PER_NODE; ring++) {
+    for (ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
       for (pixel = left_ring_top; pixel < right_ring_top; pixel++) {
         if (random(portion) == 0) {
           sparkle_is_set[ring][pixel] = true;
@@ -57,7 +57,7 @@ void sparkle_rain() {
   }
 
   // drop existing raindrops down 1 pixel
-  for (ring = 0; ring < RINGS_PER_NODE; ring++) {
+  for (ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
 
     // special case so that bottom left pixel dropping down doesn't make array index out of bounds.
     if (sparkle_is_set[ring][0] == true) {
@@ -67,7 +67,7 @@ void sparkle_rain() {
     }
 
     // general case, left side
-    for (pixel = 1; pixel <= HALF_VISIBLE; pixel++) { 
+    for (pixel = 1; pixel <= HALF_RING; pixel++) { 
       // light up next pixel down
       sparkle[ring][pixel - 1] = sparkle[ring][pixel];
       sparkle_is_set[ring][pixel - 1] = true;
@@ -78,7 +78,7 @@ void sparkle_rain() {
     }
     
     // right side
-    for (pixel = VISIBLE_LEDS_PER_RING; pixel > HALF_VISIBLE; pixel--) { 
+    for (pixel = LEDS_PER_RING; pixel > HALF_RING; pixel--) { 
       sparkle[ring][pixel + 1] = sparkle[ring][pixel];
       sparkle_is_set[ring][pixel + 1] = true;
       
@@ -107,8 +107,8 @@ void sparkle_glitter() {
 
   sparkle_reset();
 
-  for (int ring = 0; ring < RINGS_PER_NODE; ring++) {
-    for (int pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+  for (int ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+    for (int pixel = 0; pixel < LEDS_PER_RING; pixel++) {
       if (random(portion) == 0) {
         sparkle_is_set[ring][pixel] = true;
         sparkle[ring][pixel] = sparkle_color; // turn on 1/portion of the leds as stars
@@ -141,7 +141,7 @@ void sparkle_glitter() {
 
      // choose random starting points
      current_ring = random(NUM_RINGS); 
-     current_pixel = random(VISIBLE_LEDS_PER_RING);
+     current_pixel = random(LEDS_PER_RING);
      current_coin_bottom = random(NUM_RINGS);
 
      Serial.println(current_ring);
@@ -155,7 +155,7 @@ void sparkle_glitter() {
   //fixme: maybe have 3 different colored circles
 
   // vertical circle
-  for (pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+  for (pixel = 0; pixel < LEDS_PER_RING; pixel++) {
       sparkle[current_ring][pixel] = sparkle_color;
       sparkle_is_set[current_ring][pixel] = true;
   }
@@ -169,7 +169,7 @@ void sparkle_glitter() {
   // third circle has a slope of 3
   // work around ring simultaneously from both sides
  // for (ring = 0; ring < NUM_RINGS / 2; ring++) {
- //   for (pixel = 0; pixel < HALF_VISIBLE; pixel += 3) {
+ //   for (pixel = 0; pixel < HALF_RING; pixel += 3) {
  //     sparkle[(ring + current_coin_bottom) % NUM_RINGS][pixel] = sparkle_color;
  //     sparkle_is_set[(ring + current_coin_bottom) % NUM_RINGS][pixel] = true;
       
@@ -181,7 +181,7 @@ void sparkle_glitter() {
   // move each circle start over one unit
   if (sparkle_count % 50 == 0) {
     current_ring = (current_ring + 1) % NUM_RINGS;
-    current_pixel = (current_pixel + 1) % VISIBLE_LEDS_PER_RING;
+    current_pixel = (current_pixel + 1) % LEDS_PER_RING;
     current_coin_bottom = (current_coin_bottom + 1) % NUM_RINGS;
   }
 
@@ -226,7 +226,7 @@ void sparkle_glitter() {
     }
 
     for (int ring = 0; ring < NUM_RINGS; ring++) {
-        for (int pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+        for (int pixel = 0; pixel < LEDS_PER_RING; pixel++) {
 
             // only change intensity if pixel is chosen as star
             if (is_set[ring][pixel]) {
@@ -275,8 +275,8 @@ void sparkle_glitter() {
 
   int ring, pixel;
   int portion = 30; // 1/portion of the structure will be covered in stars
-  int ring0[VISIBLE_LEDS_PER_RING];
-  boolean ring0_is_set[VISIBLE_LEDS_PER_RING];
+  int ring0[LEDS_PER_RING];
+  boolean ring0_is_set[LEDS_PER_RING];
   
   sparkle_color = CRGB::LightYellow;
 
@@ -286,7 +286,7 @@ void sparkle_glitter() {
      sparkle_reset();
 
      for (ring = 0; ring < RINGS_PER_NODE; ring++) {
-      for (pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+      for (pixel = 0; pixel < LEDS_PER_RING; pixel++) {
         if (random(portion) == 0) {
           sparkle_is_set[ring][pixel] = true;
           sparkle[ring][pixel] = sparkle_color; // turn on 1/portion of the leds as stars
@@ -301,7 +301,7 @@ void sparkle_glitter() {
 //  else if (loop_count % 10 == 0) {
     
   // save ring 0 info so it doesn't get overwritten
-  for (pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+  for (pixel = 0; pixel < LEDS_PER_RING; pixel++) {
     if (sparkle_is_set[0][pixel]) {
       ring0[pixel] = sparkle[0][pixel];
       ring0_is_set[pixel] = sparkle_is_set[0][pixel];
@@ -310,7 +310,7 @@ void sparkle_glitter() {
 
   // shift all pixels backwards one ring
   for (ring = 1; ring <= RINGS_PER_NODE ; ring++) {
-    for (pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+    for (pixel = 0; pixel < LEDS_PER_RING; pixel++) {
       if (sparkle_is_set[ring][pixel]) {
           
         // light sparkle up at next ring
@@ -325,7 +325,7 @@ void sparkle_glitter() {
   }
     
   // move ring0 info to last ring
-  for (pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+  for (pixel = 0; pixel < LEDS_PER_RING; pixel++) {
     if (sparkle_is_set[3][pixel]) {
       sparkle[3][pixel] = ring0[pixel];
       sparkle_is_set[RINGS_PER_NODE - 1][pixel] = ring0_is_set[pixel];
@@ -363,27 +363,27 @@ int strip_length = num_colors * color_length + show_parameters[BLACK_THICKNESS_I
 int palette_num = show_parameters[PALETTE_INDEX];
 
   // slow down the animation without using delay()
-  if (loop_count % 50 == 0) {
-    for (int ring = 0; ring < NUM_RINGS; ring++) {
-      for (int pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+  if (loop_count % 1 == 0) {
+    for (int ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+      for (int pixel = 0; pixel < LEDS_PER_RING; pixel++) {
 
         // first color for color_length pixels
         if (pixel % strip_length < color_length) {
-          leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = get_color(palette_num, show_colors[0]);
+          leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % LEDS_PER_RING] = get_color(palette_num, show_colors[0]);
         }
 
         // second color for color_length pixels
         else if (pixel % strip_length < 2*color_length) {
-            leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = get_color(palette_num, show_colors[1]);
+            leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % LEDS_PER_RING] = get_color(palette_num, show_colors[1]);
         }
 
         // third color for color_length pixels
         else if (pixel % strip_length < 3*color_length) {
-            leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = get_color(palette_num, show_colors[2]);
+            leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % LEDS_PER_RING] = get_color(palette_num, show_colors[2]);
         }
         // black color for color_length pixels
         else {
-          leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % VISIBLE_LEDS_PER_RING] = CRGB::Black;
+          leds[ring][(pixel + rotation_direction * loop_count + offset*ring) % LEDS_PER_RING] = CRGB::Black;
         }
       }
     }
@@ -397,8 +397,8 @@ void diane_arrow_1() {
   int ring, pixel;
   int slope = 3;
 
-  for (ring = 0; ring < HALF_VISIBLE / 3; ring++) {
-    for (pixel = HALF_VISIBLE - 3 * ring; pixel <= HALF_VISIBLE + 3 * ring; pixel++) {
+  for (ring = 0; ring < HALF_RING / 3; ring++) {
+    for (pixel = HALF_RING - 3 * ring; pixel <= HALF_RING + 3 * ring; pixel++) {
       if (pixel >= ring) {
         // inside the arrow
         leds[(ring + loop_count) % NUM_RINGS][pixel] = show_colors[0];
@@ -409,8 +409,8 @@ void diane_arrow_1() {
       }
     }
   }
-  for (ring = HALF_VISIBLE / 3; ring < NUM_RINGS; ring++) {
-    for (pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+  for (ring = HALF_RING / 3; ring < NUM_RINGS; ring++) {
+    for (pixel = 0; pixel < LEDS_PER_RING; pixel++) {
       leds[(ring + loop_count) % NUM_RINGS][pixel] = show_colors[1];
 
     }
@@ -425,8 +425,8 @@ void diane_arrow_2() {
   int slope = 6;
 
   // arrow 1
-  for (ring = 0; ring < HALF_VISIBLE / 6; ring++) {
-    for (pixel = HALF_VISIBLE - 6 * ring; pixel <= HALF_VISIBLE + 6 * ring; pixel++) {
+  for (ring = 0; ring < HALF_RING / 6; ring++) {
+    for (pixel = HALF_RING - 6 * ring; pixel <= HALF_RING + 6 * ring; pixel++) {
       if (pixel >= ring) {
         // inside the arrow
         leds[(ring + loop_count) % NUM_RINGS][pixel] = show_colors[0];
@@ -440,14 +440,14 @@ void diane_arrow_2() {
 
   // ring 34 & 35 solid of background color #1
   for (ring = 34; ring <= 35; ring++) {
-    for (pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+    for (pixel = 0; pixel < LEDS_PER_RING; pixel++) {
       leds[(34 + loop_count) % NUM_RINGS][pixel] = show_colors[2];
     }
   }
 
   // arrow 2
-  for (ring = HALF_VISIBLE / 6 + 2; ring < 2 * HALF_VISIBLE / 6 + 2; ring++) {
-    for (pixel = HALF_VISIBLE - 6 * ring; pixel <= HALF_VISIBLE + 6 * ring; pixel++) {
+  for (ring = HALF_RING / 6 + 2; ring < 2 * HALF_RING / 6 + 2; ring++) {
+    for (pixel = HALF_RING - 6 * ring; pixel <= HALF_RING + 6 * ring; pixel++) {
       if (pixel >= ring) {
         // inside the arrow
         leds[(ring + loop_count) % NUM_RINGS][pixel] = show_colors[0];
@@ -460,8 +460,8 @@ void diane_arrow_2() {
   }
 
   // ring 70, 71, 72 solid of background color #2
-  for (ring = 2 * HALF_VISIBLE / 6 + 2; ring <= NUM_RINGS; ring++) {
-    for (pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
+  for (ring = 2 * HALF_RING / 6 + 2; ring <= NUM_RINGS; ring++) {
+    for (pixel = 0; pixel < LEDS_PER_RING; pixel++) {
       leds[(34 + loop_count) % NUM_RINGS][pixel] = show_colors[2];
     }
   }

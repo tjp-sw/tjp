@@ -26,9 +26,9 @@ Simple test routine, it runs a red dot through the strips.
 
 void run_dot() {
   uint16_t pixelOffset = loop_count % LEDS_PER_NODE;
-  if(pixelOffset > 0) leds_node_all(0, pixelOffset-1) = CRGB::Black;
-  leds_node_all[pixelOffset] = CRGB::Red;
-  if(pixelOffset < LEDS_PER_NODE - 1) leds_node_all(pixelOffset+1, LEDS_PER_NODE) = CRGB::Black;
+  if(pixelOffset > 0) leds_all(0, pixelOffset-1) = CRGB::Black;
+  leds_all[pixelOffset] = CRGB::Red;
+  if(pixelOffset < LEDS_PER_NODE - 1) leds_all(pixelOffset+1, LEDS_PER_NODE) = CRGB::Black;
 }
 
 /*
