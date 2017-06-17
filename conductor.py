@@ -69,7 +69,7 @@ LIGHTS_PER_STRIP = LIGHTS_PER_RING * RINGS_PER_STRIP
 
 NUM_ANIMATIONS = 4
 NUM_BEAT_EFFECTS = 1
-NUM_PARAMETERS = 9
+NUM_PARAMETERS = 10
 NUM_COLORS_PER_PALETTE = 7
 
 ANIMATION_INDEX = 0  # which animation to play
@@ -81,6 +81,7 @@ BLACK_THICKNESS_INDEX = 5  # how many dark LEDs between lit ones
 INTRA_RING_MOTION_INDEX = 6  # 0 = none, 1 = CW, 2 = CCW, 3 = split
 INTRA_RING_SPEED_INDEX = 7  # fixme: still need to decide on units
 COLOR_CHANGE_STYLE_INDEX = 8  # 0 = none, 1 = cycle thru selected, 2 = cycle thru palette
+RING_OFFSET_INDEX = 9  # how far one ring pattern is rotated from neighbor -10 -> 10
 
 lower = [0] * NUM_PARAMETERS
 upper = [0] * NUM_PARAMETERS
@@ -364,6 +365,10 @@ def set_parameter_bounds():
     # how should color change during an animation: 0 = none, 1 = cycle thru selected, 2 = cycle thru palette
     lower[COLOR_CHANGE_STYLE_INDEX] = 0
     upper[COLOR_CHANGE_STYLE_INDEX] = 2
+
+    # how far one ring pattern is rotated from neighbor -10 -> 10
+    lower[RING_OFFSET_INDEX] = -10
+    upper[RING_OFFSET_INDEX] = 10
 
 
 def sunrise_meditation(today):

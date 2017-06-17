@@ -221,13 +221,13 @@ void process_commands(const int source, String& input)
         break;
 #endif // I_AM_MEGA
       case 's':
-        size += 9;
+        size += NUM_PARAMETERS;
         if (input.length() >= size) {
-            uint8_t number_of_colors = input[4];
+            uint8_t number_of_colors = input[1 + NUM_COLORS_INDEX];
             size += number_of_colors;
             if (input.length() >= size) {
 #ifdef I_AM_DUE
-              uint8_t params[9], colors[6];
+              uint8_t params[NUM_PARAMETERS], colors[6];
 
               size_t i = 0;
               size_t j = 1;

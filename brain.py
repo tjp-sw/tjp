@@ -50,11 +50,11 @@ def do_send(socket, message):
 
 def do_show(ignored, neglected):
     # an arbitrary set of show parameters and colors
-    colors = [2, 0, 4, 3]
+    colors = [2, 1, 4]
     number_of_colors = len(colors)
-    params = [3, 0, 0, number_of_colors, 1, 4, 1, 9, 2]
+    params = [3, 0, 0, number_of_colors, 1, 4, 1, 9, 2, 5]
 
-    do_send(None, struct.pack('>c%uB' % (9 + number_of_colors), 's', *(params + colors)))
+    do_send(None, struct.pack('>c%uB' % (len(params) + number_of_colors), 's', *(params + colors)))
 
 next_timesync_sec = 0.0
 
