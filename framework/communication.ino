@@ -181,7 +181,7 @@ void process_commands(const int source, String& input)
         } else {
           print_status("insufficient beat data");
         }
-	break;
+        break;
 #endif // I_AM_MEGA
 #ifdef I_AM_MEGA
       case 'd': {
@@ -220,6 +220,51 @@ void process_commands(const int source, String& input)
         delay_next_network_connection(10);
         break;
 #endif // I_AM_MEGA
+      case 's':
+        size += 9;
+        if (input.length() >= size) {
+            uint8_t number_of_colors = input[4];
+            size += number_of_colors;
+            if (input.length() >= size) {
+#ifdef I_AM_DUE
+              uint8_t params[9], colors[6];
+
+              size_t i = 0;
+              size_t j = 1;
+              while (i < sizeof params) {
+                params[i++] = input[j++];
+              }
+              i = 0;	// restart at the beginning of the colors array
+              while (j < size) {
+                colors[i++] = input[j++];
+              }
+              while (i < sizeof colors) {
+                colors[i++] = 255;	// fill with invalid values
+              }
+              if (serial0_is_enabled) {
+                Serial.print("params");
+                for (i = 0; i < sizeof params; i++) {
+                  Serial.print(' ');
+                  Serial.print(params[i], DEC);
+                }
+                Serial.print(" colors");
+                for (i = 0; i < sizeof colors; i++) {
+                  Serial.print(' ');
+                  Serial.print(colors[i], DEC);
+                }
+                Serial.println();
+              }
+#endif // I_AM_DUE
+#ifdef I_AM_MEGA
+              NodeMate.write((uint8_t *)input.c_str(), size);
+#endif // I_AM_MEGA
+            } else {
+              print_status("insufficient show data");
+            }
+        } else {
+          print_status("insufficient show data");
+        }
+        break;
       case 't':
         size += 8;	// unsigned 64-bit integer
         if (input.length() >= size) {
@@ -234,11 +279,11 @@ void process_commands(const int source, String& input)
           epoch_msec -= loop_start_time_msec;
           if (epoch_msec > old_epoch_msec) {
             print_status("time advanced ", long(epoch_msec - old_epoch_msec));
-	  } else if (epoch_msec < old_epoch_msec) {
+          } else if (epoch_msec < old_epoch_msec) {
             print_status("time set back ", long(old_epoch_msec - epoch_msec));
-	  } else {
+          } else {
             print_status("time unchanged!");
-	  }
+          }
 #ifdef I_AM_MEGA
           NodeMate.write((uint8_t *)input.c_str(), size);
 #endif // I_AM_MEGA

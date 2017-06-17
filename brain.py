@@ -3,7 +3,12 @@ import Queue	# thread safe
 import select, socket, string, struct, sys, time
 
 mega_to_node_map = {
-    5: 2,
+    1: 1,
+    2: 3,
+    3: 2,
+    4: 6,
+    5: 5,
+    6: 4,
     7: 3,
     }
 
@@ -42,6 +47,14 @@ def do_send(socket, message):
         message_queues[s].put(message)
         if s not in writing:
             writing.append(s)
+
+def do_show(ignored, neglected):
+    # an arbitrary set of show parameters and colors
+    colors = [2, 0, 4, 3]
+    number_of_colors = len(colors)
+    params = [3, 0, 0, number_of_colors, 1, 4, 1, 9, 2]
+
+    do_send(None, struct.pack('>c%uB' % (9 + number_of_colors), 's', *(params + colors)))
 
 next_timesync_sec = 0.0
 
@@ -84,6 +97,7 @@ control_messages = {
     'quit':		(do_quit, None, None),
     'reconnect':	(do_simple, None, None),
     'send':		(do_send, None, None),
+    'show':		(do_show, None, None),
     'time':		(do_time, None, None),
     }
 
