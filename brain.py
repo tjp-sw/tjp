@@ -190,7 +190,7 @@ while running:
                             else:
                                 node_number = None
                         print 'mega', mega_number, '( node ', repr(node_number), ') is at', remote_name[s]
-                        if node_number:
+                        if node_number != None:
                             do_send(s, struct.pack('>cB', 'n', node_number))
                     else:
                         print 'received', repr(message), 'from', remote_name[s]
