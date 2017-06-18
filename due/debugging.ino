@@ -83,7 +83,7 @@ void draw_debug_mode() {
 
   leds_all = CRGB::Black;
 
-  for(uint8_t i = 0; i < RINGS_PER_NODE; i+=4) {
+  for(uint8_t i = node_number*RINGS_PER_NODE; i < (node_number+1)*RINGS_PER_NODE; i+=4) {
     for(uint16_t j = 0; j+offset < LEDS_PER_RING; j+=spacing) {
       leds[i][j+offset] = CRGB::Red;
       leds[i+1][j+offset] = CRGB::Green;

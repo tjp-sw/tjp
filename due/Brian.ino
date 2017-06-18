@@ -255,7 +255,7 @@ void variable_spin() {
   }
 
   leds_all = CRGB::Black;
-  for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
     uint16_t centerPoint = centerPoints[ring];
 
     leds[ring][centerPoint] = colors[ring < 6 ? ring : 11 - ring];
@@ -308,7 +308,7 @@ void equalizer3() {
   if(centerBandWidth % 2 == 1)
     centerBandWidth++;
   
-  for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++)
+  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++)
   {
     uint8_t channel = ring/2;
     CRGB thisColor = get_color(show_parameters[PALETTE_INDEX], channel);
@@ -359,7 +359,7 @@ void ScrollingGradient_TwoColor(uint8_t overlay) {
 
     CRGB temp = col1;
     nblend(&temp, &col2, 1, blendAmount);
-    for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+    for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
       leds[ring][idx] = temp;
     }
     #ifdef SERIAL_DEBUG

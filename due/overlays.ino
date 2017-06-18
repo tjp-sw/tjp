@@ -12,19 +12,19 @@ void ScrollingDim(uint8_t nDark, uint8_t nBright) {
       if(idx >= LEDS_PER_RING) continue;
 
       if(j <= 7) {
-        for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+        for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
           leds[ring][idx].r >>= j;
           leds[ring][idx].g >>= j;
           leds[ring][idx].b >>= j;
         }
       }
       else if(j <= 7 + nDark) {
-        for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+        for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
           leds[ring][idx] = CRGB::Black;
         }
       }
       else if(j <= 7 + nDark + 7) {
-        for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+        for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
           leds[ring][idx].r >>= 7 + nDark + 7 - j;
           leds[ring][idx].g >>= 7 + nDark + 7 - j;
           leds[ring][idx].b >>= 7 + nDark + 7 - j;
@@ -52,7 +52,7 @@ void ScrollingSaturation(uint8_t nWhite, uint8_t nTrans, uint8_t nPure) {
       if(i++ >= extendedLEDCount) { return; }
       if(idx >= LEDS_PER_RING) continue;
 
-      for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+      for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
         if(j < nTrans)
           nblend(&leds[ring][idx], &myWhite, 1, maxBlendAmount * j / nTrans);
         else if(j < nTrans + nWhite)
