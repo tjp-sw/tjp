@@ -50,6 +50,9 @@ def do_send(socket, message):
             writing.append(s)
 
 NUM_ANIMATIONS = 9	# animation programs are numbered 0 through 8
+max_palette = 3		# this will vary by time and date at burning man
+NUM_COLORS_PER_PALETTE = 3 # how many colors to use out of this palette
+NUM_BEAT_EFFECTS = 1
 TIME_LIMIT = 30		# number of seconds between animation changes
 auto_show_change = False
 last_show_change_sec = 0.0
@@ -59,9 +62,23 @@ def do_auto(ignored, neglected):
     auto_show_change = not auto_show_change
     last_show_change_sec = time.time()
 
-# an arbitrary set of show parameters and colors
-show_colors = [2, 1, 4]
+# an arbitrary initial set of show parameters and colors
+show_colors = [2, 1, 4]		# number of items must match due code: NUM_COLORS_PER_PALETTE? max_palette?
 show_parameters = [3, 0, 3, len(show_colors), 4, 7, 3, 9, 2, 5]
+show_bounds = [			# order must match show_parameters
+  # [min, max]
+    [0, NUM_ANIMATIONS - 1],	# ANIMATION_INDEX, which animation to play
+    [0, NUM_BEAT_EFFECTS - 1],	# BEAT_EFFECT_INDEX, which beat effect to use / how to respond to beat with LEDs
+    [0, max_palette - 1],	# PALETTE_INDEX, which color palette to use
+    [1, NUM_COLORS_PER_PALETTE - 2],	# NUM_COLORS_INDEX, how many colors to use in the animation (the last color indicates rainbow around structure)
+    [1, 10],			# COLOR_THICKNESS_INDEX, how many pixels should the bands of color be
+    [0, 5],			# BLACK_THICKNESS_INDEX, how many black LEDs between color bands
+    [0, 3],			# INTRA_RING_MOTION_INDEX, which direction to move lights inside a ring:  0 = none, 1 = CW, 2 = CCW, 3 = split
+    [1, 10],			# INTRA_RING_SPEED_INDEX, how fast should intra_ring motion be fixme: still need to decide on units
+    [0, 2],			# COLOR_CHANGE_STYLE_INDEX, how should color change during an animation: 0 = none, 1 = cycle thru selected, 2 = cycle thru palette
+    [0, 10],			# RING_OFFSET_INDEX, how far one ring pattern is rotated from neighbor -10 -> 10	FIXME allow negative numbers!
+    ]
+NUM_COLORS_INDEX = 3		# index into show_bounds
 
 def do_show(cmd, param):
     global last_show_change_sec, show_colors, show_parameters
@@ -96,6 +113,20 @@ def do_simple(cmd, param):
         do_send(None, struct.pack('>cB', cmd[0:1], ord(param) - ord('0')))
     else:
         do_send(None, cmd[0:1])
+
+def do_random_program_change():
+    global show_colors, show_parameters
+
+    # randomly choose a parameter to change
+    change_param = randint(0, len(show_parameters) - 1)
+    if change_param == NUM_COLORS_INDEX:
+        # randomly change a color
+        change_param = randint(0, len(show_colors) - 1)
+        show_colors[change_param] = randint(0, 5)
+    else:
+        # randomly change that parameter
+        lower, upper = show_bounds[change_param]
+        show_parameters[change_param] = randint(lower, upper)
 
 control_messages = {
 #    'SetAllAudio':	do_unimplemented,
@@ -242,7 +273,7 @@ while running:
             do_time('time', None)
 
         if auto_show_change and time.time() > last_show_change_sec + TIME_LIMIT:
-            show_parameters[0] = (show_parameters[0] + randint(1, NUM_ANIMATIONS - 1)) % NUM_ANIMATIONS
+            do_random_program_change()
             last_show_change_sec = time.time()
             do_show(None, None)
 

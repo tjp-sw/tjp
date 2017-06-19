@@ -62,7 +62,7 @@ def process_commands():
                 size += number_of_colors
                 if len(network_data) >= size:
                     params = list(struct.unpack_from('>10B', network_data, 1))
-                    colors = list(struct.unpack_from('>%uB' % number_of_colors, network_data, 10))
+                    colors = list(struct.unpack_from('>%uB' % number_of_colors, network_data, 11))
                     print 'show params', repr(params), 'colors', repr(colors)
                 else:
                     print 'command', command, 'needs', size, 'bytes but only', len(network_data), 'available'
