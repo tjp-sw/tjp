@@ -1,14 +1,15 @@
 #!/usr/bin/python
 import Queue	# thread safe
 import select, socket, string, struct, sys, time
+from random import randint
 
 mega_to_node_map = {
-    1: 1,
-    2: 3,
-    3: 2,
-    4: 6,
+    1: 2,
+    2: 1,
+    3: 4,
+    4: 0,
     5: 5,
-    6: 4,
+    6: 6,
     7: 3,
     }
 
@@ -48,13 +49,28 @@ def do_send(socket, message):
         if s not in writing:
             writing.append(s)
 
-def do_show(ignored, neglected):
-    # an arbitrary set of show parameters and colors
-    colors = [2, 1, 4]
-    number_of_colors = len(colors)
-    params = [3, 0, 0, number_of_colors, 1, 4, 1, 9, 2, 5]
+NUM_ANIMATIONS = 9	# animation programs are numbered 0 through 8
+TIME_LIMIT = 30		# number of seconds between animation changes
+auto_show_change = False
+last_show_change_sec = 0.0
 
-    do_send(None, struct.pack('>c%uB' % (len(params) + number_of_colors), 's', *(params + colors)))
+def do_auto(ignored, neglected):
+    global auto_show_change, last_show_change_sec
+    auto_show_change = not auto_show_change
+    last_show_change_sec = time.time()
+
+# an arbitrary set of show parameters and colors
+show_colors = [2, 1, 4]
+show_parameters = [3, 0, 3, len(show_colors), 4, 7, 3, 9, 2, 5]
+
+def do_show(cmd, param):
+    global last_show_change_sec, show_colors, show_parameters
+    if param:
+        if cmd == 'SetAnimation':
+            show_parameters[0] = (ord(param) - ord('0')) % NUM_ANIMATIONS
+            last_show_change_sec = time.time()
+    do_send(None, struct.pack('>c%uB' % (len(show_parameters) + len(show_colors)), 's', *(show_parameters + show_colors)))
+    print 'show:', repr(show_parameters), repr(show_colors)
 
 next_timesync_sec = 0.0
 
@@ -86,18 +102,19 @@ control_messages = {
 #    'SetAudioCh':	do_unimplemented,
 #    'SetVolCh':		do_unimplemented,
 #    'MuteAllAudio':	do_unimplemented,
-    'SetAnimation':	(do_simple, 'program', None),
+    'SetAnimation':	(do_show, None, None),
 #    'SetDynAnimation':	do_unimplemented,
-    'AllLEDoff':	(do_simple, 'program', '0'),
+#    'AllLEDoff':	(do_simple, 'program', '0'),
 #    'CheckHandStat':	do_unimplemented,
 #    'CheckAudioIn':	do_unimplemented,
+    'auto':		(do_auto, None, None),
     'disconnect':	(do_disconnect, None, None),
+    'led':		(do_simple, 'program', None),
     'list':		(do_list, None, None),
-   'node':		(do_simple, None, None),
+    'node':		(do_simple, None, None),
     'quit':		(do_quit, None, None),
     'reconnect':	(do_simple, None, None),
     'send':		(do_send, None, None),
-    'show':		(do_show, None, None),
     'time':		(do_time, None, None),
     }
 
@@ -138,6 +155,10 @@ while running:
             timeout = None	# wait indefinitely when there are no remotes
         else:
             timeout = next_timesync_sec - time.time()
+            if auto_show_change:
+                show_timeout = last_show_change_sec + TIME_LIMIT - time.time()
+                if show_timeout < timeout:
+                    timeout = show_timeout
             if timeout <= 0:
                 timeout = 0.01
         # could generate writing list here from nonempty message_queues
@@ -219,6 +240,11 @@ while running:
 
         if time.time() > next_timesync_sec:
             do_time('time', None)
+
+        if auto_show_change and time.time() > last_show_change_sec + TIME_LIMIT:
+            show_parameters[0] = (show_parameters[0] + randint(1, NUM_ANIMATIONS - 1)) % NUM_ANIMATIONS
+            last_show_change_sec = time.time()
+            do_show(None, None)
 
     except KeyboardInterrupt:
         running = False
