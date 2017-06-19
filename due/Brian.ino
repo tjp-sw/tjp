@@ -1,7 +1,6 @@
 // Adapted from:
 // Fire2012 by Mark Kriegsman, July 2012
 // as part of "Five Elements" shown here: http://youtu.be/knWiGsmgycY
-
 void Fire() {
   const uint8_t sparkSize_min = 170;
   const uint8_t sparkSize_max = 255;
@@ -52,18 +51,7 @@ void Fire() {
     }
 }
 
-// CRGB GetHeatColor( uint8_t temperature)
-// [to be included in the forthcoming FastLED v2.1]
-//
-// Approximates a 'black body radiation' spectrum for 
-// a given 'heat' level.  This is useful for animations of 'fire'.
-// Heat is specified as an arbitrary scale from 0 (cool) to 255 (hot).
-// This is NOT a chromatically correct 'black body radiation' 
-// spectrum, but it's surprisingly close, and it's extremely fast and small.
-//
-// On AVR/Arduino, this typically takes around 70 bytes of program memory, 
-// versus 768 bytes for a full 256-entry RGB lookup table.
-
+// Approximates a 'black body radiation' spectrum for a given 'heat' level.
 CRGB GetHeatColor(uint8_t temperature) {
   CRGB heatcolor;
   
@@ -138,11 +126,7 @@ void frequency_pulse() {
         leds[i](inner_start, inner_end) = whiteColor;
         leds[i](outer_start, outer_end) = whiteColor;
       }
-      else if(show_parameters[COLOR_THICKNESS_INDEX] == 3
-           && (i == white_ring - 1 || i == white_ring + 1
-              || i == 0 && white_ring == NUM_CHANNELS-1
-              || i == NUM_CHANNELS-1 && white_ring == 0)
-              ){
+      else if(i == white_ring - 1 || i == white_ring + 1 || (i == 0 && white_ring == RINGS_PER_NODE-1) || (i == RINGS_PER_NODE-1 && white_ring == 0)){
         leds[i](inner_start, inner_end) = midColor;
         leds[i](outer_start, outer_end) = midColor;
       }
@@ -297,12 +281,7 @@ void equalizer3() {
   leds_all.fadeToBlackBy(fadeRate);
 
   CHSV centerColor = get_color_hsv(show_parameters[PALETTE_INDEX], 6);
-  if(frequencies_one[6] >= 255) {
-    centerColor.saturation = 0;
-  }
-  else {
-    centerColor.saturation = 255 - frequencies_max[6] / 255;
-  }
+  centerColor.saturation = 255 - frequencies_max[6];
 
   uint8_t centerBandWidth = centerBandMinWidth + (centerBandMaxWidth - centerBandMinWidth) * downbeat_proximity / 255;
   if(centerBandWidth % 2 == 1)
@@ -313,19 +292,8 @@ void equalizer3() {
     uint8_t channel = ring/2;
     CRGB thisColor = get_color(show_parameters[PALETTE_INDEX], channel);
     uint8_t innerHeight, outerHeight;
-    if(frequencies_one[channel] >= 255) {
-      innerHeight = maxHeight;
-    }
-    else {
-      innerHeight = minHeight + (maxHeight - minHeight) * frequencies_one[channel] / 255;
-    }
-    
-    if(frequencies_two[ring/2] >= 255) {
-      outerHeight = maxHeight;
-    }
-    else {
-      outerHeight = minHeight + (maxHeight - minHeight) * frequencies_two[channel] / 255;
-    }
+    innerHeight = minHeight + (maxHeight - minHeight) * frequencies_one[channel] / 255;
+    outerHeight = minHeight + (maxHeight - minHeight) * frequencies_two[channel] / 255;
 
     leds[ring](0, innerHeight) = thisColor;
     leds[ring](LEDS_PER_RING - 1, LEDS_PER_RING - 1 - outerHeight) = thisColor;
@@ -345,9 +313,9 @@ void ScrollingGradient_TwoColor(uint8_t overlay) {
   const uint8_t sat_fullSatLEDs = 12;
 
   CRGB col1 = get_color(show_parameters[PALETTE_INDEX], 0);
-  CRGB col2 = get_color(show_parameters[PALETTE_INDEX], 1);
+  CRGB col2 = get_color(show_parameters[PALETTE_INDEX], show_parameters[NUM_COLORS_INDEX]-1);
   
-  for(uint8_t i = 0; i < extendedLEDCount; i++) {
+  for(uint16_t i = 0; i < extendedLEDCount; i++) {
     uint8_t idx = (loop_count/2 + i) % extendedLEDCount;
     if(idx >= NUM_LEDS) continue;
     
@@ -362,18 +330,6 @@ void ScrollingGradient_TwoColor(uint8_t overlay) {
     for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
       leds[ring][idx] = temp;
     }
-    #ifdef SERIAL_DEBUG
-      Serial.print("GradientTC| Period=");
-      Serial.print(period);
-      Serial.print(",\tPalWidth=");
-      Serial.print(paletteWidth);
-      Serial.print(",\ti=");
-      Serial.print(i);
-      Serial.print(",\tidx=");
-      Serial.print(idx);
-      Serial.print(",\ti_pal=");
-      Serial.println(i_pal);
-    #endif
   }
 
   if(overlay == 1) ScrollingDim(dim_fullDarkLEDs, dim_fullBrightLEDs);

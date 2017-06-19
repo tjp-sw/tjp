@@ -1,20 +1,20 @@
 void overlay() {
 
   // copy mid layer on top of existing background layer
-//  for  (int ring = 0; ring < RINGS_PER_NODE; ring++) {
+//  for  (int ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
 //    for (int pixel = 0; pixel < LEDS_PER_RING; pixel++) {
 //      if (mid_is_set[ring][pixel]) {
-//        leds[node_number*RINGS_PER_NODE + ring][pixel] = mid[ring][pixel];
+//        leds[ring][pixel] = mid[ring][pixel];
 //      }
 //    }
 //  }
 
   
   // copy sparkle layer on top of existing led layer
-  for  (int ring = 0; ring < RINGS_PER_NODE; ring++) {
+  for  (int ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
     for (int pixel = 0; pixel < LEDS_PER_RING; pixel++) {
       if (sparkle_is_set[ring][pixel]) {
-        leds[node_number*RINGS_PER_NODE + ring][pixel] = sparkle[ring][pixel];
+        leds[ring][pixel] = sparkle[ring][pixel];
       }
     }
   }
@@ -24,7 +24,8 @@ void overlay() {
 //  palette_num from 0 to 2 indicates which of the 3 palettes we're going to use for this animation
 //  color_index from 0 to 6 indicates which of the 7 colors in that palette to use
 CRGB get_color(int palette_num, int color_index) {
-
+  color_index = color_index % show_parameters[NUM_COLORS_INDEX];
+  
   switch (palette_num)  {   
   case 0:
     return icy_bright[color_index];

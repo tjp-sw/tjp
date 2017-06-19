@@ -75,20 +75,39 @@ void testLEDs() {
 }
 #endif
 
+// To help with plugging in strips and troubleshooting.
+// Scrolls blocks of pixels around each ring. Rings will be colored RGBWRGBW...
+// Number of lit pixels signals which strand it is for the current node
+// Number of empty pixels singals which node number it is
 void draw_debug_mode() {
-  if(loop_count % 4 != 0) return;
-  
-  uint8_t spacing = node_number <= NUM_NODES ? node_number+2 : 8; // Spacing tells us which node the Due thinks it is
-  uint8_t offset = (loop_count/2) % spacing; // Movement
+  uint8_t ringOffset = node_number < NUM_NODES ? node_number*RINGS_PER_NODE : 0;
+  uint8_t unlitPixels = node_number < NUM_NODES ? node_number + 1 : 8;
 
-  leds_all = CRGB::Black;
+  for(uint8_t ring = ringOffset; ring < ringOffset + RINGS_PER_NODE; ring++)
+  {
+    // Clear pixels
+    leds[ring] = CRGB::Black;
 
-  for(uint8_t i = node_number*RINGS_PER_NODE; i < (node_number+1)*RINGS_PER_NODE; i+=4) {
-    for(uint16_t j = 0; j+offset < LEDS_PER_RING; j+=spacing) {
-      leds[i][j+offset] = CRGB::Red;
-      leds[i+1][j+offset] = CRGB::Green;
-      leds[i+2][j+offset] = CRGB::Blue;
-      leds[i+3][j+offset] = CRGB(120, 120, 120);
+    // Pick color based on ring
+    uint8_t temp = ring % 4;
+    CRGB ringColor = temp == 0 ? CRGB::Red : temp == 1 ? CRGB::Green : temp == 2 ? CRGB::Blue : CRGB(120, 120, 120);
+
+    // Determine strand number and number of pixels to light up
+    temp = (ring - ringOffset) / 3; // Strand #
+    uint8_t litPixels = 1 + temp;
+
+    // Determine period of repeating pattern and get an extended LED count that is a multiple of the period
+    uint8_t period = litPixels + unlitPixels;
+    uint16_t extendedLEDCount = ((LEDS_PER_RING-1)/period+1)*period;
+
+    // Loop over extended LED count, but don't write the ones that are outside the range of the physical LEDs
+    for(uint16_t curPixel = 0; curPixel < extendedLEDCount; curPixel++) {
+      uint16_t idx = (curPixel + loop_count/10) % extendedLEDCount; // Add scrolling based off loop_count
+      if(idx >= LEDS_PER_RING) continue;
+
+      if(curPixel % period < litPixels) { // This line references curPixel since we are talking about the pattern
+        leds[ring][idx] = ringColor; // This line references idx since we are talking about where the pattern gets written
+      }
     }
   }
 }

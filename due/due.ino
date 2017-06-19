@@ -6,16 +6,18 @@ typedef void (*sparkle_f_ptr)();
 // Debugging options; comment/uncomment to test diff things //
 #define DEBUG                                               //
 //#define DEBUG_TIMING                                      //
+//#define DEBUG_FREQUENCIES                                 //
 //#define DEBUG_PEAKS                                       //
 //#define DEBUG_BPM                                         //
 //#define DEBUG_AUDIO_HOOKS                                 //
                                                             //
 // Timing settings                                          //
+//#define REFRESH_TIME 55 // 18.2 frames per second         //
 #define REFRESH_TIME 60 // 16.67 frames per second          //
 #define ANIMATION_TIME 30000 // 30 seconds per animation    //
                                                             //
 // Due controlled versus pi controlled animation choices    //
-#define PI_CONTROLLED                                     //
+#define PI_CONTROLLED                                       //
 //#define CYCLE                                             //
 //----------------------------------------------------------//
 
@@ -72,7 +74,7 @@ uint8_t high_band_emphasis = 0; // 0 or 1                                     //
 #define NUM_RINGS (RINGS_PER_NODE * NUM_NODES)                                //
 #define LEDS_PER_NODE (LEDS_PER_RING * RINGS_PER_NODE)                        //
 #define PHYSICAL_LEDS_PER_NODE (LEDS_PER_STRIP*STRIPS_PER_NODE)               //
-#define HALF_RING (LEDS_PER_RING/2)                                           //                                                                              //
+#define HALF_RING (LEDS_PER_RING/2)                                           //
 #define NUM_LEDS (LEDS_PER_NODE * NUM_NODES)                                  //
                                                                               //
 // Globals                                                                    //
@@ -80,8 +82,10 @@ bool new_animation_triggered = false;                                         //
 uint8_t current_animation = 0;                                                //
 uint32_t loop_count = 0;                                                      //
 unsigned long current_time=0, animation_start_time=0;                         //
+unsigned long long epoch_msec;                                                //
+//----------------------------------------------------------------------------//
 
-//  LED arrays ---------------------------------------------------------------//
+//  ----------------------------------------------LED arrays ---------------------------------------------------------------------
 CRGB leds_raw[LEDS_PER_STRIP*STRIPS_PER_NODE*NUM_NODES]; // 1 - 408 - 12 - 408 - 12 - 408 - 1 - 408 - 12 - 408 - 12 - 408 ...
 CRGBSet leds_all(leds_raw, LEDS_PER_STRIP*STRIPS_PER_NODE*NUM_NODES);
 CRGBSet leds[NUM_RINGS] = {
@@ -123,26 +127,6 @@ CRGBSet leds[NUM_RINGS] = {
   CRGBSet(&leds_raw[12+11*LEDS_PER_RING + 24*PHYSICAL_LEDS_PER_RING], LEDS_PER_RING)
 };
 
-void assign_node(uint8_t node_num) {
-  node_number = node_num;
-  LEDS.addLeds<WS2811_PORTD, 8>(&leds_raw[node_num * PHYSICAL_LEDS_PER_NODE], LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
-  #ifdef DEBUG
-    Serial.println("Assigned node #" + String(node_number));
-    for(int i = 0; i < 4; i ++)
-      leds_raw[node_num * PHYSICAL_LEDS_PER_NODE + LEDS_PER_STRIP*i] = CRGB::Green;
-    LEDS.show();
-    delay(1000);
-    for(int i = 0; i < 4; i ++)
-      leds_all(node_num * PHYSICAL_LEDS_PER_NODE + LEDS_PER_STRIP*i, node_num * PHYSICAL_LEDS_PER_NODE + 5 + LEDS_PER_STRIP*i) = CRGB::Red;
-    LEDS.show();
-    delay(1000);
-    for(int i = 0; i < 4; i ++)
-      leds[node_num * RINGS_PER_NODE + 3*i][-1] = CRGB::Blue;
-    LEDS.show();
-    delay(1000);
-  #endif
-}
-
 //  Show parameters coming from the pi -----------------------------------------------------//
 #define NUM_PARAMETERS 10                                                                   //
 #define NUM_COLORS_PER_PALETTE 3                                                            //
@@ -162,12 +146,11 @@ void assign_node(uint8_t node_num) {
 #define RING_OFFSET_INDEX 9  // how far one ring pattern is rotated from neighbor -10 -> 10 //
                                                                                             //
 //  Evolving parameters defining the show                                                   //
-uint8_t show_parameters[NUM_PARAMETERS];                                                        //
+uint8_t show_parameters[NUM_PARAMETERS];                                                    //
                                                                                             //
 // array of show_parameters[NUM_COLORS_INDEX] colors chosen out of given palette            //
-uint8_t show_colors[NUM_COLORS_PER_PALETTE];                                                    //   
+uint8_t show_colors[NUM_COLORS_PER_PALETTE];                                                //   
 //------------------------------------------------------------------------------------------//
-
 
 
 // Color palette choices ------------------------------------------------------//
@@ -186,22 +169,7 @@ CRGB fruit_loop[9] =
    {CRGB(255,247,0), CRGB(255,127,14),                   // light
     CRGB(188,0,208), CRGB(255,65,65), CRGB(255,73,0),     //  medium
     CRGB(178,6,88), CRGB(162,80,204)};                // dark
-/*
-CRGB icy_bright[9] = 
-    {CRGB(255,255,255), CRGB(255,255,0),                // light
-    CRGB(255,0,0), CRGB(0,255,255), CRGB(0,255,0),    //  medium
-    CRGB(0,0,0), CRGB(0,0,255)};                   // dark
 
-CRGB watermelon[9] = 
-    {CRGB(0,0,255), CRGB(255,0,255),                // light
-    CRGB(255,0,0), CRGB(80,80,80), CRGB(0,255,0),    //  medium
-    CRGB(0,0,0), CRGB(255,255,255)};                   // dark
-
-CRGB fruit_loop[9] = 
-    {CRGB(255,0,0), CRGB(80,80,80),                // light
-    CRGB(255,255,255), CRGB(255,0,255), CRGB(0,255,0),    //  medium
-    CRGB(0,0,0), CRGB(0,0,255)};                   // dark
-*/
 
 //  Sparkle layer ------------------------------------------------------------//
 #define MAX_SPARKLE_INTENSITY 250 // fixme: these should be color dependent to avoid color drift at high intensity
@@ -216,8 +184,6 @@ CRGB sparkle_color = CRGB::Purple;
 CRGB sparkle[RINGS_PER_NODE][LEDS_PER_RING];  // Sparkle LED layer as a 2D array. Currently only enough RAM for # per node. Could change this from CRGB to a byte that indexes into palette.
 boolean sparkle_is_set[RINGS_PER_NODE][LEDS_PER_RING];
 boolean increasing[RINGS_PER_NODE][LEDS_PER_RING];
-int temp[LEDS_PER_RING];
-boolean temp_is_set[LEDS_PER_RING];
 
 // array of sparkle functions to make it easier to choose one randomly
 //   sparkle_f_ptr sparkle_fn[] = { sparkle_rain() };
@@ -248,6 +214,9 @@ void setup() {                                                                  
   // Initialize digital pin LED_BUILTIN as an output                                                        //
   pinMode(LED_BUILTIN, OUTPUT);                                                                             //
                                                                                                             //
+  // Initialize LEDS controller to node 0's data. Will be moved when node is assigned from brain            //
+  LEDS.addLeds<WS2811_PORTD, 8>(&leds_raw[1], LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);               //
+                                                                                                            //
   //  Clear all LEDs                                                                                        //
   LEDS.clear();                                                                                             //
                                                                                                             //
@@ -258,9 +227,10 @@ void setup() {                                                                  
 }                                                                                                           //
 //----------------------------------------------------------------------------------------------------------//
 
+
 // the loop function runs over and over again forever ------------------------------------//
 void loop() {                                                             
-  current_time = millis();                                                
+  current_time = epoch_msec == 0 ? millis() : epoch_msec; // epoch_msec + millis();
   loop_count = (current_time - animation_start_time) / REFRESH_TIME;      
   #ifdef DEBUG_TIMING                                                     
     serial_val[0] = current_time - last_debug_time;                       
@@ -276,8 +246,11 @@ void loop() {
   #endif                                                                  
                                                                           
   //  Communicate with pi if available, select animation, other parameters
-  do_communication();   
-  #ifndef PI_CONTROLLED
+  #ifdef PI_CONTROLLED()
+    do_communication();
+    if(epoch_msec > 0)
+      current_time = epoch_msec;
+  #else
     manually_update_parameters();  
   #endif
   
