@@ -31,7 +31,9 @@ uint8_t node_number;		// declare here when not part of due.ino
 uint8_t led_state;
 uint8_t led_program;
 unsigned long loop_start_time_msec;
+#ifdef I_AM_MEGA
 unsigned long long epoch_msec;
+#endif
 
 unsigned long mate_last_input_msec;
 String mate_data;
@@ -379,7 +381,11 @@ void do_communication()
   do_network_input();
 #endif // I_AM_MEGA
   do_mate_input();
-  send_audio_packet();
+
+  if(node_number == 0) {
+    send_audio_packet();
+  }
+  
   do_heartbeat();
   do_led();
 }
@@ -413,3 +419,28 @@ void send_audio_packet()
   NodeMate.write(audioData, sizeof audioData);
 }
 #endif
+
+void assign_node(uint8_t node_num) {
+  // Needs to call setLeds() for each strip?
+  // Needs to re-call .setCorrection(TypicalLEDStrip)?
+  node_number = node_num;
+  LEDS[0].setLeds(&leds_raw[node_num * PHYSICAL_LEDS_PER_NODE], LEDS_PER_STRIP);
+  
+  #ifdef DEBUG
+    Serial.println("Assigned node #" + String(node_number));
+    for(int i = 0; i < 4; i ++)
+      leds_raw[node_num * PHYSICAL_LEDS_PER_NODE + LEDS_PER_STRIP*i] = CRGB::Green;
+    LEDS.show();
+    delay(1000);
+    for(int i = 0; i < 4; i ++)
+      leds_all(node_num * PHYSICAL_LEDS_PER_NODE + LEDS_PER_STRIP*i, node_num * PHYSICAL_LEDS_PER_NODE + 5 + LEDS_PER_STRIP*i) = CRGB::Red;
+    LEDS.show();
+    delay(1000);
+    for(int i = 0; i < 4; i ++)
+      leds[node_num * RINGS_PER_NODE + 3*i][-1] = CRGB::Blue;
+    LEDS.show();
+    delay(1000);
+  #endif
+}
+
+
