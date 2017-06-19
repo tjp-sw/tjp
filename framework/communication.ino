@@ -144,7 +144,7 @@ void do_led()
     }
   } else if (led_program == 7) {
       if (node_number != 255) {
-        led_program = node_number;	// signal the node number
+        led_program = node_number == 0 ? 6 : node_number;	// signal the node number
       } else {
         led_program = 8;		// default program
       }
@@ -198,7 +198,7 @@ void process_commands(const int source, String& input)
         if (input.length() >= size) {
           if (command == 'n') {
             assign_node(input[1]);
-            led_program = node_number;	// signal the node number
+            led_program = node_number == 0 ? 6 : node_number;	// signal the node number
 #ifdef I_AM_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
 #endif // I_AM_MEGA
