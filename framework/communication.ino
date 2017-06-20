@@ -27,13 +27,11 @@ enum communication_source { network, mate };
 bool serial0_is_enabled;	// cannot detect at run time
 #ifndef NUM_CHANNELS
 uint8_t node_number;		// declare here when not part of due.ino
+unsigned long long epoch_msec;
 #endif
 uint8_t led_state;
 uint8_t led_program;
 unsigned long loop_start_time_msec;
-#ifdef I_AM_MEGA
-unsigned long long epoch_msec;
-#endif
 
 unsigned long mate_last_input_msec;
 String mate_data;

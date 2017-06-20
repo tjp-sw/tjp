@@ -230,7 +230,7 @@ void setup() {                                                                  
 
 // the loop function runs over and over again forever ------------------------------------//
 void loop() {                                                             
-  current_time = epoch_msec == 0 ? millis() : epoch_msec; // epoch_msec + millis();
+  current_time = millis();
   loop_count = (current_time - animation_start_time) / REFRESH_TIME;      
   #ifdef DEBUG_TIMING                                                     
     serial_val[0] = current_time - last_debug_time;                       
@@ -246,10 +246,8 @@ void loop() {
   #endif                                                                  
                                                                           
   //  Communicate with pi if available, select animation, other parameters
-  #ifdef PI_CONTROLLED()
+  #ifdef PI_CONTROLLED
     do_communication();
-    if(epoch_msec > 0)
-      current_time = epoch_msec;
   #else
     manually_update_parameters();  
   #endif
