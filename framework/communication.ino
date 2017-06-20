@@ -197,7 +197,9 @@ void process_commands(const int source, String& input)
         size += 1;	// unsigned 8-bit integer
         if (input.length() >= size) {
           if (command == 'n') {
+#ifdef NUM_CHANNELS
             assign_node(input[1]);
+#endif // NUM_CHANNELS
             led_program = node_number == 0 ? 6 : node_number;	// signal the node number
 #ifdef I_AM_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
@@ -380,9 +382,11 @@ void do_communication()
 #endif // I_AM_MEGA
   do_mate_input();
 
+#ifdef NUM_CHANNELS
   if(node_number == 0) {
     send_audio_packet();
   }
+#endif // NUM_CHANNELS
   
   do_heartbeat();
   do_led();
@@ -416,7 +420,6 @@ void send_audio_packet()
   }
   NodeMate.write(audioData, sizeof audioData);
 }
-#endif
 
 void assign_node(uint8_t node_num) {
   // Needs to call setLeds() for each strip?
@@ -440,5 +443,4 @@ void assign_node(uint8_t node_num) {
     delay(1000);
   #endif
 }
-
-
+#endif // NUM_CHANNELS
