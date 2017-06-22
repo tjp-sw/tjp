@@ -1,8 +1,8 @@
 void overlay() {
 
   // copy mid layer on top of existing background layer
-//  for  (int ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
-//    for (int pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+//  for  (int ring = 0; ring < RINGS_PER_NODE; ring++) {
+//    for (int pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
 //      if (mid_is_set[ring][pixel]) {
 //        leds[ring][pixel] = mid[ring][pixel];
 //      }
@@ -11,9 +11,10 @@ void overlay() {
 
   
   // copy sparkle layer on top of existing led layer
-  for  (int ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
-    for (int pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+  for  (int ring = 0; ring < 4; ring++) {
+    for (int pixel = 0; pixel < 408; pixel++) {
       if (sparkle_is_set[ring][pixel]) {
+        //fixme: changed from leds_node 
         leds[ring][pixel] = sparkle[ring][pixel];
       }
     }
@@ -24,8 +25,7 @@ void overlay() {
 //  palette_num from 0 to 2 indicates which of the 3 palettes we're going to use for this animation
 //  color_index from 0 to 6 indicates which of the 7 colors in that palette to use
 CRGB get_color(int palette_num, int color_index) {
-  color_index = color_index % show_parameters[NUM_COLORS_INDEX];
-  
+
   switch (palette_num)  {   
   case 0:
     return icy_bright[color_index];
@@ -34,9 +34,6 @@ CRGB get_color(int palette_num, int color_index) {
     return watermelon[color_index];
 
   case 2:
-    return fruit_loop[color_index];
-
-  default:
     return fruit_loop[color_index];
   }
 }

@@ -74,12 +74,21 @@ void read_frequencies() {
   //  var frequencies_one[0] is channel 1 lowest frequency
   //  var frequencies_two[6] is channel 2 highest frequency
   
-  for(uint8_t i = 0; i < NUM_CHANNELS; i++)
+  for(int freq_amp = 0; freq_amp < NUM_CHANNELS; freq_amp++)
   {
-    frequencies_one[i] = analogRead(SS_PIN_DC_ONE);
+    frequencies_one[freq_amp] = analogRead(SS_PIN_DC_ONE);
     delayMicroseconds(100);
-    frequencies_two[i] = analogRead(SS_PIN_DC_TWO);
+    frequencies_two[freq_amp] = analogRead(SS_PIN_DC_TWO);
     delayMicroseconds(100);
+
+    frequencies_max[freq_amp] = frequencies_one[freq_amp] > frequencies_two[freq_amp] ? frequencies_one[freq_amp] : frequencies_two[freq_amp];
+    
+    // Calibrate intensity
+    if (frequencies_max[freq_amp] > NOISE_REDUCT){
+      frequencies_max[freq_amp] = frequencies_max[freq_amp] - NOISE_REDUCT;
+    } else {
+     frequencies_max[freq_amp] = 0;
+    }
 
     // Acknowledging the read?
     digitalWrite(SS_PIN_STROBE, HIGH);
@@ -87,19 +96,6 @@ void read_frequencies() {
     //delay(10);
     digitalWrite(SS_PIN_STROBE, LOW);
     //delay(10);
-  }
-
-  scale_frequencies();
-
-  for(uint8_t i = 0; i < NUM_CHANNELS; i++) {
-    frequencies_max[i] = frequencies_one[i] > frequencies_two[i] ? frequencies_one[i] : frequencies_two[i];
-      
-    // Calibrate intensity
-    if (frequencies_max[i] > NOISE_REDUCT){
-      frequencies_max[i] = frequencies_max[i] - NOISE_REDUCT;
-    } else {
-     frequencies_max[i] = 0;
-    }
   }
 }
 
@@ -647,42 +643,5 @@ void detect_edm_events() {
   else {
     cycles_building = 0;
   }
-}
-
-// Max out each frequency at 255
-void scale_frequencies() {
-  // First get overall_volume scaling factor
-  unsigned long avg_volume = 0;
-  for(uint16_t i = 0; i < AUDIO_HOOK_HISTORY_SIZE; i++) {
-    avg_volume += overall_volume[i];
-  }
-  avg_volume /= AUDIO_HOOK_HISTORY_SIZE;
-  
-  int maxFreq = 0;
-  for(uint8_t i = 0; i < NUM_CHANNELS; i++) {
-    if(frequencies_one[i] > maxFreq)
-      maxFreq = frequencies_one[i];
-    if(frequencies_two[i] > maxFreq)
-      maxFreq = frequencies_two[i];
-  }
-
-  if(maxFreq > 0) {
-    float scalingFactor = 255 * overall_volume[0] / avg_volume / maxFreq;
-    for(uint8_t i = 0; i < NUM_CHANNELS; i++) {
-      frequencies_one[i] = scalingFactor * frequencies_one[i];
-      frequencies_two[i] = scalingFactor * frequencies_two[i];
-    }
-  }
-
-  #ifdef DEBUG_FREQUENCIES
-    String debugOutput = "";
-    for(uint8_t i = 0; i < NUM_CHANNELS; i++) {
-      debugOutput += String(frequencies_one[i]) + ", ";
-    }
-    debugOutput += "\t";
-    for(uint8_t i = 0; i < NUM_CHANNELS; i++) {
-      debugOutput += String(frequencies_two[i]) + ", ";
-    }
-  #endif
 }
 

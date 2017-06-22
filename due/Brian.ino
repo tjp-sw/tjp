@@ -1,38 +1,39 @@
 // Adapted from:
 // Fire2012 by Mark Kriegsman, July 2012
 // as part of "Five Elements" shown here: http://youtu.be/knWiGsmgycY
+
 void Fire() {
   const uint8_t sparkSize_min = 170;
   const uint8_t sparkSize_max = 255;
   
     
   // Array of temperature readings at each simulation cell
-  static byte heat[RINGS_PER_NODE][LEDS_PER_RING];
+  static byte heat[RINGS_PER_NODE][VISIBLE_LEDS_PER_RING];
 
   // Step 1.  Cool down every cell a little
     for(int i = 0; i < RINGS_PER_NODE; i++) {
       // Roll a range of cooling through the structure
-      int fireCooling = 15 + (i + loop_count) % 72;
+      int fireCooling = 2 + (i + loop_count) % 110;
       
-      for(uint16_t j = 0; j < HALF_RING; j++) {
+      for(uint16_t j = 0; j < HALF_VISIBLE; j++) {
         heat[i][j] = qsub8(heat[i][j],  random8(0, fireCooling));
-        heat[i][HALF_RING + j] = qsub8(heat[i][HALF_RING + j],  random8(0, fireCooling));
+        heat[i][HALF_VISIBLE + j] = qsub8(heat[i][HALF_VISIBLE + j],  random8(0, fireCooling));
       }
     }
 
     for(int i = 0; i < RINGS_PER_NODE; i++) {
       // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-      for(int k = 1; k < HALF_RING - 1; k++) {
+      for(int k = 1; k < HALF_VISIBLE - 1; k++) {
         // Inner half
-        heat[i][HALF_RING - k] = (heat[i][HALF_RING - k] + heat[i][HALF_RING - k - 1] + heat[i][HALF_RING - k - 2]) / 2;
+        heat[i][HALF_VISIBLE - k] = (heat[i][HALF_VISIBLE - k] + heat[i][HALF_VISIBLE - k - 1] + heat[i][HALF_VISIBLE - k - 2]) / 2;
 
         // Outer half
-        heat[i][HALF_RING + k - 1] = (heat[i][HALF_RING + k - 1] + heat[i][HALF_RING + k] + heat[i][HALF_RING + k + 1]) / 2;
+        heat[i][HALF_VISIBLE + k - 1] = (heat[i][HALF_VISIBLE + k - 1] + heat[i][HALF_VISIBLE + k] + heat[i][HALF_VISIBLE + k + 1]) / 2;
       }
     
       // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
       // Roll a range of higher sparking percent through the structure, at 1/7 the rate of the cooling
-      int fireSparking = 70;//(i + RINGS_PER_NODE / 2 + loop_count/7) % 230 + 25; // 10% to 100% chance of sparking
+      int fireSparking = 60;//(i + RINGS_PER_NODE / 2 + loop_count/7) % 230 + 25; // 10% to 100% chance of sparking
       
       if(random8() < fireSparking) {
         int y = random8(7);
@@ -40,18 +41,29 @@ void Fire() {
       }
   
       if(random8() < fireSparking) {
-        int y = LEDS_PER_RING - 1 - random8(7);
+        int y = VISIBLE_LEDS_PER_RING - 1 - random8(7);
         heat[i][y] = qadd8(heat[i][y], random8(sparkSize_min, sparkSize_max));
       }
   
       // Step 4.  Map from heat cells to LED colors
-      for(int j = 0; j < LEDS_PER_RING; j++) {
+      for(int j = 0; j < VISIBLE_LEDS_PER_RING; j++) {
           leds[i][j] = GetHeatColor(heat[i][j]);
       }
     }
 }
 
-// Approximates a 'black body radiation' spectrum for a given 'heat' level.
+// CRGB GetHeatColor( uint8_t temperature)
+// [to be included in the forthcoming FastLED v2.1]
+//
+// Approximates a 'black body radiation' spectrum for 
+// a given 'heat' level.  This is useful for animations of 'fire'.
+// Heat is specified as an arbitrary scale from 0 (cool) to 255 (hot).
+// This is NOT a chromatically correct 'black body radiation' 
+// spectrum, but it's surprisingly close, and it's extremely fast and small.
+//
+// On AVR/Arduino, this typically takes around 70 bytes of program memory, 
+// versus 768 bytes for a full 256-entry RGB lookup table.
+
 CRGB GetHeatColor(uint8_t temperature) {
   CRGB heatcolor;
   
@@ -109,10 +121,10 @@ void frequency_pulse() {
   for(uint8_t j = 0; j < NUM_CHANNELS-1; j++) {
     inner_start = PIXELS_PER_BAND * j;
     inner_end = PIXELS_PER_BAND * (j+1) - 1;
-    outer_start = LEDS_PER_RING - PIXELS_PER_BAND * j;
-    outer_end = LEDS_PER_RING - PIXELS_PER_BAND * (j+1) - 1;
+    outer_start = VISIBLE_LEDS_PER_RING - PIXELS_PER_BAND * j;
+    outer_end = VISIBLE_LEDS_PER_RING - PIXELS_PER_BAND * (j+1) - 1;
 
-    CHSV tempColor = get_color_hsv(show_parameters[PALETTE_INDEX], j % show_parameters[NUM_COLORS_INDEX]);
+    CHSV tempColor = get_color_hsv(show_parameters[PALETTE_INDEX], j % show_parameters[NUM_EDM_COLORS_INDEX]);
     tempColor.value = MIN_VAL_FP + frequencies_max[j] * (255-MIN_VAL_FP) / 255;
 
     CHSV whiteColor = tempColor;
@@ -123,26 +135,30 @@ void frequency_pulse() {
     
     for(uint8_t i = 0; i < RINGS_PER_NODE; i++) {
       if(i == white_ring) {
-        leds[i](inner_start, inner_end) = whiteColor;
-        leds[i](outer_start, outer_end) = whiteColor;
+        leds_node[i](inner_start, inner_end) = whiteColor;
+        leds_node[i](outer_start, outer_end) = whiteColor;
       }
-      else if(i == white_ring - 1 || i == white_ring + 1 || (i == 0 && white_ring == RINGS_PER_NODE-1) || (i == RINGS_PER_NODE-1 && white_ring == 0)){
-        leds[i](inner_start, inner_end) = midColor;
-        leds[i](outer_start, outer_end) = midColor;
+      else if(show_parameters[COLOR_THICKNESS_INDEX] == 3
+           && (i == white_ring - 1 || i == white_ring + 1
+              || i == 0 && white_ring == NUM_CHANNELS-1
+              || i == NUM_CHANNELS-1 && white_ring == 0)
+              ){
+        leds_node[i](inner_start, inner_end) = midColor;
+        leds_node[i](outer_start, outer_end) = midColor;
       }
       else {
-        leds[i](inner_start, inner_end) = tempColor;
-        leds[i](outer_start, outer_end) = tempColor;
+        leds_node[i](inner_start, inner_end) = tempColor;
+        leds_node[i](outer_start, outer_end) = tempColor;
       }
     }
   }
   
   // Draw center band (using indexes from last iteration)
-  CHSV tempColor = get_color_hsv(show_parameters[PALETTE_INDEX], (NUM_CHANNELS-1) % show_parameters[NUM_COLORS_INDEX]);
+  CHSV tempColor = get_color_hsv(show_parameters[PALETTE_INDEX], (NUM_CHANNELS-1) % show_parameters[NUM_EDM_COLORS_INDEX]);
   tempColor.value = MIN_VAL_FP + frequencies_max[NUM_CHANNELS-1] * (255-MIN_VAL_FP) / 255;
   
   for(uint8_t i = 0; i < RINGS_PER_NODE; i++) {
-    leds[i](inner_end+1, outer_start-1) = tempColor;
+    leds_node[i](inner_end+1, outer_start-1) = tempColor;
   }
 }
 
@@ -155,11 +171,11 @@ void collision()
 {
   const uint8_t fadeRate = 48;
   const uint8_t fadeCycles = 6; // How many cycles to fade from white to black after collision; will also be the tail length
-  const uint8_t patternTime = HALF_RING + 1 + fadeCycles;
+  const uint8_t patternTime = HALF_VISIBLE + 1 + fadeCycles;
   
   static CRGB curColor[NUM_RINGS][patternTime/NUM_RINGS];  // colors of the current comets
 
-  leds_all.fadeToBlackBy(fadeRate);
+  leds_node_all.fadeToBlackBy(fadeRate);
   for(uint8_t ring = node_number * RINGS_PER_NODE; ring < (node_number + 1) * RINGS_PER_NODE; ring++)
   {
     // Start up with only comets from bottom
@@ -187,23 +203,23 @@ void collision()
 
       uint8_t comet_location = NUM_RINGS*iComet + ring_offset; // The position of the current comet
 
-      if(comet_location >= HALF_RING) {
+      if(comet_location >= HALF_VISIBLE) {
           explodeRing = true;
           break; // No need to draw further comets on this ring; they will be overwritten
       }
 
 
       leds[ring][comet_location] = CRGB::White;
-      leds[ring][LEDS_PER_RING-1 - comet_location] = CRGB::White;
+      leds[ring][VISIBLE_LEDS_PER_RING-1 - comet_location] = CRGB::White;
 
       if(comet_location >= 1) {
         leds[ring][comet_location - 1] = CRGB::White;
-        leds[ring][LEDS_PER_RING-1 - comet_location + 1] = CRGB::White;
+        leds[ring][VISIBLE_LEDS_PER_RING-1 - comet_location + 1] = CRGB::White;
       }
       
       if(comet_location >= 2) {
         leds[ring][comet_location - 2] = curColor[ring][iComet];
-        leds[ring][LEDS_PER_RING-1 - comet_location + 2] = curColor[ring][iComet];
+        leds[ring][VISIBLE_LEDS_PER_RING-1 - comet_location + 2] = curColor[ring][iComet];
       }
     }
     
@@ -221,8 +237,8 @@ void variable_spin() {
   // 6 spin rates, centered at the middle of each node, so node edges line up with each other.
   // First half of node spins one way, second half the other way. Reverse direction on odd numbered nodes so node edges line up.
   const uint8_t spinRates[6] = { 2, 3, 4, 6, 8, 12 };
-  static uint16_t centerPoints[12] = { HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING,
-                                       HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING };
+  static uint16_t centerPoints[12] = { HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE,
+                                       HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE, HALF_VISIBLE };
   CRGB colors[6];
 
   for(uint8_t i = 0; i < 6; i++)
@@ -230,28 +246,28 @@ void variable_spin() {
     colors[i] = get_color(show_parameters[PALETTE_INDEX], i);
     
     if(loop_count % spinRates[i] == 0) {
-      if(centerPoints[i] == 0) centerPoints[i] = LEDS_PER_RING - 1;
+      if(centerPoints[i] == 0) centerPoints[i] = VISIBLE_LEDS_PER_RING - 1;
       else centerPoints[i]--;
 
-      if(centerPoints[11 - i] == LEDS_PER_RING - 1) centerPoints[11 - i] = 0;
+      if(centerPoints[11 - i] == VISIBLE_LEDS_PER_RING - 1) centerPoints[11 - i] = 0;
       else centerPoints[11 - i]++;
     }
   }
 
-  leds_all = CRGB::Black;
-  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+  leds_node_all = CRGB::Black;
+  for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
     uint16_t centerPoint = centerPoints[ring];
 
-    leds[ring][centerPoint] = colors[ring < 6 ? ring : 11 - ring];
+    leds_node[ring][centerPoint] = colors[ring < 6 ? ring : 11 - ring];
     if(centerPoint == 0)
-      leds[ring][LEDS_PER_RING - 1] = colors[ring < 6 ? ring : 11 - ring];
+      leds_node[ring][VISIBLE_LEDS_PER_RING - 1] = colors[ring < 6 ? ring : 11 - ring];
     else
-      leds[ring][centerPoint-1] = colors[ring < 6 ? ring : 11 - ring];
+      leds_node[ring][centerPoint-1] = colors[ring < 6 ? ring : 11 - ring];
 
-    if(centerPoint == LEDS_PER_RING - 1)
-      leds[ring][0] = colors[ring < 6 ? ring : 11 - ring];
+    if(centerPoint == VISIBLE_LEDS_PER_RING - 1)
+      leds_node[ring][0] = colors[ring < 6 ? ring : 11 - ring];
     else
-      leds[ring][centerPoint+1] = colors[ring < 6 ? ring : 11 - ring];
+      leds_node[ring][centerPoint+1] = colors[ring < 6 ? ring : 11 - ring];
   }
 }
 
@@ -268,7 +284,7 @@ void equalizer3() {
   const uint8_t centerBandMinWidth = 10; // Keep this value even
   const uint8_t centerBandMaxWidth = 40; // Keep this value even
   const uint8_t minHeight = 20;
-  const uint8_t maxHeight = HALF_RING - centerBandMaxWidth/2;
+  const uint8_t maxHeight = HALF_VISIBLE - centerBandMaxWidth/2;
   const uint8_t fadeRate = 64;
 
 /*
@@ -278,61 +294,42 @@ void equalizer3() {
   static int outerReads[NUM_CHANNELS][windowSize];
 */
 
-  leds_all.fadeToBlackBy(fadeRate);
+  leds_node_all.fadeToBlackBy(fadeRate);
 
   CHSV centerColor = get_color_hsv(show_parameters[PALETTE_INDEX], 6);
-  centerColor.saturation = 255 - frequencies_max[6];
+  if(frequencies_one[6] >= 255) {
+    centerColor.saturation = 0;
+  }
+  else {
+    centerColor.saturation = 255 - frequencies_max[6] / 255;
+  }
 
   uint8_t centerBandWidth = centerBandMinWidth + (centerBandMaxWidth - centerBandMinWidth) * downbeat_proximity / 255;
   if(centerBandWidth % 2 == 1)
     centerBandWidth++;
   
-  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++)
+  for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++)
   {
     uint8_t channel = ring/2;
     CRGB thisColor = get_color(show_parameters[PALETTE_INDEX], channel);
     uint8_t innerHeight, outerHeight;
-    innerHeight = minHeight + (maxHeight - minHeight) * frequencies_one[channel] / 255;
-    outerHeight = minHeight + (maxHeight - minHeight) * frequencies_two[channel] / 255;
-
-    leds[ring](0, innerHeight) = thisColor;
-    leds[ring](LEDS_PER_RING - 1, LEDS_PER_RING - 1 - outerHeight) = thisColor;
-    leds[ring](HALF_RING - 1 - (centerBandWidth-1)/2, HALF_RING - 1 + centerBandWidth/2) = centerColor;
-  }
-}
-
-// Gradient from one color to the next, overlay=1 adds scrolling dim, 2 adds scrolling saturation
-void ScrollingGradient_TwoColor(uint8_t overlay) {
-  const uint8_t period = 32;
-  const uint8_t paletteWidth = 17;
-  const uint8_t extendedLEDCount = ((NUM_LEDS-1)/period+1)*period;
-  const uint8_t dim_fullDarkLEDs = 8;
-  const uint8_t dim_fullBrightLEDs = 1;
-  const uint8_t sat_fullWhiteLEDs = 1;
-  const uint8_t sat_transitionLength = 6;
-  const uint8_t sat_fullSatLEDs = 12;
-
-  CRGB col1 = get_color(show_parameters[PALETTE_INDEX], 0);
-  CRGB col2 = get_color(show_parameters[PALETTE_INDEX], show_parameters[NUM_COLORS_INDEX]-1);
-  
-  for(uint16_t i = 0; i < extendedLEDCount; i++) {
-    uint8_t idx = (loop_count/2 + i) % extendedLEDCount;
-    if(idx >= NUM_LEDS) continue;
-    
-    uint8_t blendAmount;
-    if(i % period < period/2)
-      blendAmount = (i % (period/2)) * 255 / (period/2);
-    else
-      blendAmount = 255 - (i % (period/2)) * 255 / (period/2);
-
-    CRGB temp = col1;
-    nblend(&temp, &col2, 1, blendAmount);
-    for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
-      leds[ring][idx] = temp;
+    if(frequencies_one[channel] >= 255) {
+      innerHeight = maxHeight;
     }
-  }
+    else {
+      innerHeight = minHeight + (maxHeight - minHeight) * frequencies_one[channel] / 255;
+    }
+    
+    if(frequencies_two[ring/2] >= 255) {
+      outerHeight = maxHeight;
+    }
+    else {
+      outerHeight = minHeight + (maxHeight - minHeight) * frequencies_two[channel] / 255;
+    }
 
-  if(overlay == 1) ScrollingDim(dim_fullDarkLEDs, dim_fullBrightLEDs);
-  else if(overlay == 2) ScrollingSaturation(sat_fullWhiteLEDs, sat_transitionLength, sat_fullSatLEDs);
+    leds_node[ring](0, innerHeight) = thisColor;
+    leds_node[ring](VISIBLE_LEDS_PER_RING - 1, VISIBLE_LEDS_PER_RING - 1 - outerHeight) = thisColor;
+    leds_node[ring](HALF_VISIBLE - 1 - (centerBandWidth-1)/2, HALF_VISIBLE - 1 + centerBandWidth/2) = centerColor;
+  }
 }
 
