@@ -1,5 +1,5 @@
 #define	NUM_PARAMETERS		20
-#define	NUM_COLORS_INDEX	3
+#define	NUM_EDM_COLORS_INDEX	5
 
 void setup()
 {
