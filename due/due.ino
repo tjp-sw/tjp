@@ -99,6 +99,7 @@ bool new_animation_triggered = false;                                           
 uint8_t current_animation = 0;                                                    //
 uint32_t loop_count = 0;                                                          //
 unsigned long current_time=0, animation_start_time=0;                             //
+unsigned long long epoch_msec;                                                    //
                                                                                   //
 // LED actual data                                                                //
 CRGB leds_raw[NUM_RINGS][LEDS_PER_RING];                                          //

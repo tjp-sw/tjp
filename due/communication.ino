@@ -227,7 +227,7 @@ void process_commands(const int source, String& input)
       case 's':
         size += NUM_PARAMETERS;
         if (input.length() >= size) {
-            uint8_t number_of_colors = input[1 + NUM_COLORS_INDEX];
+            uint8_t number_of_colors = input[1 + NUM_EDM_COLORS_INDEX];
             size += number_of_colors;
             if (input.length() >= size) {
 #ifdef I_AM_DUE
@@ -425,9 +425,9 @@ void assign_node(uint8_t node_num) {
   // Needs to call setLeds() for each strip?
   // Needs to re-call .setCorrection(TypicalLEDStrip)?
   node_number = node_num;
+  #ifdef DEBUG_ASSIGN_NODE
   LEDS[0].setLeds(&leds_raw[node_num * PHYSICAL_LEDS_PER_NODE], LEDS_PER_STRIP);
   
-  #ifdef DEBUG
     Serial.println("Assigned node #" + String(node_number));
     for(int i = 0; i < 4; i ++)
       leds_raw[node_num * PHYSICAL_LEDS_PER_NODE + LEDS_PER_STRIP*i] = CRGB::Green;
