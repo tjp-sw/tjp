@@ -1,5 +1,4 @@
 
-// fixme: Diane - have added and rearranged parameters. update python code to match this change
 // fixme: Brian? - animations are served from the center of the strips forward and backwards, though we're writing our code
 //        as if it's written strips 0 -> 4. should alter writing out to LEDs to counter this change
 // fixme: Brian? - saving all color arrays as CRGB will take too much memory. Instead, we'll save an index into an array / arrays to save space

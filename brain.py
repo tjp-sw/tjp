@@ -64,21 +64,31 @@ def do_auto(ignored, neglected):
 
 # an arbitrary initial set of show parameters and colors
 show_colors = [2, 1, 4]		# number of items must match due code: NUM_COLORS_PER_PALETTE? max_palette?
-show_parameters = [3, 0, 3, len(show_colors), 4, 7, 3, 9, 2, 5]
+show_parameters = [8, 1, 2, 1, 0, len(show_colors), len(show_colors), len(show_colors), len(show_colors), 3, 8, 1, 2, 0, 10, 1, 2, 0, 0, 2]
 show_bounds = [			# order must match show_parameters
   # [min, max]
     [0, NUM_ANIMATIONS - 1],	# ANIMATION_INDEX, which animation to play
+    [0, 9],			# BACKGROUND_INDEX, which background animation to use
+    [0, 9],			# MIDLAYER_INDEX, which mid layer animation to use
+    [0, 9],			# SPARKLE_INDEX, which sparkle animation to use
     [0, NUM_BEAT_EFFECTS - 1],	# BEAT_EFFECT_INDEX, which beat effect to use / how to respond to beat with LEDs
-    [0, max_palette - 1],	# PALETTE_INDEX, which color palette to use
-    [1, NUM_COLORS_PER_PALETTE - 2],	# NUM_COLORS_INDEX, how many colors to use in the animation (the last color indicates rainbow around structure)
+    [1, NUM_COLORS_PER_PALETTE - 2],	# NUM_EDM_COLORS_INDEX, how many colors to use out of the edm palette
+    [1, NUM_COLORS_PER_PALETTE - 2],	# NUM_BG_COLORS_INDEX
+    [1, NUM_COLORS_PER_PALETTE - 2],	# NUM_ML_COLORS_INDEX
+    [1, NUM_COLORS_PER_PALETTE - 2],	# NUM_SP_COLORS_INDEX
     [1, 10],			# COLOR_THICKNESS_INDEX, how many pixels should the bands of color be
     [0, 5],			# BLACK_THICKNESS_INDEX, how many black LEDs between color bands
     [0, 3],			# INTRA_RING_MOTION_INDEX, which direction to move lights inside a ring:  0 = none, 1 = CW, 2 = CCW, 3 = split
     [1, 10],			# INTRA_RING_SPEED_INDEX, how fast should intra_ring motion be fixme: still need to decide on units
     [0, 2],			# COLOR_CHANGE_STYLE_INDEX, how should color change during an animation: 0 = none, 1 = cycle thru selected, 2 = cycle thru palette
     [0, 10],			# RING_OFFSET_INDEX, how far one ring pattern is rotated from neighbor -10 -> 10	FIXME allow negative numbers!
+    [0, 1],			# INTER_RING_MOTION_INDEX, which color palette to use
+    [0, 4],			# INTER_RING_SPEED_INDEX
+    [0, 1],			# COLOR_ROTATION, if true, cycle colors through all currently chosen colors
+    [0, 1],			# COLOR_RAINBOW_INDEX, if true, spread currently chosen colors around structure like rainbow
+    [0, max_palette - 1],	# PALETTE_INDEX, which color palette to use
     ]
-NUM_COLORS_INDEX = 3		# index into show_bounds
+NUM_EDM_COLORS_INDEX = 5	# index into show_bounds
 
 def do_show(cmd, param):
     global last_show_change_sec, show_colors, show_parameters
@@ -119,7 +129,7 @@ def do_random_program_change():
 
     # randomly choose a parameter to change
     change_param = randint(0, len(show_parameters) - 1)
-    if change_param == NUM_COLORS_INDEX:
+    if change_param == NUM_EDM_COLORS_INDEX:
         # randomly change a color
         change_param = randint(0, len(show_colors) - 1)
         show_colors[change_param] = randint(0, 5)

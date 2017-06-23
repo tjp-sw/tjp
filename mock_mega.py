@@ -56,13 +56,13 @@ def process_commands():
             time.sleep(10)
             break
         elif command == 's':
-            size += 10
+            size += 20
             if len(network_data) >= size:
-                number_of_colors = struct.unpack_from('>B', network_data, 4)[0]
+                number_of_colors = struct.unpack_from('>B', network_data, 6)[0]
                 size += number_of_colors
                 if len(network_data) >= size:
-                    params = list(struct.unpack_from('>10B', network_data, 1))
-                    colors = list(struct.unpack_from('>%uB' % number_of_colors, network_data, 11))
+                    params = list(struct.unpack_from('>20B', network_data, 1))
+                    colors = list(struct.unpack_from('>%uB' % number_of_colors, network_data, 21))
                     print 'show params', repr(params), 'colors', repr(colors)
                 else:
                     print 'command', command, 'needs', size, 'bytes but only', len(network_data), 'available'
