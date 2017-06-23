@@ -159,7 +159,7 @@ CRGB leds_raw[NUM_RINGS][LEDS_PER_RING];                                        
 //--------------------------------------------------------------------------------//
     
 //  Show parameters coming from the pi ------------------------------------------------------------------//
-#define NUM_PARAMETERS 10                                                                                //
+#define NUM_PARAMETERS 20                                                                                //
 #define NUM_COLORS_PER_PALETTE 7                                                                         //
 #define NUM_ANIMATIONS 13                                                                                //
                                                                                                          //
@@ -355,6 +355,7 @@ void manually_update_parameters() {
     show_parameters[RING_OFFSET_INDEX] = 10;                                                                 // 
     show_parameters[INTER_RING_MOTION_INDEX] = 1;                                                            //
     show_parameters[INTER_RING_SPEED_INDEX] = 2;                                                             //
+    show_parameters[COLOR_ROTATION] = 0;                                                                     //
     show_parameters[COLOR_RAINBOW_INDEX] = 0;                                                                //
 
     show_parameters[PALETTE_INDEX] = 2;                                                                      //
