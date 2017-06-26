@@ -27,6 +27,9 @@ typedef void (*sparkle_f_ptr)();
 // Due controlled versus pi controlled animation choices    //
 //#define PI_CONTROLLED                                     //
 //#define CYCLE                                             //
+                                                            //
+// one node / 4 separate rings / 1 ring per strip setup     //
+#define TEST_SETUP                                          //
 //----------------------------------------------------------//
 
 // Debugging globals -------------//
@@ -72,7 +75,7 @@ uint8_t high_band_emphasis = 0; // 0 or 1                                     //
 
 // LEDs --------------------------------------------------------------------------//
 // Physical constants                                                             //
-#ifndef PI_CONTROLLED                                                             //
+#ifdef TEST_SETUP                                                                 //
   #define NUM_NODES 1                                                             //
   #define RINGS_PER_NODE 4                                                        //
   #define STRIPS_PER_NODE 4                                                       //
@@ -104,7 +107,7 @@ unsigned long long epoch_msec;                                                  
 CRGB leds_raw[NUM_RINGS][LEDS_PER_RING];                                          //
                                                                                   //
 // Alternative references to LED data; allows for ranged indexing                 //
-#ifndef PI_CONTROLLED                                                             //
+#ifdef TEST_SETUP                                                                 //
   CRGBSet leds_all(*leds_raw, NUM_LEDS);                                          //
   CRGBSet leds_node_all(leds_raw[node_number * RINGS_PER_NODE], LEDS_PER_NODE);   //
   CRGBSet leds_node[RINGS_PER_NODE] = {                                           //
