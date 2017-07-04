@@ -23,10 +23,6 @@ struct control_message {
   bool bool_loop;          //does the audio loop?
 };
 
-int input_field = 0;
-int which_field = 0;
-String input_string = "";
-
 control_message ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
 
 // ***Magically figure out what node this is. 
@@ -92,8 +88,22 @@ void do_command () {
       if (DEBUG)
         Serial.println("SetVol");
       for (int ch = 0; ch < 18; ch++) {
-        if (ctrl_msg.channels[ch]) {
-          tsunami.trackFade(channels[ch], ctrl_msg.channels[ch], ctrl_msg.fade_speed, false);
+        if (ctrl_msg.gain[ch]) {
+            ch_gain[ch]= ctrl_msg.gain[ch];
+          //tsunami.trackFade(int t, int gain, int time, bool stopFlag)
+         // tsunami.trackFade(channels[ch], ctrl_msg.gain[ch], ctrl_msg.fade_speed, false);
+          if (ch_gain[ch] = -70) {
+            tsunami.trackFade(channels[ch], ch_gain[ch], ctrl_msg.fade_speed, true);
+            channels[ch]= 0;
+            ch_loop[ch]= false;
+          } else {
+            tsunami.trackFade(channels[ch], ch_gain[ch], ctrl_msg.fade_speed, false);
+          }
+          if (DEBUG) {
+            Serial.print("Fading Channel ");
+            Serial.println(ch);
+          }
+          delay(10);
         }
       }
       break;
@@ -136,16 +146,21 @@ void loop() {
 }
 
 int msg_position = 0;
+int which_field = 0;
 String ch_string = "";
+String input_string = "";
+
 void serialEvent() {  
   while (Serial.available()) {
       // get the new byte:
      char inChar = (char)Serial.read();
 
      if (inChar == '\n') { 
-        if (DEBUG)
+        if (DEBUG>1)
           Serial.println("New Message");
+        msg_position = 0;
         which_field=0;
+        ch_string = "";
         input_string= "";
         new_ctrl_msg = true;
         break; 
@@ -160,6 +175,15 @@ void serialEvent() {
             if (DEBUG) {
               Serial.print("Node ");
               Serial.println(ctrl_msg.node);
+            }
+
+            if ((ctrl_msg.node != node) && (ctrl_msg.node != 0)) {
+              if (DEBUG) {
+                Serial.println("Not this node");
+              }   
+              while (Serial.available()) {
+                char inChar = (char)Serial.read();
+              }
             }
            break;
             
@@ -204,7 +228,7 @@ void serialEvent() {
                   if (DEBUG) {
                     Serial.print("volume ");
                     Serial.print(ch);
-                    Serial.print("-");
+                    Serial.print(">");
                     Serial.println(ctrl_msg.gain[ch]);
                   }
                   break;
