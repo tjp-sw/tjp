@@ -9,8 +9,9 @@
 
 Tsunami tsunami;                // Our Tsunami object
 boolean new_ctrl_msg = false;  // whether a new message exists to process
-int channels[18] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-bool channel_loop[ 18 ] = { false };
+int channels[ 18 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+bool ch_loop[ 18 ] = { false };
+int ch_gain[ 18 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 int node = 0;
 
 struct control_message {
@@ -67,20 +68,21 @@ void do_command () {
     //Change the music playing
     case SETAUDIO :
       if (DEBUG)
-          Serial.println("case SetAudio");
+          Serial.println("SetAudio");
       for (int ch = 0; ch < 18; ch++) {
         if (ctrl_msg.channels[ch]) {
           //tsunami.trackPlayPoly(ctrl_msg.channels[ch], 0, true);
-          tsunami.samplerateOffset(0, 0);        // Reset sample rate offset to 0
-          tsunami.masterGain(0, 0);              // Reset the master gain to 0dB          
-          tsunami.trackLoad(ctrl_msg.channels[ch], 0, true);
           channels[ch]= ctrl_msg.channels[ch];
+          ch_loop[ch]= ctrl_msg.bool_loop;
+          tsunami.trackLoad(channels[ch], 0, true);
           if (DEBUG) {
             Serial.print("Now Playing ");
             Serial.println(ctrl_msg.channels[ch]);
           }
         }
       }
+      tsunami.samplerateOffset(0, 0);        // Reset sample rate offset to 0
+      tsunami.masterGain(0, 0);              // Reset the master gain to 0dB
       tsunami.resumeAllInSync();
       break;
 
@@ -88,17 +90,19 @@ void do_command () {
     //The range for gain is -70 to +10. A value of 0 (no gain) plays the track at the base volume of the wav file. 
     case SETVOL :
       if (DEBUG)
-        Serial.println("case SetVol");
-      for (int channel = 0; channel < 18; channel++) {
-        if (ctrl_msg.channels[channel]) {
-          tsunami.trackFade(channels[channel], ctrl_msg.channels[channel], ctrl_msg.fade_speed, false);
+        Serial.println("SetVol");
+      for (int ch = 0; ch < 18; ch++) {
+        if (ctrl_msg.channels[ch]) {
+          tsunami.trackFade(channels[ch], ctrl_msg.channels[ch], ctrl_msg.fade_speed, false);
         }
       }
       break;
 
     //Instantly mute all audio on node.
     case MUTEALLAUDIO :
-      
+      if (DEBUG)
+        Serial.println("MuteAllAudio");  
+      memset(ch_loop,0,sizeof(ch_loop));    
       tsunami.stopAllTracks();
       break;
   } 
@@ -106,35 +110,29 @@ void do_command () {
 
 void loop() {
   if (new_ctrl_msg) {
-//    handle_ctrl_msg();
     do_command();
-
     new_ctrl_msg = false;
   }
   
-  //tsunami.trackPlayPoly(6, 0, true);     // Start Track 6
-  //tsunami.trackFade(6, -70, 2000, true);  // Fade Track 6 to 0dB over 2 sec  
+
   tsunami.update();
-  for (int channel = 0; channel < 18; channel++) {
-    /*if (channels[channel] > 0) {
-      Serial.print ("channel ");
-      Serial.print (channel);
-      Serial.print (">");
-      Serial.println (channels[channel]);
-    }*/
-    if(!(tsunami.isTrackPlaying(channels[channel]))) {
-      channels[channel]= 0;
-      /*if (DEBUG>1) {
-        Serial.print("Ended ");
-        Serial.println(channels[channel]);
-      }*/
+  for (int ch = 0; ch < 18; ch++) {
+    if(!(tsunami.isTrackPlaying(channels[ch]))) {
+      if (ch_loop[ch]){
+        tsunami.trackLoad(channels[ch], 0, true);
+      } else {
+        channels[ch]= 0;
+      }
     } else {
      if (DEBUG>1) {
         Serial.print("Still playing ");
-        Serial.println(channels[channel]);
+        Serial.println(channels[ch]);
       } 
     }
   }
+  tsunami.samplerateOffset(0, 0);        // Reset sample rate offset to 0
+  tsunami.masterGain(0, 0);              // Reset the master gain to 0dB
+  tsunami.resumeAllInSync();
 }
 
 int msg_position = 0;
@@ -228,4 +226,5 @@ void serialEvent() {
   
 }
 
-
+  //tsunami.trackPlayPoly(6, 0, true);     // Start Track 6
+  //tsunami.trackFade(6, -70, 2000, true);  // Fade Track 6 to 0dB over 2 sec  
