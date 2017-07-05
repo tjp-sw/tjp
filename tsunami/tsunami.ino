@@ -25,9 +25,9 @@ struct control_message {
   int node;           //nodes that will perform the command
   int command;        //Command to perform
   int channels[18];   //Array of tracks to change
-  int gain[18];           //Optional volume
+  int gain[18];       //Optional volume
   int fade_speed;     //speed to change volume
-  bool bool_loop;          //does the audio loop?
+  bool bool_loop;     //does the audio loop?
 };
 
 control_message ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
@@ -71,6 +71,37 @@ void setup() {
 }
 
 void do_command () {
+  Serial.println("---Control Message---");
+  Serial.print("Node ");
+  Serial.println(ctrl_msg.node);  
+  Serial.print("Command ");
+  Serial.println(ctrl_msg.command);
+  for (int x=0; x<18; x++) {
+    if (ctrl_msg.channels[x]) {
+      Serial.print("channels[");
+      Serial.print(x);
+      Serial.print("] ");
+      Serial.println(ctrl_msg.channels[x]);
+    }
+  }
+  for (int x=0; x<18; x++) {
+    if (ctrl_msg.gain[x]) {
+      Serial.print("gain[");
+      Serial.print(x);
+      Serial.print("] ");
+      Serial.println(ctrl_msg.gain[x]);
+    }
+  }
+  if (ctrl_msg.fade_speed){
+    Serial.print("fade_speed ");
+    Serial.println(ctrl_msg.fade_speed);
+  }
+  if (ctrl_msg.command == SETAUDIO){
+    Serial.print("Looping ");
+    Serial.println(ctrl_msg.bool_loop);
+  }
+  Serial.println("--------------------");
+    
   switch (ctrl_msg.command) {
     //Change the music playing
     case SETAUDIO :
@@ -78,6 +109,9 @@ void do_command () {
           Serial.println("SetAudio");
       for (int ch = 0; ch < 18; ch++) {
         if (ctrl_msg.channels[ch]) {
+          if (channels[ch]){
+            tsunami.trackFade(channels[ch], -70, 1000, true);
+          }
           channels[ch]= ctrl_msg.channels[ch];
           ch_loop[ch]= ctrl_msg.bool_loop;
           tsunami.trackGain(channels[ch], ch_gain[ch]);
@@ -119,14 +153,14 @@ void do_command () {
 
     //Instantly mute all audio on node.
     case MUTEALLAUDIO :
-      if (DEBUG)
-        Serial.println("MuteAllAudio");   
+      Serial.println("MuteAllAudio");   
       tsunami.stopAllTracks();
       memset(ch_loop,0,sizeof(ch_loop));   
       memset(channels,0,sizeof(channels)); 
       memset(ch_gain,0,sizeof(ch_gain));
       break;
-  } 
+  }
+  ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0}; 
 }
 
 void loop_songs () {
@@ -135,6 +169,8 @@ void loop_songs () {
   for (int ch = 0; ch < 18; ch++) {
     if(!(tsunami.isTrackPlaying(channels[ch]))) {
       if (ch_loop[ch]){
+        Serial.print("Replaying ");
+        Serial.println(channels[ch]);
         tsunami.trackGain(channels[ch], ch_gain[ch]);
         tsunami.trackLoad(channels[ch], 0, true);
       } else {
