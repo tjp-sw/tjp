@@ -5,13 +5,13 @@
 #define SETAUDIO 1
 #define SETVOL 2
 #define MUTEALLAUDIO 3
-#define DEBUG 1
+#define DEBUG 2
 
 Tsunami tsunami;                // Our Tsunami object
 boolean new_ctrl_msg = false;  // whether a new message exists to process
-int channels[ 18 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+int channels[ 18 ] = { 0 };
 bool ch_loop[ 18 ] = { false };
-int ch_gain[ 18 ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+int ch_gain[ 18 ] = { 0 };
 int node = 0;
 
 struct control_message {
@@ -28,7 +28,7 @@ control_message ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
 // ***Magically figure out what node this is. 
 // ***Probably should be slightly less magical in the final version
 void get_node() {
-  node = 0;
+  node = 1;
 }
 
 void setup() {
@@ -67,9 +67,11 @@ void do_command () {
           Serial.println("SetAudio");
       for (int ch = 0; ch < 18; ch++) {
         if (ctrl_msg.channels[ch]) {
-          //tsunami.trackPlayPoly(ctrl_msg.channels[ch], 0, true);
           channels[ch]= ctrl_msg.channels[ch];
           ch_loop[ch]= ctrl_msg.bool_loop;
+          //Serial.print("Loop ");
+          //Serial.println(ch_loop[ch]);
+          tsunami.trackGain(channels[ch], ch_gain[ch]);
           tsunami.trackLoad(channels[ch], 0, true);
           if (DEBUG) {
             Serial.print("Now Playing ");
@@ -90,9 +92,7 @@ void do_command () {
       for (int ch = 0; ch < 18; ch++) {
         if (ctrl_msg.gain[ch]) {
             ch_gain[ch]= ctrl_msg.gain[ch];
-          //tsunami.trackFade(int t, int gain, int time, bool stopFlag)
-         // tsunami.trackFade(channels[ch], ctrl_msg.gain[ch], ctrl_msg.fade_speed, false);
-          if (ch_gain[ch] = -70) {
+          if (ch_gain[ch] == -70) {
             tsunami.trackFade(channels[ch], ch_gain[ch], ctrl_msg.fade_speed, true);
             channels[ch]= 0;
             ch_loop[ch]= false;
@@ -101,7 +101,9 @@ void do_command () {
           }
           if (DEBUG) {
             Serial.print("Fading Channel ");
-            Serial.println(ch);
+            Serial.print(ch);
+            Serial.print(">");
+            Serial.println(ch_gain[ch]);
           }
           delay(10);
         }
@@ -111,30 +113,28 @@ void do_command () {
     //Instantly mute all audio on node.
     case MUTEALLAUDIO :
       if (DEBUG)
-        Serial.println("MuteAllAudio");  
-      memset(ch_loop,0,sizeof(ch_loop));    
+        Serial.println("MuteAllAudio");   
       tsunami.stopAllTracks();
+      memset(ch_loop,0,sizeof(ch_loop));   
+      memset(channels,0,sizeof(channels)); 
+      memset(ch_gain,0,sizeof(ch_gain));
       break;
   } 
 }
 
-void loop() {
-  if (new_ctrl_msg) {
-    do_command();
-    new_ctrl_msg = false;
-  }
-  
-
+void loop_songs () {
+  delay(10);
   tsunami.update();
   for (int ch = 0; ch < 18; ch++) {
     if(!(tsunami.isTrackPlaying(channels[ch]))) {
       if (ch_loop[ch]){
+        tsunami.trackGain(channels[ch], ch_gain[ch]);
         tsunami.trackLoad(channels[ch], 0, true);
       } else {
         channels[ch]= 0;
       }
     } else {
-     if (DEBUG>1) {
+     if (DEBUG>2) {
         Serial.print("Still playing ");
         Serial.println(channels[ch]);
       } 
@@ -143,6 +143,16 @@ void loop() {
   tsunami.samplerateOffset(0, 0);        // Reset sample rate offset to 0
   tsunami.masterGain(0, 0);              // Reset the master gain to 0dB
   tsunami.resumeAllInSync();
+}
+
+void loop() {
+  if (new_ctrl_msg) {
+    do_command();
+    new_ctrl_msg = false;
+  }
+  
+  loop_songs();
+
 }
 
 int msg_position = 0;
@@ -156,17 +166,21 @@ void serialEvent() {
      char inChar = (char)Serial.read();
 
      if (inChar == '\n') { 
-        if (DEBUG>1)
-          Serial.println("New Message");
         msg_position = 0;
         which_field=0;
         ch_string = "";
         input_string= "";
-        new_ctrl_msg = true;
+        if ((ctrl_msg.node == node) || (ctrl_msg.node == 0)){
+          new_ctrl_msg = true;
+          if (DEBUG>1)
+            Serial.println("New Message");
+        } else {
+          ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
+        }
         break; 
      } else if (inChar == ';') {
         if (DEBUG>1) {
-          Serial.print("input ");
+          Serial.print("input_string=");
           Serial.println(input_string);
         } 
         switch (which_field) {
@@ -177,14 +191,21 @@ void serialEvent() {
               Serial.println(ctrl_msg.node);
             }
 
-            if ((ctrl_msg.node != node) && (ctrl_msg.node != 0)) {
+ /*           if ((ctrl_msg.node != node) && (ctrl_msg.node != 0)) {
               if (DEBUG) {
                 Serial.println("Not this node");
               }   
               while (Serial.available()) {
-                char inChar = (char)Serial.read();
-              }
-            }
+                char trashChar = (char)Serial.read();
+                Serial.print(trashChar);
+              } 
+              Serial.println(Serial.available());
+              msg_position = 0;
+              //which_field=0;
+              ch_string = "";
+              input_string= "";
+             
+            } */
            break;
             
           case 1 :
@@ -198,7 +219,10 @@ void serialEvent() {
           case 2 :
             switch (ctrl_msg.command) {
               case SETAUDIO :
-                ctrl_msg.bool_loop = (input_string != '0');
+                ctrl_msg.bool_loop = (input_string.charAt(0) != '0');
+                Serial.print("Loop ");
+                Serial.print(input_string.charAt(0));
+                Serial.println(ctrl_msg.bool_loop);
                 break;
               case SETVOL :
                 ctrl_msg.fade_speed = atoi(input_string.c_str());
@@ -224,7 +248,8 @@ void serialEvent() {
                   }
                   break;
                 case SETVOL :
-                  ctrl_msg.gain[ch] = atoi(input_string.c_str());
+                  ctrl_msg.gain[ch] = atoi(ch_string.c_str());
+                  ch_string= "";
                   if (DEBUG) {
                     Serial.print("volume ");
                     Serial.print(ch);
@@ -250,5 +275,4 @@ void serialEvent() {
   
 }
 
-  //tsunami.trackPlayPoly(6, 0, true);     // Start Track 6
-  //tsunami.trackFade(6, -70, 2000, true);  // Fade Track 6 to 0dB over 2 sec  
+
