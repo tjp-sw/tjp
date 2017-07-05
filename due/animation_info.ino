@@ -1,4 +1,8 @@
-
+/*
+   RJS 7/4 I think this should actaully live on the pi in python...
+   Would be great if these classes were populated via a non-volitle database.
+   Leaving here for now...
+*/
 using namespace std;
 
 #include<set>
@@ -13,6 +17,7 @@ class AnimationInfo
   private:
     int animation_int;
     set<int> bestFreqBands;
+    //more attributes...?
 
   public:
     AnimationInfo(int ani_num, set<int> bestBands) :
@@ -30,6 +35,10 @@ class AnimationInfo
     }
 };
 
+/*
+   A class to contian lists of particular animations for various audio inputs.
+   Ideally should be populated from the Database as the information is non-volitle.
+*/
 class Animations
 {
   private:
@@ -38,6 +47,26 @@ class Animations
     set<AnimationInfo> highFreqAnimations;
     set<AnimationInfo> noFreqAnimations;
 
+  public:
+    void addToLowFreqAnimations(AnimationInfo ani_info)
+    {
+      lowFreqAnimations.inset(ani_info);
+    }
+
+    void addToMidFreqAnimations(AnimationInfo ani_info)
+    {
+      midFreqAnimations.inset(ani_info);
+    }
+
+    void addToHighFreqAnimations(AnimationInfo ani_info)
+    {
+      highFreqAnimations.inset(ani_info);
+    }
+
+    void addToNoFreqAnimations(AnimationInfo ani_info)
+    {
+      noFreqAnimations.inset(ani_info);
+    }
 
 };
 
