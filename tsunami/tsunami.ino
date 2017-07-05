@@ -5,14 +5,21 @@
 #define SETAUDIO 1
 #define SETVOL 2
 #define MUTEALLAUDIO 3
-#define DEBUG 2
+#define DEBUG 0
 
 Tsunami tsunami;                // Our Tsunami object
-boolean new_ctrl_msg = false;  // whether a new message exists to process
-int channels[ 18 ] = { 0 };
+//variables tracking currently playing song data
+boolean new_ctrl_msg = false;  
+int channels[ 18 ] = { 0 };    
 bool ch_loop[ 18 ] = { false };
 int ch_gain[ 18 ] = { 0 };
 int node = 0;
+
+//variables for serial input
+int msg_position = 0;
+int which_field = 0;
+String ch_string = "";
+String input_string = "";
 
 struct control_message {
   int node;           //nodes that will perform the command
@@ -31,7 +38,7 @@ void get_node() {
   node = 1;
 }
 
-void setup() {
+void tsunami_setup () {
   // initialize serial:
   Serial.begin(9600);
 
@@ -55,7 +62,11 @@ void setup() {
   // Allow time for the Tsunami to respond with the version string and
   //  number of tracks.
   delay(100); 
+}
 
+void setup() {
+  tsunami_setup();
+  
   get_node();
 }
 
@@ -69,14 +80,10 @@ void do_command () {
         if (ctrl_msg.channels[ch]) {
           channels[ch]= ctrl_msg.channels[ch];
           ch_loop[ch]= ctrl_msg.bool_loop;
-          //Serial.print("Loop ");
-          //Serial.println(ch_loop[ch]);
           tsunami.trackGain(channels[ch], ch_gain[ch]);
           tsunami.trackLoad(channels[ch], 0, true);
-          if (DEBUG) {
-            Serial.print("Now Playing ");
-            Serial.println(ctrl_msg.channels[ch]);
-          }
+          Serial.print("Now Playing ");
+          Serial.println(ctrl_msg.channels[ch]);
         }
       }
       tsunami.samplerateOffset(0, 0);        // Reset sample rate offset to 0
@@ -131,7 +138,12 @@ void loop_songs () {
         tsunami.trackGain(channels[ch], ch_gain[ch]);
         tsunami.trackLoad(channels[ch], 0, true);
       } else {
+        if (channels[ch]) {
+          Serial.print("Ending ");
+          Serial.println(channels[ch]);
+        }
         channels[ch]= 0;
+        ch_gain[ch]=0;
       }
     } else {
      if (DEBUG>2) {
@@ -150,15 +162,8 @@ void loop() {
     do_command();
     new_ctrl_msg = false;
   }
-  
   loop_songs();
-
 }
-
-int msg_position = 0;
-int which_field = 0;
-String ch_string = "";
-String input_string = "";
 
 void serialEvent() {  
   while (Serial.available()) {
@@ -190,22 +195,6 @@ void serialEvent() {
               Serial.print("Node ");
               Serial.println(ctrl_msg.node);
             }
-
- /*           if ((ctrl_msg.node != node) && (ctrl_msg.node != 0)) {
-              if (DEBUG) {
-                Serial.println("Not this node");
-              }   
-              while (Serial.available()) {
-                char trashChar = (char)Serial.read();
-                Serial.print(trashChar);
-              } 
-              Serial.println(Serial.available());
-              msg_position = 0;
-              //which_field=0;
-              ch_string = "";
-              input_string= "";
-             
-            } */
            break;
             
           case 1 :
@@ -220,9 +209,6 @@ void serialEvent() {
             switch (ctrl_msg.command) {
               case SETAUDIO :
                 ctrl_msg.bool_loop = (input_string.charAt(0) != '0');
-                Serial.print("Loop ");
-                Serial.print(input_string.charAt(0));
-                Serial.println(ctrl_msg.bool_loop);
                 break;
               case SETVOL :
                 ctrl_msg.fade_speed = atoi(input_string.c_str());
@@ -271,8 +257,7 @@ void serialEvent() {
      } else {
       input_string+= inChar;
      }   
-  }
-  
+  }  
 }
 
 
