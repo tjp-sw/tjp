@@ -1,9 +1,4 @@
 
-// fixme: Brian? - animations are served from the center of the strips forward and backwards, though we're writing our code
-//        as if it's written strips 0 -> 4. should alter writing out to LEDs to counter this change
-// fixme: Brian? - saving all color arrays as CRGB will take too much memory. Instead, we'll save an index into an array / arrays to save space
-//        this conversion needs to be handled
-
 
 #include <FastLED.h>
 typedef void (*sparkle_f_ptr)();     
@@ -163,11 +158,17 @@ CRGB leds_raw[NUM_RINGS][LEDS_PER_RING];                                        
 //  Show parameters coming from the pi ------------------------------------------------------------------//
 #define NUM_PARAMETERS 20                                                                                //
 #define NUM_COLORS_PER_PALETTE 7                                                                         //
-#define NUM_ANIMATIONS 13                                                                                //
+#define NUM_ANIMATIONS 13  
+#define NUM_BACKGROUNDS 3 
+#define NUM_MIDLAYERS 3 
+#define NUM_SPARKLES 3 
+#define NUM_BEATS 3 
+#define NUM_EDM_COLORS 3 
+
                                                                                                          //
 //  Indices into show_parameters[] which holds information from the pi                                   //
 //  Note: These are only *indices*, not values. Don't change these                                       //
-#define ANIMATION_INDEX 0   // which EDM animation to play - for use when we have music                  //
+#define EDM_INDEX 0   // which EDM animation to play - for use when we have music                  //
 #define BACKGROUND_INDEX 1  // which background animation to use                                         //
 #define MIDLAYER_INDEX 2  // which mid layer animation to use                                            //
 #define SPARKLE_INDEX 3  // which sparkle animation to use                                               //
@@ -178,7 +179,7 @@ CRGB leds_raw[NUM_RINGS][LEDS_PER_RING];                                        
 #define NUM_SP_COLORS_INDEX 8
 #define COLOR_THICKNESS_INDEX 9   // how many consecutive lit LEDs in a row                              //
 #define BLACK_THICKNESS_INDEX 10   // how many dark LEDs between lit ones                                 //
-#define INTRA_RING_MOTION_INDEX 11   // -1 CCW, 0 none, 1 CW, 2 split                                     //
+#define INTRA_RING_MOTION_INDEX 11   // -1 CCW, 0 none, 1 CW, 2 alternate, 3 split                                     // 
 #define INTRA_RING_SPEED_INDEX 12   // 0 to 4                                                             //
 #define COLOR_CHANGE_STYLE_INDEX 13   // 0 none, 1 cycle thru selected, 2 cycle thru palette             //
 #define RING_OFFSET_INDEX 14  // how far one ring pattern is rotated from neighbor -10 -> 10             //
@@ -239,6 +240,9 @@ boolean increasing[NUM_RINGS][VISIBLE_LEDS_PER_RING];
 CRGB temp[VISIBLE_LEDS_PER_RING];
 boolean temp_is_set[VISIBLE_LEDS_PER_RING];
 
+//  for mid-layer and sparkle-layers, set unused pixels to this color value and it won't over-write lower layer
+CRGB transparent = {1, 1, 1};
+
 // fixme: have this come from parameters
 CRGB sparkle_color = CRGB::Purple;
 
@@ -256,7 +260,7 @@ void setup() {                                                                  
                                                                                                             //
   setup_spectrum_shield();                                                                                  //
                                                                                                             //
-  show_parameters[ANIMATION_INDEX] = 0; // Initialize to debugging mode                                     //
+  show_parameters[EDM_INDEX] = 0; // Initialize to debugging mode                                     //
                                                                                                             //
   // Initialize digital pin LED_BUILTIN as an output                                                        //
   pinMode(LED_BUILTIN, OUTPUT);                                                                             //
@@ -288,9 +292,9 @@ void loop() {                                                                   
                                                                                           //
   //  Using REFRESH_TIME will slow animations, but will be more accurate to final product //
   unsigned long now = millis();                                                           //
-  if(now - current_time < REFRESH_TIME)                                                   //
-    FastLED.delay(now - current_time);                                                    //
-  current_time = now;                                                                     //
+//  if(now - current_time < REFRESH_TIME)                                                   //
+//    FastLED.delay(now - current_time);                                                    //
+  current_time = now + epoch_msec;                                                                     //
   loop_count = (current_time - animation_start_time) / REFRESH_TIME;                      //
                                                                                           //
   // read spectrum shield and do beat detection                                           //
@@ -340,35 +344,38 @@ void manually_update_parameters() {
       
     #else
       // choose single animation manually                                       ********** set parameters manually here **********
-      show_parameters[ANIMATION_INDEX] = 8;    // <--- this is where you enter your animation number        //
+      show_parameters[EDM_INDEX] = 8;    // <--- this is where you enter your animation number        //
     #endif 
 
     // Manually assign values to the rest of the animation parameters
-    show_parameters[BACKGROUND_INDEX] = 1;                                                                   //
-    show_parameters[MIDLAYER_INDEX] = 2;                                                                     //
-    show_parameters[SPARKLE_INDEX] = 1;                                                                      //
-    show_parameters[BEAT_EFFECT_INDEX] = 0;                                                                  //
-    show_parameters[NUM_EDM_COLORS_INDEX] = 3;                                                                   //
-    show_parameters[COLOR_THICKNESS_INDEX] = 3;                                                              //
-    show_parameters[BLACK_THICKNESS_INDEX] = 8;                                                              //
-    show_parameters[INTRA_RING_MOTION_INDEX] = 1;                                                            //
-    show_parameters[INTRA_RING_SPEED_INDEX ] = 2;                                                            //
-    show_parameters[COLOR_CHANGE_STYLE_INDEX] = 0;                                                           //
-    show_parameters[RING_OFFSET_INDEX] = 10;                                                                 // 
-    show_parameters[INTER_RING_MOTION_INDEX] = 1;                                                            //
-    show_parameters[INTER_RING_SPEED_INDEX] = 2;                                                             //
-    show_parameters[COLOR_ROTATION] = 0;                                                                     //
-    show_parameters[COLOR_RAINBOW_INDEX] = 0;                                                                //
+    show_parameters[BACKGROUND_INDEX] = 0; //random(0,NUM_BACKGROUNDS);                                                                   //
+    show_parameters[MIDLAYER_INDEX] = 0; //random(0, NUM_MIDLAYERS);                                                                     //
+    show_parameters[SPARKLE_INDEX] = 0; //random(0, NUM_SPARKLES);                                                                      //
+    show_parameters[BEAT_EFFECT_INDEX] = 0; //random(0, NUM_BEATS);                                                                  //
+    show_parameters[NUM_EDM_COLORS_INDEX] = 3; // random(0, NUM_EDM_COLORS);                                                                  //
+    show_parameters[COLOR_THICKNESS_INDEX] = 5; // random(2,10);                                                              //
+    show_parameters[BLACK_THICKNESS_INDEX] = 6; //random(2,10);                                                              //
+    show_parameters[INTRA_RING_MOTION_INDEX] = 2; //random(-1, 3);                                                            //
+    show_parameters[INTRA_RING_SPEED_INDEX ] = 2; //random(0, 5);                                                            //
+    show_parameters[COLOR_CHANGE_STYLE_INDEX] = 1; //random(0,3);                                                           //
+    show_parameters[RING_OFFSET_INDEX] = 2; //random(-10,11);                                                                 // 
+    show_parameters[INTER_RING_MOTION_INDEX] = -1; //random(-1, 3);                                                            //
+    show_parameters[INTER_RING_SPEED_INDEX] = 2; //random(0, 5);                                                             //                                                                                                          //
 
-    show_parameters[PALETTE_INDEX] = 2;                                                                      //
+    show_parameters[PALETTE_INDEX] = 2; //random(0,3);                                                                      //
 
-                                                                                                             //                                                                           //
+                                                                                                             //        //
     // can choose 0 to 6 as indices into current palette                                                     //
-    // 0,1 light, 2,3,4 mid, 5,6 dark                                                                        //
-    show_colors[0] = 0;                                                                                      //                                                                                                                   //
-    show_colors[1] = 1;                                                                                      //
-    show_colors[2] = 2;                                                                                      //
-                                                                                                             //  
+    // 0,1 light, 2,3,4 mid, 5,6 dark  
+    // these would need to be distinct, but generation on the pi where it 
+    // matters is distinct//
+    show_colors[0] = 2; //random(0,7);                                                                                      //                                                                                                                   //
+    show_colors[1] = 0; //random(0,7);                                                                                        //
+    show_colors[2] = 5; //random(0,7);                                                                            //
+    show_colors[3] = 6; //random(0,7);                                                                            //
+    show_colors[4] = 1; //random(0,7);                                                                            //
+    show_colors[5] = 3; //random(0,7);                                                                            //
+    show_colors[6] = 4; //random(0,7);                                                                            //
     // fixme: doesn't yet have its own parameter, so just working with ones we have                          //
     // need colors 0 or 1 from any palette for sparkle color                                                 // 
     sparkle_color = get_color(show_parameters[PALETTE_INDEX], (INTRA_RING_MOTION_INDEX + 1) % 2);                          
@@ -401,7 +408,7 @@ void cycle_through_animations() {
 // Draws the current animation
 void draw_current_animation() {
 
-  current_animation = show_parameters[ANIMATION_INDEX];
+  current_animation = show_parameters[EDM_INDEX];
   
   // This is where you would add a new animation.
   switch (current_animation)  {   
@@ -442,7 +449,10 @@ void draw_current_animation() {
       break;
 
     case 8:
-      sparkle_warp_speed();  // diane
+        // eight_step();
+      // sparkle_warp_speed();  // diane
+      // sparkle_3_circles();
+      diane_arrow_1();
       break;
 
     case 9:
@@ -451,6 +461,10 @@ void draw_current_animation() {
 
     case 10:
       scale_usage();
+      break;
+      
+    case 11:
+      all_blue();
       break;
 
     default:
