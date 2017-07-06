@@ -24,7 +24,7 @@ class AnimationSelection:
 		#get dominant frequency info 
 		populateFrequencies(0, 0, 0, 0, 0, 0, 0)
 
-	def populateFrequencies(hz1, hz2, hz3, hz4, hz5, hz6, hz7)
+	def populateFrequencies(hz1, hz2, hz3, hz4, hz5, hz6, hz7):
 		frequencies[0] = hz1
 		frequencies[1] = hz2
 		frequencies[2] = hz3
