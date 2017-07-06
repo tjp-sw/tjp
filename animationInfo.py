@@ -15,12 +15,13 @@ class FreqBand(Enum):
 class AnimationInfo:
    'a class to hold animation characteristics'
 
-   def __init__(self, index, bestFreqBands):
+   def __init__(self, index, bestFreqBands, name):
       self.index = index
       self.bestFreqBands = bestFreqBands
-   
-   def displayCount(self):
-     print "Total number of animations %d" % AnimationInfo.totalNumOfAnimations
+      self.name = name
+
+   def __repr__(self):
+      return "Animation '%s' [index:%s, bestFreqBands:%s>]" % (self.name, self.index, self.bestFreqBands)
 
    def displayInfo(self):
       print "AnimatoinIndex : ", self.index,  ", BestFreqBands: ", self.bestFreqBands
