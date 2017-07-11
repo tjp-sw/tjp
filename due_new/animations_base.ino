@@ -3,7 +3,7 @@
 //-------------------------------- SCROLLING DIM ---------------------------------
 // Draws one base color on even rings and the other color on odd rings
 // Scrolls bands of darkness over constant background color, offset on each ring
-// BASE_COLOR_THICKNESS(1-127), BASE_BLACK_THICKNESS(0-6), BASE_INTRA_RING_MOTION(-1, 0, 1), BASE_RING_OFFSET(0-127), BASE_INTRA_RING_SPEED(0-127)
+// BASE_COLOR_THICKNESS(1-255), BASE_BLACK_THICKNESS(0-6), BASE_INTRA_RING_MOTION(-1, 0, 1), BASE_RING_OFFSET(-128-127), BASE_INTRA_RING_SPEED(0-255)
 void base_scrolling_dim() {
   const uint8_t dim_length = 6;
   const uint8_t max_dim_length = 6;
@@ -15,7 +15,10 @@ void base_scrolling_dim() {
     uint8_t color_index = ring % 2;
     
     for(uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
-      uint16_t idx = (pixel + ring*BASE_RING_OFFSET + BASE_INTRA_RING_MOTION * BASE_INTRA_RING_SPEED * base_count / THROTTLE) % extended_led_count;
+      uint16_t idx;
+      if(BASE_INTRA_RING_MOTION != SPLIT) {
+        idx = (pixel + ring*BASE_RING_OFFSET + BASE_INTRA_RING_MOTION * BASE_INTRA_RING_SPEED * base_count / THROTTLE) % extended_led_count;
+      }
 
       if(idx >= LEDS_PER_RING) { continue; }
 
@@ -63,26 +66,28 @@ void base_scrolling_dim() {
 
 //-------------------------- SCROLLING 2-COLOR GRADIENT --------------------------
 // Draws a gradient moving from one base color to the other and back again
-// BASE_COLOR_THICKNESS(1-127), BASE_INTRA_RING_MOTION(-1, 0, 1), BASE_RING_OFFSET(0-127), BASE_INTRA_RING_SPEED(0-127)
+// BASE_COLOR_THICKNESS(1-255), BASE_INTRA_RING_MOTION(CCW, NONE, CW, SPLIT), BASE_RING_OFFSET(-128-127), BASE_INTRA_RING_SPEED(0-255)
 void base_scrolling_gradient() {
-  uint8_t period = 2 + BASE_COLOR_THICKNESS;
-  uint8_t offset_per_ring = period / 4;
+  uint8_t period = 2*BASE_COLOR_THICKNESS;
   uint16_t extended_led_count = ((LEDS_PER_RING-1)/period+1)*period;
 
   for(uint8_t ring = node_number * RINGS_PER_NODE; ring < (node_number + 1) * RINGS_PER_NODE; ring++) {
     for(uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
-      uint16_t idx = (pixel + ring*offset_per_ring + BASE_INTRA_RING_MOTION * BASE_INTRA_RING_SPEED * base_count / THROTTLE) % extended_led_count;
+      uint16_t idx;
+      if(BASE_INTRA_RING_MOTION != SPLIT) {
+        idx = (pixel + ring*BASE_RING_OFFSET + BASE_INTRA_RING_MOTION * BASE_INTRA_RING_SPEED * base_count / THROTTLE) % extended_led_count;
+      }
       if(idx >= LEDS_PER_RING) { continue; }
 
       uint8_t pattern_idx = pixel % period;
       if(pattern_idx < period/2) {
         // Gradient from base_color0 -> base_color1
-        base_layer[ring][idx] = get_base_color(0, 1, pattern_idx * 2 * BASE_MAX_GRADIENT_LENGTH / BASE_COLOR_THICKNESS);
+        base_layer[ring][idx] = get_base_color(0, 1, pattern_idx * BASE_MAX_GRADIENT_LENGTH / BASE_COLOR_THICKNESS);
       }
       else {
         // Gradient from base_color1 -> base_color0
         pattern_idx -= period/2;
-        base_layer[ring][idx] = get_base_color(1, 0, pattern_idx * 2 * BASE_MAX_GRADIENT_LENGTH / BASE_COLOR_THICKNESS);
+        base_layer[ring][idx] = get_base_color(1, 0, pattern_idx * BASE_MAX_GRADIENT_LENGTH / BASE_COLOR_THICKNESS);
       }
     }
   }

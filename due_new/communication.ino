@@ -253,7 +253,7 @@ void process_commands(const int source, String& input) {
           #endif // I_AM_MEGA
       
           #ifdef I_AM_DUE
-            uint8_t params[NUM_SHOW_PARAMETERS], colors[NUM_COLORS_PER_PALETTE];
+            uint8_t params[NUM_SHOW_PARAMETERS], colors[3*NUM_COLORS_PER_PALETTE];
             size_t i = 0;
             size_t j = 1;
             while (i < sizeof params) {
@@ -272,7 +272,10 @@ void process_commands(const int source, String& input) {
           uint8_t last_sparkle_animation = SPARKLE_ANIMATION;
           
           memcpy(show_parameters, params, NUM_SHOW_PARAMETERS);
-          set_palettes(colors);
+          memcpy(target_palette, colors, 3*NUM_COLORS_PER_PALETTE);
+          blend_base_layer = current_palette[0] != target_palette[0] || current_palette[1] != target_palette[1];
+          blend_mid_layer = current_palette[2] != target_palette[2] || current_palette[3] != target_palette[3] || current_palette[4] != target_palette[4];
+          blend_sparkle_layer = current_palette[5] != target_palette[5] || current_palette[6] != target_palette[6];
 
           if(BASE_ANIMATION != last_base_animation) {
             cleanup_base_animation(last_base_animation);

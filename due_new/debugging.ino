@@ -871,3 +871,27 @@ void draw_debug_mode() {
   }
 }
 
+void test_strands() {
+  const uint16_t delay_inc = 500;
+  static uint16_t delay_factor = 0;
+  for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+    if(ring == (loop_count % RINGS_PER_NODE)) {
+      if(ring == 0) {
+        delay_factor++;
+        Serial.println("delay(" + String(delay_inc * delay_factor) + ")");
+      }
+      for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+        leds[get_1d_index(ring, pixel)] = CRGB::White;//CRGB(128,128,128);
+      }
+    }
+    else {
+      for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+        leds[get_1d_index(ring, pixel)] = CRGB::Black;
+      }
+    }
+  }
+  
+  LEDS.show();
+  delay(delay_inc * delay_factor);
+}
+

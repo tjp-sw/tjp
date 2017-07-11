@@ -1,9 +1,9 @@
 #include <FastLED.h>
 
 /* ----- OVERVIEW OF NEW DUE CODE -----
- *  The current build will show all 3 layers working at once, plugged into a palette. Turning on CYCLE mostly works if you're a little patient and want to see everything changing.
- *  
  *  There are now 3 layers of animations. Each has its own loop_count (base_count, mid_count, sparkle_count), LED array, palette, and show_parameters.
+ *  The current build will show all 3 layers working at once, plugged into a palette. Turning on CYCLE will walk through everything.
+ *  CYCLE_PARAMS will keep the shows you specify but walk parameters. You can set the allowable ranges of params in init_(base|mid|sparkle)_animation()
  *  
  *  For the most part, you want to use the functions in palettes.ino to access allowed colors. You do NOT want to use CRGBs anymore. If you absolutely must use CRGBs,
  *  you can access the current node's raw LED array like this: leds[get_1d_index(ring, pixel)] = CRGB(1,2,3). But keep in mind that the layering logic will also write
@@ -15,97 +15,88 @@
  *  
  *  Add the function calls for new animations in draw_current_base(), draw_current_mid(), or draw_current_sparkle(). Any initialization or cleanup should be done in init_current_base(), cleanup_current_sparkle(), etc.
  *  
- *  CYCLE mostly works, if you want to see palettes and animations changing. It's a little buggy still but gets the point across. In the init_current_xxx() functions,
- *    I set show parameters for each animation. It's not the best method but I don't think anyone else is really concerned with CYCLE right now, and I'll have it cleaned up soon.
- *  
  */
 
 /* to do/thoughts/ideas
- *  define allowable ranges of show parameters, then build random_parameter walk in cycle_through_animations(), and anything else do_communication() does
+ *  Add logic for BASE & MID RING_MOTION = SPLIT
+ *  Change base level dimming to be less extreme, since colors will be naturally dim; OR, change use of the colors to (almost) always dim
  *  Consider colorCorrection() when looking at several palettes on the strips.
  *  calling millis() too many times? in do_communication and again in loop()
  *  How to gracefully remove max refresh rate enforcement?
  *  Test shorter delays in read_frequencies
  *  Do frequencies[] arrays need to be ints? Would be better as uint8_t, scaling or capping if necessary.
  *  how random is random8 and random16 really
- *  scrolling_2color_gradient: check that max gradient length and the +2 makes sense
  *  consider not resetting loop_counts in between animations that are very similar; imagine a snake that's a gradient. would be nice if it didn't jump when we changed animations.
  *  #define vs const scoped variables; is there a difference to RAM?
+ *  get_1d_offset() - rings 0-5 seem to be doing rings in reverse order
+ *  transparency gradients/variable transparency for each layer defined by the animations
  */
 
-//------------------------ Config --------------------------//
-// Due controlled versus pi controlled animation choices    //
-//#define PI_CONTROLLED                                     //
-#ifdef PI_CONTROLLED                                        //
-  #define INITIAL_BASE_ANIMATION -2    // debug mode        //
-  #define INITIAL_MID_ANIMATION -1     // off               //
-  #define INITIAL_SPARKLE_ANIMATION -1 // off               //
-#else                                                       //
-  #define TESTING_NODE_NUMBER 0 // To test diff nodes       //
-  //#define CYCLE                                           //
-  //#define CYCLE_RANDOM                                    //
-#endif                                                      //
-                                                            //
-#include "globals.h" // Leave this here, for #define order  //
-                                                            //
-// Testing tools                                            //
-#define DEBUG // Enables serial output                      //
-//#define DEBUG_LED_ARRAYS // Runs unit tests in setup()    //
-//#define DEBUG_TIMING // Times each step in loop()         //
-//#define DEBUG_LED_WRITE_DATA // Dumps LED data at write() //
-//#define TEST_AVAIL_RAM 1567 // How much RAM we have left  //
-                                                            //
-                                                            //
-// Animation settings                                       //
-#define PALETTE_MAX_CHANGES 25 // how fast palettes blend   //
-#define NUM_BASE_ANIMATIONS 2                               //
-#define NUM_MID_ANIMATIONS 2                                //
-#define NUM_SPARKLE_ANIMATIONS 2                            //
-                                                            //
-                                                            //
-// Timing settings                                          //
-#define REFRESH_TIME 60 // 16.7 frames per second           //
-                                                            //
-#if defined(CYCLE) || defined(CYCLE_RANDOM)                 //
-  #define BASE_ANIMATION_TIME 35000                         //
-  #define MID_ANIMATION_TIME 25000                          //
-  #define SPARKLE_ANIMATION_TIME 15000                      //
-  #define PALETTE_CHANGE_TIME 10000                         //
-#endif                                                      //
-                                                            //
-//////////////////////////////////////////////////////////////
-//--- Manually set animation parameters here ---//
-//////////////////////////////////////////////////
-void manually_set_animation_params() {          //
-                                                //
-  BASE_ANIMATION = 0;                           //
-  MID_ANIMATION = 1;                            //
-  SPARKLE_ANIMATION = 0;                        //
-                                                //  
-  BASE_COLOR_THICKNESS = 8;                     //
-  BASE_BLACK_THICKNESS = 0;                     //
-  BASE_INTRA_RING_MOTION = 1;                   //
-  BASE_INTRA_RING_SPEED = 16;                   //
-  BASE_RING_OFFSET = 8;                         //
-                                                //
-  MID_NUM_COLORS = 160;                         //
-  MID_COLOR_THICKNESS = 140;                    //
-  MID_BLACK_THICKNESS = 20;                     //
-  MID_INTRA_RING_MOTION = 0;                    //
-  MID_INTRA_RING_SPEED = 0;                     //
-  MID_RING_OFFSET = 0;                          //
-                                                //
-  SPARKLE_COLOR_THICKNESS = 1;                  //
-  SPARKLE_PORTION = 20;                         //
-  SPARKLE_INTRA_RING_MOTION = 1;                //
-  SPARKLE_INTRA_RING_SPEED = 16;                //
-  SPARKLE_MAX_DIM = 4;                          //
-  SPARKLE_RANGE = 60;                           //
-  SPARKLE_SPAWN_FREQUENCY = 10;                 //
-                                                //
-}                                               //
-//----------------------------------------------//
-
+//------------------------ Config -----------------------------------//
+// Due controlled versus pi controlled animation choices             //
+//#define PI_CONTROLLED                                              //
+#ifndef PI_CONTROLLED                                                //
+  #define TESTING_NODE_NUMBER 0   // To test diff nodes              //
+  //#define CYCLE                                                    //
+  //#define CYCLE_RANDOM                                             //
+  #define CYCLE_PARAMS    // Locks in show, cycles show_parameters //
+#endif                                                               //
+                                                                     //
+#include "globals.h" // Leave this here, for #define order           //
+                                                                     //
+// Testing tools                                                     //
+#define DEBUG                   // Enables serial output             //
+//#define DEBUG_LED_ARRAYS      // Runs unit tests in setup()        //
+//#define DEBUG_TIMING          // Times each step in loop()         //
+//#define DEBUG_LED_WRITE_DATA 10 // Dumps LED data every X cycles   //
+//#define TEST_AVAIL_RAM 3092   // How much RAM we have left         //
+                                                                     //
+                                                                     //
+// Timing settings                                                   //
+#define REFRESH_TIME 60         // 16.7 frames per second            //
+#define PALETTE_MAX_CHANGES 9   // how quickly palettes transition   //
+                                                                     //
+                                                                     //
+// How fast animations/palettes will cycle                           //                                                                     
+#if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS) //
+  #define BASE_ANIMATION_TIME 13000                                  //
+  #define MID_ANIMATION_TIME 11000                                   //
+  #define SPARKLE_ANIMATION_TIME 15000                               //
+  #define PALETTE_CHANGE_TIME 7000                                   //
+#endif                                                               //
+                                                                     //
+///////////////////////////////////////////////////////////////////////
+//-------- Manually set animation parameters here --------//
+////////////////////////////////////////////////////////////
+void manually_set_animation_params() {                    //
+                                                          //
+  BASE_ANIMATION = DEBUG_MODE;                                   //
+  MID_ANIMATION = OFF;                                    //
+  SPARKLE_ANIMATION = OFF;                               //
+                                                          //
+  BASE_COLOR_THICKNESS = 30;                              //
+  BASE_BLACK_THICKNESS = 0;                               //
+  show_parameters[BASE_INTRA_RING_MOTION_INDEX] = CW;     //
+  BASE_INTRA_RING_SPEED = 16;                             //
+  show_parameters[BASE_RING_OFFSET_INDEX] = -8;           //
+                                                          //
+  MID_NUM_COLORS = 160;                                   //
+  MID_COLOR_THICKNESS = 120;                              //
+  MID_BLACK_THICKNESS = 30;                               //
+  show_parameters[MID_INTRA_RING_MOTION_INDEX] = NONE;    //
+  MID_INTRA_RING_SPEED = 0;                               //
+  show_parameters[MID_RING_OFFSET_INDEX] = 0;             //
+                                                          //
+  SPARKLE_COLOR_THICKNESS = 1;                            //
+  SPARKLE_PORTION = 20;                                   //
+  show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = CCW; //
+  SPARKLE_INTRA_RING_SPEED = 16;                          //
+  SPARKLE_MAX_DIM = 4;                                    //
+  SPARKLE_RANGE = 60;                                     //
+  SPARKLE_SPAWN_FREQUENCY = 10;                           //
+                                                          //
+}                                                         //
+//--------------------------------------------------------//
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -126,9 +117,9 @@ void setup() {
   setup_palettes();
 
   #ifdef PI_CONTROLLED
-    BASE_ANIMATION = INITIAL_BASE_ANIMATION;
-    MID_ANIMATION = INITIAL_MID_ANIMATION;
-    SPARKLE_ANIMATION = INITIAL_SPARKLE_ANIMATION;
+    BASE_ANIMATION = DEBUG_MODE; // Debug mode
+    MID_ANIMATION = OFF; // off
+    SPARKLE_ANIMATION = OFF; // off
   #else
     manually_set_animation_params();
   #endif
@@ -157,6 +148,11 @@ void setup() {
     assign_node(node_number);
   #endif
 
+  // Clear layers
+  clear_sparkle_layer();
+  clear_mid_layer();
+  clear_base_layer();
+  
   // Initialize animations
   init_base_animation();
   init_mid_animation();
@@ -167,7 +163,7 @@ void setup() {
   base_start_time = temp;
   mid_start_time = temp;
   sparkle_start_time = temp;
-  #if defined(CYCLE) || defined(CYCLE_RANDOM)
+  #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
     palette_start_time = temp;
   #endif
 
@@ -212,7 +208,7 @@ void loop() {
   // Communicate with pi if available, select animations, palettes, show parameters
   #ifdef PI_CONTROLLED()
     do_communication();
-  #elif defined(CYCLE) || defined(CYCLE_RANDOM)
+  #elif defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
     cycle_through_animations();
   #endif
   #ifdef DEBUG_TIMING
@@ -220,8 +216,8 @@ void loop() {
     serial_val[2] = now - last_debug_time;
     last_debug_time = now;
   #endif
-  
-  
+
+
   //  Draw layers
   draw_current_base();
   #ifdef DEBUG_TIMING
@@ -251,17 +247,6 @@ void loop() {
     #endif
 
 
-    // Transition smoothly between palettes; Do this after drawing layers, in case animation wants to disable blending or layering
-    if(blend_base_layer) { blend_base_layer = blend_palette_256(base_palette, base_palette_target, PALETTE_MAX_CHANGES); }
-    if(blend_mid_layer) { blend_mid_layer = blend_palette_256(mid_palette, mid_palette_target, PALETTE_MAX_CHANGES); }
-    if(blend_sparkle_layer) { blend_sparkle_layer = blend_palette_16(sparkle_palette, sparkle_palette_target, PALETTE_MAX_CHANGES); }
-    #ifdef DEBUG_TIMING
-      now = millis();
-      serial_val[6] = now - last_debug_time;
-      last_debug_time = now;
-    #endif
-
-
     write_pixel_data();
     #ifdef DEBUG_TIMING
       now = millis();
@@ -273,11 +258,13 @@ void loop() {
 
   // Write current node's LEDs
   #ifdef DEBUG_LED_WRITE_DATA
-    for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
-      for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
-        Serial.print("loop_count " + String(loop_count) + ", Node " + String(node_number) + ", Ring " + String(ring) + ", Pixel " + String(pixel) + " = (");
-        CRGB temp = leds[get_1d_index(ring, pixel)];
-        Serial.println(String(temp.r) + "," + String(temp.g) + "," + String(temp.b) + ")");
+    if(loop_count % DEBUG_LED_WRITE_DATA == 0) {
+      for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+        for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+          Serial.print("loop_count " + String(loop_count) + ", Node " + String(node_number) + ", Ring " + String(ring) + ", Pixel " + String(pixel) + " = (");
+          CRGB temp = leds[get_1d_index(ring, pixel)];
+          Serial.println(String(temp.r) + "," + String(temp.g) + "," + String(temp.b) + ")");
+        }
       }
     }
   #endif
@@ -289,6 +276,17 @@ void loop() {
   #endif
 
 
+  // Transition smoothly between palettes; Do this after drawing layers, in case animation wants to disable blending or layering
+  if(blend_base_layer) { blend_base_layer = blend_base_palette(PALETTE_MAX_CHANGES); }
+  if(blend_mid_layer) { blend_mid_layer = blend_mid_palette(PALETTE_MAX_CHANGES); }
+  if(blend_sparkle_layer) { blend_sparkle_layer = blend_sparkle_palette(PALETTE_MAX_CHANGES); }
+  #ifdef DEBUG_TIMING
+    now = millis();
+    serial_val[6] = now - last_debug_time;
+    last_debug_time = now;
+  #endif
+
+  
   // Serial output for debugging
   #ifdef DEBUG_TIMING
     write_timing_output();
@@ -305,7 +303,7 @@ void loop() {
 }
 
  
-#if defined(CYCLE) || defined(CYCLE_RANDOM)
+#if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
 // Cycles through the animations, running each for ANIMATION_TIME seconds
 void cycle_through_animations() {
 
@@ -327,7 +325,8 @@ void cycle_through_animations() {
       }
     #endif
 
-    set_palettes((uint8_t*) initial_palette);
+    memcpy(target_palette, initial_palette, 3*NUM_COLORS_PER_PALETTE);
+    blend_base_layer = blend_mid_layer = blend_sparkle_layer = true;
 
     #ifdef DEBUG
       Serial.print("New palette loaded: ");
@@ -338,16 +337,17 @@ void cycle_through_animations() {
     #endif
   }
 
-
   if (current_time - base_start_time >= BASE_ANIMATION_TIME) {
     base_start_time = current_time;
     base_count = 0;
-    
+
     #ifdef CYCLE_RANDOM
-      BASE_ANIMATION = random8(0, NUM_BASE_ANIMATIONS);
-    #else
-      BASE_ANIMATION = ++BASE_ANIMATION % NUM_BASE_ANIMATIONS;
+        BASE_ANIMATION = 1 + random8(0, NUM_BASE_ANIMATIONS);
+    #elif defined(CYCLE)
+      BASE_ANIMATION = 1 + (++BASE_ANIMATION % NUM_BASE_ANIMATIONS);
     #endif
+
+    init_base_animation();
 
     #ifdef DEBUG
       Serial.print("New base animation started: ");
@@ -359,12 +359,14 @@ void cycle_through_animations() {
   if (current_time - mid_start_time >= BASE_ANIMATION_TIME) {
     mid_start_time = current_time;
     mid_count = 0;
-    
+
     #ifdef CYCLE_RANDOM
-      MID_ANIMATION = random8(0, NUM_MID_ANIMATIONS);
-    #else
-      MID_ANIMATION = ++MID_ANIMATION % NUM_MID_ANIMATIONS;
+      MID_ANIMATION = 1 + random8(0, NUM_MID_ANIMATIONS);
+    #elif defined(CYCLE)
+      MID_ANIMATION = 1 + (++MID_ANIMATION % NUM_MID_ANIMATIONS);
     #endif
+
+    init_mid_animation();
 
     #ifdef DEBUG
       Serial.print("New mid animation started: ");
@@ -376,12 +378,14 @@ void cycle_through_animations() {
   if (current_time - sparkle_start_time >= SPARKLE_ANIMATION_TIME) {
     sparkle_start_time = current_time;
     sparkle_count = 0;
-    
+
     #ifdef CYCLE_RANDOM
-      SPARKLE_ANIMATION = random8(0, NUM_SPARKLE_ANIMATIONS);
-    #else
-      SPARKLE_ANIMATION = ++SPARKLE_ANIMATION % NUM_SPARKLE_ANIMATIONS;
+      SPARKLE_ANIMATION = 1 + random8(0, NUM_SPARKLE_ANIMATIONS);
+    #elif defined(CYCLE)
+      SPARKLE_ANIMATION = 1 + (++SPARKLE_ANIMATION % NUM_SPARKLE_ANIMATIONS);
     #endif
+
+    init_sparkle_animation();
 
     #ifdef DEBUG
       Serial.print("New sparkle animation started: ");
@@ -395,21 +399,18 @@ void cycle_through_animations() {
 // Layer-specific drawing functions
 void draw_current_base() {
   switch(BASE_ANIMATION) {
-    case 0:
+    case SCROLLING_DIM:
       base_scrolling_dim();
       break;
 
-    case 1:
+    case SCROLLING_GRADIENT:
       base_scrolling_gradient();
       break;
 
   // ------ Non-layer animations -----
-    case -2:
-      draw_debug_mode();
-      break;
-
-    case -3:
-      draw_equalizer_full();
+    case DEBUG_MODE:
+      test_strands();
+      //draw_debug_mode();
       break;
       
     default:
@@ -420,12 +421,16 @@ void draw_current_base() {
 
 void draw_current_mid() {
   switch(MID_ANIMATION) {
-    case 0:
+    case SNAKE:
       snake();
       break;
 
-    case 1:
-      fire();
+    case FIRE:
+      fire(1);
+      break;
+
+    case FIRE_WHOOPS:
+      fire(0);
       break;
       
     default:
@@ -436,11 +441,11 @@ void draw_current_mid() {
 
 void draw_current_sparkle() {
   switch(SPARKLE_ANIMATION) {
-    case 0:
+    case GLITTER:
       sparkle_glitter();
       break;
 
-    case 1:
+    case RAIN:
       sparkle_rain();
       break;
       
@@ -450,28 +455,34 @@ void draw_current_sparkle() {
   }
 }
 
+
 // Layer-specific initialization functions (before animation starts)
-// Currently using this to store hard-coded show parameters, so cycling through animations can be done and still look good
 void init_base_animation() {
-  disable_layering = BASE_ANIMATION < -1; // -1 is off, anything below that is an edm animation.
+  disable_layering = BASE_ANIMATION >= 128; // EDM animations start at 255 and move down.
   
   switch(BASE_ANIMATION) {
-    case 0: // Scrolling Dim
-      #if defined(CYCLE) || defined(CYCLE_RANDOM)
+    case SCROLLING_DIM:
+      #if defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
         BASE_COLOR_THICKNESS = 2 + random8(4);
         BASE_BLACK_THICKNESS = random8(4);
-        BASE_INTRA_RING_MOTION = random8(2) ? -1 : 1;
-        BASE_INTRA_RING_SPEED = 2 << random8(4);
-        BASE_RING_OFFSET = random8(12);
+        show_parameters[BASE_INTRA_RING_MOTION_INDEX] = random8(2) ? CW : CCW;
+        BASE_INTRA_RING_SPEED = 4 << random8(4);
+        show_parameters[BASE_RING_OFFSET_INDEX] = random8(12);
+        #ifdef DEBUG
+          Serial.println("Scrolling Dim params: " + String(BASE_COLOR_THICKNESS) + ", " + String(BASE_BLACK_THICKNESS) + ", " + String(BASE_INTRA_RING_MOTION) + ", " + String(BASE_INTRA_RING_SPEED) + ", " + String(BASE_RING_OFFSET)); 
+        #endif
       #endif
       break;
 
-    case 1: // Scrolling Gradient
-      #if defined(CYCLE) || defined(CYCLE_RANDOM)
-        BASE_COLOR_THICKNESS = 20 + random8(20);
-        BASE_INTRA_RING_MOTION = random8(2) ? -1 : 1;
-        BASE_INTRA_RING_SPEED = 4 << random8(3);
-        BASE_RING_OFFSET = random8(20);
+    case SCROLLING_GRADIENT:
+      #if defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
+        BASE_COLOR_THICKNESS = 2 + random8(126);
+        show_parameters[BASE_INTRA_RING_MOTION_INDEX] = random8(2) ? -1 : 1;
+        BASE_INTRA_RING_SPEED = 4 << (random8(3) + (BASE_COLOR_THICKNESS < 20 ? 0 : BASE_COLOR_THICKNESS < 40 ? 1 : BASE_COLOR_THICKNESS < 70 ? 2 : 3));
+        show_parameters[BASE_RING_OFFSET_INDEX] = random8(20);
+        #ifdef DEBUG
+          Serial.println("Scrolling Gradient params: " + String(BASE_COLOR_THICKNESS) + ", " + String(BASE_INTRA_RING_MOTION) + ", " + String(BASE_INTRA_RING_SPEED) + ", " + String(BASE_RING_OFFSET)); 
+        #endif
       #endif
       break;
       
@@ -482,23 +493,30 @@ void init_base_animation() {
 
 void init_mid_animation() {
   switch(MID_ANIMATION) {
-    case 0: // Snake
-      #if defined(CYCLE) || defined(CYCLE_RANDOM)
+    case SNAKE:
+      #if defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
         MID_NUM_COLORS = 2 + random8(2);
         MID_COLOR_THICKNESS = 2 + random8(4);
         MID_BLACK_THICKNESS = 5 + random8(10);
-        MID_INTRA_RING_MOTION = random8(2) ? -1 : 1;
+        show_parameters[MID_INTRA_RING_MOTION_INDEX] = random8(2) ? CW : CCW;
         MID_INTRA_RING_SPEED = 8 << random8(3);
-        MID_RING_OFFSET = random8(10);
+        show_parameters[MID_RING_OFFSET_INDEX] = random8(10);
+        #ifdef DEBUG
+          Serial.println("Snake params: " + String(MID_NUM_COLORS) + ", " + String(MID_COLOR_THICKNESS) + ", " + String(MID_BLACK_THICKNESS) + ", " + String(MID_INTRA_RING_MOTION) + ", " + String(MID_INTRA_RING_SPEED) + ", " + String(MID_RING_OFFSET)); 
+        #endif
       #endif
       break;
       
-    case 1: // Fire
-      init_fire();
-      #if defined(CYCLE) || defined(CYCLE_RANDOM)
+    case FIRE:
+    case FIRE_WHOOPS:
+      clear_mid_layer(); // Clear old pixels which are now "heat" values
+      #if defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
         MID_NUM_COLORS = 160;      // Minimum spark size
-        MID_COLOR_THICKNESS = 140; // Spark chance
-        MID_BLACK_THICKNESS = 20;  // Cooling
+        MID_COLOR_THICKNESS = 120; // Spark chance
+        MID_BLACK_THICKNESS = 21;  // Cooling
+        #ifdef DEBUG
+          Serial.println("Fire params: " + String(MID_NUM_COLORS) + ", " + String(MID_COLOR_THICKNESS) + ", " + String(MID_BLACK_THICKNESS)); 
+        #endif
       #endif
       break;
 
@@ -509,25 +527,32 @@ void init_mid_animation() {
 
 void init_sparkle_animation() {
   switch(SPARKLE_ANIMATION) {
-    case 0: // Glitter
-      #if defined(CYCLE) || defined(CYCLE_RANDOM)
+    case GLITTER:
+      #if defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
         SPARKLE_COLOR_THICKNESS = 1 + random8(2);
-        SPARKLE_PORTION = 20 + random8(20);
+        SPARKLE_PORTION = 20 + random8(185);
         SPARKLE_MAX_DIM = random8(5);
-        SPARKLE_RANGE = 60 + random8(144);
+        { uint16_t temp = 60 + random8(100);
+          SPARKLE_RANGE = temp >= 127 ? 127 : temp; }
+        #ifdef DEBUG
+          Serial.println("Glitter params: " + String(SPARKLE_COLOR_THICKNESS) + ", " + String(SPARKLE_PORTION) + ", " + String(SPARKLE_MAX_DIM) + ", " + String(SPARKLE_RANGE));
+        #endif
       #endif
       break;
       
-    case 1: // Rain
+    case RAIN:
       clear_sparkle_layer();
-      #if defined(CYCLE) || defined(CYCLE_RANDOM)
+      #if defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
         SPARKLE_COLOR_THICKNESS = 1 + random8(2);
         SPARKLE_PORTION = 30 + random8(30);
-        SPARKLE_INTRA_RING_MOTION = random8(2) ? -1 : 1;
+        show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = random8(2) ? CCW : CW;
         SPARKLE_INTRA_RING_SPEED = 8 << random8(3);
         SPARKLE_MAX_DIM = random8(5);
         SPARKLE_RANGE = 20;
         SPARKLE_SPAWN_FREQUENCY = 20;
+        #ifdef DEBUG
+          Serial.println("Rain params: " + String(SPARKLE_COLOR_THICKNESS) + ", " + String(SPARKLE_PORTION) + ", " + String(SPARKLE_INTRA_RING_MOTION) + ", " + String(SPARKLE_INTRA_RING_SPEED) + ", " + String(SPARKLE_MAX_DIM) + ", " + String(SPARKLE_RANGE) + ", " + String(SPARKLE_SPAWN_FREQUENCY));
+        #endif
       #endif
       break;
       
@@ -535,6 +560,7 @@ void init_sparkle_animation() {
       break;
   }
 }
+
 
 // Layer-specific cleanup functions (after animation ends)
 void cleanup_base_animation(uint8_t animation_index) {
@@ -546,7 +572,8 @@ void cleanup_base_animation(uint8_t animation_index) {
 
 void cleanup_mid_animation(uint8_t animation_index) {
   switch(animation_index) {
-    case 1:
+    case FIRE:
+    case FIRE_WHOOPS:
       cleanup_fire();
       break;
 
