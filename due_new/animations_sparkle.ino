@@ -92,8 +92,8 @@ void spawn_raindrop(uint8_t ring, uint16_t pixel) {
   bool is_inner = pixel >= HALF_RING;
 
   for (uint8_t thickness = 0; thickness < SPARKLE_COLOR_THICKNESS; thickness++) {
-    if (is_inner) { set_sparkle(ring, pixel + thickness, sparkle_color); }
-    else { set_sparkle(ring, pixel - thickness, sparkle_color); }
+    if (is_inner) { set_sparkle(ring, pixel - thickness, sparkle_color); }
+    else { set_sparkle(ring, pixel + thickness, sparkle_color); }
   }
 }
 

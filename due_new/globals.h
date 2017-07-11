@@ -40,6 +40,13 @@ CRGB* initial_palette = watermelon;                                 //
 #define SCROLLING_GRADIENT 2                                  //
 #define NUM_BASE_ANIMATIONS 2  // Equal to last animation     //
                                                               //
+// EDM animations (in the base layer, starting at 128)        //
+#define FREQ_PULSE 128                                        //
+#define EQ_FULL 129                                           //
+#define EQ_FULL_SPLIT 130                                     //
+#define EQ_VARIABLE 131                                       //
+#define EQ_VARIABLE_SPLIT 132                                 //
+                                                              //
 // Mid layer                                                  //
 #define SNAKE 1                                               //
 #define FIRE 2                                                //

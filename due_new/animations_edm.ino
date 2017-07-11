@@ -3,13 +3,10 @@
 //---------------------------- EQUALIZER_FULL ---------------------------
 // This isn't actually done yet :o
 // to do: does heights[] need to be uint16_t? or can be uint8_t? Is (float) necessary on freq_max[]?
-void draw_equalizer_full() {
-  uint8_t unlit_pixels = MID_BLACK_THICKNESS;
-  uint16_t total_colored_pixels = LEDS_PER_RING - 2 * (NUM_CHANNELS-1) * unlit_pixels;
-  
-
-  uint8_t my_colors[7] = { get_mid_color(0), get_mid_color(0, 1, 3), get_mid_color(0, 1, 9), get_mid_color(1), get_mid_color(1, 2, 3), get_mid_color(1, 2, 9), get_mid_color(2) };
-  //uint8_t my_colors[3] = { get_mid_color(0), get_mid_color(1), get_mid_color(2) };
+void equalizer_full(bool split) {
+  uint8_t unlit_pixels = BASE_BLACK_THICKNESS * (NUM_CHANNELS-1);
+  uint16_t total_colored_pixels = LEDS_PER_RING - unlit_pixels;
+  if(split) { total_colored_pixels /= 2; }
 
   uint16_t freq_max[NUM_CHANNELS];
   uint16_t overall_volume = 0;
@@ -18,36 +15,97 @@ void draw_equalizer_full() {
     overall_volume += freq_max[chan];
   }
 
-  // setup levels
-  uint16_t heights[NUM_CHANNELS];
-  for(uint8_t i = 0; i < NUM_CHANNELS; i++) {
-    heights[i] = total_colored_pixels * ((float)freq_max[i] / overall_volume);
-  }
-  
-  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++)
-  {
-    uint16_t cur_height = 0;
-
-    for(uint8_t chan = 0; chan < NUM_CHANNELS; chan++) {
-      for(uint16_t pixel = cur_height; pixel <= cur_height + heights[chan]; pixel++) {
-        mid_layer[ring][pixel] = my_colors[chan];
+  uint16_t cur_height = 0;
+  for(uint8_t chan = 0; chan < NUM_CHANNELS; chan++) {
+    uint16_t height = total_colored_pixels * ((float)freq_max[chan] / overall_volume);
+    CRGB color = current_palette[chan];
+    color.maximizeBrightness();
+    
+    for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+      for(uint16_t pixel = cur_height; pixel <= cur_height + height; pixel++) {
+        leds[get_1d_index(ring, pixel)] = color;
+        if(split) { leds[get_1d_index(ring, LEDS_PER_RING - 1 - pixel)] = color; }
       }
-      cur_height += heights[chan];
+    }
+    cur_height += height;
 
-      if(chan < NUM_CHANNELS-1) {
-        for(uint16_t pixel = cur_height; pixel < cur_height + unlit_pixels; pixel++) {
-          mid_layer[ring][pixel] = TRANSPARENT;
+    if(chan < NUM_CHANNELS-1) {
+      for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+        for(uint16_t pixel = cur_height; pixel < cur_height + BASE_BLACK_THICKNESS; pixel++) {
+          leds[get_1d_index(ring, pixel)] = CRGB::Black;
+          if(split) { leds[get_1d_index(ring, LEDS_PER_RING - 1 - pixel)] = CRGB::Black; }
         }
-        cur_height += unlit_pixels;
       }
-      else {
-        // Last channel, write extra pixels until entire ring is full.
-        while(cur_height < LEDS_PER_RING) {
-          mid_layer[ring][cur_height++] = my_colors[NUM_CHANNELS-1];
+      cur_height += BASE_BLACK_THICKNESS;
+    }
+    else {
+      // Last channel, write extra pixels until entire ring is full.
+      uint8_t max_pixel = split ? LEDS_PER_RING - cur_height : LEDS_PER_RING;
+      for(; cur_height < max_pixel; cur_height++) {
+        for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+          leds[get_1d_index(ring, cur_height)] = color;
         }
       }
     }
   }
 }
 
+//---------------------------- EQUALIZER_VARIABLE ---------------------------
+// Stacked bands, one for each channel. Size varies based on volume
+// to do: does heights[] need to be uint16_t? or can be uint8_t? Is (float) necessary?
+void equalizer_variable(bool split) {
+  uint16_t cur_height = 0;
+  for(uint8_t chan = 0; chan < NUM_CHANNELS; chan++) {
+    uint16_t freq_max = frequencies_one[chan] > frequencies_two[chan] ? frequencies_one[chan] : frequencies_two[chan];
+    uint16_t height = freq_max > 255 ? 64 : freq_max / 4;
+    if(split) { height /= 2; }
+      
+    CRGB color = current_palette[chan];
+    color.maximizeBrightness();
+    
+    for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+      for(uint16_t pixel = cur_height; pixel <= cur_height + height; pixel++) {
+        leds[get_1d_index(ring, pixel)] = color;
+        if(split) { leds[get_1d_index(ring, LEDS_PER_RING - 1 - pixel)] = color; }
+      }
+      
+    }
+    
+    cur_height += height;
+
+    if(chan < NUM_CHANNELS-1) {
+      for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+        for(uint16_t pixel = cur_height; pixel < cur_height + BASE_BLACK_THICKNESS; pixel++) {
+          leds[get_1d_index(ring, pixel)] = CRGB::Black;
+          if(split) { leds[get_1d_index(ring, LEDS_PER_RING - 1 - pixel)] = CRGB::Black; }
+        }
+      }
+      cur_height += BASE_BLACK_THICKNESS;
+    }
+  }
+}
+
+
+//---------------------------- FREQUENCY_PULSE ---------------------------
+// Equally sized bands for each channel, brightness goes up and down with channel volume
+#define BAND_DISTANCE LEDS_PER_RING / 8
+#define FIRST_BAND_OFFSET BAND_DISTANCE/2
+void frequency_pulse() {
+  for(uint8_t chan = 0; chan < NUM_CHANNELS; chan++) {
+    uint16_t min_pixel = FIRST_BAND_OFFSET + chan * BAND_DISTANCE - BASE_COLOR_THICKNESS;
+    uint16_t max_pixel = FIRST_BAND_OFFSET + chan * BAND_DISTANCE + BASE_COLOR_THICKNESS - 1;
+    
+    CRGB color = current_palette[chan];
+    color.maximizeBrightness();
+    uint16_t scaling = (frequencies_one[chan] + frequencies_two[chan]) / 4;
+    if(scaling > 255) { scaling = 255; }
+    color %= scaling;
+
+    for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+      for(uint16_t pixel = min_pixel; pixel <= max_pixel; pixel++) {
+        leds[get_1d_index(ring, pixel)] = color;
+      }
+    }
+  }
+}
 

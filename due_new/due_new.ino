@@ -18,6 +18,7 @@
  */
 
 /* to do/thoughts/ideas
+ *  Scale frequencies_...[] to be 0-255
  *  Add logic for BASE & MID RING_MOTION = SPLIT
  *  Change base level dimming to be less extreme, since colors will be naturally dim; OR, change use of the colors to (almost) always dim
  *  Consider colorCorrection() when looking at several palettes on the strips.
@@ -412,6 +413,26 @@ void draw_current_base() {
       test_strands();
       //draw_debug_mode();
       break;
+
+    case FREQ_PULSE:
+      frequency_pulse();
+      break;
+
+    case EQ_FULL:
+      equalizer_full(true);
+      break;
+
+    case EQ_FULL_SPLIT:
+      equalizer_full(false);
+      break;
+
+    case EQ_VARIABLE:
+      equalizer_variable(false);
+      break;
+      
+    case EQ_VARIABLE_SPLIT:
+      equalizer_variable(true);
+      break;
       
     default:
       clear_base_layer();
@@ -477,7 +498,7 @@ void init_base_animation() {
     case SCROLLING_GRADIENT:
       #if defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
         BASE_COLOR_THICKNESS = 2 + random8(126);
-        show_parameters[BASE_INTRA_RING_MOTION_INDEX] = random8(2) ? -1 : 1;
+        show_parameters[BASE_INTRA_RING_MOTION_INDEX] = random8(2) ? CW : CCW;
         BASE_INTRA_RING_SPEED = 4 << (random8(3) + (BASE_COLOR_THICKNESS < 20 ? 0 : BASE_COLOR_THICKNESS < 40 ? 1 : BASE_COLOR_THICKNESS < 70 ? 2 : 3));
         show_parameters[BASE_RING_OFFSET_INDEX] = random8(20);
         #ifdef DEBUG
@@ -494,7 +515,7 @@ void init_base_animation() {
 void init_mid_animation() {
   switch(MID_ANIMATION) {
     case SNAKE:
-      #if defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
+      #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
         MID_NUM_COLORS = 2 + random8(2);
         MID_COLOR_THICKNESS = 2 + random8(4);
         MID_BLACK_THICKNESS = 5 + random8(10);
@@ -510,7 +531,7 @@ void init_mid_animation() {
     case FIRE:
     case FIRE_WHOOPS:
       clear_mid_layer(); // Clear old pixels which are now "heat" values
-      #if defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
+      #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
         MID_NUM_COLORS = 160;      // Minimum spark size
         MID_COLOR_THICKNESS = 120; // Spark chance
         MID_BLACK_THICKNESS = 21;  // Cooling
@@ -528,7 +549,7 @@ void init_mid_animation() {
 void init_sparkle_animation() {
   switch(SPARKLE_ANIMATION) {
     case GLITTER:
-      #if defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
+      #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
         SPARKLE_COLOR_THICKNESS = 1 + random8(2);
         SPARKLE_PORTION = 20 + random8(185);
         SPARKLE_MAX_DIM = random8(5);
@@ -542,7 +563,7 @@ void init_sparkle_animation() {
       
     case RAIN:
       clear_sparkle_layer();
-      #if defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
+      #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
         SPARKLE_COLOR_THICKNESS = 1 + random8(2);
         SPARKLE_PORTION = 30 + random8(30);
         show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = random8(2) ? CCW : CW;
