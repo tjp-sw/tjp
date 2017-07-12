@@ -49,7 +49,11 @@ NUM_COLOR_FAMILIES = 7  # is this used? should usually be same as num_days, but 
 SUNRISE_MEDITATION_MINUTES = 20  # minutes
 SUNSET_MEDITATION_MINUTES = 20  # minutes
 CYCLE_PAUSE = MINUTES_OF_TESTING / 10  # seconds to pause before re-running conductor loop  -- maybe change to .1
-TIME_LIMIT = 10  # number of seconds that can pass before a parameter is changed
+MID_TIME_LIMIT = 60
+BASE_TIME_LIMIT = 97
+SPARKLE_TIME_LIMIT = 43
+SPARMKE_PARAMETER_TIME_LIMIT = 29
+PALETTE_TIME_LIMIT = 10  # number of seconds that can pass before a parameter is changed
 
 # structure constants
 NUM_NODES = 6
@@ -67,24 +71,94 @@ LIGHTS_PER_STRIP = LIGHTS_PER_RING * RINGS_PER_STRIP
 # can be passed around in one go. These constants are the indices into this show_parameters
 # array holding that type of parameter value
 
-NUM_ANIMATIONS = 4
+NUM_7_COLOR_ANIMATIONS = 2
+NUM_BASE_ANIMATIONS = 2
+NUM_MID_ANIMATIONS = 3
+NUM_SPARKLE_ANIMATIONS = 3
+
 NUM_BEAT_EFFECTS = 1
-NUM_PARAMETERS = 10
+NUM_PARAMETERS = 30
 NUM_COLORS_PER_PALETTE = 7
+NUM_COLOR_PALETTES = 3
 
-ANIMATION_INDEX = 0  # which animation to play
-BEAT_EFFECT_INDEX = 1  # how to respond to beat
-PALETTE_INDEX = 2  # which color palette to use
-NUM_COLORS_INDEX = 3  # how many colors to use out of this palette
-COLOR_THICKNESS_INDEX = 4  # how many consecutive lit LEDs in a row
-BLACK_THICKNESS_INDEX = 5  # how many dark LEDs between lit ones
-INTRA_RING_MOTION_INDEX = 6  # 0 = none, 1 = CW, 2 = CCW, 3 = split
-INTRA_RING_SPEED_INDEX = 7  # fixme: still need to decide on units
-COLOR_CHANGE_STYLE_INDEX = 8  # 0 = none, 1 = cycle thru selected, 2 = cycle thru palette
-RING_OFFSET_INDEX = 9  # how far one ring pattern is rotated from neighbor -10 -> 10
+BASE_TIME_LIMIT = 87
+MID_TIME_LIMIT = 61
+SPARKLE_TIME_LIMIT = 43
+SPARKLE_PARAMETER_TIME_LIMIT =  17
+PALETTE_TIME_LIMIT = 7
 
-lower = [0] * NUM_PARAMETERS
-upper = [0] * NUM_PARAMETERS
+#ANIMATION_INDEX = 0  # which animation to play
+#BEAT_EFFECT_INDEX = 1  # how to respond to beat
+#PALETTE_INDEX = 2  # which color palette to use
+#NUM_COLORS_INDEX = 3  # how many colors to use out of this palette
+#COLOR_THICKNESS_INDEX = 4  # how many consecutive lit LEDs in a row
+#BLACK_THICKNESS_INDEX = 5  # how many dark LEDs between lit ones
+#INTRA_RING_MOTION_INDEX = 6  # 0 = none, 1 = CW, 2 = CCW, 3 = split
+#INTRA_RING_SPEED_INDEX = 7  # fixme: still need to decide on units
+#COLOR_CHANGE_STYLE_INDEX = 8  # 0 = none, 1 = cycle thru selected, 2 = cycle thru palette
+#RING_OFFSET_INDEX = 9  # # LEDs a ring's pattern is rotated from it's neighbors' pattern, -10 to 10
+
+# show_bounds = [[0 for i in range(0, 2)] for j in range(0,NUM_PARAMETERS)]
+# lower = [0] * NUM_PARAMETERS
+# upper = [0] * NUM_PARAMETERS
+show_bounds = [  # order must match show_parameters
+        # [min, max]
+        # show bounds 0 through 7 concern base animations
+        [0, NUM_BASE_ANIMATIONS - 1],  # BACKGROUND_INDEX, which background animation to use
+        [0, 255], # base color thickness
+        [0, 255], # base black thickness
+        [-1, 3], # base intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
+        [0, 255], # base intra ring speed
+        [-1,1], # base inter ring motion: -1 = CCW, 0 = none, 1 = CW
+        [0,255], # base inter ring speed
+        [-10,10], # base ring offset
+        # show bounds 8 through 16 concern mid layer animations
+        [0, NUM_MID_ANIMATIONS - 1],  # MIDLAYER_INDEX, which mid layer animation to use
+        [1, 3], # mid num colors
+        [0, 255],  # mid color thickness
+        [0, 255],  # mid black thickness
+        [-1, 3],  # mid intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
+        [0, 255],  # mid intra ring speed
+        [-1, 1],  # mid inter ring motion: -1 = CCW, 0 = none, 1 = CW
+        [0, 255],  # mid inter ring speed
+        [-10, 10],  # mid ring offset
+        # show bounds 17 through 27 concern sparkle animations
+        [0, NUM_SPARKLE_ANIMATIONS - 1],  # SPARKLE_INDEX, which sparkle animation to use
+        [2, 200],  # sparkle portion
+        [0, 255],  # sparkle color thickness
+        [0, 255],  # sparkle black thickness
+        [-1, 3],  # sparkle intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
+        [0, 255],  # sparkle intra ring speed
+        [-1, 1],  # sparkle inter ring motion: -1 = CCW, 0 = none, 1 = CW
+        [0, 255],  # sparkle inter ring speed
+        [0, 6], # sparkle max dim
+        [0, 255], # sparkle range
+        [1, 50], # sparkle spawn frequency
+        [0, NUM_7_COLOR_ANIMATIONS - 1],  # which 7 color animation to play, show bound 28
+        [0, NUM_COLOR_PALETTES - 1], # which color palette, show bound 29
+        [0, NUM_BEAT_EFFECTS - 1],  # which beat effect to use to respond to beat with LEDs, show bound 30
+        [0,1], # is_beat boolean, show bound 31
+        [0,100] # beat proximity - how close you are to beat. so when beat prox >= 95 or <= 5, can smooth beat response
+    ]
+
+# Pre-defined color palettes
+fruit_loop = [[25,0,25], [25,15,0], [180,10,70], [140,60,180], [180,60,60], [255,255,120], [255,100,180]]
+icy_bright = [[37,28,60], [70,0,28], [255,108,189], [0,172,238], [44,133,215], [255,255,255], [254,207,24]]
+watermelon = [[40,29,35], [5,45,15], [47,140,9], [72,160,5], [148,33,137], [47,192,91], [70,190,91]]
+palette = [fruit_loop, icy_bright, watermelon]
+
+
+#------------------------------- set parameter bounds -------------------------------
+# sets upper and lower bounds for each of the animation parameters
+# only needs to be set once
+# fixme: I don't seem to understand passing parameters in python well enough to change these 2 lists
+# fixme: global vars is the only way I know how to make it work.
+
+def set_parameter_bounds():
+    print "set parameterr bounds"
+
+
+
 # ----------------------------------------------------------------------------------------
 # Functions in here
 #
@@ -101,25 +175,6 @@ upper = [0] * NUM_PARAMETERS
 # night_program()
 # ----------------------------------------------------------------------------------------
 
-
-# ----------------- def of color class --------------------------------------------------------
-class Color:
-        def __init__(self, r, g, b):  # RGB color values 0..255
-            self.red = r
-            self.blue = b
-            self.green = g
-
-        # attempt to resolve undesired color shift that occurs when intensity increases
-        # to the point that one base color maxes out before the others
-        # here, native intensity of the color is normalized to 1, and the value returned is
-        # the highest multiple of rgb that won't have that effect
-
-        def max_intensity_multiplier(self):
-
-            brightest = max(self.red, self.green, self.blue)
-            max_multiplier = 255.0 / brightest
-
-            return max_multiplier
 
 
 # ##########################################################################################################
@@ -228,147 +283,147 @@ def conductor(sunrise_time, sunset_time, sunrise_meditation_duration, sunset_med
 
 # ------------------------------------------------- edm_program() -----------------------------------------------
 # show for when the journey is installed at an event with electronic dance music only
+# parameters are somewhat randomly chosen; this will change at bm when params will be determined by sound
 def edm_program():
 
-    print "sanctioned colors", SANCTIONED_COLORS
-
-
-    start_time = time.time()
-
-    # randomly initialize parameters to animations
-    # later these will be based more closely on other inputs
-
-    max_palette = 3  # this will vary by time and date at burning man
+    bg_start_time = time.time()
+    mid_start_time = time.time()
+    sparkle_start_time = time.time()
+    sparkle_parameter_start_time = time.time()
+    palette_start_time = time.time()
 
     show_parameters = [0] * NUM_PARAMETERS
-    show_colors = [0] * NUM_COLORS_PER_PALETTE
+    show_colors = [[0 for rgb in range(0, 2)] for i in range(0, NUM_COLORS_PER_PALETTE)]
+    bg_colors = [[0 for i in range(0, 2)] for rgb in range(0, 2)]
+    mid_colors = [[0 for i in range(0, 3)] for rgb in range(0, 2)]
+    mid_colors = [[0 for i in range(0, 2)] for rgb in range(0, 2)]
 
     set_parameter_bounds()
 
     # choose random starting values for each of the parameters
     for i in range(0, NUM_PARAMETERS - 1):
-        show_parameters[i] = randint(lower[i], upper[i])
+        new_parameter = randint(show_bounds[i][0], show_bounds[i][1])
+        # change to unsigned int for passing to due
+        if new_parameter < 0:
+            show_parameters[i] = 256 + new_parameter
+        else:
+            show_parameters[i] = new_parameter
+
+    print "initial show parameters ", show_parameters
 
     # choose which colors out of the chosen palette to use
-    # show_parameters[NUM_COLORS_INDEX] returns how many colors to use in the current animation
-    show_colors = sample(range(1, 7), show_parameters[NUM_COLORS_INDEX])
+    #shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
+    bg_order = sample(range(0,2), 2)
+    mid_order = sample(range(2,5), 3)
+    sp_order = sample(range(5,7), 2)
 
-    send_due_parameters(show_parameters, show_colors)
+    # palette[show_parameters[29]] is currently chosen palette
+    show_colors[0] = palette[show_parameters[29]][bg_order[0]]
+    show_colors[1] = palette[show_parameters[29]][bg_order[1]]
+    show_colors[2] = palette[show_parameters[29]][mid_order[0]]
+    show_colors[3] = palette[show_parameters[29]][mid_order[1]]
+    show_colors[4] = palette[show_parameters[29]][mid_order[2]]
+    show_colors[5] = palette[show_parameters[29]][sp_order[0]]
+    show_colors[6] = palette[show_parameters[29]][sp_order[1]]
+    print "initial show colors" , show_colors
 
-    temporary_counter = 0
-    current_time = time.time()
+    # fixme: Jeff: here's where parameters -> due is called
+    send_due_parameters()
+
     while True:  # run forever until show is taken down
 
-        print "current params", show_parameters
-        print "current colors", show_colors
-
-        if (current_time - start_time) > TIME_LIMIT:
-            start_time = current_time
-
-            # randomly choose a parameter to change
-            change_param = randint(0, NUM_PARAMETERS - 1)
-            print "changing parameter", change_param
-
-            # now randomly change that parameter
-            new = randint(lower[change_param], upper[change_param])
-            show_parameters[change_param] = new
-            print "new show parameter", show_parameters[change_param]
-
-            if change_param == NUM_COLORS_INDEX:
-                # choose which colors out of the chosen palette to use
-                show_colors = sample(range(0, 5), show_parameters[NUM_COLORS_INDEX])
-
-        send_due_parameters(show_parameters, show_colors)
-
-        time.sleep(3)
         current_time = time.time()
-        temporary_counter += 1
+        bg_time = time.time()
+        mid_time = time.time()
+        sparkle_time = time.time()
+        sparkle_parameter_time = time.time()
+        palette_time = time.time()
+
+        # to avoid hard transitions, change all base animation parameters only when you change background choice
+        if bg_time - bg_start_time > BASE_TIME_LIMIT:
+            bg_start_time = bg_time
+
+            # change bg show parameters
+            for i in range (0, 7):
+                new_parameter = randint(show_bounds[i][0], show_bounds[i][1])
+
+                # convert to unsigned int for passing to due
+                if new_parameter < 0:
+                    show_parameters[i] = 256 + new_parameter
+                else:
+                    show_parameters[i] = new_parameter
+                print "background parameter ", i, "changed to ", show_parameters[i]
+
+        # to avoid hard transitions, change all mid animation parameters only when you change mid layer choice
+        if mid_time - mid_start_time > MID_TIME_LIMIT:
+            mid_start_time = mid_time
+
+            # change mid show parameters
+            for i in range (8, 17):
+                new_parameter = randint(show_bounds[i][0], show_bounds[i][1])
+
+                # convert to unsigned int for passing to due
+                if new_parameter < 0:
+                    show_parameters[i] = 256 + new_parameter
+                else:
+                    show_parameters[i] = new_parameter
+                print "mid parameter ", i, "changed to ", show_parameters[i]
+
+        if sparkle_time - sparkle_start_time > SPARKLE_TIME_LIMIT:
+            sparkle_start_time = sparkle_time
+
+            # change sparkle animation
+            show_parameters[17] = randint(show_bounds[17][0], show_bounds[17][1])
+            print "sparkle choice changed to ", show_parameters[17]
+
+        # can change sparkle parameters independently of changing sparkle animation, without having hard transitions
+        if sparkle_parameter_time - sparkle_parameter_start_time > SPARKLE_PARAMETER_TIME_LIMIT:
+            sparkle_parameter_start_time = sparkle_parameter_time
+
+            # choose which parameter to change; sparkle params are 18-27
+            change_sparkle = randint(18,28)
+            new_parameter = randint(show_bounds[change_sparkle][0], show_bounds[change_sparkle][1])
+
+            # change to unsigned int for passing to due
+            if new_parameter < 0:
+                show_parameters[change_sparkle] = 256 + new_parameter
+            else:
+                show_parameters[change_sparkle] = new_parameter
+            print "sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
+
+        if palette_time - palette_start_time > PALETTE_TIME_LIMIT:
+            palette_start_time = palette_time
+
+            show_parameters[29] = randint(show_bounds[29][0], show_bounds[29][1])
+            # choose which colors out of the chosen palette to use
+            # shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
+            bg_order = sample(range(0, 2), 2)
+            mid_order = sample(range(2, 5), 3)
+            sp_order = sample(range(5, 7), 2)
+
+            # palette[show_parameters[29]] is currently chosen palette
+            show_colors[0] = palette[show_parameters[29]][bg_order[0]]
+            show_colors[1] = palette[show_parameters[29]][bg_order[1]]
+            show_colors[2] = palette[show_parameters[29]][mid_order[0]]
+            show_colors[3] = palette[show_parameters[29]][mid_order[1]]
+            show_colors[4] = palette[show_parameters[29]][mid_order[2]]
+            show_colors[5] = palette[show_parameters[29]][sp_order[0]]
+            show_colors[6] = palette[show_parameters[29]][sp_order[1]]
+
+            print "palette changed ", show_colors
+
+        # fixme: Jeff: here's where parameters -> due is called
+        send_due_parameters()
+
+        #time.sleep(3)
+        current_time = time.time()
 
 
-# "p" array is always length NUM_PARAMETERS
-# "c" array length varies from 1 to NUM_COLORS_PER_PALETTE - 2
-def send_due_parameters(p, c):
-    print 'send to due: params', repr(p), ';', len(c), 'colors', repr(c)
-    return;
+#  fixme: Jeff, here is a place for the code to send the parameters to the due
+#  parameters are in 2 arrays; show_parameters[NUM_PARAMETERS] and SHOW_COLORS[NUM_COLORS_PER_PALETTE]
+def send_due_parameters():
+  return(1);
 
-
-# ------------------------------------------------- scale() -----------------------------------------------
-
-# this function will scale RGB values up and down to change brightness,
-# but will stop scaling once one value hits 255
-# this will change self's rgb values. please don't pass it the original desired color array!
-# mult = 1 corresponds to no scaling at all
-# usage:    for i in range(1, 10):
-#               mult = i / 10.0
-#               scaled_color = scale(led_color, mult)
-
-def scale(color, mult):
-
-    max_ = color.max_intensity_multiplier()
-
-    if mult < max_:  # this scaling won't distort color
-        scale_factor = mult
-    else:  # then this scaling would push one of the color values past 255; just scale as far as you can
-        scale_factor = max_
-
-    r = int(round(color.red * scale_factor))
-    g = int(round(color.green * scale_factor))
-    b = int(round(color.blue * scale_factor))
-
-    new_color = Color(r, g, b)
-
-    return new_color
-
-
-#------------------------------- set parameter bounds -------------------------------
-# sets upper and lower bounds for each of the animation parameters
-# only needs to be set once
-# fixme: I don't seem to understand passing parameters in python well enough to change these 2 lists
-# fixme: global vars is the only way I know how to make it work.
-
-def set_parameter_bounds():
-
-    max_palette = 3
-
-    # which animation to play
-    lower[ANIMATION_INDEX] = 0
-    upper[ANIMATION_INDEX] = NUM_ANIMATIONS - 1
-
-    # which color palette to use
-    lower[PALETTE_INDEX] = 0
-    upper[PALETTE_INDEX] = max_palette - 1  # this will vary by time and date at burning man
-
-    # how many colors to use in the animation
-    lower[NUM_COLORS_INDEX] = 1
-    upper[NUM_COLORS_INDEX] = NUM_COLORS_PER_PALETTE - 2  # the last color indicates rainbow around structure
-
-    # which beat effect to use / how to respond to beat with LEDs
-    lower[BEAT_EFFECT_INDEX] = 0
-    upper[BEAT_EFFECT_INDEX] = NUM_BEAT_EFFECTS - 1
-
-    # how many pixels should the bands of color be
-    lower[COLOR_THICKNESS_INDEX] = 1
-    upper[COLOR_THICKNESS_INDEX] = 10
-
-    # how many black LEDs between color bands
-    lower[BLACK_THICKNESS_INDEX] = 0
-    upper[BLACK_THICKNESS_INDEX] = 5
-
-    # which direction to move lights inside a ring:  0 = none, 1 = CW, 2 = CCW, 3 = split
-    lower[INTRA_RING_MOTION_INDEX] = 0
-    upper[INTRA_RING_MOTION_INDEX] = 3
-
-    # how fast should intra_ring motion be fixme: still need to decide on units
-    lower[INTRA_RING_SPEED_INDEX] = 1
-    upper[INTRA_RING_SPEED_INDEX] = 10
-
-    # how should color change during an animation: 0 = none, 1 = cycle thru selected, 2 = cycle thru palette
-    lower[COLOR_CHANGE_STYLE_INDEX] = 0
-    upper[COLOR_CHANGE_STYLE_INDEX] = 2
-
-    # how far one ring pattern is rotated from neighbor -10 -> 10
-    lower[RING_OFFSET_INDEX] = -10
-    upper[RING_OFFSET_INDEX] = 10
 
 
 def sunrise_meditation(today):
