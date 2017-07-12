@@ -38,7 +38,7 @@ void sparkle_rain() {
   if(sparkle_count % throttle == 0) {
     // move existing raindrops
     for (uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
-      if(SPARKLE_INTRA_RING_MOTION == DOWNWARD) {
+      if(SPARKLE_INTRA_RING_MOTION == DOWN) {
         // inner half
         for (uint16_t pixel = LEDS_PER_RING - 1; pixel > HALF_RING + distance_per_cycle; pixel--)  { set_sparkle(ring, pixel, get_sparkle(ring, pixel-distance_per_cycle)); }
         for (uint8_t pixel = HALF_RING + distance_per_cycle; pixel >= HALF_RING; pixel--)          { set_sparkle(ring, pixel, TRANSPARENT); }
@@ -47,7 +47,7 @@ void sparkle_rain() {
         for (uint8_t pixel = 0; pixel < HALF_RING-1 - distance_per_cycle; pixel++)             { set_sparkle(ring, pixel, get_sparkle(ring, pixel+distance_per_cycle)); }
         for (uint16_t pixel = HALF_RING-1 - distance_per_cycle; pixel <= HALF_RING-1; pixel++) { set_sparkle(ring, pixel, TRANSPARENT); }
       }
-      else if(SPARKLE_INTRA_RING_MOTION == UPWARD) {
+      else if(SPARKLE_INTRA_RING_MOTION == UP) {
         // inner half
         for (uint16_t pixel = HALF_RING; pixel < LEDS_PER_RING-1 - distance_per_cycle; pixel++)        { set_sparkle(ring, pixel, get_sparkle(ring, pixel+distance_per_cycle)); }
         for (uint16_t pixel = LEDS_PER_RING-1 - distance_per_cycle; pixel <= LEDS_PER_RING-1; pixel++) { set_sparkle(ring, pixel, TRANSPARENT); }
@@ -63,14 +63,14 @@ void sparkle_rain() {
   // create new raindrops every "frequency" cycles
   if (sparkle_count % SPARKLE_SPAWN_FREQUENCY == 0) {
     for (uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
-      if(SPARKLE_INTRA_RING_MOTION == DOWNWARD) {
+      if(SPARKLE_INTRA_RING_MOTION == DOWN) {
         for (uint16_t pixel = HALF_RING - SPARKLE_RANGE; pixel < HALF_RING + SPARKLE_RANGE; pixel++) {
           if (random16(SPARKLE_COLOR_THICKNESS * SPARKLE_PORTION) == 0) {
             spawn_raindrop(ring, pixel);
           }
         }
       }
-      else if(SPARKLE_INTRA_RING_MOTION == UPWARD) {
+      else if(SPARKLE_INTRA_RING_MOTION == UP) {
         for(uint16_t pixel = 0; pixel < SPARKLE_RANGE; pixel++) {
           if (random16(SPARKLE_COLOR_THICKNESS * SPARKLE_PORTION) == 0) {
             spawn_raindrop(ring, pixel);
@@ -90,7 +90,7 @@ void spawn_raindrop(uint8_t ring, uint16_t pixel) {
   uint8_t dim = random8(SPARKLE_MAX_DIM + 1);
   uint8_t sparkle_color = random8(2) == 0 ? get_sparkle_color(0, dim) : get_sparkle_color(1, dim);
   bool is_inner = pixel >= HALF_RING;
-  if(SPARKLE_INTRA_RING_MOTION == UPWARD) { is_inner = !is_inner; }
+  if(SPARKLE_INTRA_RING_MOTION == UP) { is_inner = !is_inner; }
 
   for (uint8_t thickness = 0; thickness < SPARKLE_COLOR_THICKNESS; thickness++) {
     if (is_inner) { set_sparkle(ring, pixel - thickness, sparkle_color); }

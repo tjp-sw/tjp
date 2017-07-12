@@ -41,7 +41,7 @@ void snake(uint8_t ring_mode) {
 // Changes palette to a heat scale, and values in mid_layer represent the amount of heat in each pixel
 // The palette_type parameter changes how the heat scale is constructed. Setting to 0 will skip this step and just use the actual palette.
 // MID_BLACK_THICKNESS(20-80) == cooling, MID_COLOR_THICKNESS(40-225) == sparking chance, MID_NUM_COLORS(100-255) == minimum spark size
-// A cooling wind rolls around the structure: MID_INTER_NODE_SPEED == wind speed, MID_RING_OFFSET == wind decay amount in neighboring rings
+// A cooling wind rolls around the structure: MID_INTER_RING_SPEED == wind speed, MID_RING_OFFSET == wind decay amount in neighboring rings
 
 void set_fire_palette() {
   // change mid_palette to heat scale
@@ -105,20 +105,15 @@ void cleanup_fire() {
 #define MAX_WIND_COOLING 60 // Largest extra cooling, at center of the wind
 #define MAX_WIND_RANGE 6    // Wind cooling reaches 6 rings in either direction from center
 void fire(uint8_t ring_mode, uint8_t palette_type) {
-  static bool last_cycle_was_blending = true;
   if(palette_type != FIRE_PALETTE_DISABLED) {
-    if(last_cycle_was_blending || blend_mid_layer) {
-      if(palette_type == FIRE_PALETTE_STANDARD) { set_fire_palette(); }
-    }
-    
-    last_cycle_was_blending = blend_mid_layer;
+    if(palette_type == FIRE_PALETTE_STANDARD) { set_fire_palette(); }
   }
 
   uint8_t ring_start = node_number*RINGS_PER_NODE + (ring_mode == ODD_RINGS ? 1 : 0);
   uint8_t ring_inc = ring_mode == ALL_RINGS ? 1 : 2;
   
   // Step 1.  Cool down every 4th cell a little, and add an extra cooling wind that moves around the structure
-  uint8_t coldest_ring = (mid_count * MID_INTRA_RING_SPEED / THROTTLE) % NUM_RINGS;
+  uint8_t coldest_ring = (mid_count * MID_INTER_RING_SPEED / THROTTLE) % NUM_RINGS;
   for(uint8_t ring = ring_start; ring < (node_number+1)*RINGS_PER_NODE; ring += ring_inc) {
     uint8_t fire_cooling = MID_BLACK_THICKNESS;
     uint8_t dist = ring > coldest_ring ? ring - coldest_ring : coldest_ring - ring;
@@ -183,10 +178,7 @@ void fire(uint8_t ring_mode, uint8_t palette_type) {
 // Draws single-colored bands that fade in and out and scroll around rings
 // MID_NUM_COLORS(1-3), MID_COLOR_THICKNESS(1-255), MID_BLACK_THICKNESS(0-6), MID_INTRA_RING_MOTION(-1, 0, 1), MID_RING_OFFSET(-128-127), MID_INTRA_RING_SPEED(0-255)
 void mid_scrolling_dim(uint8_t color_mode) {
-  const uint8_t dim_length = 6;
-  const uint8_t max_dim_length = 6;
-
-  uint8_t period = MID_COLOR_THICKNESS + MID_BLACK_THICKNESS + 2*dim_length;
+  uint8_t period = MID_COLOR_THICKNESS + MID_BLACK_THICKNESS + 2*MAX_DIMMING;
   uint16_t extended_led_count = ((LEDS_PER_RING-1)/period+1)*period;
 
   for(uint8_t ring = node_number * RINGS_PER_NODE; ring < (node_number + 1) * RINGS_PER_NODE; ring++) {
@@ -204,15 +196,15 @@ void mid_scrolling_dim(uint8_t color_mode) {
       if(pattern_idx < MID_COLOR_THICKNESS) {
         mid_layer[ring][idx] = get_mid_color(color_index);
       }
-      else if(pattern_idx < MID_COLOR_THICKNESS + dim_length) {
-        uint8_t dim_amount = 1 + (pattern_idx - MID_COLOR_THICKNESS) * max_dim_length / dim_length;
+      else if(pattern_idx < MID_COLOR_THICKNESS + MAX_DIMMING) {
+        uint8_t dim_amount = 1 + (pattern_idx - MID_COLOR_THICKNESS);
         mid_layer[ring][idx] = get_mid_color(color_index, dim_amount);
       }
-      else if(pattern_idx < MID_COLOR_THICKNESS + dim_length + MID_BLACK_THICKNESS) {
+      else if(pattern_idx < MID_COLOR_THICKNESS + MAX_DIMMING + MID_BLACK_THICKNESS) {
         mid_layer[ring][idx] = BLACK;
       }
       else {
-        uint8_t dim_amount = max_dim_length - (pattern_idx - MID_COLOR_THICKNESS - MID_BLACK_THICKNESS - dim_length) * max_dim_length / dim_length;
+        uint8_t dim_amount = MAX_DIMMING - (pattern_idx - MID_COLOR_THICKNESS - MID_BLACK_THICKNESS - MAX_DIMMING);
         mid_layer[ring][idx] = get_mid_color(color_index, dim_amount);
       }
     }

@@ -13,10 +13,10 @@ uint8_t get_base_color(uint8_t color0, uint8_t color1, uint8_t blending, uint8_t
     if(color0 > 1) Serial.println("Error in get_base_color(), color0 == " + String(color0));
     if(color1 > 1) Serial.println("Error in get_base_color(), color1 == " + String(color1));
     if(blending > 35) Serial.println("Error in get_base_color(), blending == " + String(blending));
-    if(dimming > 7) Serial.println("Error in get_base_color(), dimming == " + String(dimming));
+    if(dimming > MAX_DIMMING) Serial.println("Error in get_base_color(), dimming == " + String(dimming));
   #endif
 
-  if(dimming >= 7) {
+  if(dimming > MAX_DIMMING) {
     return BLACK;
   }
   else if(color0 == 0) {
@@ -86,7 +86,7 @@ uint8_t get_mid_color(uint8_t color0) {
 uint8_t get_sparkle_color(uint8_t color, uint8_t dimming) {
   #ifdef DEBUG
     if(color > 1) Serial.println("Error in get_sparkle_color(), color == " + String(color));
-    if(dimming > 6) Serial.println("Error in get_sparkle_color(), dimming == " + String(dimming));
+    if(dimming > MAX_DIMMING) Serial.println("Error in get_sparkle_color(), dimming == " + String(dimming));
   #endif
 
   return 2 + 7*color + dimming;
@@ -98,7 +98,7 @@ uint8_t get_sparkle_color(uint8_t color) {
 uint8_t get_edm_color(uint8_t color, uint8_t dimming) {
     #ifdef DEBUG
     if(color > 6) Serial.println("Error in get_sparkle_color(), color == " + String(color));
-    if(dimming > 6) Serial.println("Error in get_sparkle_color(), dimming == " + String(dimming));
+    if(dimming > MAX_DIMMING) Serial.println("Error in get_sparkle_color(), dimming == " + String(dimming));
   #endif
 
   if(color < 2) { return get_base_color(color, dimming); }
@@ -118,7 +118,7 @@ void create_base_palette(CRGBPalette256* new_palette, CRGB color0, CRGB color1) 
   new_palette->entries[GRAY] = CRGB(128, 128, 128);
 
   CRGB temp;
-  for(uint8_t i = 0; i < 36; i++) {
+  for(uint8_t i = 0; i < MAX_BASE_GRADIENT; i++) {
     uint16_t palette_offset = 4 + 7*i;
     // 36 unique hues/saturations, each with 7 brightness values
     temp = color0;

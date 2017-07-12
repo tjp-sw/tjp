@@ -76,24 +76,31 @@ CRGB* initial_palette = watermelon;                                 //
 #define BASE_BLACK_THICKNESS_INDEX 4        // how many dark LEDs between lit ones                //
 #define BASE_INTRA_RING_MOTION_INDEX 5      // NONE, CW, CCW, SPLIT                               //
 #define BASE_INTRA_RING_SPEED_INDEX 6       // Number of pixels to move per 16 cycles             //
-#define BASE_RING_OFFSET_INDEX 7            // rotation of pattern from neighbor                  //
+#define BASE_INTER_RING_MOTION_INDEX 7      // NONE, CW, CCW, SPLIT                               //
+#define BASE_INTER_RING_SPEED_INDEX 8       // Number of pixels to move per 16 cycles             //
+#define BASE_RING_OFFSET_INDEX 9            // rotation of pattern from neighbor                  //
                                                                                                   //
-#define MID_NUM_COLORS_INDEX 8              // how many colors to use out of this palette         //
-#define MID_COLOR_THICKNESS_INDEX 9         // how many consecutive lit LEDs in a row             //
-#define MID_BLACK_THICKNESS_INDEX 10        // how many dark LEDs between lit ones                //
-#define MID_INTRA_RING_MOTION_INDEX 11      // NONE, CW, CCW, SPLIT                               //
-#define MID_INTRA_RING_SPEED_INDEX 12       // Number of pixels to move per 16 cycles             //
-#define MID_RING_OFFSET_INDEX 13            // rotation of pattern from neighbor                  //
+#define MID_NUM_COLORS_INDEX 10              // how many colors to use out of this palette        //
+#define MID_COLOR_THICKNESS_INDEX 11         // how many consecutive lit LEDs in a row            //
+#define MID_BLACK_THICKNESS_INDEX 12        // how many dark LEDs between lit ones                //
+#define MID_INTRA_RING_MOTION_INDEX 13      // NONE, CW, CCW, SPLIT                               //
+#define MID_INTRA_RING_SPEED_INDEX 14       // Number of pixels to move per 16 cycles             //
+#define MID_INTER_RING_MOTION_INDEX 15      // NONE, CW, CCW, SPLIT                               //
+#define MID_INTER_RING_SPEED_INDEX 16       // Number of pixels to move per 16 cycles             //
+#define MID_RING_OFFSET_INDEX 17            // rotation of pattern from neighbor                  //
                                                                                                   //
-#define SPARKLE_COLOR_THICKNESS_INDEX 14    // how many consecutive lit LEDs in a row             //
-#define SPARKLE_PORTION_INDEX 15            // percentage of LEDs that will be lit at once        //
-#define SPARKLE_INTRA_RING_MOTION_INDEX 16  // -1 Upward, 0 none, 1 Downward                      //
-#define SPARKLE_INTRA_RING_SPEED_INDEX 17   // Number of pixels to move per 16 cycles             //
-#define SPARKLE_MAX_DIMMING_INDEX 18        // Max amount a sparkle will be dimmed                //
-#define SPARKLE_RANGE_INDEX 19              // Range of pixels that new bursts are created in     //
-#define SPARKLE_SPAWN_FREQUENCY_INDEX 20    // How often new bursts of sparkles are created       //
+#define SPARKLE_COLOR_THICKNESS_INDEX 18    // how many consecutive lit LEDs in a row             //
+#define SPARKLE_PORTION_INDEX 19            // percentage of LEDs that will be lit at once        //
+#define SPARKLE_INTRA_RING_MOTION_INDEX 20  // -1 UP, 0 none, 1 DOWN                      //
+#define SPARKLE_INTRA_RING_SPEED_INDEX 21   // Number of pixels to move per 16 cycles             //
+#define SPARKLE_INTER_RING_MOTION_INDEX 22  // -1 UP, 0 none, 1 DOWN                      //
+#define SPARKLE_INTER_RING_SPEED_INDEX 23   // Number of pixels to move per 16 cycles             //
+#define SPARKLE_MAX_DIMMING_INDEX 24        // Max amount a sparkle will be dimmed                //
+#define SPARKLE_RANGE_INDEX 25              // Range of pixels that new bursts are created in     //
+#define SPARKLE_SPAWN_FREQUENCY_INDEX 26    // How often new bursts of sparkles are created       //
+#define BEAT_EFFECT_INDEX 27                // How the beat should affect animations              //
                                                                                                   //
-#define NUM_SHOW_PARAMETERS 21              // This should be 1 greater than the last index       //
+#define NUM_SHOW_PARAMETERS 28              // This should be 1 greater than the last index       //
                                                                                                   //
                                                                                                   //
 //  Evolving parameters defining the show, also automatically converts from unsigned/signed       //
@@ -108,6 +115,8 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
 #define BASE_BLACK_THICKNESS      (show_parameters[BASE_BLACK_THICKNESS_INDEX])                   //
 #define BASE_INTRA_RING_MOTION    ((int8_t)show_parameters[BASE_INTRA_RING_MOTION_INDEX])         //
 #define BASE_INTRA_RING_SPEED     (show_parameters[BASE_INTRA_RING_SPEED_INDEX])                  //
+#define BASE_INTER_RING_MOTION    ((int8_t)show_parameters[BASE_INTER_RING_MOTION_INDEX])         //
+#define BASE_INTER_RING_SPEED     (show_parameters[BASE_INTER_RING_SPEED_INDEX])                  //
 #define BASE_RING_OFFSET          ((int8_t)show_parameters[BASE_RING_OFFSET_INDEX])               //
                                                                                                   //
 #define MID_NUM_COLORS            (show_parameters[MID_NUM_COLORS_INDEX])                         //
@@ -115,28 +124,39 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
 #define MID_BLACK_THICKNESS       (show_parameters[MID_BLACK_THICKNESS_INDEX])                    //
 #define MID_INTRA_RING_MOTION     ((int8_t)show_parameters[MID_INTRA_RING_MOTION_INDEX])          //
 #define MID_INTRA_RING_SPEED      (show_parameters[MID_INTRA_RING_SPEED_INDEX])                   //
+#define MID_INTER_RING_MOTION     ((int8_t)show_parameters[MID_INTER_RING_MOTION_INDEX])          //
+#define MID_INTER_RING_SPEED      (show_parameters[MID_INTER_RING_SPEED_INDEX])                   //
 #define MID_RING_OFFSET           ((int8_t)show_parameters[MID_RING_OFFSET_INDEX])                //
                                                                                                   //
 #define SPARKLE_COLOR_THICKNESS   (show_parameters[SPARKLE_COLOR_THICKNESS_INDEX])                //
 #define SPARKLE_PORTION           (show_parameters[SPARKLE_PORTION_INDEX])                        //
 #define SPARKLE_INTRA_RING_MOTION ((int8_t)show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX])      //
 #define SPARKLE_INTRA_RING_SPEED  (show_parameters[SPARKLE_INTRA_RING_SPEED_INDEX])               //
+#define SPARKLE_INTER_RING_MOTION ((int8_t)show_parameters[SPARKLE_INTER_RING_MOTION_INDEX])      //
+#define SPARKLE_INTER_RING_SPEED  (show_parameters[SPARKLE_INTER_RING_SPEED_INDEX])               //
 #define SPARKLE_MAX_DIM           (show_parameters[SPARKLE_MAX_DIMMING_INDEX])                    //
 #define SPARKLE_RANGE             (show_parameters[SPARKLE_RANGE_INDEX])                          //
 #define SPARKLE_SPAWN_FREQUENCY   (show_parameters[SPARKLE_SPAWN_FREQUENCY_INDEX])                //
                                                                                                   //
+#define BEAT_EFFECT               (show_parameters[BEAT_EFFECT_INDEX])                            //
+                                                                                                  //
+// Beat effect modes                                                                              //
+#define COLOR_SWAP 1                                                                              //
+                                                                                                  //
+                                                                                                  //
 // Animation constants and parameters                                                             //
+#define MAX_DIMMING 6                                                                             //
 #define THROTTLE 16 // Allows INTRA_RING_SPEED to speed up OR slow down an animation              //
-#define BASE_MAX_GRADIENT_LENGTH 30 // Plus the pure colors on either side makes 32               //
-#define MID_MAX_GRADIENT_LENGTH 10  // Plus the pure colors on either side makes 12               //
+#define MAX_BASE_GRADIENT 36                                                                      //
+#define MAX_MID_GRADIENT 12                                                                       //
                                                                                                   //
 #define NONE 0        // For BASE & MID INTRA_RING_MOTION                                         //
 #define CW 1          // For BASE & MID INTRA_RING_MOTION                                         //
-#define CCW -1      // For INTRA_RING_MOTION                                                      //
+#define CCW -1        // For INTRA_RING_MOTION                                                    //
 #define SPLIT 2       // For INTRA_RING_MOTION                                                    //
                                                                                                   //
-#define DOWNWARD 1      // For SPARKLE_INTRA_RING_MOTION                                          //
-#define UPWARD -1 // For SPARKLE_INTRA_RING_MOTION                                                //
+#define DOWN 1      // For SPARKLE_INTRA_RING_MOTION                                          //
+#define UP -1       // For SPARKLE_INTRA_RING_MOTION                                          //
                                                                                                   //
 #define ALL_RINGS 0                                                                               //
 #define ODD_RINGS 1                                                                               //

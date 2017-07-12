@@ -28,7 +28,6 @@
  *  How to gracefully remove max refresh rate enforcement?
  *  Test shorter delays in read_frequencies
  *  Do frequencies[] arrays need to be ints? Would be better as uint8_t, scaling or capping if necessary.
- *  how random is random8 and random16 really
  *  consider not resetting loop_counts in between animations that are very similar; imagine a snake that's a gradient. would be nice if it didn't jump when we changed animations.
  *  #define vs const scoped variables; is there a difference to RAM?
  *  get_1d_offset() - rings 0-5 seem to be doing rings in reverse order
@@ -36,6 +35,7 @@
  */
 
 //------------------------ Config -----------------------------------//
+//#define I_AM_THE_BEAT_DUE // Enable this on the 4th due for pride  //
 // Due controlled versus pi controlled animation choices             //
 //#define PI_CONTROLLED                                              //
 #ifndef PI_CONTROLLED                                                //
@@ -49,7 +49,6 @@
                                                                      //
 // Testing tools                                                     //
 #define DEBUG                   // Enables serial output             //
-//#define DEBUG_LED_ARRAYS      // Runs unit tests in setup()        //
 //#define DEBUG_TIMING          // Times each step in loop()         //
 //#define DEBUG_LED_WRITE_DATA 10 // Dumps LED data every X cycles   //
 //#define TEST_AVAIL_RAM 3092   // How much RAM we have left         //
@@ -62,9 +61,9 @@
                                                                      //
 // How fast animations/palettes will cycle                           //                                                                     
 #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS) //
-  #define BASE_ANIMATION_TIME 13000                                  //
-  #define MID_ANIMATION_TIME 61000                                   //
-  #define SPARKLE_ANIMATION_TIME 15000                               //
+  #define BASE_ANIMATION_TIME 12000                                  //
+  #define MID_ANIMATION_TIME 90000                                   //
+  #define SPARKLE_ANIMATION_TIME 12000                               //
   #define PALETTE_CHANGE_TIME 7000                                   //
 #endif                                                               //
                                                                      //
@@ -74,28 +73,36 @@
 void manually_set_animation_params() {                    //
                                                           //
   BASE_ANIMATION = OFF;                                   //
-  MID_ANIMATION = FIRE;                                   //
+  MID_ANIMATION = MID_SCROLLING_DIM2;                     //
   SPARKLE_ANIMATION = OFF;                                //
+                                                          //
+  BEAT_EFFECT = COLOR_SWAP;                               //
                                                           //
   BASE_COLOR_THICKNESS = 30;                              //
   BASE_BLACK_THICKNESS = 0;                               //
   show_parameters[BASE_INTRA_RING_MOTION_INDEX] = CW;     //
   BASE_INTRA_RING_SPEED = 16;                             //
+  show_parameters[BASE_INTER_RING_MOTION_INDEX] = NONE;   //
+  BASE_INTER_RING_SPEED = 0;                             //
   show_parameters[BASE_RING_OFFSET_INDEX] = -8;           //
                                                           //
-  MID_NUM_COLORS = 160;                                   //
-  MID_COLOR_THICKNESS = 120;                              //
-  MID_BLACK_THICKNESS = 30;                               //
-  show_parameters[MID_INTRA_RING_MOTION_INDEX] = NONE;    //
-  MID_INTRA_RING_SPEED = 0;                               //
-  show_parameters[MID_RING_OFFSET_INDEX] = 0;             //
+  MID_NUM_COLORS = 3;                                     //
+  MID_COLOR_THICKNESS = 3;                                //
+  MID_BLACK_THICKNESS = 6;                                //
+  show_parameters[MID_INTRA_RING_MOTION_INDEX] = CW;      //
+  MID_INTRA_RING_SPEED = 16;                              //
+  show_parameters[MID_INTER_RING_MOTION_INDEX] = NONE;    //
+  MID_INTER_RING_SPEED = 0;                               //
+  show_parameters[MID_RING_OFFSET_INDEX] = 4;             //
                                                           //
   SPARKLE_COLOR_THICKNESS = 1;                            //
   SPARKLE_PORTION = 20;                                   //
-  show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = CCW; //
+  show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = DOWN;//
   SPARKLE_INTRA_RING_SPEED = 16;                          //
+  show_parameters[SPARKLE_INTER_RING_MOTION_INDEX] = NONE;//
+  SPARKLE_INTER_RING_SPEED = 0;                          //
   SPARKLE_MAX_DIM = 4;                                    //
-  SPARKLE_RANGE = 60;                                     //
+  SPARKLE_RANGE = 30;                                     //
   SPARKLE_SPAWN_FREQUENCY = 10;                           //
                                                           //
 }                                                         //
@@ -221,6 +228,13 @@ void loop() {
   #endif
 
 
+  // Apply beat effects
+  #ifndef PI_CONTROLLED
+    is_beat = loop_count % 10 == 0; // Generates a fake beat
+  #endif
+  if(is_beat) { do_beat_effects(); }
+
+
   //  Draw layers
   draw_current_base();
   #ifdef DEBUG_TIMING
@@ -305,7 +319,39 @@ void loop() {
   loop_count++;
 }
 
- 
+
+void do_beat_effects() {
+  switch(BEAT_EFFECT) {
+    case COLOR_SWAP:
+    {
+      // Rotate colors
+      CRGB temp = current_palette[2];
+      current_palette[2] = current_palette[3];
+      current_palette[3] = current_palette[4];
+      current_palette[4] = temp;
+    
+      // Rotate targets so the same colors continue blending into the same targets
+      temp = target_palette[2];
+      target_palette[2] = target_palette[3];
+      target_palette[3] = target_palette[4];
+      target_palette[4] = temp;
+    
+      // Set all the dimming/gradient values in mid_palette that the animations will reference
+      create_mid_palette(&mid_palette, current_palette[2], current_palette[3], current_palette[4]);
+      break;
+    }
+
+    case NONE:
+      break;
+
+    default:
+      #ifdef DEBUG
+        Serial.println("Error! Undefined BEAT EFFECT: " + String(BEAT_EFFECT));
+      #endif
+      break;
+  }
+}
+
 #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
 // Cycles through the animations, running each for ANIMATION_TIME seconds
 void cycle_through_animations() {
@@ -549,10 +595,10 @@ void init_mid_animation() {
         MID_NUM_COLORS = 150;      // Minimum spark size
         MID_COLOR_THICKNESS = 130; // Spark chance
         MID_BLACK_THICKNESS = 15;  // Cooling
-        MID_INTRA_RING_SPEED = 8;  // Speed wind moves around structure
+        MID_INTER_RING_SPEED = 8;  // Speed wind moves around structure
         show_parameters[MID_RING_OFFSET_INDEX] = 96; // Taper of wind cooling intensity (out of 127); 64 = each neighboring ring is cooled half as much
         #ifdef DEBUG
-          Serial.println("Fire params: " + String(MID_NUM_COLORS) + ", " + String(MID_COLOR_THICKNESS) + ", " + String(MID_BLACK_THICKNESS)); 
+          Serial.println("Fire params: " + String(MID_NUM_COLORS) + ", " + String(MID_COLOR_THICKNESS) + ", " + String(MID_BLACK_THICKNESS) + ", " + String(MID_INTER_RING_SPEED) + ", " + String(MID_RING_OFFSET)); 
         #endif
       #endif
       break;
@@ -598,7 +644,7 @@ void init_sparkle_animation() {
       #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
         SPARKLE_COLOR_THICKNESS = random8(1, 3);
         SPARKLE_PORTION = random8(30, 60);
-        show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = random8(2) ? DOWNWARD : UPWARD;
+        show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = random8(2) ? DOWN : UP;
         SPARKLE_INTRA_RING_SPEED = 16 << random8(3);
         SPARKLE_MAX_DIM = random8(5);
         SPARKLE_RANGE = 20;

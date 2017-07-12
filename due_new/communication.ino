@@ -106,16 +106,8 @@ void do_network_input() {
 
 
 #ifdef I_AM_DUE
-// Sends the 14 reads from the spectrum shield to the Pi. Each read is 2 bytes.
 void send_audio_packet() {
-  uint8_t audioData[4 * NUM_CHANNELS];
-  for(uint8_t i = 0; i < 4 * NUM_CHANNELS; i+=4) {
-    audioData[i] = frequencies_one[i] >> 8;
-    audioData[i + 1] = frequencies_one[i] & 0xFF;
-    audioData[i + 2] = frequencies_two[i] >> 8;
-    audioData[i + 3] = frequencies_two[i] & 0xFF;
-  }
-  
+  uint8_t audioData[2] = { is_beat, downbeat_proximity };
   NodeMate.write(audioData, sizeof audioData);
 }
 
@@ -403,7 +395,7 @@ void do_communication() {
   
   do_mate_input();
 
-  #ifdef I_AM_DUE
+  #ifdef I_AM_THE_BEAT_DUE
     send_audio_packet();
   #endif
   
