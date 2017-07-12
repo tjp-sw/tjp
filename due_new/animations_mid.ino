@@ -189,7 +189,11 @@ void mid_scrolling_dim(uint8_t color_mode) {
       }
 
       if(idx >= LEDS_PER_RING) { continue; }
-      uint8_t color_index = (color_mode == COLOR_BY_LOCATION ? idx : color_mode == COLOR_BY_PATTERN ? pixel + period/2 : pixel) / period;
+      uint8_t color_index;
+      if(color_mode == COLOR_BY_LOCATION)     { color_index = idx / period; }
+      else if(color_mode == COLOR_BY_PATTERN) { color_index = (pixel + period/2) / period; }
+      else                                    { color_index = (pixel - MID_COLOR_THICKNESS/2) / period; }
+
       color_index %= MID_NUM_COLORS;
 
       uint8_t pattern_idx = pixel % period;

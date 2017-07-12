@@ -42,7 +42,7 @@
   #define TESTING_NODE_NUMBER 0   // To test diff nodes              //
   //#define CYCLE                                                    //
   //#define CYCLE_RANDOM                                             //
-  #define CYCLE_PARAMS    // Locks in show, cycles show_parameters //
+  //#define CYCLE_PARAMS    // Locks in show, cycles show_parameters //
 #endif                                                               //
                                                                      //
 #include "globals.h" // Leave this here, for #define order           //
@@ -72,14 +72,14 @@
 ////////////////////////////////////////////////////////////
 void manually_set_animation_params() {                    //
                                                           //
-  BASE_ANIMATION = OFF;                                   //
-  MID_ANIMATION = MID_SCROLLING_DIM2;                     //
+  BASE_ANIMATION = EQ_VARIABLE_SPLIT;                     //
+  MID_ANIMATION = OFF;                                    //
   SPARKLE_ANIMATION = OFF;                                //
                                                           //
   BEAT_EFFECT = COLOR_SWAP;                               //
                                                           //
-  BASE_COLOR_THICKNESS = 30;                              //
-  BASE_BLACK_THICKNESS = 0;                               //
+  BASE_COLOR_THICKNESS = 55;                              //
+  BASE_BLACK_THICKNESS = 2;                               //
   show_parameters[BASE_INTRA_RING_MOTION_INDEX] = CW;     //
   BASE_INTRA_RING_SPEED = 16;                             //
   show_parameters[BASE_INTER_RING_MOTION_INDEX] = NONE;   //
@@ -88,7 +88,7 @@ void manually_set_animation_params() {                    //
                                                           //
   MID_NUM_COLORS = 3;                                     //
   MID_COLOR_THICKNESS = 3;                                //
-  MID_BLACK_THICKNESS = 6;                                //
+  MID_BLACK_THICKNESS = 2;                                //
   show_parameters[MID_INTRA_RING_MOTION_INDEX] = CW;      //
   MID_INTRA_RING_SPEED = 16;                              //
   show_parameters[MID_INTER_RING_MOTION_INDEX] = NONE;    //
@@ -467,19 +467,19 @@ void draw_current_base() {
       break;
 
     case EQ_FULL:
-      equalizer_full(true);
+      equalizer_full(DISPLAY_FULL);
       break;
 
     case EQ_FULL_SPLIT:
-      equalizer_full(false);
+      equalizer_full(DISPLAY_SPLIT);
       break;
 
     case EQ_VARIABLE:
-      equalizer_variable(false);
+      equalizer_variable(DISPLAY_FULL);
       break;
       
     case EQ_VARIABLE_SPLIT:
-      equalizer_variable(true);
+      equalizer_variable(DISPLAY_SPLIT);
       break;
       
     default:
