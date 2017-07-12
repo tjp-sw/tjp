@@ -18,9 +18,11 @@
  */
 
 /* to do/thoughts/ideas
+ *  using random8() in fire() is faster, but leads to artifacts. look into adding entropy to fire and using random8
+ *  For fire: on inner part of structure, allow heat to diffuse from neighboring rings, since the rings are physically closer together
+ *  Fire: Using weird params, but fire's params are pretty unique. Also using INTRA_RING_MOTION when it's really INTER_RING
  *  Scale frequencies_...[] to be 0-255
- *  Add logic for BASE & MID RING_MOTION = SPLIT
- *  Change base level dimming to be less extreme, since colors will be naturally dim; OR, change use of the colors to (almost) always dim
+ *  Add logic for BASE_RING_MOTION = SPLIT
  *  Consider colorCorrection() when looking at several palettes on the strips.
  *  calling millis() too many times? in do_communication and again in loop()
  *  How to gracefully remove max refresh rate enforcement?
@@ -61,7 +63,7 @@
 // How fast animations/palettes will cycle                           //                                                                     
 #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS) //
   #define BASE_ANIMATION_TIME 13000                                  //
-  #define MID_ANIMATION_TIME 11000                                   //
+  #define MID_ANIMATION_TIME 61000                                   //
   #define SPARKLE_ANIMATION_TIME 15000                               //
   #define PALETTE_CHANGE_TIME 7000                                   //
 #endif                                                               //
@@ -71,9 +73,9 @@
 ////////////////////////////////////////////////////////////
 void manually_set_animation_params() {                    //
                                                           //
-  BASE_ANIMATION = DEBUG_MODE;                                   //
-  MID_ANIMATION = OFF;                                    //
-  SPARKLE_ANIMATION = OFF;                               //
+  BASE_ANIMATION = OFF;                                   //
+  MID_ANIMATION = FIRE;                                   //
+  SPARKLE_ANIMATION = OFF;                                //
                                                           //
   BASE_COLOR_THICKNESS = 30;                              //
   BASE_BLACK_THICKNESS = 0;                               //
@@ -357,7 +359,7 @@ void cycle_through_animations() {
   }
   
   
-  if (current_time - mid_start_time >= BASE_ANIMATION_TIME) {
+  if (current_time - mid_start_time >= MID_ANIMATION_TIME) {
     mid_start_time = current_time;
     mid_count = 0;
 
@@ -400,12 +402,12 @@ void cycle_through_animations() {
 // Layer-specific drawing functions
 void draw_current_base() {
   switch(BASE_ANIMATION) {
-    case SCROLLING_DIM:
+    case BASE_SCROLLING_DIM:
       base_scrolling_dim();
       break;
 
-    case SCROLLING_GRADIENT:
-      base_scrolling_gradient();
+    case BASE_2COLOR_GRADIENT:
+      base_scrolling_2color_gradient();
       break;
 
   // ------ Non-layer animations -----
@@ -443,15 +445,27 @@ void draw_current_base() {
 void draw_current_mid() {
   switch(MID_ANIMATION) {
     case SNAKE:
-      snake();
+      snake(ALL_RINGS);
       break;
 
     case FIRE:
-      fire(1);
+      fire(ALL_RINGS, FIRE_PALETTE_STANDARD);
       break;
 
     case FIRE_WHOOPS:
-      fire(0);
+      fire(ALL_RINGS, FIRE_PALETTE_DISABLED);
+      break;
+      
+    case MID_SCROLLING_DIM:
+      mid_scrolling_dim(COLOR_BY_LOCATION);
+      break;
+
+    case MID_SCROLLING_DIM2:
+      mid_scrolling_dim(COLOR_BY_PATTERN);
+      break;
+      
+    case MID_SCROLLING_DIM3:
+      mid_scrolling_dim(COLOR_BY_PATTERN_OFFSET);
       break;
       
     default:
@@ -482,25 +496,25 @@ void init_base_animation() {
   disable_layering = BASE_ANIMATION >= 128; // EDM animations start at 255 and move down.
   
   switch(BASE_ANIMATION) {
-    case SCROLLING_DIM:
+    case BASE_SCROLLING_DIM:
       #if defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
-        BASE_COLOR_THICKNESS = 2 + random8(4);
+        BASE_COLOR_THICKNESS = random8(2, 6);
         BASE_BLACK_THICKNESS = random8(4);
         show_parameters[BASE_INTRA_RING_MOTION_INDEX] = random8(2) ? CW : CCW;
         BASE_INTRA_RING_SPEED = 4 << random8(4);
-        show_parameters[BASE_RING_OFFSET_INDEX] = random8(12);
+        show_parameters[BASE_RING_OFFSET_INDEX] = random8(24) - 12;
         #ifdef DEBUG
           Serial.println("Scrolling Dim params: " + String(BASE_COLOR_THICKNESS) + ", " + String(BASE_BLACK_THICKNESS) + ", " + String(BASE_INTRA_RING_MOTION) + ", " + String(BASE_INTRA_RING_SPEED) + ", " + String(BASE_RING_OFFSET)); 
         #endif
       #endif
       break;
 
-    case SCROLLING_GRADIENT:
+    case BASE_2COLOR_GRADIENT:
       #if defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
-        BASE_COLOR_THICKNESS = 2 + random8(126);
+        BASE_COLOR_THICKNESS = random8(8, 255);
         show_parameters[BASE_INTRA_RING_MOTION_INDEX] = random8(2) ? CW : CCW;
-        BASE_INTRA_RING_SPEED = 4 << (random8(3) + (BASE_COLOR_THICKNESS < 20 ? 0 : BASE_COLOR_THICKNESS < 40 ? 1 : BASE_COLOR_THICKNESS < 70 ? 2 : 3));
-        show_parameters[BASE_RING_OFFSET_INDEX] = random8(20);
+        BASE_INTRA_RING_SPEED = 4 << (random8(3) + (BASE_COLOR_THICKNESS < 20 ? 0 : BASE_COLOR_THICKNESS < 40 ? 1 : BASE_COLOR_THICKNESS < 70 ? 2 : BASE_COLOR_THICKNESS < 128 ? 3 : 4));
+        show_parameters[BASE_RING_OFFSET_INDEX] = random8(40) - 20;
         #ifdef DEBUG
           Serial.println("Scrolling Gradient params: " + String(BASE_COLOR_THICKNESS) + ", " + String(BASE_INTRA_RING_MOTION) + ", " + String(BASE_INTRA_RING_SPEED) + ", " + String(BASE_RING_OFFSET)); 
         #endif
@@ -516,12 +530,12 @@ void init_mid_animation() {
   switch(MID_ANIMATION) {
     case SNAKE:
       #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
-        MID_NUM_COLORS = 2 + random8(2);
-        MID_COLOR_THICKNESS = 2 + random8(4);
-        MID_BLACK_THICKNESS = 5 + random8(10);
+        MID_NUM_COLORS = random8(2, 4);
+        MID_COLOR_THICKNESS = random8(2, 6);
+        MID_BLACK_THICKNESS = random8(5, 15);
         show_parameters[MID_INTRA_RING_MOTION_INDEX] = random8(2) ? CW : CCW;
         MID_INTRA_RING_SPEED = 8 << random8(3);
-        show_parameters[MID_RING_OFFSET_INDEX] = random8(10);
+        show_parameters[MID_RING_OFFSET_INDEX] = random8(20) - 10;
         #ifdef DEBUG
           Serial.println("Snake params: " + String(MID_NUM_COLORS) + ", " + String(MID_COLOR_THICKNESS) + ", " + String(MID_BLACK_THICKNESS) + ", " + String(MID_INTRA_RING_MOTION) + ", " + String(MID_INTRA_RING_SPEED) + ", " + String(MID_RING_OFFSET)); 
         #endif
@@ -532,15 +546,33 @@ void init_mid_animation() {
     case FIRE_WHOOPS:
       clear_mid_layer(); // Clear old pixels which are now "heat" values
       #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
-        MID_NUM_COLORS = 160;      // Minimum spark size
-        MID_COLOR_THICKNESS = 120; // Spark chance
-        MID_BLACK_THICKNESS = 21;  // Cooling
+        MID_NUM_COLORS = 150;      // Minimum spark size
+        MID_COLOR_THICKNESS = 130; // Spark chance
+        MID_BLACK_THICKNESS = 15;  // Cooling
+        MID_INTRA_RING_SPEED = 8;  // Speed wind moves around structure
+        show_parameters[MID_RING_OFFSET_INDEX] = 96; // Taper of wind cooling intensity (out of 127); 64 = each neighboring ring is cooled half as much
         #ifdef DEBUG
           Serial.println("Fire params: " + String(MID_NUM_COLORS) + ", " + String(MID_COLOR_THICKNESS) + ", " + String(MID_BLACK_THICKNESS)); 
         #endif
       #endif
       break;
 
+    case MID_SCROLLING_DIM:
+    case MID_SCROLLING_DIM2:
+    case MID_SCROLLING_DIM3:
+      #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
+        MID_NUM_COLORS = random8(1, 4);
+        MID_COLOR_THICKNESS = random8(1, 5);
+        MID_BLACK_THICKNESS = random8(2, 16);
+        show_parameters[MID_INTRA_RING_MOTION_INDEX] = random8(2) ? CW : CCW;
+        show_parameters[MID_RING_OFFSET_INDEX] = random8(20) - 10;
+        MID_INTRA_RING_SPEED = 8 << random8(3);
+        #ifdef DEBUG
+          Serial.println("Scrolling dim params: " + String(MID_NUM_COLORS) + ", " + String(MID_COLOR_THICKNESS) + ", " + String(MID_BLACK_THICKNESS) + ", " + String(MID_INTRA_RING_MOTION) + ", " + String(MID_RING_OFFSET) + ", " + String(MID_INTRA_RING_SPEED));
+        #endif
+      #endif
+      break;
+      
     default:
       break;
   }
@@ -550,10 +582,10 @@ void init_sparkle_animation() {
   switch(SPARKLE_ANIMATION) {
     case GLITTER:
       #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
-        SPARKLE_COLOR_THICKNESS = 1 + random8(2);
-        SPARKLE_PORTION = 20 + random8(185);
+        SPARKLE_COLOR_THICKNESS = random8(1, 3);
+        SPARKLE_PORTION = random8(20, 205);
         SPARKLE_MAX_DIM = random8(5);
-        { uint16_t temp = 60 + random8(100);
+        { uint16_t temp = random8(60, 160);
           SPARKLE_RANGE = temp >= 127 ? 127 : temp; }
         #ifdef DEBUG
           Serial.println("Glitter params: " + String(SPARKLE_COLOR_THICKNESS) + ", " + String(SPARKLE_PORTION) + ", " + String(SPARKLE_MAX_DIM) + ", " + String(SPARKLE_RANGE));
@@ -564,10 +596,10 @@ void init_sparkle_animation() {
     case RAIN:
       clear_sparkle_layer();
       #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
-        SPARKLE_COLOR_THICKNESS = 1 + random8(2);
-        SPARKLE_PORTION = 30 + random8(30);
-        show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = random8(2) ? CCW : CW;
-        SPARKLE_INTRA_RING_SPEED = 8 << random8(3);
+        SPARKLE_COLOR_THICKNESS = random8(1, 3);
+        SPARKLE_PORTION = random8(30, 60);
+        show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = random8(2) ? DOWNWARD : UPWARD;
+        SPARKLE_INTRA_RING_SPEED = 16 << random8(3);
         SPARKLE_MAX_DIM = random8(5);
         SPARKLE_RANGE = 20;
         SPARKLE_SPAWN_FREQUENCY = 20;

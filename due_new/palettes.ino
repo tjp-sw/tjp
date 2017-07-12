@@ -125,12 +125,20 @@ void create_base_palette(CRGBPalette256* new_palette, CRGB color0, CRGB color1) 
     nblend(temp, color1, 255 * i / 35);
 
     new_palette->entries[palette_offset] = temp;
+    new_palette->entries[palette_offset + 1] = CRGB(temp.r * 2/3, temp.g * 2/3, temp.b * 2/3);
+    new_palette->entries[palette_offset + 2] = CRGB(temp.r / 2, temp.g / 2, temp.b / 2);
+    new_palette->entries[palette_offset + 3] = CRGB(temp.r / 3, temp.g / 3, temp.b / 3);
+    new_palette->entries[palette_offset + 4] = CRGB(temp.r / 4, temp.g / 4, temp.b / 4);
+    new_palette->entries[palette_offset + 5] = CRGB(temp.r / 5, temp.g / 5, temp.b / 5);
+    new_palette->entries[palette_offset + 6] = CRGB(temp.r / 6, temp.g / 6, temp.b / 6);
+    /*
     new_palette->entries[palette_offset + 1] = CRGB(temp.r / 2, temp.g / 2, temp.b / 2);
     new_palette->entries[palette_offset + 2] = CRGB(temp.r / 4, temp.g / 4, temp.b / 4);
     new_palette->entries[palette_offset + 3] = CRGB(temp.r / 6, temp.g / 6, temp.b / 6);
     new_palette->entries[palette_offset + 4] = CRGB(temp.r / 9, temp.g / 9, temp.b / 9);
     new_palette->entries[palette_offset + 5] = CRGB(temp.r / 12, temp.g / 12, temp.b / 12);
     new_palette->entries[palette_offset + 6] = CRGB(temp.r / 15, temp.g / 15, temp.b / 15);
+    */
   }
 }
 

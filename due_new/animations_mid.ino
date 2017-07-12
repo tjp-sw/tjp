@@ -4,11 +4,13 @@
 // Sends alternating bands of colors rotating around the rings
 // Creates repeated snakes with NUM_COLORS colors, with each color repeated COLOR_THICKNESS times, separated by BLACK_THICKNESS black LEDs.
 // MID_NUM_COLORS(1-3), MID_COLOR_THICKNESS(1-20), MID_BLACK_THICKNESS(0-60), MID_INTRA_RING_MOTION(-1, 1), MID_RING_OFFSET(0-20), MID_INTRA_RING_SPEED(8-127)
-void snake() {
+void snake(uint8_t ring_mode) {
   uint8_t period = MID_NUM_COLORS * MID_COLOR_THICKNESS + MID_BLACK_THICKNESS;
   uint16_t extended_led_count = ((LEDS_PER_RING-1)/period+1)*period;
-  
-  for (uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+
+  uint8_t ring_start = node_number*RINGS_PER_NODE + (ring_mode == ODD_RINGS ? 1 : 0);
+  uint8_t ring_inc = ring_mode == ALL_RINGS ? 1 : 2;
+  for (uint8_t ring = ring_start; ring < (node_number+1)*RINGS_PER_NODE; ring += ring_inc) {
     for (uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
       uint16_t idx;
       if(MID_INTRA_RING_MOTION != SPLIT) {
@@ -38,32 +40,15 @@ void snake() {
 // Adapted from: Fire2012 by Mark Kriegsman, July 2012, part of "Five Elements" shown here: http://youtu.be/knWiGsmgycY
 // Changes palette to a heat scale, and values in mid_layer represent the amount of heat in each pixel
 // The palette_type parameter changes how the heat scale is constructed. Setting to 0 will skip this step and just use the actual palette.
-// To do: add a cooling wind that rolls around structure: MID_INTER_NODE_SPEED == wind speed, MID_RING_OFFSET == wind decay amount in neighboring rings
-// To do: on inner part of structure, allow heat to diffuse from neighboring rings.
 // MID_BLACK_THICKNESS(20-80) == cooling, MID_COLOR_THICKNESS(40-225) == sparking chance, MID_NUM_COLORS(100-255) == minimum spark size
+// A cooling wind rolls around the structure: MID_INTER_NODE_SPEED == wind speed, MID_RING_OFFSET == wind decay amount in neighboring rings
+
 void set_fire_palette() {
   // change mid_palette to heat scale
-/*  CHSV tp0 = rgb2hsv_approximate(target_palette[2]);
-  CHSV tp1 = rgb2hsv_approximate(target_palette[3]);
-  CHSV tp2 = rgb2hsv_approximate(target_palette[4]);
-
-  CHSV cp0 = rgb2hsv_approximate(current_palette[2]);
-  CHSV cp1 = rgb2hsv_approximate(current_palette[3]);
-  CHSV cp2 = rgb2hsv_approximate(current_palette[4]);
-
-  Serial.print("rgb[0] = (" + String(current_palette[2].r) + "," + String(current_palette[2].g) + "," + String(current_palette[2].b) + ")");
-  Serial.println("\t\thsv[0] = (" + String(cp0.h) + "," + String(cp0.s) + "," + String(cp0.v) + ")");
-  Serial.print("rgb[1] = (" + String(current_palette[3].r) + "," + String(current_palette[3].g) + "," + String(current_palette[3].b) + ")");
-  Serial.println("\t\thsv[1] = (" + String(cp1.h) + "," + String(cp1.s) + "," + String(cp1.v) + ")");
-  Serial.print("rgb[2] = (" + String(current_palette[4].r) + "," + String(current_palette[4].g) + "," + String(current_palette[4].b) + ")");
-  Serial.println("\t\thsv[2] = (" + String(cp2.h) + "," + String(cp2.s) + "," + String(cp2.v) + ")");
-  Serial.println();
-  */
-
   CRGB steps[3];
-  steps[0] = current_palette[2];//CHSV(cp0.h, 255, 100);
-  steps[1] = current_palette[3];//CHSV(cp1.h, 180, 150);
-  steps[2] = current_palette[4];//CHSV(cp2.h, 140, 255);
+  steps[0] = current_palette[2];
+  steps[1] = current_palette[3];
+  steps[2] = current_palette[4];
 
   steps[0].maximizeBrightness();
   steps[1].maximizeBrightness();
@@ -116,29 +101,49 @@ void cleanup_fire() {
   create_mid_palette(&mid_palette, current_palette[2], current_palette[3], current_palette[4]);
 }
 
-#define SPARKING_RANGE 20
-void fire(uint8_t palette_type) {
+#define SPARKING_RANGE 20   // How far from bottom sparks will form
+#define MAX_WIND_COOLING 60 // Largest extra cooling, at center of the wind
+#define MAX_WIND_RANGE 6    // Wind cooling reaches 6 rings in either direction from center
+void fire(uint8_t ring_mode, uint8_t palette_type) {
   static bool last_cycle_was_blending = true;
-  if(palette_type != 0) {
+  if(palette_type != FIRE_PALETTE_DISABLED) {
     if(last_cycle_was_blending || blend_mid_layer) {
-      if(palette_type == 1) { set_fire_palette(); }
+      if(palette_type == FIRE_PALETTE_STANDARD) { set_fire_palette(); }
     }
     
     last_cycle_was_blending = blend_mid_layer;
   }
+
+  uint8_t ring_start = node_number*RINGS_PER_NODE + (ring_mode == ODD_RINGS ? 1 : 0);
+  uint8_t ring_inc = ring_mode == ALL_RINGS ? 1 : 2;
+  
+  // Step 1.  Cool down every 4th cell a little, and add an extra cooling wind that moves around the structure
+  uint8_t coldest_ring = (mid_count * MID_INTRA_RING_SPEED / THROTTLE) % NUM_RINGS;
+  for(uint8_t ring = ring_start; ring < (node_number+1)*RINGS_PER_NODE; ring += ring_inc) {
+    uint8_t fire_cooling = MID_BLACK_THICKNESS;
+    uint8_t dist = ring > coldest_ring ? ring - coldest_ring : coldest_ring - ring;
+
+    uint8_t wind_cooling = 0;
+    if(dist <= MAX_WIND_RANGE) {
+      wind_cooling = MAX_WIND_COOLING;
+      while(dist-- > 0) {
+        wind_cooling = wind_cooling * MID_RING_OFFSET / 127;
+      }
+    }
     
-  // Step 1.  Cool down every 4th cell a little
-  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
-    // Roll a range of cooling through the structure
-    int fireCooling = MID_BLACK_THICKNESS;// + (ring + base_count) % 50;
     
     for(uint16_t pixel = 0; pixel < HALF_RING; pixel+=4) {
-      mid_layer[ring][pixel] = qsub8(mid_layer[ring][pixel],  random8(0, fireCooling));
-      mid_layer[ring][HALF_RING + pixel] = qsub8(mid_layer[ring][HALF_RING + pixel],  random8(0, fireCooling));
+      uint8_t extra_cooling = wind_cooling;
+      //if((pixel < 2*SPARKING_RANGE) || (pixel > NUM_LEDS-1 - 2*SPARKING_RANGE))
+        //extra_cooling = 255;
+      //if((pixel < 4*SPARKING_RANGE) || (pixel > NUM_LEDS-1 - 4*SPARKING_RANGE))
+        //extra_cooling = wind_cooling * 3;
+      mid_layer[ring][pixel] = qsub8(mid_layer[ring][pixel],  random(0, fire_cooling+extra_cooling));
+      mid_layer[ring][HALF_RING + pixel] = qsub8(mid_layer[ring][HALF_RING + pixel],  random(0, fire_cooling+extra_cooling));
     }
   }
 
-  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+  for(uint8_t ring = ring_start; ring < (node_number+1)*RINGS_PER_NODE; ring += ring_inc) {
     
     // Step 2.  Heat from each cell drifts 'up' and diffuses a little
     for(uint16_t pixel = 1; pixel < HALF_RING - 1; pixel++) {
@@ -155,26 +160,61 @@ void fire(uint8_t palette_type) {
     // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
     uint8_t fireSparking = MID_COLOR_THICKNESS;//(i + RINGS_PER_NODE / 2 + loop_count/7) % 230 + 25; // 10% to 100% chance of sparking
     
-    if(random8() < fireSparking) {
+    if(random(256) < fireSparking) {
       uint8_t pixel = random8(SPARKING_RANGE);
-      mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random8(MID_NUM_COLORS, 255));
+      mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random(MID_NUM_COLORS, 255));
     }
 
-    if(random8() < fireSparking) {
-      uint16_t pixel = LEDS_PER_RING - 1 - random8(SPARKING_RANGE);
-      mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random8(MID_NUM_COLORS, 255));
-    }
-
-    if(ring == 4) {
-      for(uint16_t pix = 205; pix < 408; pix++) {
-        //Serial.println("mid_layer[4][" + String(pix) + "] = " + String(mid_layer[ring][pix]));
-      }
+    if(random(256) < fireSparking) {
+      uint16_t pixel = LEDS_PER_RING - 1 - random(SPARKING_RANGE);
+      mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random(MID_NUM_COLORS, 255));
     }
   }
 
-  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+  for(uint8_t ring = ring_start; ring < (node_number+1)*RINGS_PER_NODE; ring += ring_inc) {
     for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
       if(mid_layer[ring][pixel] < 9) { mid_layer[ring][pixel] = TRANSPARENT; }
+    }
+  }
+}
+
+
+//-------------------------------- SCROLLING DIM ---------------------------------
+// Draws single-colored bands that fade in and out and scroll around rings
+// MID_NUM_COLORS(1-3), MID_COLOR_THICKNESS(1-255), MID_BLACK_THICKNESS(0-6), MID_INTRA_RING_MOTION(-1, 0, 1), MID_RING_OFFSET(-128-127), MID_INTRA_RING_SPEED(0-255)
+void mid_scrolling_dim(uint8_t color_mode) {
+  const uint8_t dim_length = 6;
+  const uint8_t max_dim_length = 6;
+
+  uint8_t period = MID_COLOR_THICKNESS + MID_BLACK_THICKNESS + 2*dim_length;
+  uint16_t extended_led_count = ((LEDS_PER_RING-1)/period+1)*period;
+
+  for(uint8_t ring = node_number * RINGS_PER_NODE; ring < (node_number + 1) * RINGS_PER_NODE; ring++) {
+    for(uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
+      uint16_t idx;
+      if(MID_INTRA_RING_MOTION != SPLIT) {
+        idx = (pixel + ring*MID_RING_OFFSET + MID_INTRA_RING_MOTION * MID_INTRA_RING_SPEED * mid_count / THROTTLE) % extended_led_count;
+      }
+
+      if(idx >= LEDS_PER_RING) { continue; }
+      uint8_t color_index = (color_mode == COLOR_BY_LOCATION ? idx : color_mode == COLOR_BY_PATTERN ? pixel + period/2 : pixel) / period;
+      color_index %= MID_NUM_COLORS;
+
+      uint8_t pattern_idx = pixel % period;
+      if(pattern_idx < MID_COLOR_THICKNESS) {
+        mid_layer[ring][idx] = get_mid_color(color_index);
+      }
+      else if(pattern_idx < MID_COLOR_THICKNESS + dim_length) {
+        uint8_t dim_amount = 1 + (pattern_idx - MID_COLOR_THICKNESS) * max_dim_length / dim_length;
+        mid_layer[ring][idx] = get_mid_color(color_index, dim_amount);
+      }
+      else if(pattern_idx < MID_COLOR_THICKNESS + dim_length + MID_BLACK_THICKNESS) {
+        mid_layer[ring][idx] = BLACK;
+      }
+      else {
+        uint8_t dim_amount = max_dim_length - (pattern_idx - MID_COLOR_THICKNESS - MID_BLACK_THICKNESS - dim_length) * max_dim_length / dim_length;
+        mid_layer[ring][idx] = get_mid_color(color_index, dim_amount);
+      }
     }
   }
 }

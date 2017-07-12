@@ -41,20 +41,20 @@ void sparkle_rain() {
       if(SPARKLE_INTRA_RING_MOTION == DOWNWARD) {
         // inner half
         for (uint16_t pixel = LEDS_PER_RING - 1; pixel > HALF_RING + distance_per_cycle; pixel--)  { set_sparkle(ring, pixel, get_sparkle(ring, pixel-distance_per_cycle)); }
-        for (uint16_t pixel = HALF_RING + distance_per_cycle; pixel >= HALF_RING; pixel--)         { set_sparkle(ring, pixel, TRANSPARENT); }
+        for (uint8_t pixel = HALF_RING + distance_per_cycle; pixel >= HALF_RING; pixel--)          { set_sparkle(ring, pixel, TRANSPARENT); }
         
         // outer half
-        for (uint16_t pixel = 0; pixel < HALF_RING-1 - distance_per_cycle; pixel++)            { set_sparkle(ring, pixel, get_sparkle(ring, pixel+distance_per_cycle)); }
+        for (uint8_t pixel = 0; pixel < HALF_RING-1 - distance_per_cycle; pixel++)             { set_sparkle(ring, pixel, get_sparkle(ring, pixel+distance_per_cycle)); }
         for (uint16_t pixel = HALF_RING-1 - distance_per_cycle; pixel <= HALF_RING-1; pixel++) { set_sparkle(ring, pixel, TRANSPARENT); }
       }
       else if(SPARKLE_INTRA_RING_MOTION == UPWARD) {
         // inner half
-        for (uint16_t pixel = HALF_RING; pixel < LEDS_PER_RING-1 - distance_per_cycle; pixel++)       { set_sparkle(ring, pixel, get_sparkle(ring, pixel+distance_per_cycle)); }
+        for (uint16_t pixel = HALF_RING; pixel < LEDS_PER_RING-1 - distance_per_cycle; pixel++)        { set_sparkle(ring, pixel, get_sparkle(ring, pixel+distance_per_cycle)); }
         for (uint16_t pixel = LEDS_PER_RING-1 - distance_per_cycle; pixel <= LEDS_PER_RING-1; pixel++) { set_sparkle(ring, pixel, TRANSPARENT); }
-        
+
         // outer half
         for (uint16_t pixel = HALF_RING-1; pixel > distance_per_cycle; pixel--) { set_sparkle(ring, pixel, get_sparkle(ring, pixel-distance_per_cycle)); }
-        for (uint16_t pixel = distance_per_cycle; pixel >= 0; pixel--)          { set_sparkle(ring, pixel, TRANSPARENT); }
+        for (int8_t pixel = distance_per_cycle; pixel >= 0; pixel--)            { set_sparkle(ring, pixel, TRANSPARENT); }
       }
     }
   }
@@ -90,6 +90,7 @@ void spawn_raindrop(uint8_t ring, uint16_t pixel) {
   uint8_t dim = random8(SPARKLE_MAX_DIM + 1);
   uint8_t sparkle_color = random8(2) == 0 ? get_sparkle_color(0, dim) : get_sparkle_color(1, dim);
   bool is_inner = pixel >= HALF_RING;
+  if(SPARKLE_INTRA_RING_MOTION == UPWARD) { is_inner = !is_inner; }
 
   for (uint8_t thickness = 0; thickness < SPARKLE_COLOR_THICKNESS; thickness++) {
     if (is_inner) { set_sparkle(ring, pixel - thickness, sparkle_color); }

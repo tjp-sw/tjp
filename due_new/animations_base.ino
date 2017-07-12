@@ -67,7 +67,7 @@ void base_scrolling_dim() {
 //-------------------------- SCROLLING 2-COLOR GRADIENT --------------------------
 // Draws a gradient moving from one base color to the other and back again
 // BASE_COLOR_THICKNESS(1-255), BASE_INTRA_RING_MOTION(CCW, NONE, CW, SPLIT), BASE_RING_OFFSET(-128-127), BASE_INTRA_RING_SPEED(0-255)
-void base_scrolling_gradient() {
+void base_scrolling_2color_gradient() {
   uint8_t period = 2*BASE_COLOR_THICKNESS;
   uint16_t extended_led_count = ((LEDS_PER_RING-1)/period+1)*period;
 

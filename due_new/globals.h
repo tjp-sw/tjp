@@ -36,8 +36,8 @@ CRGB* initial_palette = watermelon;                                 //
                                                               //
 // Base layer                                                 //
 #define DEBUG_MODE 255        // Startup animation            //
-#define SCROLLING_DIM 1                                       //
-#define SCROLLING_GRADIENT 2                                  //
+#define BASE_SCROLLING_DIM 1                                  //
+#define BASE_2COLOR_GRADIENT 2                                //
 #define NUM_BASE_ANIMATIONS 2  // Equal to last animation     //
                                                               //
 // EDM animations (in the base layer, starting at 128)        //
@@ -51,7 +51,10 @@ CRGB* initial_palette = watermelon;                                 //
 #define SNAKE 1                                               //
 #define FIRE 2                                                //
 #define FIRE_WHOOPS 3                                         //
-#define NUM_MID_ANIMATIONS 3  // Equal to last animation      //
+#define MID_SCROLLING_DIM 4                                   //
+#define MID_SCROLLING_DIM2 5                                  //
+#define MID_SCROLLING_DIM3 6                                  //
+#define NUM_MID_ANIMATIONS 6  // Equal to last animation      //
                                                               //
 // Sparkle layer                                              //
 #define GLITTER 1                                             //
@@ -122,16 +125,32 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
 #define SPARKLE_RANGE             (show_parameters[SPARKLE_RANGE_INDEX])                          //
 #define SPARKLE_SPAWN_FREQUENCY   (show_parameters[SPARKLE_SPAWN_FREQUENCY_INDEX])                //
                                                                                                   //
-// Animation constants                                                                            //
+// Animation constants and parameters                                                             //
 #define THROTTLE 16 // Allows INTRA_RING_SPEED to speed up OR slow down an animation              //
 #define BASE_MAX_GRADIENT_LENGTH 30 // Plus the pure colors on either side makes 32               //
 #define MID_MAX_GRADIENT_LENGTH 10  // Plus the pure colors on either side makes 12               //
+                                                                                                  //
 #define NONE 0        // For BASE & MID INTRA_RING_MOTION                                         //
 #define CW 1          // For BASE & MID INTRA_RING_MOTION                                         //
-#define CCW -1      // For INTRA_RING_MOTION                                                    //
+#define CCW -1      // For INTRA_RING_MOTION                                                      //
 #define SPLIT 2       // For INTRA_RING_MOTION                                                    //
+                                                                                                  //
 #define DOWNWARD 1      // For SPARKLE_INTRA_RING_MOTION                                          //
-#define UPWARD -1 // For SPARKLE_INTRA_RING_MOTION                                              //
+#define UPWARD -1 // For SPARKLE_INTRA_RING_MOTION                                                //
+                                                                                                  //
+#define ALL_RINGS 0                                                                               //
+#define ODD_RINGS 1                                                                               //
+#define EVEN_RINGS 2                                                                              //
+                                                                                                  //
+#define DISPLAY_FULL 0                                                                            //
+#define DISPLAY_SPLIT 1                                                                           //
+                                                                                                  //
+#define FIRE_PALETTE_DISABLED 0                                                                   //
+#define FIRE_PALETTE_STANDARD 1                                                                   //
+                                                                                                  //
+#define COLOR_BY_LOCATION 0                                                                       //
+#define COLOR_BY_PATTERN 1                                                                        //
+#define COLOR_BY_PATTERN_OFFSET 2                                                                 //
 //------------------------------------------------------------------------------------------------//
 
 
