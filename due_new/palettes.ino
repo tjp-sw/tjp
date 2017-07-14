@@ -118,7 +118,7 @@ void create_base_palette(CRGBPalette256* new_palette, CRGB color0, CRGB color1) 
   new_palette->entries[GRAY] = CRGB(128, 128, 128);
 
   CRGB temp;
-  for(uint8_t i = 0; i < MAX_BASE_GRADIENT; i++) {
+  for(uint8_t i = 0; i < BASE_GRADIENT_SIZE; i++) {
     uint16_t palette_offset = 4 + 7*i;
     // 36 unique hues/saturations, each with 7 brightness values
     temp = color0;
@@ -187,10 +187,10 @@ void create_sparkle_palette(CRGBPalette16* new_palette, CRGB color0, CRGB color1
     new_palette->entries[palette_offset] = temp;
     new_palette->entries[palette_offset + 1] = CRGB(temp.r / 2, temp.g / 2, temp.b / 2);
     new_palette->entries[palette_offset + 2] = CRGB(temp.r / 4, temp.g / 4, temp.b / 4);
-    new_palette->entries[palette_offset + 3] = CRGB(temp.r / 6, temp.g / 6, temp.b / 6);
-    new_palette->entries[palette_offset + 4] = CRGB(temp.r / 9, temp.g / 9, temp.b / 9);
-    new_palette->entries[palette_offset + 5] = CRGB(temp.r / 12, temp.g / 12, temp.b / 12);
-    new_palette->entries[palette_offset + 6] = CRGB(temp.r / 15, temp.g / 15, temp.b / 15);
+    new_palette->entries[palette_offset + 3] = CRGB(temp.r / 8, temp.g / 8, temp.b / 8);
+    new_palette->entries[palette_offset + 4] = CRGB(temp.r / 12, temp.g / 12, temp.b / 12);
+    new_palette->entries[palette_offset + 5] = CRGB(temp.r / 16, temp.g / 16, temp.b / 16);
+    new_palette->entries[palette_offset + 6] = CRGB(temp.r / 20, temp.g / 20, temp.b / 20);
   }
 }
 

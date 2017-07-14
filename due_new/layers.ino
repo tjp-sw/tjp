@@ -71,26 +71,6 @@ void clear_sparkle_layer() {
 }
 
 
-// Takes a ring 0-11, pixel 0-407, returns 1d offset into leds[]. Not to be used when drawing layers.
-uint16_t get_1d_index(uint8_t ring, uint16_t pixel) {
-  #ifdef DEBUG
-    if(ring >= RINGS_PER_NODE) Serial.println("Error in get_1d_index(" + String(ring) + ", " + String(pixel) + "). Ring out of range.");
-    if(pixel >= LEDS_PER_RING) Serial.println("Error in get_1d_index(" + String(ring) + ", " + String(pixel) + "). Pixel out of range.");
-  #endif
-  
-  bool backward_strip = ring < RINGS_PER_NODE/2;
-  uint8_t strip = ring % 2 + (backward_strip ? 0 : 2);
-  
-  uint16_t pixel_offset = LEDS_PER_STRIP * strip;
-  if(backward_strip) {
-    return pixel_offset + LEDS_PER_STRIP - 1 - PHYSICAL_LEDS_PER_RING*(ring/2) - pixel;
-  }
-  else {
-    return pixel_offset + 1 + PHYSICAL_LEDS_PER_RING*((ring - RINGS_PER_NODE/2)/2) + pixel;
-  }
-}
-
-
 // Bit-bashing functions for reading/writing nybbles in sparkle layer
 void set_sparkle(uint8_t ring, uint16_t pixel, uint8_t value) {
   uint8_t pixel_index = pixel >> 1;

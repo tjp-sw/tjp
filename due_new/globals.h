@@ -12,6 +12,26 @@ CRGB fruit_loop[7] = {                                              //
     //CRGB(178,6,88), CRGB(162,80,204), CRGB(255,65,65),  // medium //
     //CRGB(255,247,0), CRGB(255,127,14)};                 // light  //
     CRGB(25,0,25), CRGB(25,15,0),                         // dark   //
+    CRGB(90,5,35), CRGB(70,30,90), CRGB(90,30,30),   // medium //
+    CRGB(128,128,60), CRGB(128,50,90)};                // light  //
+                                                                    //
+#ifndef PI_CONTROLLED                                               //
+  CRGB icy_bright[7] = {                                            //
+    CRGB(37,28,60), CRGB(70,0,28),                        // dark   //
+    CRGB(128,54,90), CRGB(0,83,115), CRGB(20,64,100), // medium //
+    CRGB(128,128,128), CRGB(128,100,120)};                // light  //
+                                                                    //
+  CRGB watermelon[7] = {                                            //
+    CRGB(40,29,35), CRGB(5,45,15),                        // dark   //
+    CRGB(47,140,9), CRGB(72,160,5), CRGB(100,22,90),     // medium //
+    CRGB(47,192,91), CRGB(70,190,91)};                    // light  //
+#endif                                                              //
+/*
+CRGB fruit_loop[7] = {                                              //
+    //CRGB(188,0,208), CRGB(255,73,0),                    // dark   //
+    //CRGB(178,6,88), CRGB(162,80,204), CRGB(255,65,65),  // medium //
+    //CRGB(255,247,0), CRGB(255,127,14)};                 // light  //
+    CRGB(25,0,25), CRGB(25,15,0),                         // dark   //
     CRGB(180,10,70), CRGB(140,60,180), CRGB(180,60,60),   // medium //
     CRGB(255,255,120), CRGB(255,100,180)};                // light  //
                                                                     //
@@ -26,8 +46,9 @@ CRGB fruit_loop[7] = {                                              //
     CRGB(47,140,9), CRGB(72,160,5), CRGB(148,33,137),     // medium //
     CRGB(47,192,91), CRGB(70,190,91)};                    // light  //
 #endif                                                              //
+*/
                                                                     //
-CRGB* initial_palette = watermelon;                                 //
+CRGB* initial_palette = fruit_loop;                                 //
 //------------------------------------------------------------------//
 
 
@@ -54,7 +75,8 @@ CRGB* initial_palette = watermelon;                                 //
 #define MID_SCROLLING_DIM 4                                   //
 #define MID_SCROLLING_DIM2 5                                  //
 #define MID_SCROLLING_DIM3 6                                  //
-#define NUM_MID_ANIMATIONS 6  // Equal to last animation      //
+#define FIRE_SNAKE 7
+#define NUM_MID_ANIMATIONS 7  // Equal to last animation      //
                                                               //
 // Sparkle layer                                              //
 #define GLITTER 1                                             //
@@ -147,8 +169,8 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
 // Animation constants and parameters                                                             //
 #define MAX_DIMMING 6                                                                             //
 #define THROTTLE 16 // Allows INTRA_RING_SPEED to speed up OR slow down an animation              //
-#define MAX_BASE_GRADIENT 36                                                                      //
-#define MAX_MID_GRADIENT 12                                                                       //
+#define BASE_GRADIENT_SIZE 36                                                                      //
+#define MID_GRADIENT_SIZE 12                                                                       //
                                                                                                   //
 #define NONE 0        // For BASE & MID INTRA_RING_MOTION                                         //
 #define CW 1          // For BASE & MID INTRA_RING_MOTION                                         //

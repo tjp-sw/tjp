@@ -3,8 +3,11 @@
 //---------------------------- EQUALIZER_FULL ---------------------------
 // This isn't actually done yet :o
 // to do: does heights[] need to be uint16_t? or can be uint8_t? Is (float) necessary on freq_max[]?
+// BASE_BLACK_THICKNESS(1:4)
 void equalizer_full(uint8_t display_mode) {
-  uint8_t unlit_pixels = BASE_BLACK_THICKNESS * (NUM_CHANNELS-1);
+  uint8_t black_thickness = scale_param(BASE_BLACK_THICKNESS, 1, 4);
+  
+  uint8_t unlit_pixels = black_thickness * (NUM_CHANNELS-1);
   uint16_t total_colored_pixels = LEDS_PER_RING - unlit_pixels;
   if(display_mode == DISPLAY_SPLIT) { total_colored_pixels /= 2; }
 
@@ -20,6 +23,7 @@ void equalizer_full(uint8_t display_mode) {
     uint16_t height = total_colored_pixels * ((float)freq_max[chan] / overall_volume);
     CRGB color = current_palette[chan];
     color.maximizeBrightness();
+    color %= 128; // half brightness
     
     for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
       for(uint16_t pixel = cur_height; pixel <= cur_height + height; pixel++) {
@@ -31,12 +35,12 @@ void equalizer_full(uint8_t display_mode) {
 
     if(chan < NUM_CHANNELS-1) {
       for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
-        for(uint16_t pixel = cur_height; pixel < cur_height + BASE_BLACK_THICKNESS; pixel++) {
+        for(uint16_t pixel = cur_height; pixel < cur_height + black_thickness; pixel++) {
           leds[get_1d_index(ring, pixel)] = CRGB::Black;
           if(display_mode == DISPLAY_SPLIT) { leds[get_1d_index(ring, LEDS_PER_RING - 1 - pixel)] = CRGB::Black; }
         }
       }
-      cur_height += BASE_BLACK_THICKNESS;
+      cur_height += black_thickness;
     }
     else {
       // Last channel, write extra pixels until entire ring is full.
@@ -55,8 +59,11 @@ void equalizer_full(uint8_t display_mode) {
 // Stacked bands, one for each channel. Size varies based on volume
 // to do: does heights[] need to be uint16_t? or can be uint8_t? Is (float) necessary?
 // to do: remove per-channel max_height, instead just reduce heights if total height exceeds LEDS_PER_RING
+// BASE_BLACK_THICKNESS(1:4)
 void equalizer_variable(uint8_t display_mode) {
-  uint8_t max_height = (LEDS_PER_RING - (NUM_CHANNELS-1) * BASE_BLACK_THICKNESS) / NUM_CHANNELS;
+  uint8_t black_thickness = scale_param(BASE_BLACK_THICKNESS, 1, 4);
+  
+  uint8_t max_height = (LEDS_PER_RING - (NUM_CHANNELS-1) * black_thickness) / NUM_CHANNELS;
   
   uint16_t cur_height = 0;
   for(uint8_t chan = 0; chan < NUM_CHANNELS; chan++) {
@@ -72,6 +79,7 @@ void equalizer_variable(uint8_t display_mode) {
       
     CRGB color = current_palette[chan];
     color.maximizeBrightness();
+    color %= 128; // half brightness
     
     for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
       for(uint16_t pixel = cur_height; pixel <= cur_height + height; pixel++) {
@@ -84,17 +92,20 @@ void equalizer_variable(uint8_t display_mode) {
 
     if(chan < NUM_CHANNELS-1) {
       for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
-        for(uint16_t pixel = cur_height; pixel < cur_height + BASE_BLACK_THICKNESS; pixel++) {
+        for(uint16_t pixel = cur_height; pixel < cur_height + black_thickness; pixel++) {
           leds[get_1d_index(ring, pixel)] = CRGB::Black;
           if(display_mode == DISPLAY_SPLIT) { leds[get_1d_index(ring, LEDS_PER_RING - 1 - pixel)] = CRGB::Black; }
         }
       }
-      cur_height += BASE_BLACK_THICKNESS;
+      cur_height += black_thickness;
     }
+
+    //Serial.println("chan " + String(chan) + ", height=" + String(cur_height));
   }
 
   uint16_t stop_point = display_mode == DISPLAY_SPLIT ? HALF_RING : LEDS_PER_RING;
   while(cur_height < stop_point) {
+    //Serial.println("black drawn at height=" + String(cur_height));
     for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
       leds[get_1d_index(ring, cur_height)] = CRGB::Black;
       if(display_mode == DISPLAY_SPLIT) { leds[get_1d_index(ring, LEDS_PER_RING - 1 - cur_height)] = CRGB::Black; }
@@ -108,10 +119,15 @@ void equalizer_variable(uint8_t display_mode) {
 // Equally sized bands for each channel, brightness goes up and down with channel volume
 #define BAND_LENGTH LEDS_PER_RING / 7
 #define FIRST_BAND_OFFSET BAND_LENGTH/2
+// BASE_COLOR_THICKNESS(50:57), BASE_INTRA_RING_MOTION(-1:1), BASE_RING_OFFSET(-6:6), BASE_INTRA_RING_SPEED(4:32)
 void frequency_pulse() {
+  uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 50, 57);
+  uint8_t intra_speed = scale_param(BASE_INTRA_RING_SPEED, 4, 32);
+  int8_t ring_offset = scale_param(BASE_RING_OFFSET, -6, 6);
+  
   for(uint8_t chan = 0; chan < NUM_CHANNELS; chan++) {
-    uint16_t min_pixel = FIRST_BAND_OFFSET + chan * BAND_LENGTH - BASE_COLOR_THICKNESS/2;
-    uint16_t max_pixel = FIRST_BAND_OFFSET + chan * BAND_LENGTH + BASE_COLOR_THICKNESS/2 - 1;
+    uint16_t min_pixel = FIRST_BAND_OFFSET + chan * BAND_LENGTH - color_thickness/2;
+    uint16_t max_pixel = FIRST_BAND_OFFSET + chan * BAND_LENGTH + color_thickness/2 - 1;
 
     CRGB color = current_palette[chan];
     color.maximizeBrightness();
@@ -131,5 +147,7 @@ void frequency_pulse() {
       }
     }
   }
+
+  //rotate_leds(BASE_INTRA_RING_SPEED/THROTTLE, ring_offset, BASE_INTRA_RING_MOTION);
 }
 

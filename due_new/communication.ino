@@ -55,6 +55,40 @@ void print_status(const char* status, const long value) {
   Serial.print(now_sec(millis()), DEC);
   Serial.println(" seconds");
 }
+
+void do_led() {
+  uint8_t new_led_state = led_state;  // default to current state
+
+  if (led_program == 0) {   // steady off
+    new_led_state = LOW;
+  } else if (led_program == 9) {  // steady on
+    new_led_state = HIGH;
+  } else if (led_program == 8) {  // flash at 1 Hz, 50% duty cycle
+    if (((epoch_msec + loop_start_time_msec) / 500) % 2 == 0) { // current half second even/odd
+      new_led_state = HIGH;
+    } else {
+      new_led_state = LOW;
+    }
+  } else if (led_program == 7) {
+      if (node_number != 255) {
+        led_program = node_number == 0 ? 6 : node_number; // signal the node number
+      } else {
+        led_program = 8;    // default program
+      }
+  } else if (led_program < 10) {  // flash a few times and pause
+    unsigned long step = ((epoch_msec + loop_start_time_msec) / 200) % ((led_program + 1) * 2);
+    if (step == 1 || step % 2 == 0) { // leave LED off once per cycle
+      new_led_state = LOW;
+    } else {
+      new_led_state = HIGH;
+    }
+  }
+
+  if (led_state != new_led_state) {
+    led_state = new_led_state;
+    digitalWrite(LED_BUILTIN, led_state);
+  }
+}
 #endif
 
 
@@ -136,8 +170,18 @@ void assign_node(uint8_t node_num) {
 
 void setup_communication() {
   #ifdef DEBUG
-    Serial.begin(115200);
-  #endif // DEBUG
+    #ifdef I_AM_MEGA
+      Serial.begin(115200); // Already called for due in setup()
+    #endif
+
+
+  // turn off the LED
+  pinMode(LED_BUILTIN, OUTPUT);
+  led_state = LOW;    // off
+  digitalWrite(LED_BUILTIN, led_state);
+  led_program = 8;    // default program selection
+  #endif // DEBUG && I_AM_MEGA
+
 
   NodeMate.begin(115200);
   mate_last_input_msec = 0;
@@ -149,7 +193,7 @@ void setup_communication() {
     // seed the random number generator with some supposedly unpredictable values
     mega_number = EEPROM.read(TJP_NODE_ID);
     randomSeed(micros() + mega_number);
-    for (int pin = 0; pin <= 15; pin++) {
+    for (uint8_t pin = 0; pin <= 15; pin++) {
       randomSeed(random(LONG_MAX) + analogRead(pin));
     }
 
@@ -189,7 +233,7 @@ void process_commands(const int source, String& input) {
     switch (command) {
       #ifdef I_AM_MEGA
       case 'b':
-        size += 2*NUM_CHANNELS;
+        size += AUDIO_PACKET_SIZE;
         if (input.length() >= size) {
           // pass the beat message through in both directions
           if (source == mate && remote.connected()) {
@@ -223,12 +267,32 @@ void process_commands(const int source, String& input) {
       #endif // I_AM_MEGA
  
       case 'n':
+      case 'p':
         size += 1;	// unsigned 8-bit integer
         if (input.length() >= size) {
-          assign_node(input[1]);
-          #ifdef I_AM_MEGA
-            NodeMate.write((uint8_t *)input.c_str(), size);
-          #endif // I_AM_MEGA
+          if(command == 'n') {
+            #ifdef I_AM_DUE
+              assign_node(input[1]);
+            #endif
+  
+            led_program = node_number == 0 ? 6 : node_number;  // signal the node number
+
+            #ifdef I_AM_MEGA
+              NodeMate.write((uint8_t *)input.c_str(), size);
+            #endif // I_AM_MEGA
+            
+          }
+          else if (command == 'p') {
+            led_program = input[1];
+            #ifdef I_AM_MEGA
+              NodeMate.write((uint8_t *)input.c_str(), size);
+            #endif // I_AM_MEGA
+          }
+          else {
+            #ifdef DEBUG
+              print_status("neither n nor p");
+            #endif
+          }
         }
         else {
           #ifdef DEBUG
@@ -238,7 +302,7 @@ void process_commands(const int source, String& input) {
         break;
  
       case 's':
-        size += NUM_SHOW_PARAMETERS;
+        size += NUM_SHOW_PARAMETERS + 3*NUM_COLORS_PER_PALETTE;
         if (input.length() >= size) {
           #ifdef I_AM_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
@@ -255,46 +319,48 @@ void process_commands(const int source, String& input) {
             while (j < size) {
               colors[i++] = input[j++];
             }
-            while (i < sizeof colors) {
-            colors[i++] = 255;	// fill with invalid values
-          }
 
-          uint8_t last_base_animation = BASE_ANIMATION;
-          uint8_t last_mid_animation = MID_ANIMATION;
-          uint8_t last_sparkle_animation = SPARKLE_ANIMATION;
-          
-          memcpy(show_parameters, params, NUM_SHOW_PARAMETERS);
-          memcpy(target_palette, colors, 3*NUM_COLORS_PER_PALETTE);
-          blend_base_layer = current_palette[0] != target_palette[0] || current_palette[1] != target_palette[1];
-          blend_mid_layer = current_palette[2] != target_palette[2] || current_palette[3] != target_palette[3] || current_palette[4] != target_palette[4];
-          blend_sparkle_layer = current_palette[5] != target_palette[5] || current_palette[6] != target_palette[6];
-
-          if(BASE_ANIMATION != last_base_animation) {
-            cleanup_base_animation(last_base_animation);
-            init_base_animation();
-          }
-          
-          if(MID_ANIMATION != last_mid_animation) {
-            cleanup_mid_animation(last_mid_animation);
-            init_mid_animation();
-          }
-
-          if(SPARKLE_ANIMATION != last_sparkle_animation) {
-            cleanup_sparkle_animation(last_sparkle_animation);
-            init_sparkle_animation();
-          }
-          
-          #ifdef DEBUG
-            Serial.print("params");
-            for (i = 0; i < sizeof params; i++)
-            {
-              Serial.print(' ');
-              Serial.print(params[i], DEC);
+            uint8_t last_base_animation = BASE_ANIMATION;
+            uint8_t last_mid_animation = MID_ANIMATION;
+            uint8_t last_sparkle_animation = SPARKLE_ANIMATION;
+            
+            memcpy(show_parameters, params, NUM_SHOW_PARAMETERS);
+            memcpy(target_palette, colors, 3*NUM_COLORS_PER_PALETTE);
+            blend_base_layer = current_palette[0] != target_palette[0] || current_palette[1] != target_palette[1];
+            blend_mid_layer = current_palette[2] != target_palette[2] || current_palette[3] != target_palette[3] || current_palette[4] != target_palette[4];
+            blend_sparkle_layer = current_palette[5] != target_palette[5] || current_palette[6] != target_palette[6];
+  
+            if(BASE_ANIMATION != last_base_animation) {
+              cleanup_base_animation(last_base_animation);
+              init_base_animation();
             }
-
-            Serial.println();
-          #endif // DEBUG
-        #endif // I_AM_DUE
+            
+            if(MID_ANIMATION != last_mid_animation) {
+              cleanup_mid_animation(last_mid_animation);
+              init_mid_animation();
+            }
+  
+            if(SPARKLE_ANIMATION != last_sparkle_animation) {
+              cleanup_sparkle_animation(last_sparkle_animation);
+              init_sparkle_animation();
+            }
+            
+            #ifdef DEBUG
+              Serial.print("params");
+              for (i = 0; i < sizeof params; i++)
+              {
+                Serial.print(' ');
+                Serial.print(params[i], DEC);
+              }
+              Serial.print(" colors");
+              for (i = 0; i < sizeof colors; i++) {
+                Serial.print(' ');
+                Serial.print(colors[i], DEC);
+              }
+  
+              Serial.println();
+            #endif // DEBUG
+          #endif // I_AM_DUE
         }
         else {
           #ifdef DEBUG
@@ -400,5 +466,8 @@ void do_communication() {
   #endif
   
   do_heartbeat();
+  #ifdef DEBUG
+    do_led();
+  #endif
 }
 
