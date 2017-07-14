@@ -119,7 +119,7 @@ void equalizer_variable(uint8_t display_mode) {
 // Equally sized bands for each channel, brightness goes up and down with channel volume
 #define BAND_LENGTH LEDS_PER_RING / 7
 #define FIRST_BAND_OFFSET BAND_LENGTH/2
-// BASE_COLOR_THICKNESS(50:57), BASE_INTRA_RING_MOTION(-1:1), BASE_RING_OFFSET(-6:6), BASE_INTRA_RING_SPEED(4:32)
+// BASE_COLOR_THICKNESS(50:57), To be added: BASE_INTRA_RING_MOTION(-1:1), BASE_RING_OFFSET(-6:6), BASE_INTRA_RING_SPEED(4:32)
 void frequency_pulse() {
   uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 50, 57);
   uint8_t intra_speed = scale_param(BASE_INTRA_RING_SPEED, 4, 32);
@@ -131,6 +131,8 @@ void frequency_pulse() {
 
     CRGB color = current_palette[chan];
     color.maximizeBrightness();
+    color %= 128; // half brightness
+    
     uint16_t scaling = (frequencies_one[chan] + frequencies_two[chan]) / 6;
     if(scaling > 255) { 
       #ifdef DEBUG
@@ -150,4 +152,5 @@ void frequency_pulse() {
 
   //rotate_leds(BASE_INTRA_RING_SPEED/THROTTLE, ring_offset, BASE_INTRA_RING_MOTION);
 }
+
 

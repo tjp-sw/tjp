@@ -44,7 +44,7 @@
 //------------------------ Config -----------------------------------//
 //#define I_AM_THE_BEAT_DUE // Enable this on the 4th due for pride  //
 // Due controlled versus pi controlled animation choices             //
-//#define PI_CONTROLLED                                              //
+#define PI_CONTROLLED                                              //
 #ifndef PI_CONTROLLED                                                //
   #define TESTING_NODE_NUMBER 0   // To test diff nodes              //
   //#define CYCLE                                                    //
@@ -164,10 +164,12 @@ void setup() {
     SPARKLE_ANIMATION = NONE; // off
   #else
     manually_set_animation_params();
-    init_base_animation();
-    init_mid_animation();
-    init_sparkle_animation();
   #endif
+    
+  init_base_animation();
+  init_mid_animation();
+  init_sparkle_animation();
+
 
 
   // Clear layers
@@ -329,6 +331,7 @@ void loop() {
 
 
 void do_beat_effects() {
+  return;
   switch(BEAT_EFFECT) {
     case COLOR_SWAP:
     {
@@ -465,9 +468,12 @@ void draw_current_base() {
       break;
 
   // ------ Non-layer animations -----
-    case DEBUG_MODE:
+    case TEST_STRANDS:
       test_strands();
-      //draw_debug_mode();
+      break;
+      
+    case DEBUG_MODE:
+      draw_debug_mode();
       break;
 
     case FREQ_PULSE:

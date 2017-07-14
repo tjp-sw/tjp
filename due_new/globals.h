@@ -57,6 +57,7 @@ CRGB* initial_palette = fruit_loop;                                 //
                                                               //
 // Base layer                                                 //
 #define DEBUG_MODE 255        // Startup animation            //
+#define TEST_STRANDS 254      // Test for burnt out LEDs      //
 #define BASE_SCROLLING_DIM 1                                  //
 #define BASE_2COLOR_GRADIENT 2                                //
 #define NUM_BASE_ANIMATIONS 2  // Equal to last animation     //
@@ -90,40 +91,41 @@ CRGB* initial_palette = fruit_loop;                                 //
 //  Indices into show_parameters[] which holds information from the pi                            //
 //  Note: These are only *indices*, not values. Don't change these                                //
 #define BASE_ANIMATION_INDEX 0              // which base animation to play                       //
-#define MID_ANIMATION_INDEX 1               // which mid animation to play                        //
-#define SPARKLE_ANIMATION_INDEX 2           // which sparkle animation to play                    //
+#define BASE_COLOR_THICKNESS_INDEX 1        // how many consecutive lit LEDs in a row             //
+#define BASE_BLACK_THICKNESS_INDEX 2        // how many dark LEDs between lit ones                //
+#define BASE_INTRA_RING_MOTION_INDEX 3      // CW, NONE, CW, ALTERNATE, SPLIT                     //
+#define BASE_INTRA_RING_SPEED_INDEX 4       // Number of pixels to move per 16 cycles             //
+#define BASE_INTER_RING_MOTION_INDEX 5      // CCW, NONE, CW,                                     //
+#define BASE_INTER_RING_SPEED_INDEX 6       // Number of pixels to move per 16 cycles             //
+#define BASE_RING_OFFSET_INDEX 7            // rotation of pattern from neighbor                  //
+
+#define MID_ANIMATION_INDEX 8               // which mid animation to play                        //
+#define MID_NUM_COLORS_INDEX 9              // how many colors to use out of this palette         //
+#define MID_COLOR_THICKNESS_INDEX 10        // how many consecutive lit LEDs in a row             //
+#define MID_BLACK_THICKNESS_INDEX 11        // how many dark LEDs between lit ones                //
+#define MID_INTRA_RING_MOTION_INDEX 12      // CW, NONE, CW, ALTERNATE, SPLIT                     //
+#define MID_INTRA_RING_SPEED_INDEX 13       // Number of pixels to move per 16 cycles             //
+#define MID_INTER_RING_MOTION_INDEX 14      // CCW, NONE, CW,                                     //
+#define MID_INTER_RING_SPEED_INDEX 15       // Number of pixels to move per 16 cycles             //
+#define MID_RING_OFFSET_INDEX 16            // rotation of pattern from neighbor                  //
+
+#define SPARKLE_ANIMATION_INDEX 17          // which sparkle animation to play                    //
+#define SPARKLE_PORTION_INDEX 18            // percentage of LEDs that will be lit at once        //
+#define SPARKLE_COLOR_THICKNESS_INDEX 19    // how many consecutive lit LEDs in a row             //
+#define ALSO_THROW_AWAY 20
+#define SPARKLE_INTRA_RING_MOTION_INDEX 21  // CW, NONE, CW, ALTERNATE, SPLIT                     //
+#define SPARKLE_INTRA_RING_SPEED_INDEX 22   // Number of pixels to move per 16 cycles             //
+#define SPARKLE_INTER_RING_MOTION_INDEX 23  // CCW, NONE, CW,                                     //
+#define SPARKLE_INTER_RING_SPEED_INDEX 24   // Number of pixels to move per 16 cycles             //
+#define SPARKLE_MAX_DIMMING_INDEX 25        // Max amount a sparkle will be dimmed                //
+#define SPARKLE_RANGE_INDEX 26              // Range of pixels that new bursts are created in     //
+#define SPARKLE_SPAWN_FREQUENCY_INDEX 27    // How often new bursts of sparkles are created       //
+
+#define SEVEN_COLOR_ANIMATION_INDEX 28
+#define THROW_AWAY 29 // fixme: change the parameters send on the pi
+#define BEAT_EFFECT_INDEX 30                // How the beat should affect animations              //
                                                                                                   //
-// Base parameters                                                                                //
-#define BASE_COLOR_THICKNESS_INDEX 3        // how many consecutive lit LEDs in a row             //
-#define BASE_BLACK_THICKNESS_INDEX 4        // how many dark LEDs between lit ones                //
-#define BASE_INTRA_RING_MOTION_INDEX 5      // NONE, CW, CCW, SPLIT                               //
-#define BASE_INTRA_RING_SPEED_INDEX 6       // Number of pixels to move per 16 cycles             //
-#define BASE_INTER_RING_MOTION_INDEX 7      // NONE, CW, CCW, SPLIT                               //
-#define BASE_INTER_RING_SPEED_INDEX 8       // Number of pixels to move per 16 cycles             //
-#define BASE_RING_OFFSET_INDEX 9            // rotation of pattern from neighbor                  //
-                                                                                                  //
-#define MID_NUM_COLORS_INDEX 10              // how many colors to use out of this palette        //
-#define MID_COLOR_THICKNESS_INDEX 11         // how many consecutive lit LEDs in a row            //
-#define MID_BLACK_THICKNESS_INDEX 12        // how many dark LEDs between lit ones                //
-#define MID_INTRA_RING_MOTION_INDEX 13      // NONE, CW, CCW, SPLIT                               //
-#define MID_INTRA_RING_SPEED_INDEX 14       // Number of pixels to move per 16 cycles             //
-#define MID_INTER_RING_MOTION_INDEX 15      // NONE, CW, CCW, SPLIT                               //
-#define MID_INTER_RING_SPEED_INDEX 16       // Number of pixels to move per 16 cycles             //
-#define MID_RING_OFFSET_INDEX 17            // rotation of pattern from neighbor                  //
-                                                                                                  //
-#define SPARKLE_COLOR_THICKNESS_INDEX 18    // how many consecutive lit LEDs in a row             //
-#define SPARKLE_PORTION_INDEX 19            // percentage of LEDs that will be lit at once        //
-#define SPARKLE_INTRA_RING_MOTION_INDEX 20  // -1 UP, 0 none, 1 DOWN                      //
-#define SPARKLE_INTRA_RING_SPEED_INDEX 21   // Number of pixels to move per 16 cycles             //
-#define SPARKLE_INTER_RING_MOTION_INDEX 22  // -1 UP, 0 none, 1 DOWN                      //
-#define SPARKLE_INTER_RING_SPEED_INDEX 23   // Number of pixels to move per 16 cycles             //
-#define SPARKLE_MAX_DIMMING_INDEX 24        // Max amount a sparkle will be dimmed                //
-#define SPARKLE_RANGE_INDEX 25              // Range of pixels that new bursts are created in     //
-#define SPARKLE_SPAWN_FREQUENCY_INDEX 26    // How often new bursts of sparkles are created       //
-#define BEAT_EFFECT_INDEX 27                // How the beat should affect animations              //
-                                                                                                  //
-#define NUM_SHOW_PARAMETERS 28              // This should be 1 greater than the last index       //
-                                                                                                  //
+#define NUM_SHOW_PARAMETERS 30                                                                    //
                                                                                                   //
 //  Evolving parameters defining the show, also automatically converts from unsigned/signed       //
 uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                                     //
@@ -197,7 +199,7 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
 
 
 // ------------------ Physical structure ---------------------------------//
-#define NUM_NODES 6                                                       //
+#define NUM_NODES 3                                                       //
 #define RINGS_PER_NODE 12                                                 //
 #define STRIPS_PER_NODE 4                                                 //
 #define PHYSICAL_LEDS_PER_RING 420                                        //

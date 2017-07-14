@@ -320,46 +320,53 @@ void process_commands(const int source, String& input) {
               colors[i++] = input[j++];
             }
 
-            uint8_t last_base_animation = BASE_ANIMATION;
-            uint8_t last_mid_animation = MID_ANIMATION;
-            uint8_t last_sparkle_animation = SPARKLE_ANIMATION;
-            
-            memcpy(show_parameters, params, NUM_SHOW_PARAMETERS);
-            memcpy(target_palette, colors, 3*NUM_COLORS_PER_PALETTE);
-            blend_base_layer = current_palette[0] != target_palette[0] || current_palette[1] != target_palette[1];
-            blend_mid_layer = current_palette[2] != target_palette[2] || current_palette[3] != target_palette[3] || current_palette[4] != target_palette[4];
-            blend_sparkle_layer = current_palette[5] != target_palette[5] || current_palette[6] != target_palette[6];
-  
-            if(BASE_ANIMATION != last_base_animation) {
-              cleanup_base_animation(last_base_animation);
-              init_base_animation();
-            }
-            
-            if(MID_ANIMATION != last_mid_animation) {
-              cleanup_mid_animation(last_mid_animation);
-              init_mid_animation();
-            }
-  
-            if(SPARKLE_ANIMATION != last_sparkle_animation) {
-              cleanup_sparkle_animation(last_sparkle_animation);
-              init_sparkle_animation();
-            }
-            
-            #ifdef DEBUG
-              Serial.print("params");
-              for (i = 0; i < sizeof params; i++)
-              {
-                Serial.print(' ');
-                Serial.print(params[i], DEC);
+            if(node_number < NUM_NODES) {
+              uint8_t last_base_animation = BASE_ANIMATION;
+              uint8_t last_mid_animation = MID_ANIMATION;
+              uint8_t last_sparkle_animation = SPARKLE_ANIMATION;
+              
+              memcpy(show_parameters, params, NUM_SHOW_PARAMETERS);
+              memcpy(target_palette, colors, 3*NUM_COLORS_PER_PALETTE);
+              blend_base_layer = current_palette[0] != target_palette[0] || current_palette[1] != target_palette[1];
+              blend_mid_layer = current_palette[2] != target_palette[2] || current_palette[3] != target_palette[3] || current_palette[4] != target_palette[4];
+              blend_sparkle_layer = current_palette[5] != target_palette[5] || current_palette[6] != target_palette[6];
+    
+              if(BASE_ANIMATION != last_base_animation) {
+                cleanup_base_animation(last_base_animation);
+                init_base_animation();
               }
-              Serial.print(" colors");
-              for (i = 0; i < sizeof colors; i++) {
-                Serial.print(' ');
-                Serial.print(colors[i], DEC);
+              
+              if(MID_ANIMATION != last_mid_animation) {
+                cleanup_mid_animation(last_mid_animation);
+                init_mid_animation();
               }
-  
-              Serial.println();
-            #endif // DEBUG
+    
+              if(SPARKLE_ANIMATION != last_sparkle_animation) {
+                cleanup_sparkle_animation(last_sparkle_animation);
+                init_sparkle_animation();
+              }
+              
+              #ifdef DEBUG
+                Serial.print("params");
+                for (i = 0; i < sizeof params; i++)
+                {
+                  Serial.print(' ');
+                  Serial.print(params[i], DEC);
+                }
+                Serial.print(" colors");
+                for (i = 0; i < sizeof colors; i++) {
+                  Serial.print(' ');
+                  Serial.print(colors[i], DEC);
+                }
+    
+                Serial.println();
+              #endif // DEBUG
+            }
+            else {
+              #ifdef DEBUG
+                Serial.print("Ignoring message. node_number = " + String(node_number));
+              #endif
+            }
           #endif // I_AM_DUE
         }
         else {
@@ -407,7 +414,8 @@ void process_commands(const int source, String& input) {
     
       default:
         #ifdef DEBUG
-          print_status("unknown command");
+          print_status("unknown command: ");
+          Serial.println(command);
         #endif
         break;
     }
