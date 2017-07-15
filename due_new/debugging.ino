@@ -75,6 +75,7 @@ void draw_debug_mode() {
 
       if(curPixel % period < litPixels) { // This line references curPixel since we are talking about the pattern
         leds[get_1d_index(ring, idx)] = ringColor; // This line references idx since we are talking about where the pattern gets written
+        //Serial.println(String(ring) + ", " + String(idx));
       }
     }
   }

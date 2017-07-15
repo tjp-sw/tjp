@@ -4,7 +4,7 @@
   #include <SPI.h>
   #include <EEPROM.h>
   #include <Ethernet.h>
-  #include <limits.h>		// provides LONG_MAX
+  #include <limits.h>    // provides LONG_MAX
   
   IPAddress brain(169,254,136,0);
   IPAddress subnet_mask(255,255,0,0);
@@ -15,7 +15,7 @@
   
   EthernetClient remote;
   
-  #define	NodeMate	Serial3
+  #define NodeMate  Serial3
 
   // declare here when not part of due.ino
   unsigned long long epoch_msec;
@@ -200,16 +200,16 @@ void setup_communication() {
       randomSeed(random(LONG_MAX) + analogRead(pin));
     }
 
-    delay(50);			// extra time for Ethernet shield to power on
+    delay(50);      // extra time for Ethernet shield to power on
     // establish MAC address and IP address of this device
     byte mac[] = { 0x35, 0x28, 0x35, 0x28, 0x00, mega_number };
-    IPAddress self = brain;	// same network
-    self[2] = mega_number;	// unique host
-    self[3] = mega_number;	// unique host
+    IPAddress self = brain; // same network
+    self[2] = mega_number;  // unique host
+    self[3] = mega_number;  // unique host
     // initialize Ethernet shield
     // Ethernet.begin(mac, ip, dns, gateway, subnet);
     Ethernet.begin(mac, self, brain, brain, subnet_mask);
-    remote.stop();		// initialize connection state as disconnected
+    remote.stop();    // initialize connection state as disconnected
     network_data = "";
 
     #ifdef DEBUG
@@ -271,7 +271,7 @@ void process_commands(const int source, String& input) {
  
       case 'n':
       case 'p':
-        size += 1;	// unsigned 8-bit integer
+        size += 1;  // unsigned 8-bit integer
         if (input.length() >= size) {
           if(command == 'n') {
             #ifdef I_AM_DUE
@@ -318,7 +318,7 @@ void process_commands(const int source, String& input) {
             while (i < sizeof params) {
               params[i++] = input[j++];
             }
-            i = 0;	// restart at the beginning of the colors array
+            i = 0;  // restart at the beginning of the colors array
             while (j < size) {
               colors[i++] = input[j++];
             }
@@ -381,7 +381,7 @@ void process_commands(const int source, String& input) {
   
       
       case 't':
-        size += 8;	// unsigned 64-bit integer
+        size += 8;  // unsigned 64-bit integer
         if (input.length() >= size) {
           const unsigned long long old_epoch_msec = epoch_msec;
           unsigned int i = 1;
@@ -391,7 +391,7 @@ void process_commands(const int source, String& input) {
             epoch_msec += (uint8_t)input[i++];
           }
       
-          epoch_msec /= 1000;	// convert microseconds to milliseconds
+          epoch_msec /= 1000; // convert microseconds to milliseconds
           epoch_msec -= loop_start_time_msec;
 
           #ifdef DEBUG
@@ -423,7 +423,7 @@ void process_commands(const int source, String& input) {
         break;
     }
 
-    input = input.substring(size);	// discard processed message
+    input = input.substring(size);  // discard processed message
   }
 }
 
@@ -481,4 +481,3 @@ void do_communication() {
     do_led();
   #endif
 }
-

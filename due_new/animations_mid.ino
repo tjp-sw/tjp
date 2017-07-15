@@ -6,7 +6,7 @@
 // MID_NUM_COLORS(1:3), MID_COLOR_THICKNESS(2:5), MID_BLACK_THICKNESS(5:20), MID_INTRA_RING_MOTION(-1:1), MID_RING_OFFSET(-period/2:period/2), MID_INTRA_RING_SPEED(8-32)
 void snake(uint8_t ring_mode) {
   uint8_t color_thickness = scale_param(MID_COLOR_THICKNESS, 2, 5);
-  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 5, 20);
+  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 5, 50);
   uint8_t intra_speed = scale_param(MID_INTRA_RING_SPEED, 8, 32);
   uint8_t period = MID_NUM_COLORS * color_thickness + black_thickness;
   int8_t ring_offset = scale_param(MID_RING_OFFSET, -1 * period/2, period/2);

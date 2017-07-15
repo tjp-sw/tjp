@@ -18,15 +18,13 @@
  */
 
 /* to do/thoughts/ideas
+ *  EQ_VARIABLE(one sided) + Fire on the other side; requires mixing mid and edm animation
  *  smooth out frequencies[] values cycle to cycle
  *  add edm layer
- *  add equalizer_variable_size
  *  all speeds must be a factor of 2 to prevent jumping
- *  extendedLEDcount messing up; first part of pattern shouldn't write to end of strip.
  *  SPARKLE_PORTION uses an exponential scale, so most values end up looking very sparse
  *  optimize and inline small functions like scale_param()
  *  add sparkle layer parameter MIN_DIMMING
- *  base_ring_offset should be larger range, -128:127
  *  using random8() in fire() is faster, but leads to artifacts. look into adding entropy to fire and using random8
  *  For fire: on inner part of structure, allow heat to diffuse from neighboring rings, since the rings are physically closer together
  *  Scale frequencies_...[] to be 0-255
@@ -55,14 +53,14 @@
 #include "globals.h" // Leave this here, for #define order           //
                                                                      //
 // Testing tools                                                     //
-#define DEBUG                   // Enables serial output             //
+#//define DEBUG                   // Enables serial output             //
 //#define DEBUG_TIMING          // Times each step in loop()         //
 //#define DEBUG_LED_WRITE_DATA 10 // Dumps LED data every X cycles   //
 //#define TEST_AVAIL_RAM 3092   // How much RAM we have left         //
                                                                      //
                                                                      //
 // Timing settings                                                   //
-#define REFRESH_TIME 60         // 16.7 frames per second            //
+#define REFRESH_TIME 0         // 16.7 frames per second            //
 #define PALETTE_MAX_CHANGES 9   // how quickly palettes transition   //
                                                                      //
                                                                      //
@@ -79,7 +77,7 @@
 ////////////////////////////////////////////////////////////
 void manually_set_animation_params() {                    //
                                                           //
-  BASE_ANIMATION = EQ_FULL_SPLIT;                                  //
+  BASE_ANIMATION = DEBUG_MODE;                                  //
   MID_ANIMATION = NONE;                                   //
   SPARKLE_ANIMATION = NONE;                               //
                                                           //
@@ -199,11 +197,6 @@ void loop() {
 
   // Update time and counters
   current_time = epoch_msec + millis();
-  #ifdef PI_CONTROLLED
-    base_count = (current_time - base_start_time) / REFRESH_TIME;
-    mid_count = (current_time - mid_start_time) / REFRESH_TIME;
-    sparkle_count = (current_time - sparkle_start_time) / REFRESH_TIME;
-  #endif
   
   #ifdef DEBUG_TIMING
     serial_val[0] = current_time - last_debug_time; // This also captures the end of loop delay() and any time lost in between loops
@@ -315,18 +308,11 @@ void loop() {
   #endif
 
 
-  // Enforce max refresh rate, leaving a 1ms buffer
-  unsigned long temp = millis();
-  if(temp - current_time < REFRESH_TIME - 1) {
-    delay(REFRESH_TIME + current_time - temp - 1);
-  }
   
   loop_count++;
-  #ifndef PI_CONTROLLED
     base_count++;
     mid_count++;
     sparkle_count++;
-  #endif
 }
 
 
@@ -584,6 +570,14 @@ void init_base_animation() {
           Serial.println("Scrolling Gradient params: " + String(BASE_COLOR_THICKNESS) + ", " + String(BASE_INTRA_RING_MOTION) + ", " + String(BASE_INTRA_RING_SPEED) + ", " + String(BASE_RING_OFFSET)); 
         #endif
       #endif
+      break;
+
+    case SOUND_RESPONSIVE:
+      if(BASE_ANIMATION < 128) {
+        BASE_ANIMATION = random8(128, 133);
+        disable_layering = BASE_ANIMATION >= 128; // EDM animations start at 255 and move down.
+        
+      }
       break;
       
     default:

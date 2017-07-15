@@ -5,6 +5,7 @@
 // to do: does heights[] need to be uint16_t? or can be uint8_t? Is (float) necessary on freq_max[]?
 // BASE_BLACK_THICKNESS(1:4)
 void equalizer_full(uint8_t display_mode) {
+  leds[0] = CRGB::Red;
   uint8_t black_thickness = scale_param(BASE_BLACK_THICKNESS, 1, 4);
   
   uint8_t unlit_pixels = black_thickness * (NUM_CHANNELS-1);
@@ -61,6 +62,7 @@ void equalizer_full(uint8_t display_mode) {
 // to do: remove per-channel max_height, instead just reduce heights if total height exceeds LEDS_PER_RING
 // BASE_BLACK_THICKNESS(1:4)
 void equalizer_variable(uint8_t display_mode) {
+  leds[0] = CRGB::Blue;
   uint8_t black_thickness = scale_param(BASE_BLACK_THICKNESS, 1, 4);
   
   uint8_t max_height = (LEDS_PER_RING - (NUM_CHANNELS-1) * black_thickness) / NUM_CHANNELS;
@@ -68,7 +70,7 @@ void equalizer_variable(uint8_t display_mode) {
   uint16_t cur_height = 0;
   for(uint8_t chan = 0; chan < NUM_CHANNELS; chan++) {
     uint16_t freq_max = frequencies_one[chan] > frequencies_two[chan] ? frequencies_one[chan] : frequencies_two[chan];
-    uint16_t height = freq_max / 10;
+    uint16_t height = freq_max / 4;
     if(height > max_height) {
       #ifdef DEBUG
         Serial.println("equalizer_variable() height capped. Clipped from " + String(height) + " down to " + String(max_height));
@@ -115,10 +117,54 @@ void equalizer_variable(uint8_t display_mode) {
 }
 
 
-//---------------------------- FREQUENCY_PULSE ---------------------------
+//---------------------------- EQUALIZER_PULSE ---------------------------
 // Equally sized bands for each channel, brightness goes up and down with channel volume
+// BASE_COLOR_THICKNESS(55)
 #define BAND_LENGTH LEDS_PER_RING / 7
 #define FIRST_BAND_OFFSET BAND_LENGTH/2
+void equalizer_pulse() {
+  equalizer_variable(SPLIT);
+  return;
+  
+  uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 55, 70);
+  
+  leds_all = CRGB::Black;
+  
+  for(uint8_t chan = 0; chan < NUM_CHANNELS; chan++) {
+    CRGB color = current_palette[chan];
+    color.maximizeBrightness();
+    uint16_t scaling = (frequencies_one[chan] + frequencies_two[chan]) / 6;
+    if(scaling > 255) { 
+      #ifdef DEBUG
+        Serial.println("equalizer_pulse() brightness scaling capped, clipped from " + String(scaling) + " down to 255.");
+      #endif
+      scaling = 255;
+    }
+    
+    uint8_t band_height = color_thickness * scaling / 255;
+    int16_t min_pixel = FIRST_BAND_OFFSET + chan * BAND_LENGTH - band_height/2;
+    uint16_t max_pixel = FIRST_BAND_OFFSET + chan * BAND_LENGTH + band_height/2 - 1;
+    if(min_pixel < 0) { min_pixel = 0; }
+    if(max_pixel >= LEDS_PER_RING) { max_pixel = LEDS_PER_RING-1; }
+    
+    for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+      for(uint16_t pixel = min_pixel; pixel <= max_pixel; pixel++) {
+        uint16_t index = get_1d_index(ring, pixel);
+        if(leds[index] == CRGB(0,0,0)) {
+          leds[index] = color;
+        }
+        else {
+          nblend(&leds[index], &color, 1, 128);
+        }
+      }
+    }
+  }
+}
+
+
+//---------------------------- FREQUENCY_PULSE ---------------------------
+// Equally sized bands for each channel, brightness goes up and down with channel volume
+#define MIN_FREQ_PULSE_BRIGHTNESS 8
 // BASE_COLOR_THICKNESS(50:57), To be added: BASE_INTRA_RING_MOTION(-1:1), BASE_RING_OFFSET(-6:6), BASE_INTRA_RING_SPEED(4:32)
 void frequency_pulse() {
   uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 50, 57);
@@ -140,7 +186,7 @@ void frequency_pulse() {
       #endif
       scaling = 255;
     }
-    else if(scaling < 8) { scaling = 8; }
+    else if(scaling < MIN_FREQ_PULSE_BRIGHTNESS) { scaling = MIN_FREQ_PULSE_BRIGHTNESS; }
     color %= scaling;
 
     for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
@@ -150,7 +196,8 @@ void frequency_pulse() {
     }
   }
 
-  //rotate_leds(BASE_INTRA_RING_SPEED/THROTTLE, ring_offset, BASE_INTRA_RING_MOTION);
+  uint8_t flat_offset = (BASE_INTRA_RING_MOTION * intra_speed * base_count / THROTTLE) % LEDS_PER_RING;
+  rotate_leds(flat_offset, ring_offset, BASE_INTRA_RING_MOTION == CW);
 }
 
 

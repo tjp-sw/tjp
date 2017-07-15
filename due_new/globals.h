@@ -60,7 +60,8 @@ CRGB* initial_palette = fruit_loop;                                 //
 #define TEST_STRANDS 254      // Test for burnt out LEDs      //
 #define BASE_SCROLLING_DIM 1                                  //
 #define BASE_2COLOR_GRADIENT 2                                //
-#define NUM_BASE_ANIMATIONS 2  // Equal to last animation     //
+#define SOUND_RESPONSIVE 3
+#define NUM_BASE_ANIMATIONS 3  // Equal to last animation     //
                                                               //
 // EDM animations (in the base layer, starting at 128)        //
 #define FREQ_PULSE 128                                        //
@@ -76,7 +77,7 @@ CRGB* initial_palette = fruit_loop;                                 //
 #define MID_SCROLLING_DIM 4                                   //
 #define MID_SCROLLING_DIM2 5                                  //
 #define MID_SCROLLING_DIM3 6                                  //
-#define FIRE_SNAKE 7
+#define FIRE_SNAKE 7                                          //
 #define NUM_MID_ANIMATIONS 7  // Equal to last animation      //
                                                               //
 // Sparkle layer                                              //
