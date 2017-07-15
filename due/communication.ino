@@ -32,6 +32,7 @@ unsigned long long epoch_msec;
 uint8_t led_state;
 uint8_t led_program;
 unsigned long loop_start_time_msec;
+unsigned long last_announcement_msec;
 
 unsigned long mate_last_input_msec;
 String mate_data;
@@ -96,6 +97,8 @@ void setup_communication()
   led_state = LOW;		// off
   digitalWrite(LED_BUILTIN, led_state);
   led_program = 8;		// default program selection
+
+  last_announcement_msec = 0;
 
 #ifdef I_AM_MEGA
   // seed the random number generator with some supposedly unpredictable values
@@ -355,7 +358,7 @@ void do_network_input()
 
 void do_heartbeat()
 {
-  if (node_number == 255 && loop_start_time_msec % 1000 == 0) {
+  if (node_number == 255 && loop_start_time_msec > last_announcement_msec + 1000) {
 #ifdef I_AM_MEGA
     if (remote.connected()) {
       const char mega_message[3] = {'m', (char)mega_number, '\0'};
@@ -364,11 +367,11 @@ void do_heartbeat()
 #ifdef I_AM_DUE
       NodeMate.write('d');
 #endif // I_AM_DUE
-      delay(1);	// advance to the next millisecond
       print_status("announcing");
 #ifdef I_AM_MEGA
     }
 #endif // I_AM_MEGA
+  last_announcement_msec = millis();
   }
 }
 
