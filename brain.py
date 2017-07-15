@@ -4,62 +4,6 @@ import select, socket, string, struct, sys, time
 from random import randint
 from random import sample
 
-mega_to_node_map = {
-    1: 4,
-    2: 2,
-    3: 1,
-    4: 0,
-    5: 5,
-    6: 6,
-    7: 3,
-    }
-
-# close all TCP connections and continue to run
-def do_disconnect(ignored, neglected):
-    global listener, sources #, writable, oops
-    copy_of_sources = [] + sources	# array elements will be removed from sources itself
-    for s in copy_of_sources:
-        if s is not sys.stdin and s is not listener:
-            disconnect(s, 'closing')
-    # writable = []
-    # oops = []
-
-def do_list(ignored, neglected):
-    global listener, sources
-    for s in sources:
-        if s is not sys.stdin:
-            if s is listener:
-                print 'listening on %s:%d' % s.getsockname()
-            else:
-                print 'connected to', remote_name[s]
-
-def do_quit(ignored, neglected):
-    global running
-    running = False
-
-# send a message to one remote or all
-def do_send(socket, message):
-    global message_queues, writing
-    # print 'sending', repr(message)
-    if socket and socket != 'send':
-        list = [socket]
-    else:
-        list = message_queues
-    for s in list:
-        message_queues[s].put(message)
-        if s not in writing:
-            writing.append(s)
-
-NUM_ANIMATIONS = 9	# animation programs are numbered 0 through 8
-TIME_LIMIT = 5		# number of seconds between animation changes
-auto_show_change = False
-last_show_change_sec = 0.0
-
-def do_auto(ignored, neglected):
-    global auto_show_change, last_show_change_sec
-    auto_show_change = not auto_show_change
-    last_show_change_sec = time.time()
-
 # Non-Color Animation Parameter Constants
 #
 # All (most of) the parameters for a show are stored in an array called show_parameters, so that they
@@ -132,6 +76,62 @@ watermelon = [[40,29,35], [5,45,15], [47,140,9], [72,160,5], [148,33,137], [47,1
 pride = [[255, 0, 0], [255, 127, 0], [255, 255, 0], [0, 255, 0], [0, 0, 255], [75, 0, 130], [148, 0, 211]]
 edirp = [[148, 0, 211], [75, 0, 130], [0, 0, 255], [0, 255, 0], [255, 255, 0], [255, 127, 0], [255, 0, 0]]
 palette = [fruit_loop, icy_bright, watermelon, pride, edirp]
+
+mega_to_node_map = {
+    1: 4,
+    2: 2,
+    3: 1,
+    4: 0,
+    5: 5,
+    6: 6,
+    7: 3,
+    }
+
+# close all TCP connections and continue to run
+def do_disconnect(ignored, neglected):
+    global listener, sources #, writable, oops
+    copy_of_sources = [] + sources	# array elements will be removed from sources itself
+    for s in copy_of_sources:
+        if s is not sys.stdin and s is not listener:
+            disconnect(s, 'closing')
+    # writable = []
+    # oops = []
+
+def do_list(ignored, neglected):
+    global listener, sources
+    for s in sources:
+        if s is not sys.stdin:
+            if s is listener:
+                print 'listening on %s:%d' % s.getsockname()
+            else:
+                print 'connected to', remote_name[s]
+
+def do_quit(ignored, neglected):
+    global running
+    running = False
+
+# send a message to one remote or all
+def do_send(socket, message):
+    global message_queues, writing
+    # print 'sending', repr(message)
+    if socket and socket != 'send':
+        list = [socket]
+    else:
+        list = message_queues
+    for s in list:
+        message_queues[s].put(message)
+        if s not in writing:
+            writing.append(s)
+
+NUM_ANIMATIONS = 9	# animation programs are numbered 0 through 8
+TIME_LIMIT = 5		# number of seconds between animation changes
+auto_show_change = False
+last_show_change_sec = 0.0
+
+def do_auto(ignored, neglected):
+    global auto_show_change, last_show_change_sec
+    auto_show_change = not auto_show_change
+    last_show_change_sec = time.time()
 
 # ------------------------------------------------- edm_program() -----------------------------------------------
 # show for when the journey is installed at an event with electronic dance music only
