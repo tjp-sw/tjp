@@ -133,6 +133,16 @@ def do_auto(ignored, neglected):
     auto_show_change = not auto_show_change
     last_show_change_sec = time.time()
 
+def constrained_random_parameter(i):
+    new_parameter = randint(show_bounds[i][0], show_bounds[i][1])
+    if show_bounds[i][0] == -1 and show_bounds[i][1] == 1 and new_parameter == 0:
+        new_parameter = 1;		# FIX: no zero value for now
+        print i, 'forced to 1'
+    # change to unsigned int for passing to due
+    if new_parameter < 0:
+        new_parameter += 256
+    return new_parameter
+
 # ------------------------------------------------- edm_program() -----------------------------------------------
 # show for when the journey is installed at an event with electronic dance music only
 # parameters are somewhat randomly chosen; this will change at bm when params will be determined by sound
@@ -149,14 +159,7 @@ show_colors = [[0 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALET
 
 # choose random starting values for each of the parameters
 for i in range(0, NUM_PARAMETERS):
-    new_parameter = randint(show_bounds[i][0], show_bounds[i][1])
-    if show_bounds[i][0] == -1 and show_bounds[i][1] == 1 and new_parameter == 0:
-        new_parameter = 1;		# FIX: no zero value for now
-    # change to unsigned int for passing to due
-    if new_parameter < 0:
-        show_parameters[i] = 256 + new_parameter
-    else:
-        show_parameters[i] = new_parameter
+    show_parameters[i] = constrained_random_parameter(i)
 
 print "initial show parameters ", show_parameters
 
@@ -197,15 +200,7 @@ def edm_program():
 
         # change bg show parameters
         for i in range (0, 8):
-            new_parameter = randint(show_bounds[i][0], show_bounds[i][1])
-            if show_bounds[i][0] == -1 and show_bounds[i][1] == 1 and new_parameter == 0:
-                new_parameter = 1;		# FIX: no zero value for now
-
-            # convert to unsigned int for passing to due
-            if new_parameter < 0:
-                show_parameters[i] = 256 + new_parameter
-            else:
-                show_parameters[i] = new_parameter
+            show_parameters[i] = constrained_random_parameter(i)
             print "background parameter ", i, "changed to ", show_parameters[i]
 
     # to avoid hard transitions, change all mid animation parameters only when you change mid layer choice
@@ -214,15 +209,7 @@ def edm_program():
 
         # change mid show parameters
         for i in range (8, 17):
-            new_parameter = randint(show_bounds[i][0], show_bounds[i][1])
-            if show_bounds[i][0] == -1 and show_bounds[i][1] == 1 and new_parameter == 0:
-                new_parameter = 1;		# FIX: no zero value for now
-
-            # convert to unsigned int for passing to due
-            if new_parameter < 0:
-                show_parameters[i] = 256 + new_parameter
-            else:
-                show_parameters[i] = new_parameter
+            show_parameters[i] = constrained_random_parameter(i)
             print "mid parameter ", i, "changed to ", show_parameters[i]
 
     if sparkle_time - sparkle_start_time > SPARKLE_TIME_LIMIT:
@@ -238,13 +225,7 @@ def edm_program():
 
         # choose which parameter to change; sparkle params are 18-27
         change_sparkle = randint(18,28)
-        new_parameter = randint(show_bounds[change_sparkle][0], show_bounds[change_sparkle][1])
-
-        # change to unsigned int for passing to due
-        if new_parameter < 0:
-            show_parameters[change_sparkle] = 256 + new_parameter
-        else:
-            show_parameters[change_sparkle] = new_parameter
+        show_parameters[change_sparkle] = constrained_random_parameter(change_sparkle)
         print "sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
 
     if palette_time - palette_start_time > PALETTE_TIME_LIMIT:
