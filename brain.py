@@ -26,13 +26,17 @@ SPARKLE_TIME_LIMIT = 43
 SPARKLE_PARAMETER_TIME_LIMIT =  17
 PALETTE_TIME_LIMIT = 7
 
+BACKGROUND_INDEX = 0
+MIDLAYER_INDEX = 8
+SPARKLE_INDEX = 17
+
 # show_bounds = [[0 for i in range(0, 3)] for j in range(0,NUM_PARAMETERS)]
 # lower = [0] * NUM_PARAMETERS
 # upper = [0] * NUM_PARAMETERS
 show_bounds = [  # order must match show_parameters
         # [min, max]
         # show bounds 0 through 7 concern base animations
-        [1, NUM_BASE_ANIMATIONS],  # BACKGROUND_INDEX, which background animation to use
+        [0, NUM_BASE_ANIMATIONS],  # BACKGROUND_INDEX, which background animation to use
         [0, 255], # base color thickness
         [0, 255], # base black thickness
         [-1, 1], # base intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
@@ -133,6 +137,11 @@ def do_auto(ignored, neglected):
     auto_show_change = not auto_show_change
     last_show_change_sec = time.time()
 
+# ------------------------------------------------- edm_program() -----------------------------------------------
+# show for when the journey is installed at an event with electronic dance music only
+# parameters are somewhat randomly chosen; this will change at bm when params will be determined by sound
+# def edm_program():
+
 def constrained_random_parameter(i):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
         new_parameter = show_bounds[i][randint(0,1)]	# no zero value
@@ -143,10 +152,10 @@ def constrained_random_parameter(i):
         new_parameter += 256
     return new_parameter
 
-# ------------------------------------------------- edm_program() -----------------------------------------------
-# show for when the journey is installed at an event with electronic dance music only
-# parameters are somewhat randomly chosen; this will change at bm when params will be determined by sound
-# def edm_program():
+def constrain_show():
+    global show_parameters
+    if show_parameters[BACKGROUND_INDEX] == 0 and show_parameters[MIDLAYER_INDEX] == 0 and show_parameters[SPARKLE_INDEX] == 0:
+        show_parameters[BACKGROUND_INDEX] = 1	# never black
 
 bg_start_time = time.time()
 mid_start_time = time.time()
@@ -160,7 +169,7 @@ show_colors = [[0 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALET
 # choose random starting values for each of the parameters
 for i in range(0, NUM_PARAMETERS):
     show_parameters[i] = constrained_random_parameter(i)
-
+constrain_show()
 print "initial show parameters ", show_parameters
 
 # choose which colors out of the chosen palette to use
@@ -199,7 +208,7 @@ def edm_program():
         bg_start_time = bg_time
 
         # change bg show parameters
-        for i in range (0, 8):
+        for i in range (BACKGROUND_INDEX, MIDLAYER_INDEX):
             show_parameters[i] = constrained_random_parameter(i)
             print "background parameter ", i, "changed to ", show_parameters[i]
 
@@ -208,7 +217,7 @@ def edm_program():
         mid_start_time = mid_time
 
         # change mid show parameters
-        for i in range (8, 17):
+        for i in range (MIDLAYER_INDEX, SPARKLE_INDEX):
             show_parameters[i] = constrained_random_parameter(i)
             print "mid parameter ", i, "changed to ", show_parameters[i]
 
@@ -216,8 +225,8 @@ def edm_program():
         sparkle_start_time = sparkle_time
 
         # change sparkle animation
-        show_parameters[17] = randint(show_bounds[17][0], show_bounds[17][1])
-        print "sparkle choice changed to ", show_parameters[17]
+        show_parameters[SPARKLE_INDEX] = randint(show_bounds[SPARKLE_INDEX][0], show_bounds[SPARKLE_INDEX][1])
+        print "sparkle choice changed to ", show_parameters[SPARKLE_INDEX]
 
     # can change sparkle parameters independently of changing sparkle animation, without having hard transitions
     if sparkle_parameter_time - sparkle_parameter_start_time > SPARKLE_PARAMETER_TIME_LIMIT:
@@ -227,6 +236,8 @@ def edm_program():
         change_sparkle = randint(18,28)
         show_parameters[change_sparkle] = constrained_random_parameter(change_sparkle)
         print "sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
+
+    constrain_show()	# keep the lights on
 
     if palette_time - palette_start_time > PALETTE_TIME_LIMIT:
         palette_start_time = palette_time
