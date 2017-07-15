@@ -42,6 +42,7 @@ class Animations:
    def displayCount(self):
      print "Total number of animations %d" % AnimationInfo.totalNumOfAnimations
 
+   #Add animationInfo object to corresponding list(s) of suitable frequency range for the animation.
    def addAnimation(animation_info):
       if(FreqBand.LOW in animation_info.bestFreqBands):
          lowFreqAnimation.append(animation_info);
