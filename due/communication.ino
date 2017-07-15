@@ -77,10 +77,10 @@ void setup_communication()
   serial0_is_enabled = true;
 #else
   serial0_is_enabled = false;	// change to true for debugging
+#endif // DEBUG
   if (serial0_is_enabled) {
     Serial.begin(115200);
   }
-#endif // DEBUG
 
   NodeMate.begin(115200);
   mate_last_input_msec = 0;
@@ -197,9 +197,7 @@ void process_commands(const int source, String& input)
         size += 1;	// unsigned 8-bit integer
         if (input.length() >= size) {
           if (command == 'n') {
-#ifdef NUM_CHANNELS
             assign_node(input[1]);
-#endif // NUM_CHANNELS
             led_program = node_number == 0 ? 6 : node_number;	// signal the node number
 #ifdef I_AM_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
@@ -227,11 +225,11 @@ void process_commands(const int source, String& input)
       case 's':
         size += NUM_PARAMETERS;
         if (input.length() >= size) {
-            uint8_t number_of_colors = input[1 + NUM_EDM_COLORS_INDEX];
+            uint8_t number_of_colors = 3 * 7;
             size += number_of_colors;
             if (input.length() >= size) {
 #ifdef I_AM_DUE
-              uint8_t params[NUM_PARAMETERS], colors[6];
+              uint8_t params[NUM_PARAMETERS], colors[3 * 7];
 
               size_t i = 0;
               size_t j = 1;
@@ -420,6 +418,7 @@ void send_audio_packet()
   }
   NodeMate.write(audioData, sizeof audioData);
 }
+#endif // NUM_CHANNELS
 
 void assign_node(uint8_t node_num) {
   // Needs to call setLeds() for each strip?
@@ -443,4 +442,3 @@ void assign_node(uint8_t node_num) {
     delay(1000);
   #endif
 }
-#endif // NUM_CHANNELS
