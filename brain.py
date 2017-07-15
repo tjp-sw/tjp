@@ -6,9 +6,9 @@ from random import sample
 
 mega_to_node_map = {
     1: 4,
-    2: 0,
+    2: 2,
     3: 1,
-    4: 2,
+    4: 0,
     5: 5,
     6: 6,
     7: 3,
@@ -74,7 +74,7 @@ NUM_SPARKLE_ANIMATIONS = 3
 NUM_BEAT_EFFECTS = 1
 NUM_PARAMETERS = 30
 NUM_COLORS_PER_PALETTE = 7
-NUM_COLOR_PALETTES = 3
+NUM_COLOR_PALETTES = 4
 
 BASE_TIME_LIMIT = 87
 MID_TIME_LIMIT = 61
@@ -88,7 +88,7 @@ PALETTE_TIME_LIMIT = 7
 show_bounds = [  # order must match show_parameters
         # [min, max]
         # show bounds 0 through 7 concern base animations
-        [0, NUM_BASE_ANIMATIONS - 1],  # BACKGROUND_INDEX, which background animation to use
+        [1, NUM_BASE_ANIMATIONS],  # BACKGROUND_INDEX, which background animation to use
         [0, 255], # base color thickness
         [0, 255], # base black thickness
         [-1, 1], # base intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
@@ -97,7 +97,7 @@ show_bounds = [  # order must match show_parameters
         [0,255], # base inter ring speed
         [-128,127], # base ring offset
         # show bounds 8 through 16 concern mid layer animations
-        [0, NUM_MID_ANIMATIONS - 1],  # MIDLAYER_INDEX, which mid layer animation to use
+        [0, NUM_MID_ANIMATIONS],  # MIDLAYER_INDEX, which mid layer animation to use
         [1, 3], # mid num colors
         [0, 255],  # mid color thickness
         [0, 255],  # mid black thickness
@@ -107,7 +107,7 @@ show_bounds = [  # order must match show_parameters
         [0, 255],  # mid inter ring speed
         [-128,127],  # mid ring offset
         # show bounds 17 through 27 concern sparkle animations
-        [0, NUM_SPARKLE_ANIMATIONS - 1],  # SPARKLE_INDEX, which sparkle animation to use
+        [0, NUM_SPARKLE_ANIMATIONS],  # SPARKLE_INDEX, which sparkle animation to use
         [2, 200],  # sparkle portion
         [0, 255],  # sparkle color thickness
         [0, 255],  # sparkle black thickness
@@ -129,7 +129,9 @@ show_bounds = [  # order must match show_parameters
 fruit_loop = [[25,0,25], [25,15,0], [180,10,70], [140,60,180], [180,60,60], [255,255,120], [255,100,180]]
 icy_bright = [[37,28,60], [70,0,28], [255,108,189], [0,172,238], [44,133,215], [255,255,255], [254,207,24]]
 watermelon = [[40,29,35], [5,45,15], [47,140,9], [72,160,5], [148,33,137], [47,192,91], [70,190,91]]
-palette = [fruit_loop, icy_bright, watermelon]
+pride = [[255, 0, 0], [255, 127, 0], [255, 255, 0], [0, 255, 0], [0, 0, 255], [75, 0, 130], [148, 0, 211]]
+edirp = [[148, 0, 211], [75, 0, 130], [0, 0, 255], [0, 255, 0], [255, 255, 0], [255, 127, 0], [255, 0, 0]]
+palette = [fruit_loop, icy_bright, watermelon, pride, edirp]
 
 # ------------------------------------------------- edm_program() -----------------------------------------------
 # show for when the journey is installed at an event with electronic dance music only
@@ -149,7 +151,7 @@ show_colors = [[0 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALET
 for i in range(0, NUM_PARAMETERS):
     new_parameter = randint(show_bounds[i][0], show_bounds[i][1])
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1 and new_parameter == 0:
-        new_parameter == 1;		# FIX: no zero value for now
+        new_parameter = 1;		# FIX: no zero value for now
     # change to unsigned int for passing to due
     if new_parameter < 0:
         show_parameters[i] = 256 + new_parameter
@@ -197,7 +199,7 @@ def edm_program():
         for i in range (0, 8):
             new_parameter = randint(show_bounds[i][0], show_bounds[i][1])
             if show_bounds[i][0] == -1 and show_bounds[i][1] == 1 and new_parameter == 0:
-                new_parameter == 1;		# FIX: no zero value for now
+                new_parameter = 1;		# FIX: no zero value for now
 
             # convert to unsigned int for passing to due
             if new_parameter < 0:
@@ -213,6 +215,8 @@ def edm_program():
         # change mid show parameters
         for i in range (8, 17):
             new_parameter = randint(show_bounds[i][0], show_bounds[i][1])
+            if show_bounds[i][0] == -1 and show_bounds[i][1] == 1 and new_parameter == 0:
+                new_parameter = 1;		# FIX: no zero value for now
 
             # convert to unsigned int for passing to due
             if new_parameter < 0:
