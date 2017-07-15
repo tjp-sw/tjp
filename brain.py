@@ -134,10 +134,10 @@ def do_auto(ignored, neglected):
     last_show_change_sec = time.time()
 
 def constrained_random_parameter(i):
-    new_parameter = randint(show_bounds[i][0], show_bounds[i][1])
-    if show_bounds[i][0] == -1 and show_bounds[i][1] == 1 and new_parameter == 0:
-        new_parameter = 1;		# FIX: no zero value for now
-        print i, 'forced to 1'
+    if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
+        new_parameter = show_bounds[i][randint(0,1)]	# no zero value
+    else:
+        new_parameter = randint(show_bounds[i][0], show_bounds[i][1])
     # change to unsigned int for passing to due
     if new_parameter < 0:
         new_parameter += 256
