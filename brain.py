@@ -11,19 +11,21 @@ from random import sample
 # array holding that type of parameter value
 
 NUM_7_COLOR_ANIMATIONS = 2
-NUM_BASE_ANIMATIONS = 2
+NUM_BASE_ANIMATIONS = 3
 NUM_MID_ANIMATIONS = 3
-NUM_SPARKLE_ANIMATIONS = 3
+NUM_SPARKLE_ANIMATIONS = 2
 
 NUM_BEAT_EFFECTS = 1
 NUM_PARAMETERS = 30
 NUM_COLORS_PER_PALETTE = 7
 NUM_COLOR_PALETTES = 4
 
-BASE_TIME_LIMIT = 87
-MID_TIME_LIMIT = 61
-SPARKLE_TIME_LIMIT = 43
-SPARKLE_PARAMETER_TIME_LIMIT =  17
+BASE_TIME_LIMIT = 31
+BASE_PARAMETER_TIME_LIMIT = 19
+MID_TIME_LIMIT = 29
+MID_PARAMETER_TIME_LIMIT = 17
+SPARKLE_TIME_LIMIT = 37
+SPARKLE_PARAMETER_TIME_LIMIT =  13
 PALETTE_TIME_LIMIT = 7
 
 BACKGROUND_INDEX = 0
@@ -39,21 +41,21 @@ show_bounds = [  # order must match show_parameters
         [0, NUM_BASE_ANIMATIONS],  # BACKGROUND_INDEX, which background animation to use
         [0, 255], # base color thickness
         [0, 255], # base black thickness
+        [-128,127], # base ring offset
         [-1, 1], # base intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
         [0, 255], # base intra ring speed
         [-1,1], # base inter ring motion: -1 = CCW, 0 = none, 1 = CW
         [0,255], # base inter ring speed
-        [-128,127], # base ring offset
         # show bounds 8 through 16 concern mid layer animations
         [0, NUM_MID_ANIMATIONS],  # MIDLAYER_INDEX, which mid layer animation to use
         [1, 3], # mid num colors
         [0, 255],  # mid color thickness
         [0, 255],  # mid black thickness
+        [-128,127],  # mid ring offset
         [-1, 1],  # mid intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
         [0, 255],  # mid intra ring speed
         [-1, 1],  # mid inter ring motion: -1 = CCW, 0 = none, 1 = CW
         [0, 255],  # mid inter ring speed
-        [-128,127],  # mid ring offset
         # show bounds 17 through 27 concern sparkle animations
         [0, NUM_SPARKLE_ANIMATIONS],  # SPARKLE_INDEX, which sparkle animation to use
         [2, 200],  # sparkle portion
@@ -158,7 +160,9 @@ def constrain_show():
         show_parameters[BACKGROUND_INDEX] = 1	# never black
 
 bg_start_time = time.time()
+bg_parameter_start_time = time.time()
 mid_start_time = time.time()
+mid_parameter_start_time = time.time()
 sparkle_start_time = time.time()
 sparkle_parameter_start_time = time.time()
 palette_start_time = time.time()
@@ -192,48 +196,66 @@ print "initial show colors" , show_colors
 # send_due_parameters()
 
 def edm_program():
-    global bg_start_time, mid_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
+    global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
     global show_parameters, show_colors
 #    while True:  # run forever until show is taken down
 
     current_time = time.time()
     bg_time = time.time()
+    bg_parameter_time = time.time()
     mid_time = time.time()
+    mid_parameter_time = time.time()
     sparkle_time = time.time()
     sparkle_parameter_time = time.time()
     palette_time = time.time()
 
-    # to avoid hard transitions, change all base animation parameters only when you change background choice
+    # to avoid hard transitions, change disruptive base animation parameters only when you change background choice
     if bg_time - bg_start_time > BASE_TIME_LIMIT:
         bg_start_time = bg_time
 
         # change bg show parameters
-        for i in range (BACKGROUND_INDEX, MIDLAYER_INDEX):
+        for i in range (BACKGROUND_INDEX, BACKGROUND_INDEX + 4):
             show_parameters[i] = constrained_random_parameter(i)
             print "background parameter ", i, "changed to ", show_parameters[i]
 
-    # to avoid hard transitions, change all mid animation parameters only when you change mid layer choice
+    if bg_parameter_time - bg_parameter_start_time > BASE_PARAMETER_TIME_LIMIT:
+        bg_parameter_start_time = bg_parameter_time
+
+        # choose which parameter to change
+        change_bg = randint(BACKGROUND_INDEX + 4, MIDLAYER_INDEX - 1)
+        show_parameters[change_bg] = constrained_random_parameter(change_bg)
+        print "background parameter ", change_bg, "changed to ", show_parameters[change_bg]
+
+    # to avoid hard transitions, change disruptive mid animation parameters only when you change mid layer choice
     if mid_time - mid_start_time > MID_TIME_LIMIT:
         mid_start_time = mid_time
 
         # change mid show parameters
-        for i in range (MIDLAYER_INDEX, SPARKLE_INDEX):
+        for i in range (MIDLAYER_INDEX, MIDLAYER_INDEX + 5):
             show_parameters[i] = constrained_random_parameter(i)
             print "mid parameter ", i, "changed to ", show_parameters[i]
+
+    if mid_parameter_time - mid_parameter_start_time > MID_PARAMETER_TIME_LIMIT:
+        mid_parameter_start_time = mid_parameter_time
+
+        # choose which parameter to change
+        change_mid = randint(MIDLAYER_INDEX + 5, SPARKLE_INDEX - 1)
+        show_parameters[change_mid] = constrained_random_parameter(change_mid)
+        print "mid parameter ", change_mid, "changed to ", show_parameters[change_mid]
 
     if sparkle_time - sparkle_start_time > SPARKLE_TIME_LIMIT:
         sparkle_start_time = sparkle_time
 
         # change sparkle animation
-        show_parameters[SPARKLE_INDEX] = randint(show_bounds[SPARKLE_INDEX][0], show_bounds[SPARKLE_INDEX][1])
+        show_parameters[SPARKLE_INDEX] = constrained_random_parameter(SPARKLE_INDEX)
         print "sparkle choice changed to ", show_parameters[SPARKLE_INDEX]
 
     # can change sparkle parameters independently of changing sparkle animation, without having hard transitions
     if sparkle_parameter_time - sparkle_parameter_start_time > SPARKLE_PARAMETER_TIME_LIMIT:
         sparkle_parameter_start_time = sparkle_parameter_time
 
-        # choose which parameter to change; sparkle params are 18-27
-        change_sparkle = randint(18,28)
+        # choose which parameter to change
+        change_sparkle = randint(SPARKLE_INDEX + 1,SPARKLE_INDEX + 10)
         show_parameters[change_sparkle] = constrained_random_parameter(change_sparkle)
         print "sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
 
@@ -242,7 +264,7 @@ def edm_program():
     if palette_time - palette_start_time > PALETTE_TIME_LIMIT:
         palette_start_time = palette_time
 
-        show_parameters[29] = randint(show_bounds[29][0], show_bounds[29][1])
+        show_parameters[29] = constrained_random_parameter(29)
         # choose which colors out of the chosen palette to use
         # shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
         bg_order = sample(range(0, 2), 2)
