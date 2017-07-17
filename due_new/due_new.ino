@@ -53,7 +53,7 @@
 #include "globals.h" // Leave this here, for #define order           //
                                                                      //
 // Testing tools                                                     //
-#//define DEBUG                   // Enables serial output             //
+//#define DEBUG                   // Enables serial output             //
 //#define DEBUG_TIMING          // Times each step in loop()         //
 //#define DEBUG_LED_WRITE_DATA 10 // Dumps LED data every X cycles   //
 //#define TEST_AVAIL_RAM 3092   // How much RAM we have left         //
@@ -77,14 +77,14 @@
 ////////////////////////////////////////////////////////////
 void manually_set_animation_params() {                    //
                                                           //
-  BASE_ANIMATION = DEBUG_MODE;                                  //
+  BASE_ANIMATION = 128;                                  //
   MID_ANIMATION = NONE;                                   //
   SPARKLE_ANIMATION = NONE;                               //
                                                           //
   BEAT_EFFECT = NONE;                                     //
                                                           //
   BASE_COLOR_THICKNESS = 0;                             //
-  BASE_BLACK_THICKNESS = 0;                             //
+  BASE_BLACK_THICKNESS = 255;                             //
   show_parameters[BASE_INTRA_RING_MOTION_INDEX] = CW;     //
   BASE_INTRA_RING_SPEED = 255;                            //
   show_parameters[BASE_INTER_RING_MOTION_INDEX] = NONE;   //
@@ -128,16 +128,18 @@ void setup() {
   #endif
 
 
-  // Hold data lines low
+  
+
+  // Initialize FastLED parallel output controller (must be 8, even if we only use 4)
+  LEDS.addLeds<WS2811_PORTD, 8>(leds, LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
+
+// Hold data lines low
   digitalWrite(25, 0);
   digitalWrite(26, 0);
   digitalWrite(27, 0);
   digitalWrite(28, 0);
   delay(500);
-
-  // Initialize FastLED parallel output controller (must be 8, even if we only use 4)
-  LEDS.addLeds<WS2811_PORTD, 8>(leds, LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
-
+  
   //  Clear all LEDs
   LEDS.clear();
   LEDS.show();
@@ -189,6 +191,15 @@ void setup() {
 
 // the loop function runs over and over again forever
 void loop() {
+if(loop_count % 100 == 0) {
+  // Hold data lines low
+  digitalWrite(25, 0);
+  digitalWrite(26, 0);
+  digitalWrite(27, 0);
+  digitalWrite(28, 0);
+  delay(1);
+}
+  
   #ifdef DEBUG_TIMING
     static uint16_t serial_val[20];
     static unsigned long last_debug_time;

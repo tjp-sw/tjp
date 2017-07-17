@@ -94,21 +94,21 @@ CRGB* initial_palette = fruit_loop;                                 //
 #define BASE_ANIMATION_INDEX 0              // which base animation to play                       //
 #define BASE_COLOR_THICKNESS_INDEX 1        // how many consecutive lit LEDs in a row             //
 #define BASE_BLACK_THICKNESS_INDEX 2        // how many dark LEDs between lit ones                //
-#define BASE_INTRA_RING_MOTION_INDEX 3      // CW, NONE, CW, ALTERNATE, SPLIT                     //
-#define BASE_INTRA_RING_SPEED_INDEX 4       // Number of pixels to move per 16 cycles             //
-#define BASE_INTER_RING_MOTION_INDEX 5      // CCW, NONE, CW,                                     //
-#define BASE_INTER_RING_SPEED_INDEX 6       // Number of pixels to move per 16 cycles             //
-#define BASE_RING_OFFSET_INDEX 7            // rotation of pattern from neighbor                  //
+#define BASE_RING_OFFSET_INDEX 3            // rotation of pattern from neighbor                  //
+#define BASE_INTRA_RING_MOTION_INDEX 4      // CW, NONE, CW, ALTERNATE, SPLIT                     //
+#define BASE_INTRA_RING_SPEED_INDEX 5       // Number of pixels to move per 16 cycles             //
+#define BASE_INTER_RING_MOTION_INDEX 6      // CCW, NONE, CW,                                     //
+#define BASE_INTER_RING_SPEED_INDEX 7       // Number of pixels to move per 16 cycles             //
 
 #define MID_ANIMATION_INDEX 8               // which mid animation to play                        //
 #define MID_NUM_COLORS_INDEX 9              // how many colors to use out of this palette         //
 #define MID_COLOR_THICKNESS_INDEX 10        // how many consecutive lit LEDs in a row             //
 #define MID_BLACK_THICKNESS_INDEX 11        // how many dark LEDs between lit ones                //
-#define MID_INTRA_RING_MOTION_INDEX 12      // CW, NONE, CW, ALTERNATE, SPLIT                     //
-#define MID_INTRA_RING_SPEED_INDEX 13       // Number of pixels to move per 16 cycles             //
-#define MID_INTER_RING_MOTION_INDEX 14      // CCW, NONE, CW,                                     //
-#define MID_INTER_RING_SPEED_INDEX 15       // Number of pixels to move per 16 cycles             //
-#define MID_RING_OFFSET_INDEX 16            // rotation of pattern from neighbor                  //
+#define MID_RING_OFFSET_INDEX 12            // rotation of pattern from neighbor                  //
+#define MID_INTRA_RING_MOTION_INDEX 13      // CW, NONE, CW, ALTERNATE, SPLIT                     //
+#define MID_INTRA_RING_SPEED_INDEX 14       // Number of pixels to move per 16 cycles             //
+#define MID_INTER_RING_MOTION_INDEX 15      // CCW, NONE, CW,                                     //
+#define MID_INTER_RING_SPEED_INDEX 16       // Number of pixels to move per 16 cycles             //
 
 #define SPARKLE_ANIMATION_INDEX 17          // which sparkle animation to play                    //
 #define SPARKLE_PORTION_INDEX 18            // percentage of LEDs that will be lit at once        //

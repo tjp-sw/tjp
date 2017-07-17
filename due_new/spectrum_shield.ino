@@ -19,7 +19,7 @@ void setup_spectrum_shield() {
 
 // Read sound frequencies for each band and channel. Each channel has 7 frequency "buckets"  0 - 6.
 // frequencies_one[0] is channel 1 lowest frequency, frequencies_two[6] is channel 2 highest frequency
-#define NOISE_REDUCTION 70 
+#define NOISE_REDUCTION 30 
 void read_frequencies() {
 
   for(uint8_t i = 0; i < NUM_CHANNELS; i++)
@@ -31,6 +31,16 @@ void read_frequencies() {
     frequencies_two[i] = temp < 0 ? 0 : temp;
     delayMicroseconds(100);
 
+    // to do: PRIDE HACK!!!!!
+    
+    //frequencies_one[i] /= (i+1);
+    //frequencies_two[i] /= (i+1);
+    //frequencies_one[i] *= 4;
+    //frequencies_two[i] *= 4;
+
+    //Serial.println(String(i) + " = " + frequencies_one[i]);
+    //Serial.println(String(i) + " = " + frequencies_two[i]);
+    
     // Acknowledging the read?
     digitalWrite(SS_PIN_STROBE, HIGH);
     delayMicroseconds(100);

@@ -3,10 +3,10 @@
 //---------------------------- EQUALIZER_FULL ---------------------------
 // This isn't actually done yet :o
 // to do: does heights[] need to be uint16_t? or can be uint8_t? Is (float) necessary on freq_max[]?
-// BASE_BLACK_THICKNESS(1:4)
+// BASE_BLACK_THICKNESS(3:8)
 void equalizer_full(uint8_t display_mode) {
   leds[0] = CRGB::Red;
-  uint8_t black_thickness = scale_param(BASE_BLACK_THICKNESS, 1, 4);
+  uint8_t black_thickness = scale_param(BASE_BLACK_THICKNESS, 3, 8);
   
   uint8_t unlit_pixels = black_thickness * (NUM_CHANNELS-1);
   uint16_t total_colored_pixels = LEDS_PER_RING - unlit_pixels;
@@ -22,6 +22,7 @@ void equalizer_full(uint8_t display_mode) {
   uint16_t cur_height = 0;
   for(uint8_t chan = 0; chan < NUM_CHANNELS; chan++) {
     uint16_t height = total_colored_pixels * ((float)freq_max[chan] / overall_volume);
+
     CRGB color = current_palette[chan];
     color.maximizeBrightness();
     color %= 128; // half brightness
@@ -70,7 +71,7 @@ void equalizer_variable(uint8_t display_mode) {
   uint16_t cur_height = 0;
   for(uint8_t chan = 0; chan < NUM_CHANNELS; chan++) {
     uint16_t freq_max = frequencies_one[chan] > frequencies_two[chan] ? frequencies_one[chan] : frequencies_two[chan];
-    uint16_t height = freq_max / 4;
+    uint16_t height = freq_max / 6;
     if(height > max_height) {
       #ifdef DEBUG
         Serial.println("equalizer_variable() height capped. Clipped from " + String(height) + " down to " + String(max_height));
@@ -167,7 +168,7 @@ void equalizer_pulse() {
 #define MIN_FREQ_PULSE_BRIGHTNESS 8
 // BASE_COLOR_THICKNESS(50:57), To be added: BASE_INTRA_RING_MOTION(-1:1), BASE_RING_OFFSET(-6:6), BASE_INTRA_RING_SPEED(4:32)
 void frequency_pulse() {
-  uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 50, 57);
+  uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 48, 55);
   uint8_t intra_speed = scale_param(BASE_INTRA_RING_SPEED, 4, 32);
   int8_t ring_offset = scale_param(BASE_RING_OFFSET, -6, 6);
   
@@ -179,7 +180,7 @@ void frequency_pulse() {
     color.maximizeBrightness();
     color %= 128; // half brightness
     
-    uint16_t scaling = (frequencies_one[chan] + frequencies_two[chan]) / 6;
+    uint16_t scaling = (frequencies_one[chan] + frequencies_two[chan]) / 4;
     if(scaling > 255) { 
       #ifdef DEBUG
         Serial.println("frequency_pulse() brightness scaling capped, clipped from " + String(scaling) + " down to 255.");
@@ -196,8 +197,8 @@ void frequency_pulse() {
     }
   }
 
-  uint8_t flat_offset = (BASE_INTRA_RING_MOTION * intra_speed * base_count / THROTTLE) % LEDS_PER_RING;
-  rotate_leds(flat_offset, ring_offset, BASE_INTRA_RING_MOTION == CW);
+  //uint8_t flat_offset = (BASE_INTRA_RING_MOTION * intra_speed * base_count / THROTTLE) % LEDS_PER_RING;
+  //rotate_leds(flat_offset, ring_offset, BASE_INTRA_RING_MOTION == CW);
 }
 
 
