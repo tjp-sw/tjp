@@ -5,8 +5,8 @@ from datetime import datetime
 # Stores Music library and returns appropriate songs
 RED_MID = [1]
 RED_HIGH = [2]
-ORANGE_MID = [3]
-ORANGE_HIGH = [4]
+ORANGE_MID = [1,8,12]
+ORANGE_HIGH = [7,11]
 YELLOW_MID = [5]
 YELLOW_HIGH = [6]
 GREEN_MID = [7]
@@ -19,7 +19,7 @@ WHITE_MID = [13]
 WHITE_HIGH = [14]
 MIDS = [RED_MID, ORANGE_MID, YELLOW_MID, GREEN_MID, BLUE_MID, PURPLE_MID, WHITE_MID]
 HIGHS = [RED_HIGH, ORANGE_HIGH, YELLOW_HIGH, GREEN_HIGH, BLUE_HIGH, PURPLE_HIGH, WHITE_HIGH]
-LOWS = [15, 16, 17]
+LOWS = [15, 4, 17]
 
 
 def find_low(theme=datetime.today().weekday()):

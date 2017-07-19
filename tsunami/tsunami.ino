@@ -68,6 +68,8 @@ void setup() {
   tsunami_setup();
   
   get_node();
+
+  Serial.println("Ready");
 }
 
 void do_command () {
@@ -116,8 +118,12 @@ void do_command () {
           ch_loop[ch]= ctrl_msg.bool_loop;
           tsunami.trackGain(channels[ch], ch_gain[ch]);
           tsunami.trackLoad(channels[ch], 0, true);
+          if (DEBUG) {
+            Serial.print("Gain ");
+            Serial.println(ch_gain[ch]);
+          }
           Serial.print("Now Playing ");
-          Serial.println(ctrl_msg.channels[ch]);
+          Serial.println(channels[ch]);
         }
       }
       tsunami.samplerateOffset(0, 0);        // Reset sample rate offset to 0
