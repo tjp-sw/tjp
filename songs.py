@@ -3,9 +3,9 @@ from datetime import datetime
 
 
 # Stores Music library and returns appropriate songs
-RED_LOW = []
-RED_MID = [1]
-RED_HIGH = [2]
+RED_LOW = range(1000,1004)
+RED_MID = range(1,60)
+RED_HIGH = range(61,85)
 ORANGE_LOW = []
 ORANGE_MID = [1, 8, 12]
 ORANGE_HIGH = [7, 11]
@@ -29,7 +29,7 @@ HIGHS = [RED_HIGH, ORANGE_HIGH, YELLOW_HIGH, GREEN_HIGH, BLUE_HIGH, PURPLE_HIGH,
 LOWS = [RED_LOW, ORANGE_LOW, YELLOW_LOW, GREEN_LOW, BLUE_LOW, PURPLE_LOW, WHITE_LOW]
 MEDITATIONS = []
 
-SET_THEME = 1
+SET_THEME = 0
 
 
 def find_low(theme=datetime.today().weekday()):

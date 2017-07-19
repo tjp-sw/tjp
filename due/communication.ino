@@ -224,6 +224,8 @@ void process_commands(const int source, String& input)
         network_data = "";
         delay_next_network_connection(10);
         break;
+      case 'a':
+        handle_commands(command);
 #endif // I_AM_MEGA
       case 's':
         size += NUM_PARAMETERS;

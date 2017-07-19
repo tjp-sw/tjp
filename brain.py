@@ -3,6 +3,7 @@ import Queue	# thread safe
 import select, socket, string, struct, sys, time
 from random import randint
 from random import sample
+import music
 
 # Non-Color Animation Parameter Constants
 #
@@ -376,6 +377,7 @@ def disconnect(socket, msg):
 
 do_list(None, None)
 print sorted(control_messages.keys())
+tsunami= music.Music()
 running = True
 while running:
     try:
@@ -441,6 +443,9 @@ while running:
                         print 'mega', mega_number, '( node ', repr(node_number), ') is at', remote_name[s]
                         if node_number != None:
                             do_send(s, struct.pack('>cB', 'n', node_number))
+                    elif message[0:1] == 's':
+                        music.status_update(message)
+
                     else:
                         print 'received', repr(message), 'from', remote_name[s]
                 else:
@@ -473,6 +478,8 @@ while running:
             edm_program()
             last_show_change_sec = time.time()
             do_show(None, None)
+
+    tsunami.tick()
 
     except KeyboardInterrupt:
         running = False

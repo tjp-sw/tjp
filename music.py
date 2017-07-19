@@ -1,14 +1,19 @@
 import random
-import songs
 from datetime import datetime, timedelta
+from brain import do_send
+import songs
 
 
-# Just random....not sure where this signal is coming from
+# Just random....this signal is coming from the touchpad which is not written yet.
 def panel_touched():
     chance = random.randint(0, 400000)
     if chance == 0:
         return True
     return False
+
+
+def status_update(message):
+    print (message)
 
 
 # sends a control message to the mega
@@ -30,10 +35,10 @@ class ControlMessage:
             if ch > 0:
                 empty_msg = False
         if empty_msg is False:
-            ctrl_msg = ';'.join([str(self.node), str(self.command), str(self.field2),
-                                 ','.join(str(ch) for ch in self.channels)])
-            ctrl_msg += ';'
+            ctrl_msg = 'a' + ';'.join([str(self.node), str(self.command), str(self.field2),
+                                      ','.join(str(ch) for ch in self.channels)]) + ';'
             print(ctrl_msg)
+            do_send(self.node, ctrl_msg)
 
     def play(self, channels, node=0, looping=0):
         self.node = node
@@ -87,13 +92,13 @@ class Music:
 
         tick_msg = ControlMessage()
         tick_msg.play(msg)
-
+"""
 music = Music()
 
 while True:
     music.tick()
 
-"""  
+  
 
 #Set theme
 theme_list= ['RED', 'ORANGE', 'YELLOW', 'GREEN', 'BLUE', 'PURPLE', 'WHITE']
