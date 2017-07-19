@@ -55,6 +55,8 @@ void setup() {
   delay(100); 
 
   get_node();
+
+  Serial.println("Ready");
 }
 
 //convert control message into commands for Tsunami
@@ -80,11 +82,26 @@ void handle_ctrl_msg () {
 void do_command () {
   switch (ctrl_msg.command) {
     //Change the music playing
-    case SETALLAUDIO :
-      Serial.println("case SetAllAudio");
-      for (int channel = 0; channel < 18; channel++) {
-        if (ctrl_msg.channels[channel]) {
-          tsunami.trackLoad(ctrl_msg.channels[channel], 0, true);
+
+    case SETAUDIO :
+      if (DEBUG)
+          Serial.println("SetAudio");
+      for (int ch = 0; ch < 18; ch++) {
+        if (ctrl_msg.channels[ch]) {
+          if (channels[ch]){
+            tsunami.trackFade(channels[ch], -70, 1000, true);
+          }
+          channels[ch]= ctrl_msg.channels[ch];
+          ch_loop[ch]= ctrl_msg.bool_loop;
+          tsunami.trackGain(channels[ch], ch_gain[ch]);
+          tsunami.trackLoad(channels[ch], 0, true);
+          if (DEBUG) {
+            Serial.print("Gain ");
+            Serial.println(ch_gain[ch]);
+          }
+          Serial.print("Now Playing ");
+          Serial.println(channels[ch]);
+
         }
       }
       tsunami.resumeAllInSync();
