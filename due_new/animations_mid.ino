@@ -1,5 +1,42 @@
 // This file is for completed mid animations
 
+// this updated animation needs testing by diane
+//-------------------------------- SNAKE --------------------------------
+// Sends alternating bands of colors rotating around the rings
+// Creates repeated snakes with NUM_COLORS colors, with each color repeated COLOR_THICKNESS times, separated by BLACK_THICKNESS black LEDs.
+// MID_NUM_COLORS(1-3), MID_COLOR_THICKNESS(1-20), MID_BLACK_THICKNESS(0-60), MID_INTRA_RING_MOTION(-1, 1), MID_RING_OFFSET(0-20), MID_INTRA_RING_SPEED(8-127)
+void old_snake(uint8_t ring_mode) {
+   
+  uint8_t period = MID_NUM_COLORS * MID_COLOR_THICKNESS + MID_BLACK_THICKNESS;
+  uint16_t extended_led_count = ((LEDS_PER_RING-1)/period+1)*period;
+
+  uint8_t ring_start = node_number*RINGS_PER_NODE + (ring_mode == ODD_RINGS ? 1 : 0);
+  uint8_t ring_inc = ring_mode == ALL_RINGS ? 1 : 2;
+  for (uint8_t ring = ring_start; ring < (node_number+1)*RINGS_PER_NODE; ring += ring_inc) {
+    for (uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
+      uint16_t idx;
+      if(MID_INTRA_RING_MOTION != SPLIT) {
+        idx = (pixel + MID_RING_OFFSET*ring + MID_INTRA_RING_MOTION * MID_INTRA_RING_SPEED * loop_count / THROTTLE) % extended_led_count;
+      }
+      if(idx >= LEDS_PER_RING) { continue; }
+
+      uint8_t pattern_idx = pixel % period;
+      if(pattern_idx < MID_BLACK_THICKNESS) {
+        mid_layer[ring][idx] = TRANSPARENT;
+      }
+      else if(pattern_idx < MID_BLACK_THICKNESS + MID_COLOR_THICKNESS) {
+        mid_layer[ring][idx] = get_mid_color(0);
+      }
+      else if(pattern_idx < MID_BLACK_THICKNESS + 2*MID_COLOR_THICKNESS) {
+        mid_layer[ring][idx] = get_mid_color(1);
+      }
+      else {
+        mid_layer[ring][idx] = get_mid_color(2);
+      }
+    }
+  }
+}
+
 //-------------------------------- SNAKE --------------------------------
 // Sends alternating bands of colors rotating around the rings
 // Creates repeated snakes with MID_NUM_COLORS colors, with each color repeated COLOR_THICKNESS times, separated by BLACK_THICKNESS black LEDs.
@@ -57,44 +94,6 @@ void snake(uint8_t ring_mode) {
       }          
   }
 }
-
-
-//-------------------------------- SNAKE --------------------------------
-// Sends alternating bands of colors rotating around the rings
-// Creates repeated snakes with MID_NUM_COLORS colors, with each color repeated COLOR_THICKNESS times, separated by BLACK_THICKNESS black LEDs.
-// MID_NUM_COLORS(1:3), MID_COLOR_THICKNESS(2:5), MID_BLACK_THICKNESS(5:20), MID_INTRA_RING_MOTION(-1:1), MID_RING_OFFSET(-period/2:period/2), MID_INTRA_RING_SPEED(8-32)
-void old_snake(uint8_t ring_mode) {
-  uint8_t color_thickness = scale_param(MID_COLOR_THICKNESS, 2, 5);
-  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 5, 50);
-  uint8_t intra_speed = scale_param(MID_INTRA_RING_SPEED, 8, 32);
-  uint8_t period = MID_NUM_COLORS * color_thickness + black_thickness;
-  int8_t ring_offset = scale_param(MID_RING_OFFSET, -1 * period/2, period/2);
-  uint16_t extended_led_count = ((LEDS_PER_RING-1)/period+1)*period;
-
-  uint8_t ring_start = node_number*RINGS_PER_NODE + (ring_mode == ODD_RINGS ? 1 : 0);
-  uint8_t ring_inc = ring_mode == ALL_RINGS ? 1 : 2;
-  for (uint8_t ring = ring_start; ring < (node_number+1)*RINGS_PER_NODE; ring += ring_inc) {
-    for (uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
-      uint16_t idx = (pixel + ring_offset*ring + MID_INTRA_RING_MOTION * intra_speed * mid_count / THROTTLE) % extended_led_count;
-      if(idx >= LEDS_PER_RING) { continue; }
-
-      uint8_t pattern_idx = pixel % period;
-      if(pattern_idx < black_thickness) {
-        mid_layer[ring][idx] = TRANSPARENT;
-      }
-      else if(pattern_idx < black_thickness + color_thickness) {
-        mid_layer[ring][idx] = get_mid_color(0);
-      }
-      else if(pattern_idx < black_thickness + 2*color_thickness) {
-        mid_layer[ring][idx] = get_mid_color(1);
-      }
-      else {
-        mid_layer[ring][idx] = get_mid_color(2);
-      }
-    }
-  }
-}
-
 
 //-------------------------------- FIRE ---------------------------------
 // Adapted from: Fire2012 by Mark Kriegsman, July 2012, part of "Five Elements" shown here: http://youtu.be/knWiGsmgycY

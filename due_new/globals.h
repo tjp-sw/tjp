@@ -167,6 +167,17 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
                                                                                                   //
 // Beat effect modes                                                                              //
 #define COLOR_SWAP 1                                                                              //
+#define ALTERNATE_COLOR_THICKNESS 2
+#define ALTERNATE_BLACK_THICKNESS 3
+#define JERKY_MOTION 4
+#define BLACKEN_NODE 5
+#define BLACKEN_RING 6
+uint8_t beat_proximity = 50; // not near beat
+boolean odd_beat = true;
+boolean blacken_ring = false;
+uint8_t blacken_ring_number = 0;
+boolean blacken_node = false;
+uint8_t blacken_node_number = 0;
                                                                                                   //
                                                                                                   //
 // Animation constants and parameters                                                             //
@@ -178,10 +189,11 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
 #define NONE 0        // For BASE & MID INTRA_RING_MOTION                                         //
 #define CW 1          // For BASE & MID INTRA_RING_MOTION                                         //
 #define CCW -1        // For INTRA_RING_MOTION                                                    //
-#define SPLIT 2       // For INTRA_RING_MOTION                                                    //
+#define ALTERNATE 2   // For INTRA_RING_MOTION                                                    //
+#define SPLIT 3       // For INTRA_RING_MOTION                                                    //
                                                                                                   //
-#define DOWN 1      // For SPARKLE_INTRA_RING_MOTION                                          //
-#define UP -1       // For SPARKLE_INTRA_RING_MOTION                                          //
+#define DOWN 1      // For SPARKLE_INTRA_RING_MOTION                                              //
+#define UP -1       // For SPARKLE_INTRA_RING_MOTION                                              //
                                                                                                   //
 #define ALL_RINGS 0                                                                               //
 #define ODD_RINGS 1                                                                               //
@@ -274,4 +286,8 @@ bool is_beat = false; // This can be inferred from downbeat_proximity         //
 uint8_t downbeat_proximity = 0; // Up and down from 0-255 with the beat       //
 uint8_t band_distribution[NUM_BANDS]; // bass=0, mid=1, treble=2; sums to 255 //
 //----------------------------------------------------------------------------//
+
+// Diane's sparkle globals - if this gets to be too much I'll try to figure out a way to be more space efficient
+uint8_t current_ring;
+uint8_t current_pixel;
 

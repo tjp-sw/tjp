@@ -42,7 +42,7 @@
 //------------------------ Config -----------------------------------//
 //#define I_AM_THE_BEAT_DUE // Enable this on the 4th due for pride  //
 // Due controlled versus pi controlled animation choices             //
-#define PI_CONTROLLED                                              //
+//#define PI_CONTROLLED                                              //
 #ifndef PI_CONTROLLED                                                //
   #define TESTING_NODE_NUMBER 0   // To test diff nodes              //
   //#define CYCLE                                                    //
@@ -53,7 +53,7 @@
 #include "globals.h" // Leave this here, for #define order           //
                                                                      //
 // Testing tools                                                     //
-//#define DEBUG                   // Enables serial output             //
+#define DEBUG                   // Enables serial output             //
 //#define DEBUG_TIMING          // Times each step in loop()         //
 //#define DEBUG_LED_WRITE_DATA 10 // Dumps LED data every X cycles   //
 //#define TEST_AVAIL_RAM 3092   // How much RAM we have left         //
@@ -77,11 +77,11 @@
 ////////////////////////////////////////////////////////////
 void manually_set_animation_params() {                    //
                                                           //
-  BASE_ANIMATION = 128;                                  //
-  MID_ANIMATION = NONE;                                   //
+  BASE_ANIMATION = NONE;                                  //
+  MID_ANIMATION = SNAKE;                                   //
   SPARKLE_ANIMATION = NONE;                               //
                                                           //
-  BEAT_EFFECT = NONE;                                     //
+  BEAT_EFFECT = JERKY_MOTION;                                     //
                                                           //
   BASE_COLOR_THICKNESS = 0;                             //
   BASE_BLACK_THICKNESS = 255;                             //
@@ -92,10 +92,10 @@ void manually_set_animation_params() {                    //
   show_parameters[BASE_RING_OFFSET_INDEX] = 127;          //
                                                           //
   MID_NUM_COLORS = 3;                                     //
-  MID_COLOR_THICKNESS = 0;                              //
-  MID_BLACK_THICKNESS = 0;                              //
+  MID_COLOR_THICKNESS = 5;                              //
+  MID_BLACK_THICKNESS = 10;                              //
   show_parameters[MID_INTRA_RING_MOTION_INDEX] = CW;      //
-  MID_INTRA_RING_SPEED = 255;                             //
+  MID_INTRA_RING_SPEED = 10;                             //
   show_parameters[MID_INTER_RING_MOTION_INDEX] = NONE;    //
   MID_INTER_RING_SPEED = 0;                               //
   show_parameters[MID_RING_OFFSET_INDEX] = 32;            //
@@ -240,8 +240,9 @@ if(loop_count % 100 == 0) {
   // Apply beat effects
   #ifndef PI_CONTROLLED
     is_beat = loop_count % 10 == 0; // Generates a fake beat
+    beat_proximity = loop_count % 100; // beat proximity near 100 means near a beat; dividing by 200 to slow down 
   #endif
-  if(is_beat) { do_beat_effects(); }
+  if(is_beat || beat_proximity <= 4 || beat_proximity >= 95) { do_beat_effects(); }
 
 
   //  Draw layers
@@ -328,27 +329,40 @@ if(loop_count % 100 == 0) {
 
 
 void do_beat_effects() {
-  return;
+  //return;
   switch(BEAT_EFFECT) {
-    case COLOR_SWAP:
-    {
-      // Rotate colors
-      CRGB temp = current_palette[2];
-      current_palette[2] = current_palette[3];
-      current_palette[3] = current_palette[4];
-      current_palette[4] = temp;
+    case COLOR_SWAP: {
+      color_swap();
+      break;
+    }
     
-      // Rotate targets so the same colors continue blending into the same targets
-      temp = target_palette[2];
-      target_palette[2] = target_palette[3];
-      target_palette[3] = target_palette[4];
-      target_palette[4] = temp;
-    
-      // Set all the dimming/gradient values in mid_palette that the animations will reference
-      create_mid_palette(&mid_palette, current_palette[2], current_palette[3], current_palette[4]);
+    case ALTERNATE_COLOR_THICKNESS: {
+      alternate_color_thickness();
       break;
     }
 
+    case ALTERNATE_BLACK_THICKNESS: {
+      alternate_black_thickness();
+      break;
+    }
+
+    case JERKY_MOTION: {
+      // code for this is incorporated into write_pixel_data() in "layers"
+      break;
+    }
+
+    case BLACKEN_NODE: {
+      // fixme: haven't tested yet
+       do_blacken_node();
+      break;
+    }
+
+    case BLACKEN_RING: {
+      // fixme: haven't tested yet
+      do_blacken_ring();
+      break;
+    }
+    
     case NONE:
       break;
 
@@ -502,7 +516,7 @@ void draw_current_base() {
 void draw_current_mid() {
   switch(MID_ANIMATION) {
     case SNAKE:
-      snake(ALL_RINGS);
+      old_snake(ALL_RINGS);
       break;
 
     case FIRE:

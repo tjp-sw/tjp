@@ -116,6 +116,7 @@ void spawn_raindrop(uint8_t ring, uint16_t pixel, uint8_t color_thickness) {
 
 // Animations to fix
 
+/*
 //--------------------------------------- SPARKLE WARP SPEED -------------------------------------------
 //  Sends sparkles racing around horizontally from ring to ring
 //  When someone is inside it is intended to look like flying through space or that old cheesy 
@@ -130,7 +131,7 @@ void sparkle_warp_speed() {
   uint8_t pixel;
   uint8_t temp[LEDS_PER_RING/2]; 
 
-/*
+
 
    //  only move every throttle-th cycle to slow it down; speeds up after each redraw
   if (sparkle_count % throttle == 0) {
@@ -151,7 +152,7 @@ void sparkle_warp_speed() {
     // move temp info to last ring
     for (pixel = 0; pixel < LEDS_PER_RING; pixel++) { set_sparkle(NUM_RINGS - 1, pixel, temp[pixel]); }
   }
-  */
+
 }
 
 
@@ -219,6 +220,8 @@ void sparkle_twinkle() {
             // only change intensity if pixel is chosen as star
             if (get_sparkle_color(ring, pixel) != TRANSPARENT) {
 
+ need to update with brian's get dim code
+ 
                 // increase or decrease intensity depending on whether dim is even or odd
                 if (dim[ring][pixel] == 6) { dim[ring][pixel] = 5; }
                 else if (dim[ring][pixel] == 1) { dim[ring][pixel] = 0; }
@@ -231,8 +234,10 @@ void sparkle_twinkle() {
                 // sparkle_color = (get_sparkle[ring][pixel] == ...) ? 0 : 1;
                 set_sparkle(ring, pixel, get_sparkle_color(0, dim[ring][pixel]));   
             }
+
         }
     }
   }
 }
 
+*/

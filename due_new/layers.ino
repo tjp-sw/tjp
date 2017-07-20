@@ -2,44 +2,59 @@
 void write_pixel_data() {
   uint8_t ring_offset = RINGS_PER_NODE * node_number;
 
-  for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++)
-  {
-    bool backward_strip = ring < RINGS_PER_NODE/2;
-    uint8_t strip = ring % 2 + (backward_strip ? 0 : 2);
+  Serial.println("in write pixel data");
+  
+  if ((BEAT_EFFECT != JERKY_MOTION) || is_beat){
+    Serial.println(" move ");
+    for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++)
+    {
+      bool backward_strip = ring < RINGS_PER_NODE/2;
+      uint8_t strip = ring % 2 + (backward_strip ? 0 : 2);
     
-    uint16_t pixel_offset = LEDS_PER_STRIP * strip;
-    if(backward_strip) {
-      pixel_offset += LEDS_PER_STRIP - 1 - PHYSICAL_LEDS_PER_RING*(ring/2);
-    }
-    else {
-      pixel_offset += 1 + PHYSICAL_LEDS_PER_RING*((ring - RINGS_PER_NODE/2)/2);
-    }
-    
-    for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
-      uint8_t color_index = get_sparkle(ring_offset+ring, pixel);
-      CRGB pixel_color;
-
-      if(color_index != 0) {
-        pixel_color = ColorFromPalette(sparkle_palette, color_index);
+      uint16_t pixel_offset = LEDS_PER_STRIP * strip;
+      if(backward_strip) {
+        pixel_offset += LEDS_PER_STRIP - 1 - PHYSICAL_LEDS_PER_RING*(ring/2);
       }
       else {
-        color_index = mid_layer[ring_offset+ring][pixel];
-        if(color_index != 0) {
-          pixel_color = ColorFromPalette(mid_palette, color_index);
-          /*if(ring == 4 && pixel > 205 && pixel < 408) {
-            Serial.print("mid_layer[4][" + String(pixel) + "] = palette[" + String(mid_layer[ring][pixel]) + "] = (");
-            Serial.println(String(pixel_color.r) + "," + String(pixel_color.g) + "," + String(pixel_color.b) + ")");
-          }*/
-        }
-        else {
-          color_index = base_layer[ring_offset+ring][pixel];
-          pixel_color = ColorFromPalette(base_palette, color_index);
-        }
+        pixel_offset += 1 + PHYSICAL_LEDS_PER_RING*((ring - RINGS_PER_NODE/2)/2);
       }
+    
+      for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+        uint8_t color_index = get_sparkle(ring_offset+ring, pixel);
+        CRGB pixel_color;
 
-      leds[pixel_offset] = pixel_color;
-      if(backward_strip) pixel_offset--;
-      else pixel_offset++;
+        if(color_index != 0) {
+          pixel_color = ColorFromPalette(sparkle_palette, color_index);
+        }
+        else { // mid color is top_most
+          color_index = mid_layer[ring_offset+ring][pixel];
+          if(color_index != 0) {
+            pixel_color = ColorFromPalette(mid_palette, color_index);
+
+            // blacken_ring beat effect
+            if (blacken_ring && (ring_offset + ring == blacken_ring_number)) {
+              pixel_color = CRGB::Black;
+            }
+
+            // blacken_node beat effect
+            if (blacken_node && (node_number == blacken_node_number)) {
+              pixel_color = CRGB::Black;
+            }
+            /*if(ring == 4 && pixel > 205 && pixel < 408) {
+              Serial.print("mid_layer[4][" + String(pixel) + "] = palette[" + String(mid_layer[ring][pixel]) + "] = (");
+              Serial.println(String(pixel_color.r) + "," + String(pixel_color.g) + "," + String(pixel_color.b) + ")");
+            }*/
+          }
+          else {
+            color_index = base_layer[ring_offset+ring][pixel];
+            pixel_color = ColorFromPalette(base_palette, color_index);
+          }  
+        }
+
+        leds[pixel_offset] = pixel_color;
+        if(backward_strip) pixel_offset--;
+        else pixel_offset++;
+      }
     }
   }
 }
