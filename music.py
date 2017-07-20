@@ -1,6 +1,5 @@
 import random
 from datetime import datetime, timedelta
-from brain import do_send
 import songs
 
 
@@ -15,7 +14,7 @@ def panel_touched():
 def status_update(message):
     print (message)
 
-
+"""
 # sends a control message to the mega
 class ControlMessage:
     def __init__(self, node=0, command=1, field2=0, channels=None):
@@ -26,40 +25,37 @@ class ControlMessage:
             self.channels = channels
         else:
             self.channels = [0] * 7
+"""
 
-    def send(self):
-        empty_msg = True
-        if self.command == 3:
-            empty_msg = False
-        for ch in self.channels:
+
+def send_music(node=0, command=1, field2=0, channels=None):
+    empty_msg = True
+    if command == 3:
+        empty_msg = False
+    if channels is not None:
+        for ch in channels:
             if ch > 0:
                 empty_msg = False
-        if empty_msg is False:
-            ctrl_msg = 'a' + ';'.join([str(self.node), str(self.command), str(self.field2),
-                                      ','.join(str(ch) for ch in self.channels)]) + ';'
-            print(ctrl_msg)
-            do_send(self.node, ctrl_msg)
-
-    def play(self, channels, node=0, looping=0):
-        self.node = node
-        self.command = 1
-        self.field2 = looping
-        self.channels = channels
-        self.send()
-
-    def set_volume(self, channels, fade_speed=2000, node=0):
-        self.node = node
-        self.command = 2
-        self.field2 = fade_speed
-        self.channels = channels
-        self.send()
-
-    def mute(self, node=0):
-        self.node = node
-        self.command = 3
-        self.send()
+    if empty_msg is False:
+        ctrl_msg = 'a' + ';'.join([str(node), str(command), str(field2),
+                                  ','.join(str(ch) for ch in channels)]) + ';'
+        print(ctrl_msg)
+        return (node, ctrl_msg)
+    return (None, None)
 
 
+def play(channels, node=0, looping=0):
+    return send_music(node, 1, looping, channels)
+
+
+def set_volume(channels, fade_speed=2000, node=0):
+    return send_music(node, 2, fade_speed, channels)
+
+
+def mute(node=0):
+    return send_music(node, 3)
+
+#Can only return one command per tick....need to update looping
 class Music:
     def __init__(self):
         self.played_low = -1
@@ -70,9 +66,8 @@ class Music:
     def tick(self):
         if self.played_low != datetime.today().weekday():  # Changes at midnight. This probably should be changed
             low = songs.find_low()
-            low_msg = ControlMessage()
-            low_msg.play([low], looping=1)
             self.played_low = datetime.today().weekday()
+            return play([low], looping=1)
 
         msg = [0] * 4
         if self.played_mid <= (datetime.now() - timedelta(minutes=1)):
@@ -90,8 +85,8 @@ class Music:
         if panel_touched():
             msg[3] = songs.find_high()
 
-        tick_msg = ControlMessage()
-        tick_msg.play(msg)
+        return play(msg)
+
 """
 music = Music()
 

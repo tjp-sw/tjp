@@ -72,8 +72,99 @@ void setup() {
   Serial.println("Ready");
 }
 
-void handle_command(String command) {
-    Serial.println(command);
+void handle_command(char command[]) {
+    // Serial.println(command);
+    for( unsigned int letter = 1; letter < sizeof(command)/sizeof(command[0]); a = a + 1 ) {
+        char inChar = command[letter];
+
+         if (inChar == '\n') {
+            msg_position = 0;
+            which_field=0;
+            ch_string = "";
+            input_string= "";
+            if ((ctrl_msg.node == node_number) || (ctrl_msg.node == 0)){
+              new_ctrl_msg = true;
+              if (DEBUG>1)
+                Serial.println("New Message");
+            } else {
+              ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
+            }
+            break;
+         } else if (inChar == ';') {
+            if (DEBUG>1) {
+              Serial.print("input_string=");
+              Serial.println(input_string);
+            }
+            switch (which_field) {
+              case 0 :
+                ctrl_msg.node= atoi(input_string.c_str());
+                if (DEBUG) {
+                  Serial.print("Node ");
+                  Serial.println(ctrl_msg.node);
+                }
+               break;
+
+              case 1 :
+                ctrl_msg.command= atoi(input_string.c_str());
+                if (DEBUG) {
+                  Serial.print("Command ");
+                  Serial.println(ctrl_msg.command);
+                }
+                break;
+
+              case 2 :
+                switch (ctrl_msg.command) {
+                  case SETAUDIO :
+                    ctrl_msg.bool_loop = (input_string.charAt(0) != '0');
+                    break;
+                  case SETVOL :
+                    ctrl_msg.fade_speed = atoi(input_string.c_str());
+                    break;
+                }
+                break;
+
+              case 3 :
+               for (int ch = 0; ch < 18; ch++) {
+                  do  {
+                    ch_string+= input_string[msg_position];
+                    msg_position++;
+                  } while ((msg_position < strlen(input_string.c_str())) && (input_string[msg_position] != ','));
+                  switch (ctrl_msg.command) {
+                    case SETAUDIO :
+                      ctrl_msg.channels[ch] = atoi(ch_string.c_str());
+                      ch_string= "";
+                      if (DEBUG) {
+                        Serial.print("channel ");
+                        Serial.print(ch);
+                        Serial.print(">");
+                        Serial.println(ctrl_msg.channels[ch]);
+                      }
+                      break;
+                    case SETVOL :
+                      ctrl_msg.gain[ch] = atoi(ch_string.c_str());
+                      ch_string= "";
+                      if (DEBUG) {
+                        Serial.print("volume ");
+                        Serial.print(ch);
+                        Serial.print(">");
+                        Serial.println(ctrl_msg.gain[ch]);
+                      }
+                      break;
+                  }
+                  ch_string = "";
+                  msg_position++;
+                  if (msg_position >= strlen(input_string.c_str())) {
+                    break;
+                  }
+                }
+                break;
+            }
+            input_string= "";
+            which_field++;
+         } else {
+          input_string+= inChar;
+     }
+  }
 }
 
 

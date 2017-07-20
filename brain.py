@@ -479,7 +479,9 @@ while running:
             last_show_change_sec = time.time()
             do_show(None, None)
 
-    tsunami.tick()
+        (node, tick)= tsunami.tick()
+        if tick is not None:
+           do_send(node, tick)
 
     except KeyboardInterrupt:
         running = False
