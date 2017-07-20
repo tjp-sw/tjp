@@ -235,6 +235,8 @@ void process_commands(const int source, String& input) {
     char command = input[0];
     switch (command) {
       #ifdef I_AM_MEGA
+      case 'a':
+        handle_commands(command);
       case 'b':
         size += AUDIO_PACKET_SIZE;
         if (input.length() >= size) {

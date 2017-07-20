@@ -70,7 +70,7 @@ class Music:
             return play([low], looping=1)
 
         msg = [0] * 4
-        if self.played_mid <= (datetime.now() - timedelta(minutes=1)):
+        if self.played_mid <= (datetime.now() - timedelta(seconds=30)):
             msg[1] = songs.find_mid()
             self.played_mid = datetime.now()
 
