@@ -1,12 +1,12 @@
 
-#ifdef DEBUG
+#ifdef DEBUG_TIMING
 // For debugging only, writes all saved variables
-void write_to_serial() {
+void write_timing_output() {
   int num_serial_vals = 0;
   
   #ifdef DEBUG_TIMING
     Serial.print("Timing:");
-    num_serial_vals = 4;
+    num_serial_vals = 9;
   #endif
   
   for(int i = 0; i < num_serial_vals; i++) {
@@ -19,54 +19,89 @@ void write_to_serial() {
     Serial.flush(); // Guarantees buffer will write if future code hangs
   }
 }
-
-// Used to verify multiple views of LEDs all reference the raw leds_raw[][] array correctly.
-void testLEDs() {
-  /*
-    CRGB leds_raw[NUM_RINGS][LEDS_PER_RING];
-    CRGBSet leds_all(*leds, NUM_LEDS);
-    CRGBSet leds_node(leds_raw[node_number * RINGS_PER_NODE], LEDS_PER_NODE);
-    CRGBSet* leds;
- */
-
-  Serial.println("Testing LEDs");
-
-  leds[NUM_RINGS-1](0, 10) = CRGB(1,2,3);
-  for(int i = 0; i <= 10; i++)
-    Serial.print(leds_raw[NUM_RINGS-1][i] == CRGB(1,2,3) ? "Match1, " : "oops1, ");
-  Serial.println();
-
-  leds_all(LEDS_PER_RING, LEDS_PER_RING+10) = CRGB(4,5,6);
-  for(int i = 0; i <= 10; i++)
-    Serial.print(leds_raw[1][i] == CRGB(4,5,6) ? "Match2, " : "oops2, ");    
-  Serial.println();
-
-  leds_node[2](0, 10) = CRGB(7,8,9);
-  for(int i = 0; i <= 10; i++)
-    Serial.print(leds_raw[node_number*RINGS_PER_NODE+2][i] == CRGB(7,8,9) ? "Match3, " : "oops3, ");
-  Serial.println();
-
-  leds_node_all(3*LEDS_PER_RING, 3*LEDS_PER_RING+10) = CRGB(2,3,4);
-  for(int i = 0; i <= 10; i++)
-    Serial.print(leds_raw[node_number*RINGS_PER_NODE+3][i] == CRGB(2,3,4) ? "Match4, " : "oops4, ");
-  Serial.println();
-
-  Serial.flush();
-}
 #endif
 
-void draw_debug_mode() {
-  uint8_t spacing = node_number+1; // Spacing tells us which node the Due thinks it is
-  uint8_t offset = loop_count % spacing; // Movement
+// To help with plugging in strips and troubleshooting. This does not use layers or palettes.
+// Scrolls blocks of pixels around each ring. Rings will be colored RGBWRGBW...
+// Number of lit pixels signals which strand it is for the current node
+// Number of empty pixels singals which node number it is
+void draw_debug_mode() {  
+  uint8_t ringOffset, unlitPixels, throttle;
+  
+  if(node_number < NUM_NODES) {
+    // Node number has been assigned
+    ringOffset = node_number*RINGS_PER_NODE;
+    unlitPixels = 1 + node_number;
+    throttle = 8;
+  }
+  else {
+    // Node number has NOT been assigned
+    ringOffset = 0;
+    unlitPixels = 8;
+    throttle = 16;
+  }
 
-  leds_node_all = CRGB::Black;
-  for(uint8_t i = 0; i < RINGS_PER_NODE; i+=4) {
-    for(uint16_t j = 0; j + offset < VISIBLE_LEDS_PER_RING; j+=spacing) {
-      leds_node[i][j+offset] = CRGB::Red;
-      leds_node[i+1][j+offset] = CRGB::Green;
-      leds_node[i+2][j+offset] = CRGB::Blue;
-      leds_node[i+3][j+offset] = CRGB(120, 120, 120);
+  // Clear all LEDs
+  leds_all = CRGB::Black;
+
+  
+  for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++)
+  {
+    // Pick color based on ring
+    uint8_t temp = (ring + ringOffset) % 4;
+    CRGB ringColor = temp == 0 ? CRGB::Red : temp == 1 ? CRGB::Green : temp == 2 ? CRGB::Blue : CRGB::White;
+
+    
+    // Determine strand number and number of pixels to light up
+    uint8_t strand;
+    if(ring < RINGS_PER_NODE/2) {
+      strand = ring % 2;
+    }
+    else {
+      strand = 2 + (ring % 2);
+    }
+    
+    uint8_t litPixels = 1 + strand;
+
+
+    // Determine period of the repeating pattern and get an extended LED count that is a multiple of the period
+    uint8_t period = litPixels + unlitPixels;
+    uint16_t extended_led_count = ((LEDS_PER_RING-1)/period+1)*period;
+
+    // Loop over extended LED count, but don't write the ones that are outside the range of the physical LEDs
+    for(uint16_t curPixel = 0; curPixel < extended_led_count; curPixel++) {
+      uint16_t idx = (curPixel + loop_count/throttle) % extended_led_count; // Add scrolling based off loop_count
+      if(idx >= LEDS_PER_RING) continue;
+
+      if(curPixel % period < litPixels) { // This line references curPixel since we are talking about the pattern
+        leds[get_1d_index(ring, idx)] = ringColor; // This line references idx since we are talking about where the pattern gets written
+        //Serial.println(String(ring) + ", " + String(idx));
+      }
     }
   }
+}
+
+void test_strands() {
+  const uint16_t delay_inc = 500;
+  static uint16_t delay_factor = 0;
+  for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+    if(ring == (loop_count % RINGS_PER_NODE)) {
+      if(ring == 0) {
+        delay_factor++;
+        Serial.println("delay(" + String(delay_inc * delay_factor) + ")");
+      }
+      for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+        leds[get_1d_index(ring, pixel)] = CRGB::White;//CRGB(128,128,128);
+      }
+    }
+    else {
+      for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+        leds[get_1d_index(ring, pixel)] = CRGB::Black;
+      }
+    }
+  }
+  
+  LEDS.show();
+  delay(delay_inc * delay_factor);
 }
 
