@@ -236,7 +236,25 @@ void process_commands(const int source, String& input) {
     switch (command) {
       #ifdef I_AM_MEGA
       case 'a':
-        handle_commands(command);
+        size += 1;  // unsigned 8-bit integer
+        if (input.length() >= size) {
+            size += input[1];
+            if (input.length() >= size) {
+                // Tsunami.write(input.substring(2, size))
+            }
+            else {
+              #ifdef DEBUG
+                print_status("insufficient audio data");
+              #endif
+            }
+        }
+        else {
+          #ifdef DEBUG
+            print_status("insufficient audio data");
+          #endif
+        }
+        break;
+
       case 'b':
         size += AUDIO_PACKET_SIZE;
         if (input.length() >= size) {

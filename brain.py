@@ -479,9 +479,12 @@ while running:
             last_show_change_sec = time.time()
             do_show(None, None)
 
-        (node, tick)= tsunami.tick()
-        if tick is not None:
-           do_send(node, tick)
+        (node, audio_msg)= tsunami.tick()
+        if audio_msg is not None:
+            if audio_msg[0:1] == 'a':
+                # hope the length is less than 256
+                audio_msg = struct.pack('>cB', audio_msg[0:1], len(audio_msg[1:])) + audio_msg[1:]
+            do_send(None, audio_msg)	# always send to all nodes
 
     except KeyboardInterrupt:
         running = False

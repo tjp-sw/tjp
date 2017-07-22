@@ -47,8 +47,18 @@ def process_commands():
                 print 'command', command, 'needs', size, 'bytes but only', len(network_data), 'available'
                 break
         elif command == 'a':
-            print network_data
-            break
+            size += 1	# unsigned 8-bit integer
+
+            if len(network_data) >= size:
+                size += struct.unpack_from('>B', network_data, 1)[0]
+                if len(network_data) >= size:
+                    print 'mega', mega_number, 'audio', repr(network_data[2:size])
+                else:
+                    print 'command', command, 'needs', size, 'bytes but only', len(network_data), 'available'
+                    break
+            else:
+                print 'command', command, 'needs', size, 'bytes but only', len(network_data), 'available'
+                break
         elif command == 'r':
             global remote
 
