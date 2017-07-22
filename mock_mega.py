@@ -46,6 +46,9 @@ def process_commands():
             else:
                 print 'command', command, 'needs', size, 'bytes but only', len(network_data), 'available'
                 break
+        elif command == 'a':
+            print network_data
+            break
         elif command == 'r':
             global remote
 

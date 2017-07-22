@@ -1,49 +1,54 @@
-void overlay() {
+// Converts 0:255 parameters into the minVal:maxVal expected range
+uint8_t scale_param(uint8_t param, uint8_t minVal, uint8_t maxVal) {
+  uint8_t range = maxVal - minVal + 1;
+  //Serial.println("signed " + String(param) + " from " + String(minVal) + ":" + String(maxVal) + " = " + String(minVal + param * range / 256));
+  return minVal + param * range / 256;
+}
 
-  // copy mid layer on top of existing background layer
-//  for  (int ring = 0; ring < RINGS_PER_NODE; ring++) {
-//    for (int pixel = 0; pixel < VISIBLE_LEDS_PER_RING; pixel++) {
-//      if (mid_is_set[ring][pixel]) {
-//        leds[ring][pixel] = mid[ring][pixel];
-//      }
-//    }
-//  }
+// Converts -128:127 parameters into the minVal:maxVal expected range
+int8_t scale_param(int8_t param, int8_t minVal, int8_t maxVal) {
+  uint8_t range = maxVal - minVal + 1;
+  //Serial.println("signed " + String(param) + " from " + String(minVal) + ":" + String(maxVal) + " = " + String(minVal + param * range / 256 + range/2));
+  return minVal + param * range / 256 + range/2;
+}
 
+
+// Takes a ring 0:11, pixel 0:407, returns 1d offset into leds[]. Not to be used when drawing layers.
+uint16_t get_1d_index(uint8_t ring, uint16_t pixel) {
+  #ifdef DEBUG
+    if(ring >= RINGS_PER_NODE) Serial.println("Error in get_1d_index(" + String(ring) + ", " + String(pixel) + "). Ring out of range.");
+    if(pixel >= LEDS_PER_RING) Serial.println("Error in get_1d_index(" + String(ring) + ", " + String(pixel) + "). Pixel out of range.");
+  #endif
   
-  // copy sparkle layer on top of existing led layer
-  for  (int ring = 0; ring < 4; ring++) {
-    for (int pixel = 0; pixel < 408; pixel++) {
-      if (sparkle_is_set[ring][pixel]) {
-        //fixme: changed from leds_node 
-        leds[ring][pixel] = sparkle[ring][pixel];
-      }
+  bool backward_strip = ring < RINGS_PER_NODE/2;
+  uint8_t strip = ring % 2 + (backward_strip ? 0 : 2);
+  
+  uint16_t pixel_offset = LEDS_PER_STRIP * strip;
+  if(backward_strip) {
+    return pixel_offset + LEDS_PER_STRIP - 1 - PHYSICAL_LEDS_PER_RING*(ring/2) - pixel;
+  }
+  else {
+    return pixel_offset + 1 + PHYSICAL_LEDS_PER_RING*((ring - RINGS_PER_NODE/2)/2) + pixel;
+  }
+}
+
+
+// Rotates all rings, directly accessing the leds[] array; USES >1200 BYTES OF RAM :o!!!
+void rotate_leds(uint8_t flat_offset, uint8_t increment_per_ring, boolean clockwise) {
+  CRGB orig[LEDS_PER_RING];
+  for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+    memcpy(orig, &leds[get_1d_index(ring, 0)], LEDS_PER_RING);
+
+    uint16_t offset = increment_per_ring * (node_number*RINGS_PER_NODE + ring) + flat_offset;
+    offset %= LEDS_PER_RING;
+    if(clockwise) { offset = LEDS_PER_RING - offset; }
+    
+    uint16_t target_pixel = offset;
+    for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+      leds[get_1d_index(ring, target_pixel)] = orig[pixel];
+      if(++target_pixel == LEDS_PER_RING) { target_pixel = 0; }
     }
   }
 }
 
-
-//  palette_num from 0 to 2 indicates which of the 3 palettes we're going to use for this animation
-//  color_index from 0 to 6 indicates which of the 7 colors in that palette to use
-CRGB get_color(int palette_num, int color_index) {
-
-  switch (palette_num)  {   
-  case 0:
-    return icy_bright[color_index];
-
-  case 1:
-    return watermelon[color_index];
-
-  case 2:
-    return fruit_loop[color_index];
-  }
-}
-
-// rgb2hsv() is slow, if we start using HSV colors more we should switch to HSVs in the palettes
-CHSV get_color_hsv(int palette_num, int color_index) {
-  return rgb2hsv_approximate(get_color(palette_num, color_index));
-}
-
-CRGB get_random_palette_color() {
-  return get_color(show_parameters[PALETTE_INDEX], random8(0, 7));
-}
 

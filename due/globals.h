@@ -94,21 +94,21 @@ CRGB* initial_palette = fruit_loop;                                 //
 #define BASE_ANIMATION_INDEX 0              // which base animation to play                       //
 #define BASE_COLOR_THICKNESS_INDEX 1        // how many consecutive lit LEDs in a row             //
 #define BASE_BLACK_THICKNESS_INDEX 2        // how many dark LEDs between lit ones                //
-#define BASE_INTRA_RING_MOTION_INDEX 3      // CW, NONE, CW, ALTERNATE, SPLIT                     //
-#define BASE_INTRA_RING_SPEED_INDEX 4       // Number of pixels to move per 16 cycles             //
-#define BASE_INTER_RING_MOTION_INDEX 5      // CCW, NONE, CW,                                     //
-#define BASE_INTER_RING_SPEED_INDEX 6       // Number of pixels to move per 16 cycles             //
-#define BASE_RING_OFFSET_INDEX 7            // rotation of pattern from neighbor                  //
+#define BASE_RING_OFFSET_INDEX 3            // rotation of pattern from neighbor                  //
+#define BASE_INTRA_RING_MOTION_INDEX 4      // CW, NONE, CW, ALTERNATE, SPLIT                     //
+#define BASE_INTRA_RING_SPEED_INDEX 5       // Number of pixels to move per 16 cycles             //
+#define BASE_INTER_RING_MOTION_INDEX 6      // CCW, NONE, CW,                                     //
+#define BASE_INTER_RING_SPEED_INDEX 7       // Number of pixels to move per 16 cycles             //
 
 #define MID_ANIMATION_INDEX 8               // which mid animation to play                        //
 #define MID_NUM_COLORS_INDEX 9              // how many colors to use out of this palette         //
 #define MID_COLOR_THICKNESS_INDEX 10        // how many consecutive lit LEDs in a row             //
 #define MID_BLACK_THICKNESS_INDEX 11        // how many dark LEDs between lit ones                //
-#define MID_INTRA_RING_MOTION_INDEX 12      // CW, NONE, CW, ALTERNATE, SPLIT                     //
-#define MID_INTRA_RING_SPEED_INDEX 13       // Number of pixels to move per 16 cycles             //
-#define MID_INTER_RING_MOTION_INDEX 14      // CCW, NONE, CW,                                     //
-#define MID_INTER_RING_SPEED_INDEX 15       // Number of pixels to move per 16 cycles             //
-#define MID_RING_OFFSET_INDEX 16            // rotation of pattern from neighbor                  //
+#define MID_RING_OFFSET_INDEX 12            // rotation of pattern from neighbor                  //
+#define MID_INTRA_RING_MOTION_INDEX 13      // CW, NONE, CW, ALTERNATE, SPLIT                     //
+#define MID_INTRA_RING_SPEED_INDEX 14       // Number of pixels to move per 16 cycles             //
+#define MID_INTER_RING_MOTION_INDEX 15      // CCW, NONE, CW,                                     //
+#define MID_INTER_RING_SPEED_INDEX 16       // Number of pixels to move per 16 cycles             //
 
 #define SPARKLE_ANIMATION_INDEX 17          // which sparkle animation to play                    //
 #define SPARKLE_PORTION_INDEX 18            // percentage of LEDs that will be lit at once        //
@@ -167,6 +167,17 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
                                                                                                   //
 // Beat effect modes                                                                              //
 #define COLOR_SWAP 1                                                                              //
+#define ALTERNATE_COLOR_THICKNESS 2
+#define ALTERNATE_BLACK_THICKNESS 3
+#define JERKY_MOTION 4
+#define BLACKEN_NODE 5
+#define BLACKEN_RING 6
+uint8_t beat_proximity = 50; // not near beat
+boolean odd_beat = true;
+boolean blacken_ring = false;
+uint8_t blacken_ring_number = 0;
+boolean blacken_node = false;
+uint8_t blacken_node_number = 0;
                                                                                                   //
                                                                                                   //
 // Animation constants and parameters                                                             //
@@ -178,10 +189,11 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
 #define NONE 0        // For BASE & MID INTRA_RING_MOTION                                         //
 #define CW 1          // For BASE & MID INTRA_RING_MOTION                                         //
 #define CCW -1        // For INTRA_RING_MOTION                                                    //
-#define SPLIT 2       // For INTRA_RING_MOTION                                                    //
+#define ALTERNATE 2   // For INTRA_RING_MOTION                                                    //
+#define SPLIT 3       // For INTRA_RING_MOTION                                                    //
                                                                                                   //
-#define DOWN 1      // For SPARKLE_INTRA_RING_MOTION                                          //
-#define UP -1       // For SPARKLE_INTRA_RING_MOTION                                          //
+#define DOWN 1      // For SPARKLE_INTRA_RING_MOTION                                              //
+#define UP -1       // For SPARKLE_INTRA_RING_MOTION                                              //
                                                                                                   //
 #define ALL_RINGS 0                                                                               //
 #define ODD_RINGS 1                                                                               //
@@ -274,4 +286,8 @@ bool is_beat = false; // This can be inferred from downbeat_proximity         //
 uint8_t downbeat_proximity = 0; // Up and down from 0-255 with the beat       //
 uint8_t band_distribution[NUM_BANDS]; // bass=0, mid=1, treble=2; sums to 255 //
 //----------------------------------------------------------------------------//
+
+// Diane's sparkle globals - if this gets to be too much I'll try to figure out a way to be more space efficient
+uint8_t current_ring;
+uint8_t current_pixel;
 

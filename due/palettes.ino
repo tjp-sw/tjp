@@ -217,7 +217,7 @@ bool blend_sparkle_palette(uint8_t max_changes) {
   return current_palette[5] != target_palette[5] || current_palette[6] != target_palette[6];
 }
 
-bool blend_palette(uint8_t iMin, uint8_t iMax, uint8_t max_changes) {
+void blend_palette(uint8_t iMin, uint8_t iMax, uint8_t max_changes) {
     uint8_t* p1;
   uint8_t* p2;
   uint8_t changes = 0;
