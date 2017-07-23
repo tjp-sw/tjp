@@ -268,6 +268,40 @@ def edm_program(init=False):
 
         print "palette changed ", show_colors
 
+# ------------ playa_program() --------------------------------------------------------
+# a partially scripted program for Burning Man 2017
+
+burning_man_begins = time.mktime(time.strptime('2017-Aug-27 00:00', '%Y-%b-%d %H:%M'))
+sunrise_time = [1503839940, 1503926400, 1504012860, 1504099320, 1504185780,
+                1504272240, 1504358700, 1504445160, 1504531620]
+sunset_time  = [1503887940, 1503974220, 1504060500, 1504146840, 1504233120,
+                1504319460, 1504405740, 1504492020, 1504578360]
+
+show_start_time = -1.0
+def playa_program(init=False):
+    global show_start_time, virtual_time
+
+    if init:
+        if show_start_time < 0:
+            show_start_time = int(time.time())
+            if show_start_time > burning_man_begins:
+                show_start_time = burning_man_begins
+            edm_program(init)	# good enough for now
+            virtual_time = burning_man_begins
+        return
+
+    if show_start_time != burning_man_begins:
+        if time.time() >= burning_man_begins:
+            # Burning Man has just begun!
+            show_start_time = burning_man_begins
+            virtual_time = time.time()
+        else:
+            virtual_time += 60 * 24	# advance by one day every minute
+    else:
+        virtual_time = time.time()	# keep it real
+
+    print 'playa time advanced to', time.ctime(virtual_time)
+
 def do_show(cmd, param):
     global last_show_change_sec, show_colors, show_parameters
     if param:
@@ -321,6 +355,7 @@ control_messages = {
     'list':		(do_list, None, None),
     'node':		(do_simple, None, None),
     'pause':		(do_auto, None, None),
+    'playa':		(do_auto, None, playa_program),
     'quit':		(do_quit, None, None),
     'reconnect':	(do_simple, None, None),
     'send':		(do_send, None, None),
