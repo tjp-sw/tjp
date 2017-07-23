@@ -33,9 +33,6 @@ BACKGROUND_INDEX = 0
 MIDLAYER_INDEX = 8
 SPARKLE_INDEX = 17
 
-# show_bounds = [[0 for i in range(0, 3)] for j in range(0,NUM_PARAMETERS)]
-# lower = [0] * NUM_PARAMETERS
-# upper = [0] * NUM_PARAMETERS
 show_bounds = [  # order must match show_parameters
         # [min, max]
         # show bounds 0 through 7 concern base animations
@@ -143,7 +140,6 @@ def do_auto(ignored, neglected):
 # ------------------------------------------------- edm_program() -----------------------------------------------
 # show for when the journey is installed at an event with electronic dance music only
 # parameters are somewhat randomly chosen; this will change at bm when params will be determined by sound
-# def edm_program():
 
 def constrained_random_parameter(i):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
@@ -160,13 +156,7 @@ def constrain_show():
     if show_parameters[BACKGROUND_INDEX] == 0 and show_parameters[MIDLAYER_INDEX] == 0 and show_parameters[SPARKLE_INDEX] == 0:
         show_parameters[BACKGROUND_INDEX] = 1	# never black
 
-bg_start_time = time.time()
-bg_parameter_start_time = time.time()
-mid_start_time = time.time()
-mid_parameter_start_time = time.time()
-sparkle_start_time = time.time()
-sparkle_parameter_start_time = time.time()
-palette_start_time = time.time()
+bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
 
 show_parameters = [0] * NUM_PARAMETERS
 show_colors = [[0 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALETTE)]
@@ -193,22 +183,11 @@ show_colors[5] = palette[show_parameters[29]][sp_order[0]]
 show_colors[6] = palette[show_parameters[29]][sp_order[1]]
 print "initial show colors" , show_colors
 
-# fixme: Jeff: here's where parameters -> due is called
-# send_due_parameters()
-
 def edm_program():
     global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
     global show_parameters, show_colors
-#    while True:  # run forever until show is taken down
 
-    current_time = time.time()
-    bg_time = time.time()
-    bg_parameter_time = time.time()
-    mid_time = time.time()
-    mid_parameter_time = time.time()
-    sparkle_time = time.time()
-    sparkle_parameter_time = time.time()
-    palette_time = time.time()
+    bg_time = bg_parameter_time = mid_time = mid_parameter_time = sparkle_time = sparkle_parameter_time = palette_time = time.time()
 
     # to avoid hard transitions, change disruptive base animation parameters only when you change background choice
     if bg_time - bg_start_time > BASE_TIME_LIMIT:
@@ -282,12 +261,6 @@ def edm_program():
         show_colors[6] = palette[show_parameters[29]][sp_order[1]]
 
         print "palette changed ", show_colors
-
-    # fixme: Jeff: here's where parameters -> due is called
-#    send_due_parameters()
-
-    #time.sleep(3)
-    current_time = time.time()
 
 def do_show(cmd, param):
     global last_show_change_sec, show_colors, show_parameters
