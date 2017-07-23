@@ -91,6 +91,14 @@ mega_to_node_map = {
     7: 3,
     }
 
+NUM_ANIMATIONS = 9	# animation programs are numbered 0 through 8
+TIME_LIMIT = 5		# number of seconds between animation changes
+auto_show = None
+last_show_change_sec = 0.0
+
+show_parameters = [0] * NUM_PARAMETERS
+show_colors = [[333 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALETTE)]	# invalid values
+
 # close all TCP connections and continue to run
 def do_disconnect(ignored, neglected):
     global listener, sources #, writable, oops
@@ -127,19 +135,12 @@ def do_send(socket, message):
         if s not in writing:
             writing.append(s)
 
-NUM_ANIMATIONS = 9	# animation programs are numbered 0 through 8
-TIME_LIMIT = 5		# number of seconds between animation changes
-auto_show_change = False
-last_show_change_sec = 0.0
-
-def do_auto(ignored, neglected):
-    global auto_show_change, last_show_change_sec
-    auto_show_change = not auto_show_change
-    last_show_change_sec = time.time()
-
-# ------------------------------------------------- edm_program() -----------------------------------------------
-# show for when the journey is installed at an event with electronic dance music only
-# parameters are somewhat randomly chosen; this will change at bm when params will be determined by sound
+def do_auto(ignored, show_name):
+    global auto_show, last_show_change_sec
+    auto_show = show_name
+    if auto_show:
+        auto_show(True)
+        last_show_change_sec = time.time()
 
 def constrained_random_parameter(i):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
@@ -156,36 +157,41 @@ def constrain_show():
     if show_parameters[BACKGROUND_INDEX] == 0 and show_parameters[MIDLAYER_INDEX] == 0 and show_parameters[SPARKLE_INDEX] == 0:
         show_parameters[BACKGROUND_INDEX] = 1	# never black
 
-bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
+# ------------------------------------------------- edm_program() -----------------------------------------------
+# show for when the journey is installed at an event with electronic dance music only
+# parameters are somewhat randomly chosen
 
-show_parameters = [0] * NUM_PARAMETERS
-show_colors = [[0 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALETTE)]
-
-# choose random starting values for each of the parameters
-for i in range(0, NUM_PARAMETERS):
-    show_parameters[i] = constrained_random_parameter(i)
-constrain_show()
-print "initial show parameters ", show_parameters
-
-# choose which colors out of the chosen palette to use
-#shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
-bg_order = sample(range(0,2), 2)
-mid_order = sample(range(2,5), 3)
-sp_order = sample(range(5,7), 2)
-
-# palette[show_parameters[29]] is currently chosen palette
-show_colors[0] = palette[show_parameters[29]][bg_order[0]]
-show_colors[1] = palette[show_parameters[29]][bg_order[1]]
-show_colors[2] = palette[show_parameters[29]][mid_order[0]]
-show_colors[3] = palette[show_parameters[29]][mid_order[1]]
-show_colors[4] = palette[show_parameters[29]][mid_order[2]]
-show_colors[5] = palette[show_parameters[29]][sp_order[0]]
-show_colors[6] = palette[show_parameters[29]][sp_order[1]]
-print "initial show colors" , show_colors
-
-def edm_program():
+def edm_program(init=False):
     global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
     global show_parameters, show_colors
+
+    if init:
+        if show_colors[0] == [333,333,333]:	# invalid values before initialization
+            bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
+
+            # choose random starting values for each of the parameters
+            for i in range(0, NUM_PARAMETERS):
+                show_parameters[i] = constrained_random_parameter(i)
+            constrain_show()
+
+            # choose which colors out of the chosen palette to use
+            #shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
+            bg_order = sample(range(0,2), 2)
+            mid_order = sample(range(2,5), 3)
+            sp_order = sample(range(5,7), 2)
+
+            # palette[show_parameters[29]] is currently chosen palette
+            show_colors[0] = palette[show_parameters[29]][bg_order[0]]
+            show_colors[1] = palette[show_parameters[29]][bg_order[1]]
+            show_colors[2] = palette[show_parameters[29]][mid_order[0]]
+            show_colors[3] = palette[show_parameters[29]][mid_order[1]]
+            show_colors[4] = palette[show_parameters[29]][mid_order[2]]
+            show_colors[5] = palette[show_parameters[29]][sp_order[0]]
+            show_colors[6] = palette[show_parameters[29]][sp_order[1]]
+
+        print "initial show parameters ", show_parameters
+        print "initial show colors" , show_colors
+        return
 
     bg_time = bg_parameter_time = mid_time = mid_parameter_time = sparkle_time = sparkle_parameter_time = palette_time = time.time()
 
@@ -309,11 +315,12 @@ control_messages = {
 #    'AllLEDoff':	(do_simple, 'program', '0'),
 #    'CheckHandStat':	do_unimplemented,
 #    'CheckAudioIn':	do_unimplemented,
-    'auto':		(do_auto, None, None),
     'disconnect':	(do_disconnect, None, None),
+    'edm':		(do_auto, None, edm_program),
     'led':		(do_simple, 'program', None),
     'list':		(do_list, None, None),
     'node':		(do_simple, None, None),
+    'pause':		(do_auto, None, None),
     'quit':		(do_quit, None, None),
     'reconnect':	(do_simple, None, None),
     'send':		(do_send, None, None),
@@ -350,7 +357,7 @@ def disconnect(socket, msg):
 
 do_list(None, None)
 print sorted(control_messages.keys())
-tsunami= music.Music()
+tsunami = music.Music()
 running = True
 while running:
     try:
@@ -358,7 +365,7 @@ while running:
             timeout = None	# wait indefinitely when there are no remotes
         else:
             timeout = next_timesync_sec - time.time()
-            if auto_show_change:
+            if auto_show:
                 show_timeout = last_show_change_sec + TIME_LIMIT - time.time()
                 if show_timeout < timeout:
                     timeout = show_timeout
@@ -447,12 +454,12 @@ while running:
         if time.time() > next_timesync_sec:
             do_time('time', None)
 
-        if auto_show_change and time.time() > last_show_change_sec + TIME_LIMIT:
-            edm_program()
+        if auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
+            auto_show()
             last_show_change_sec = time.time()
             do_show(None, None)
 
-        (node, audio_msg)= tsunami.tick()
+        (node, audio_msg) = tsunami.tick()
         if audio_msg is not None:
             if audio_msg[0:1] == 'a':
                 # hope the length is less than 256
