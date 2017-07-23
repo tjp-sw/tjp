@@ -271,36 +271,57 @@ def edm_program(init=False):
 # ------------ playa_program() --------------------------------------------------------
 # a partially scripted program for Burning Man 2017
 
-burning_man_begins = time.mktime(time.strptime('2017-Aug-27 00:00', '%Y-%b-%d %H:%M'))
+TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
+MEDITATION_MINUTES = 20
+BURNING_MAN_START = time.mktime(time.strptime('2017-Aug-28 00:00', '%Y-%b-%d %H:%M'))
+BURNING_MAN_END   = time.mktime(time.strptime('2017-Sep-04 00:00', '%Y-%b-%d %H:%M'))
+NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
 sunrise_time = [1503839940, 1503926400, 1504012860, 1504099320, 1504185780,
                 1504272240, 1504358700, 1504445160, 1504531620]
 sunset_time  = [1503887940, 1503974220, 1504060500, 1504146840, 1504233120,
                 1504319460, 1504405740, 1504492020, 1504578360]
 
-show_start_time = -1.0
+real_start_time = -1.0
 def playa_program(init=False):
-    global show_start_time, virtual_time
+    global real_start_time, virtual_time, meditation_sec, time_compression_factor
 
+    real_time = time.time()
     if init:
-        if show_start_time < 0:
-            show_start_time = int(time.time())
-            if show_start_time > burning_man_begins:
-                show_start_time = burning_man_begins
+        if real_start_time < 0:
+            time_compression_factor = float(NUM_DAYS * 60 * 24) / TEST_CYCLE_MINUTES	# 60*24 == minutes per day
+            meditation_sec = int(MEDITATION_MINUTES * 60 * time_compression_factor / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
+            real_start_time = real_time
             edm_program(init)	# good enough for now
-            virtual_time = burning_man_begins
         return
 
-    if show_start_time != burning_man_begins:
-        if time.time() >= burning_man_begins:
-            # Burning Man has just begun!
-            show_start_time = burning_man_begins
-            virtual_time = time.time()
-        else:
-            virtual_time += 60 * 24	# advance by one day every minute
+    if real_start_time == BURNING_MAN_START:
+        virtual_time = real_time	# this is the live show at Burning Man
     else:
-        virtual_time = time.time()	# keep it real
+        if BURNING_MAN_START <= real_time and real_time < BURNING_MAN_END:
+            time_compression_factor = 1.0
+            meditation_sec = MEDITATION_MINUTES * 60
+            print 'Welcome home!'	# Burning Man has just begun!
+            real_start_time = BURNING_MAN_START
+            virtual_time = real_time
+        else:
+            virtual_time = BURNING_MAN_START + (real_time - real_start_time) * time_compression_factor
+    bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
+    meditating = None
+    for meditation_start in sunrise_time:
+        meditation_end = meditation_start + meditation_sec
+        if meditation_start <= virtual_time and virtual_time < meditation_end:
+            meditating = 'sunrise'
+            break
+    if meditating == None:
+        for meditation_start in sunset_time:
+            meditation_end = meditation_start + meditation_sec
+            if meditation_start <= virtual_time and virtual_time < meditation_end:
+                meditating = 'sunset'
+                break
 
-    print 'playa time advanced to', time.ctime(virtual_time)
+    print 'playa time advanced to', time.ctime(virtual_time), 'on day', bm_day_index
+    if meditating:
+        print meditating, 'meditation'
 
 def do_show(cmd, param):
     global last_show_change_sec, show_colors, show_parameters
