@@ -256,7 +256,7 @@ void process_commands(const int source, String& input) {
         break;
 
       case 'b':
-        size += AUDIO_PACKET_SIZE;
+        size += 54;
         if (input.length() >= size) {
           // pass the beat message through in both directions
           if (source == mate && remote.connected()) {
@@ -274,9 +274,11 @@ void process_commands(const int source, String& input) {
         break;
 
       case 'd':
+      {
         const uint8_t node_message[2] = { 'n', node_number };
         NodeMate.write(node_message, 2);
         break;
+      }
 
       case 'r':
         #ifdef DEBUG
