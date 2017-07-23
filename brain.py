@@ -276,14 +276,44 @@ MEDITATION_MINUTES = 20
 BURNING_MAN_START = time.mktime(time.strptime('2017-Aug-28 00:00', '%Y-%b-%d %H:%M'))
 BURNING_MAN_END   = time.mktime(time.strptime('2017-Sep-04 00:00', '%Y-%b-%d %H:%M'))
 NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
-sunrise_time = [1503839940, 1503926400, 1504012860, 1504099320, 1504185780,
-                1504272240, 1504358700, 1504445160, 1504531620]
-sunset_time  = [1503887940, 1503974220, 1504060500, 1504146840, 1504233120,
-                1504319460, 1504405740, 1504492020, 1504578360]
+
+daynight = None
+def major_playa_mode(when):
+    global daynight
+
+    sunrise_time = [1503839940, 1503926400, 1504012860, 1504099320, 1504185780,
+                    1504272240, 1504358700, 1504445160, 1504531620]
+    sunset_time  = [1503887940, 1503974220, 1504060500, 1504146840, 1504233120,
+                    1504319460, 1504405740, 1504492020, 1504578360]
+
+    meditation = None
+    if sunrise_time[0] <= when and when < sunset_time[len(sunset_time)-1] + meditation_sec:
+        for meditation_start in sunrise_time:
+            meditation_end = meditation_start + meditation_sec
+            if meditation_start <= when and when < meditation_end:
+                meditation = 'sunrise'
+                daynight = 'daytime'
+                break
+        if meditation == None:
+            for meditation_start in sunset_time:
+                meditation_end = meditation_start + meditation_sec
+                if meditation_start <= when and when < meditation_end:
+                    meditation = 'sunset'
+                    daynight = 'nighttime'
+                    break
+    else:
+        daynight = None
+    if meditation == None and daynight == None:	# pretend that daytime is between 6 AM and 6 PM
+        hour = int(time.strftime('%-H', time.localtime(when)))
+        if (6 <= hour and hour < 18):
+            daynight = 'daytime'
+        else:
+            daynight = 'nighttime'
+    return meditation or daynight	# meditation has precedence
 
 real_start_time = -1.0
 def playa_program(init=False):
-    global real_start_time, virtual_time, meditation_sec, time_compression_factor
+    global real_start_time, meditation_sec, time_compression_factor
 
     real_time = time.time()
     if init:
@@ -306,22 +336,9 @@ def playa_program(init=False):
         else:
             virtual_time = BURNING_MAN_START + (real_time - real_start_time) * time_compression_factor
     bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
-    meditating = None
-    for meditation_start in sunrise_time:
-        meditation_end = meditation_start + meditation_sec
-        if meditation_start <= virtual_time and virtual_time < meditation_end:
-            meditating = 'sunrise'
-            break
-    if meditating == None:
-        for meditation_start in sunset_time:
-            meditation_end = meditation_start + meditation_sec
-            if meditation_start <= virtual_time and virtual_time < meditation_end:
-                meditating = 'sunset'
-                break
+    mode = major_playa_mode(virtual_time)
 
-    print 'playa time advanced to', time.ctime(virtual_time), 'on day', bm_day_index
-    if meditating:
-        print meditating, 'meditation'
+    print 'playa time advanced to', time.ctime(virtual_time), 'on day', bm_day_index, 'in', mode
 
 def do_show(cmd, param):
     global last_show_change_sec, show_colors, show_parameters
