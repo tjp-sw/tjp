@@ -19,7 +19,6 @@ NUM_SPARKLE_ANIMATIONS = 2
 NUM_BEAT_EFFECTS = 1
 NUM_PARAMETERS = 30
 NUM_COLORS_PER_PALETTE = 7
-NUM_COLOR_PALETTES = 4
 
 BASE_TIME_LIMIT = 31
 BASE_PARAMETER_TIME_LIMIT = 19
@@ -33,9 +32,14 @@ BACKGROUND_INDEX = 0
 MIDLAYER_INDEX = 8
 SPARKLE_INDEX = 17
 
-# show_bounds = [[0 for i in range(0, 3)] for j in range(0,NUM_PARAMETERS)]
-# lower = [0] * NUM_PARAMETERS
-# upper = [0] * NUM_PARAMETERS
+# Pre-defined color palettes
+fruit_loop = [[25,0,25], [25,15,0], [180,10,70], [140,60,180], [180,60,60], [255,255,120], [255,100,180]]
+icy_bright = [[37,28,60], [70,0,28], [255,108,189], [0,172,238], [44,133,215], [255,255,255], [254,207,24]]
+watermelon = [[40,29,35], [5,45,15], [47,140,9], [72,160,5], [148,33,137], [47,192,91], [70,190,91]]
+pride = [[255, 0, 0], [255, 127, 0], [255, 255, 0], [0, 255, 0], [0, 0, 255], [75, 0, 130], [148, 0, 211]]
+edirp = [[148, 0, 211], [75, 0, 130], [0, 0, 255], [0, 255, 0], [255, 255, 0], [255, 127, 0], [255, 0, 0]]
+palette = [fruit_loop, icy_bright, watermelon, pride, edirp]
+
 show_bounds = [  # order must match show_parameters
         # [min, max]
         # show bounds 0 through 7 concern base animations
@@ -70,19 +74,11 @@ show_bounds = [  # order must match show_parameters
         [0, 255], # sparkle range
         [1, 50], # sparkle spawn frequency
         [0, NUM_7_COLOR_ANIMATIONS - 1],  # which 7 color animation to play, show bound 28
-        [0, NUM_COLOR_PALETTES - 1], # which color palette, show bound 29
+        [0, len(palette) - 1], # which color palette, show bound 29
         [0, NUM_BEAT_EFFECTS - 1],  # which beat effect to use to respond to beat with LEDs, show bound 30
         [0,1], # is_beat boolean, show bound 31
         [0,100] # beat proximity - how close you are to beat. so when beat prox >= 95 or <= 5, can smooth beat response
     ]
-
-# Pre-defined color palettes
-fruit_loop = [[25,0,25], [25,15,0], [180,10,70], [140,60,180], [180,60,60], [255,255,120], [255,100,180]]
-icy_bright = [[37,28,60], [70,0,28], [255,108,189], [0,172,238], [44,133,215], [255,255,255], [254,207,24]]
-watermelon = [[40,29,35], [5,45,15], [47,140,9], [72,160,5], [148,33,137], [47,192,91], [70,190,91]]
-pride = [[255, 0, 0], [255, 127, 0], [255, 255, 0], [0, 255, 0], [0, 0, 255], [75, 0, 130], [148, 0, 211]]
-edirp = [[148, 0, 211], [75, 0, 130], [0, 0, 255], [0, 255, 0], [255, 255, 0], [255, 127, 0], [255, 0, 0]]
-palette = [fruit_loop, icy_bright, watermelon, pride, edirp]
 
 mega_to_node_map = {
     1: 4,
@@ -93,6 +89,14 @@ mega_to_node_map = {
     6: 6,
     7: 3,
     }
+
+NUM_ANIMATIONS = 9	# animation programs are numbered 0 through 8
+TIME_LIMIT = 5		# number of seconds between animation changes
+auto_show = None
+last_show_change_sec = 0.0
+
+show_parameters = [0] * NUM_PARAMETERS
+show_colors = [[333 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALETTE)]	# invalid values
 
 # close all TCP connections and continue to run
 def do_disconnect(ignored, neglected):
@@ -130,20 +134,12 @@ def do_send(socket, message):
         if s not in writing:
             writing.append(s)
 
-NUM_ANIMATIONS = 9	# animation programs are numbered 0 through 8
-TIME_LIMIT = 5		# number of seconds between animation changes
-auto_show_change = False
-last_show_change_sec = 0.0
-
-def do_auto(ignored, neglected):
-    global auto_show_change, last_show_change_sec
-    auto_show_change = not auto_show_change
-    last_show_change_sec = time.time()
-
-# ------------------------------------------------- edm_program() -----------------------------------------------
-# show for when the journey is installed at an event with electronic dance music only
-# parameters are somewhat randomly chosen; this will change at bm when params will be determined by sound
-# def edm_program():
+def do_auto(ignored, show_name):
+    global auto_show, last_show_change_sec
+    auto_show = show_name
+    if auto_show:
+        auto_show(True)
+        last_show_change_sec = time.time()
 
 def constrained_random_parameter(i):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
@@ -160,55 +156,45 @@ def constrain_show():
     if show_parameters[BACKGROUND_INDEX] == 0 and show_parameters[MIDLAYER_INDEX] == 0 and show_parameters[SPARKLE_INDEX] == 0:
         show_parameters[BACKGROUND_INDEX] = 1	# never black
 
-bg_start_time = time.time()
-bg_parameter_start_time = time.time()
-mid_start_time = time.time()
-mid_parameter_start_time = time.time()
-sparkle_start_time = time.time()
-sparkle_parameter_start_time = time.time()
-palette_start_time = time.time()
+def choose_random_colors_from_palette():
+    # choose which colors out of the chosen palette to use
+    #shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
+    bg_order = sample(range(0,2), 2)
+    mid_order = sample(range(2,5), 3)
+    sp_order = sample(range(5,7), 2)
 
-show_parameters = [0] * NUM_PARAMETERS
-show_colors = [[0 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALETTE)]
+    current_palette = show_parameters[29]
+    show_colors[0] = palette[current_palette][bg_order[0]]
+    show_colors[1] = palette[current_palette][bg_order[1]]
+    show_colors[2] = palette[current_palette][mid_order[0]]
+    show_colors[3] = palette[current_palette][mid_order[1]]
+    show_colors[4] = palette[current_palette][mid_order[2]]
+    show_colors[5] = palette[current_palette][sp_order[0]]
+    show_colors[6] = palette[current_palette][sp_order[1]]
 
-# choose random starting values for each of the parameters
-for i in range(0, NUM_PARAMETERS):
-    show_parameters[i] = constrained_random_parameter(i)
-constrain_show()
-print "initial show parameters ", show_parameters
+# ------------------------------------------------- edm_program() -----------------------------------------------
+# show for when the journey is installed at an event with electronic dance music only
+# parameters are somewhat randomly chosen
 
-# choose which colors out of the chosen palette to use
-#shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
-bg_order = sample(range(0,2), 2)
-mid_order = sample(range(2,5), 3)
-sp_order = sample(range(5,7), 2)
-
-# palette[show_parameters[29]] is currently chosen palette
-show_colors[0] = palette[show_parameters[29]][bg_order[0]]
-show_colors[1] = palette[show_parameters[29]][bg_order[1]]
-show_colors[2] = palette[show_parameters[29]][mid_order[0]]
-show_colors[3] = palette[show_parameters[29]][mid_order[1]]
-show_colors[4] = palette[show_parameters[29]][mid_order[2]]
-show_colors[5] = palette[show_parameters[29]][sp_order[0]]
-show_colors[6] = palette[show_parameters[29]][sp_order[1]]
-print "initial show colors" , show_colors
-
-# fixme: Jeff: here's where parameters -> due is called
-# send_due_parameters()
-
-def edm_program():
+def edm_program(init=False):
     global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
     global show_parameters, show_colors
-#    while True:  # run forever until show is taken down
 
-    current_time = time.time()
-    bg_time = time.time()
-    bg_parameter_time = time.time()
-    mid_time = time.time()
-    mid_parameter_time = time.time()
-    sparkle_time = time.time()
-    sparkle_parameter_time = time.time()
-    palette_time = time.time()
+    if init:
+        if show_colors[0] == [333,333,333]:	# invalid values before initialization
+            bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
+
+            # choose random starting values for each of the parameters
+            for i in range(0, NUM_PARAMETERS):
+                show_parameters[i] = constrained_random_parameter(i)
+            constrain_show()
+            choose_random_colors_from_palette()
+
+        print "initial show parameters ", show_parameters
+        print "initial show colors" , show_colors
+        return
+
+    bg_time = bg_parameter_time = mid_time = mid_parameter_time = sparkle_time = sparkle_parameter_time = palette_time = time.time()
 
     # to avoid hard transitions, change disruptive base animation parameters only when you change background choice
     if bg_time - bg_start_time > BASE_TIME_LIMIT:
@@ -266,28 +252,88 @@ def edm_program():
         palette_start_time = palette_time
 
         show_parameters[29] = constrained_random_parameter(29)
-        # choose which colors out of the chosen palette to use
-        # shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
-        bg_order = sample(range(0, 2), 2)
-        mid_order = sample(range(2, 5), 3)
-        sp_order = sample(range(5, 7), 2)
-
-        # palette[show_parameters[29]] is currently chosen palette
-        show_colors[0] = palette[show_parameters[29]][bg_order[0]]
-        show_colors[1] = palette[show_parameters[29]][bg_order[1]]
-        show_colors[2] = palette[show_parameters[29]][mid_order[0]]
-        show_colors[3] = palette[show_parameters[29]][mid_order[1]]
-        show_colors[4] = palette[show_parameters[29]][mid_order[2]]
-        show_colors[5] = palette[show_parameters[29]][sp_order[0]]
-        show_colors[6] = palette[show_parameters[29]][sp_order[1]]
-
+        choose_random_colors_from_palette()
         print "palette changed ", show_colors
 
-    # fixme: Jeff: here's where parameters -> due is called
-#    send_due_parameters()
+# ------------ playa_program() --------------------------------------------------------
+# a partially scripted program for Burning Man 2017
 
-    #time.sleep(3)
-    current_time = time.time()
+TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
+MEDITATION_MINUTES = 20
+BURNING_MAN_START = time.mktime(time.strptime('2017-Aug-28 00:00', '%Y-%b-%d %H:%M'))
+BURNING_MAN_END   = time.mktime(time.strptime('2017-Sep-04 00:00', '%Y-%b-%d %H:%M'))
+NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
+
+daynight = None
+def major_playa_mode(when):
+    global daynight
+
+    sunrise_time = [1503839940, 1503926400, 1504012860, 1504099320, 1504185780,
+                    1504272240, 1504358700, 1504445160, 1504531620]
+    sunset_time  = [1503887940, 1503974220, 1504060500, 1504146840, 1504233120,
+                    1504319460, 1504405740, 1504492020, 1504578360]
+
+    meditation = None
+    if sunrise_time[0] <= when and when < sunset_time[len(sunset_time)-1] + meditation_sec:
+        for meditation_start in sunrise_time:
+            meditation_end = meditation_start + meditation_sec
+            if meditation_start <= when and when < meditation_end:
+                meditation = 'sunrise'
+                daynight = 'daytime'
+                break
+        if meditation == None:
+            for meditation_start in sunset_time:
+                meditation_end = meditation_start + meditation_sec
+                if meditation_start <= when and when < meditation_end:
+                    meditation = 'sunset'
+                    daynight = 'nighttime'
+                    break
+    else:
+        daynight = None
+    if meditation == None and daynight == None:	# pretend that daytime is between 6 AM and 6 PM
+        hour = int(time.strftime('%-H', time.localtime(when)))
+        if (6 <= hour and hour < 18):
+            daynight = 'daytime'
+        else:
+            daynight = 'nighttime'
+    return meditation or daynight	# meditation has precedence
+
+real_start_time = -1.0
+def playa_program(init=False):
+    global real_start_time, meditation_sec, time_compression_factor
+
+    real_time = time.time()
+    if init:
+        if real_start_time < 0:
+            time_compression_factor = float(NUM_DAYS * 60 * 24) / TEST_CYCLE_MINUTES	# 60*24 == minutes per day
+            meditation_sec = int(MEDITATION_MINUTES * 60 * time_compression_factor / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
+            real_start_time = real_time
+            edm_program(init)	# good enough for now
+            show_parameters[29] = 999	# invalid
+        return
+
+    if real_start_time == BURNING_MAN_START:
+        virtual_time = real_time	# this is the live show at Burning Man
+    else:
+        if BURNING_MAN_START <= real_time and real_time < BURNING_MAN_END:
+            time_compression_factor = 1.0
+            meditation_sec = MEDITATION_MINUTES * 60
+            print 'Welcome home!'	# Burning Man has just begun!
+            real_start_time = BURNING_MAN_START
+            virtual_time = real_time
+        else:
+            virtual_time = BURNING_MAN_START + (real_time - real_start_time) * time_compression_factor
+
+    mode = major_playa_mode(virtual_time)
+
+    bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
+    new_palette = bm_day_index % len(palette)
+    if show_parameters[29] != new_palette:
+        show_parameters[29] = new_palette
+        choose_random_colors_from_palette()
+        print 'palette changed', show_colors
+
+    print 'playa time advanced to', time.ctime(virtual_time), 'on day', bm_day_index, 'in', mode
 
 def do_show(cmd, param):
     global last_show_change_sec, show_colors, show_parameters
@@ -349,11 +395,13 @@ control_messages = {
 #    'AllLEDoff':	    (do_simple, 'program', '0'),
 #    'CheckHandStat':	do_unimplemented,
 #    'CheckAudioIn':	do_unimplemented,
-    'auto':		(do_auto, None, None),
     'disconnect':	(do_disconnect, None, None),
+    'edm':		(do_auto, None, edm_program),
     'led':		(do_simple, 'program', None),
     'list':		(do_list, None, None),
     'node':		(do_simple, None, None),
+    'pause':		(do_auto, None, None),
+    'playa':		(do_auto, None, playa_program),
     'quit':		(do_quit, None, None),
     'reconnect':	(do_simple, None, None),
     'send':		(do_send, None, None),
@@ -390,7 +438,7 @@ def disconnect(socket, msg):
 
 do_list(None, None)
 print sorted(control_messages.keys())
-tsunami= music.Music()
+tsunami = music.Music()
 running = True
 while running:
     try:
@@ -398,7 +446,7 @@ while running:
             timeout = None	# wait indefinitely when there are no remotes
         else:
             timeout = next_timesync_sec - time.time()
-            if auto_show_change:
+            if auto_show:
                 show_timeout = last_show_change_sec + TIME_LIMIT - time.time()
                 if show_timeout < timeout:
                     timeout = show_timeout

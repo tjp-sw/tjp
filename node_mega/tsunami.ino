@@ -38,7 +38,7 @@ control_message ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
 //  node = 1;
 //}
 
-void tsunami_setup () {
+void setup_tsunami () {
   // initialize serial:
   Serial.begin(9600);
 
@@ -62,14 +62,6 @@ void tsunami_setup () {
   // Allow time for the Tsunami to respond with the version string and
   //  number of tracks.
   delay(100); 
-}
-
-void setup() {
-  tsunami_setup();
-  
-//  get_node();
-
-  Serial.println("Ready");
 }
 
 void handle_command(char command[]) {
@@ -265,7 +257,7 @@ void do_command () {
   ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0}; 
 }
 
-void do_tsunami {
+void do_tsunami() {
   if (new_ctrl_msg) {
     do_command();
     new_ctrl_msg = false;
