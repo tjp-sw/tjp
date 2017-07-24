@@ -120,7 +120,7 @@ def do_quit(ignored, neglected):
 # send a message to one remote or all
 def do_send(socket, message):
     global message_queues, writing
-    # print 'sending', repr(message)
+    print 'sending', repr(message)
     if socket and socket != 'send':
         list = [socket]
     else:
@@ -301,6 +301,18 @@ def do_show(cmd, param):
     do_send(None, struct.pack('>c%uB' % (len(show_parameters) + len(show_colors_list)), 's', *(show_parameters + show_colors_list)))
     print 'show:', repr(show_parameters), repr(show_colors)
 
+#do a dynamically changing show based on internal audio selections. maybe inlcude hand inputs as well. 
+def do_dyn_show(cmd, param):
+    global show_colors, show_parameters
+    if param:
+        if cmd == 'SetAnimation':
+            show_parameters[0] = (ord(param) - ord('0')) % NUM_ANIMATIONS
+            last_show_change_sec = time.time()
+    show_colors_list = []
+
+    print 'dyn_show', repr(param), repr(show_parameters), repr(show_colors)
+    print'no idea what im doing...'
+
 next_timesync_sec = 0.0
 
 # almost the same as do_send() above, but send the very latest
@@ -327,13 +339,13 @@ def do_simple(cmd, param):
         do_send(None, cmd[0:1])
 
 control_messages = {
-#    'SetAllAudio':	do_unimplemented,
-#    'SetAudioCh':	do_unimplemented,
+#    'SetAllAudio':	    do_unimplemented,
+#    'SetAudioCh':	    do_unimplemented,
 #    'SetVolCh':		do_unimplemented,
 #    'MuteAllAudio':	do_unimplemented,
-    'SetAnimation':	(do_show, None, None),
-#    'SetDynAnimation':	do_unimplemented,
-#    'AllLEDoff':	(do_simple, 'program', '0'),
+    'SetAnimation':	    (do_show, None, None),
+    'SetDynAnimation':	(do_dyn_show, None, None),
+#    'AllLEDoff':	    (do_simple, 'program', '0'),
 #    'CheckHandStat':	do_unimplemented,
 #    'CheckAudioIn':	do_unimplemented,
     'auto':		(do_auto, None, None),
@@ -389,6 +401,12 @@ while running:
                 show_timeout = last_show_change_sec + TIME_LIMIT - time.time()
                 if show_timeout < timeout:
                     timeout = show_timeout
+            else: #dynamic show change
+                #check if song file selection changed
+                    #check composite frequency analysis of group of audio files selected
+                    #mark 'timeout = show_timeout' to signal paramters need to chage...?
+                    print 'dynamic show time baby!'
+
             if timeout <= 0:
                 timeout = 0.01
         # could generate writing list here from nonempty message_queues
@@ -471,17 +489,23 @@ while running:
         for s in oops:
             disconnect(s, sys.exc_value)
 
+        #syncing time across nodes
         if time.time() > next_timesync_sec:
             do_time('time', None)
 
-        if auto_show_change and time.time() > last_show_change_sec + TIME_LIMIT:
-            edm_program()
+        #pushing animation parameters across nodes
+        if auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
+            auto_show()
             last_show_change_sec = time.time()
             do_show(None, None)
 
-        (node, tick)= tsunami.tick()
-        if tick is not None:
-           do_send(node, tick)
+        #sending internal audio selection across nodes
+        (node, audio_msg) = tsunami.tick()
+        if audio_msg is not None:
+            if audio_msg[0:1] == 'a':
+                # hope the length is less than 256
+                audio_msg = struct.pack('>cB', audio_msg[0:1], len(audio_msg[1:])) + audio_msg[1:]
+            do_send(None, audio_msg)	# always send to all nodes
 
     except KeyboardInterrupt:
         running = False

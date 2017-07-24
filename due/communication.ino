@@ -306,7 +306,7 @@ void process_commands(const int source, String& input) {
         }
         break;
  
-      case 's':
+      case 's': //message regarding the animations
         size += NUM_SHOW_PARAMETERS + 3*NUM_COLORS_PER_PALETTE;
         if (input.length() >= size) {
           #ifdef I_AM_MEGA

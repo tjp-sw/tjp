@@ -1,5 +1,6 @@
 #!/usr/bin/python
-from random import *
+from random import randint
+from brain import do_send
 
 #Class to handle decision makig process for which animation index to select + all the additional paramters accordingly.
 #Goal: to have a formula that creates good bounds for a random number generator to make the final call. Need to ultimately 
@@ -35,5 +36,5 @@ class AnimationSelection:
 
 		dominantFreqBand = frequencies[0]
 
-
+do_send(0, "dodo")
 

@@ -56,38 +56,55 @@ def mute(node=0):
     return send_music(node, 3)
 
 #Can only return one command per tick....need to update looping
+debugging = True
 class Music:
     def __init__(self):
-        self.played_low = -1
+        if debugging:
+            self.played_low = datetime.min
+        else:
+            self.played_low = -1
+
         self.played_mid = datetime.min
         self.checked_high = datetime.min
         self.played_high = datetime.min
+        self.msg = [0] * 4
 
     def tick(self):
-        if self.played_low != datetime.today().weekday():  # Changes at midnight. This probably should be changed
-            low = songs.find_low()
-            self.played_low = datetime.today().weekday()
-            return play([low], looping=1)
+        msgs = [0] * 4
+        if debugging:
+            if self.played_low <= (datetime.now() - timedelta(seconds=10)):
+                low = songs.find_low()
+                self.msg[0] = low
+                msgs[0] = low
+                self.played_low = datetime.now()
+        else:
+            if self.played_low != datetime.today().weekday():  # Changes at midnight. This probably should be changed
+                low = songs.find_low()
+                self.played_low = datetime.today().weekday()
+                return play([low], looping=1)
 
-        msg = [0] * 4
         if self.played_mid <= (datetime.now() - timedelta(seconds=30)):
-            msg[1] = songs.find_mid()
+            self.msg[1] = songs.find_mid()
+            msgs[1] = songs.find_mid()
             self.played_mid = datetime.now()
 
         if self.checked_high <= (datetime.now() - timedelta(minutes=1)):
             play_chance = random.randint(0, 4)
             if play_chance == 0 or \
                self.played_high <= (datetime.now() - timedelta(minutes=5)):
-                msg[2] = songs.find_high()
+                self.msg[2] = songs.find_high()
+                msgs[2] = songs.find_high()
                 self.played_high = datetime.now()
             self.checked_high = datetime.now()
 
         if panel_touched():
-            msg[3] = songs.find_high()
+            self.msg[3] = songs.find_high()
+            msgs[3] = songs.find_high()
 
-        return play(msg)
+        #return play(self.msg)
+        return play(msgs)
 
-"""
+
 music = Music()
 
 while True:
@@ -105,4 +122,3 @@ BLUE= 4
 PURPLE= 5
 WHITE= 6
 
-"""
