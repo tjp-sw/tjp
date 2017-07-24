@@ -19,7 +19,6 @@ NUM_SPARKLE_ANIMATIONS = 2
 NUM_BEAT_EFFECTS = 1
 NUM_PARAMETERS = 30
 NUM_COLORS_PER_PALETTE = 7
-NUM_COLOR_PALETTES = 4
 
 BASE_TIME_LIMIT = 31
 BASE_PARAMETER_TIME_LIMIT = 19
@@ -32,6 +31,14 @@ PALETTE_TIME_LIMIT = 7
 BACKGROUND_INDEX = 0
 MIDLAYER_INDEX = 8
 SPARKLE_INDEX = 17
+
+# Pre-defined color palettes
+fruit_loop = [[25,0,25], [25,15,0], [180,10,70], [140,60,180], [180,60,60], [255,255,120], [255,100,180]]
+icy_bright = [[37,28,60], [70,0,28], [255,108,189], [0,172,238], [44,133,215], [255,255,255], [254,207,24]]
+watermelon = [[40,29,35], [5,45,15], [47,140,9], [72,160,5], [148,33,137], [47,192,91], [70,190,91]]
+pride = [[255, 0, 0], [255, 127, 0], [255, 255, 0], [0, 255, 0], [0, 0, 255], [75, 0, 130], [148, 0, 211]]
+edirp = [[148, 0, 211], [75, 0, 130], [0, 0, 255], [0, 255, 0], [255, 255, 0], [255, 127, 0], [255, 0, 0]]
+palette = [fruit_loop, icy_bright, watermelon, pride, edirp]
 
 show_bounds = [  # order must match show_parameters
         # [min, max]
@@ -67,19 +74,11 @@ show_bounds = [  # order must match show_parameters
         [0, 255], # sparkle range
         [1, 50], # sparkle spawn frequency
         [0, NUM_7_COLOR_ANIMATIONS - 1],  # which 7 color animation to play, show bound 28
-        [0, NUM_COLOR_PALETTES - 1], # which color palette, show bound 29
+        [0, len(palette) - 1], # which color palette, show bound 29
         [0, NUM_BEAT_EFFECTS - 1],  # which beat effect to use to respond to beat with LEDs, show bound 30
         [0,1], # is_beat boolean, show bound 31
         [0,100] # beat proximity - how close you are to beat. so when beat prox >= 95 or <= 5, can smooth beat response
     ]
-
-# Pre-defined color palettes
-fruit_loop = [[25,0,25], [25,15,0], [180,10,70], [140,60,180], [180,60,60], [255,255,120], [255,100,180]]
-icy_bright = [[37,28,60], [70,0,28], [255,108,189], [0,172,238], [44,133,215], [255,255,255], [254,207,24]]
-watermelon = [[40,29,35], [5,45,15], [47,140,9], [72,160,5], [148,33,137], [47,192,91], [70,190,91]]
-pride = [[255, 0, 0], [255, 127, 0], [255, 255, 0], [0, 255, 0], [0, 0, 255], [75, 0, 130], [148, 0, 211]]
-edirp = [[148, 0, 211], [75, 0, 130], [0, 0, 255], [0, 255, 0], [255, 255, 0], [255, 127, 0], [255, 0, 0]]
-palette = [fruit_loop, icy_bright, watermelon, pride, edirp]
 
 mega_to_node_map = {
     1: 4,
@@ -157,6 +156,22 @@ def constrain_show():
     if show_parameters[BACKGROUND_INDEX] == 0 and show_parameters[MIDLAYER_INDEX] == 0 and show_parameters[SPARKLE_INDEX] == 0:
         show_parameters[BACKGROUND_INDEX] = 1	# never black
 
+def choose_random_colors_from_palette():
+    # choose which colors out of the chosen palette to use
+    #shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
+    bg_order = sample(range(0,2), 2)
+    mid_order = sample(range(2,5), 3)
+    sp_order = sample(range(5,7), 2)
+
+    current_palette = show_parameters[29]
+    show_colors[0] = palette[current_palette][bg_order[0]]
+    show_colors[1] = palette[current_palette][bg_order[1]]
+    show_colors[2] = palette[current_palette][mid_order[0]]
+    show_colors[3] = palette[current_palette][mid_order[1]]
+    show_colors[4] = palette[current_palette][mid_order[2]]
+    show_colors[5] = palette[current_palette][sp_order[0]]
+    show_colors[6] = palette[current_palette][sp_order[1]]
+
 # ------------------------------------------------- edm_program() -----------------------------------------------
 # show for when the journey is installed at an event with electronic dance music only
 # parameters are somewhat randomly chosen
@@ -173,21 +188,7 @@ def edm_program(init=False):
             for i in range(0, NUM_PARAMETERS):
                 show_parameters[i] = constrained_random_parameter(i)
             constrain_show()
-
-            # choose which colors out of the chosen palette to use
-            #shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
-            bg_order = sample(range(0,2), 2)
-            mid_order = sample(range(2,5), 3)
-            sp_order = sample(range(5,7), 2)
-
-            # palette[show_parameters[29]] is currently chosen palette
-            show_colors[0] = palette[show_parameters[29]][bg_order[0]]
-            show_colors[1] = palette[show_parameters[29]][bg_order[1]]
-            show_colors[2] = palette[show_parameters[29]][mid_order[0]]
-            show_colors[3] = palette[show_parameters[29]][mid_order[1]]
-            show_colors[4] = palette[show_parameters[29]][mid_order[2]]
-            show_colors[5] = palette[show_parameters[29]][sp_order[0]]
-            show_colors[6] = palette[show_parameters[29]][sp_order[1]]
+            choose_random_colors_from_palette()
 
         print "initial show parameters ", show_parameters
         print "initial show colors" , show_colors
@@ -251,21 +252,7 @@ def edm_program(init=False):
         palette_start_time = palette_time
 
         show_parameters[29] = constrained_random_parameter(29)
-        # choose which colors out of the chosen palette to use
-        # shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
-        bg_order = sample(range(0, 2), 2)
-        mid_order = sample(range(2, 5), 3)
-        sp_order = sample(range(5, 7), 2)
-
-        # palette[show_parameters[29]] is currently chosen palette
-        show_colors[0] = palette[show_parameters[29]][bg_order[0]]
-        show_colors[1] = palette[show_parameters[29]][bg_order[1]]
-        show_colors[2] = palette[show_parameters[29]][mid_order[0]]
-        show_colors[3] = palette[show_parameters[29]][mid_order[1]]
-        show_colors[4] = palette[show_parameters[29]][mid_order[2]]
-        show_colors[5] = palette[show_parameters[29]][sp_order[0]]
-        show_colors[6] = palette[show_parameters[29]][sp_order[1]]
-
+        choose_random_colors_from_palette()
         print "palette changed ", show_colors
 
 # ------------ playa_program() --------------------------------------------------------
@@ -322,6 +309,7 @@ def playa_program(init=False):
             meditation_sec = int(MEDITATION_MINUTES * 60 * time_compression_factor / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
             real_start_time = real_time
             edm_program(init)	# good enough for now
+            show_parameters[29] = 999	# invalid
         return
 
     if real_start_time == BURNING_MAN_START:
@@ -335,8 +323,15 @@ def playa_program(init=False):
             virtual_time = real_time
         else:
             virtual_time = BURNING_MAN_START + (real_time - real_start_time) * time_compression_factor
-    bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
+
     mode = major_playa_mode(virtual_time)
+
+    bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
+    new_palette = bm_day_index % len(palette)
+    if show_parameters[29] != new_palette:
+        show_parameters[29] = new_palette
+        choose_random_colors_from_palette()
+        print 'palette changed', show_colors
 
     print 'playa time advanced to', time.ctime(virtual_time), 'on day', bm_day_index, 'in', mode
 
