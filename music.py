@@ -39,7 +39,7 @@ def send_music(node=0, command=1, field2=0, channels=None):
     if empty_msg is False:
         ctrl_msg = 'a' + ';'.join([str(node), str(command), str(field2),
                                   ','.join(str(ch) for ch in channels)]) + ';'
-        print(ctrl_msg)
+        #print(ctrl_msg)
         return (node, ctrl_msg)
     return (None, None)
 

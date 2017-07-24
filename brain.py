@@ -120,7 +120,7 @@ def do_quit(ignored, neglected):
 # send a message to one remote or all
 def do_send(socket, message):
     global message_queues, writing
-    print 'sending', repr(message)
+    #print 'sending', repr(message)
     if socket and socket != 'send':
         list = [socket]
     else:
@@ -302,6 +302,7 @@ def do_show(cmd, param):
     print 'show:', repr(show_parameters), repr(show_colors)
 
 #do a dynamically changing show based on internal audio selections. maybe inlcude hand inputs as well. 
+#TODO
 def do_dyn_show(cmd, param):
     global show_colors, show_parameters
     if param:
@@ -311,7 +312,7 @@ def do_dyn_show(cmd, param):
     show_colors_list = []
 
     print 'dyn_show', repr(param), repr(show_parameters), repr(show_colors)
-    print'no idea what im doing...'
+    print 'clearly a work in progress...'
 
 next_timesync_sec = 0.0
 

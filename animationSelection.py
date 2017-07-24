@@ -36,5 +36,5 @@ class AnimationSelection:
 
 		dominantFreqBand = frequencies[0]
 
-do_send(0, "dodo")
+#do_send(0, "testtest")
 
