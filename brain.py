@@ -479,6 +479,11 @@ while running:
                         if len(message) == 55:
                             do_send(None, message)	# relay to all nodes
                             print 'beat', repr(message), 'from', remote_name[s]
+                    elif message[0:1] == 'B':
+                        if len(message) == 10:
+                            intensity, timestamp = struct.unpack_from('>BQ', message, 1)
+                            timestamp /= 1000.0		# convert from milliseconds
+                            print 'beat intensity', intensity, 'at', timestamp, 'from', remote_name[s]
                     elif message[0:1] == 'm':
                         mega_number = ord(message[1:2])
                         try:
@@ -490,6 +495,7 @@ while running:
                                 node_number = None
                         print 'mega', mega_number, '( node ', repr(node_number), ') is at', remote_name[s]
                         if node_number != None:
+                            remote_name[s] = 'node %u' % node_number
                             do_send(s, struct.pack('>cB', 'n', node_number))
                     elif message[0:1] == 's':
                         music.status_update(message)
