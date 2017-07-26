@@ -423,6 +423,40 @@ def disconnect(socket, msg):
     del message_queues[socket]
     del remote_name[socket]
 
+# 1. detect presence and direction of a loud beat
+# 2. send beat predictions to the nodes
+beat_history = []
+intensity_sum = 0
+def analyze_beat(node, intensity, timestamp):
+    global beat_history, intensity_sum
+    NODE = 0
+    INTENSITY = 1
+    TIMESTAMP = 2
+
+    # prune old data
+    # beat history timestamps are roughly oldest first
+    keeper = time.time() - 20	# 20 seconds ago
+    for i in range(0, len(beat_history)):
+        if beat_history[i][TIMESTAMP] > keeper:
+            if i > 0:
+                beat_history = beat_history[i:]
+                # print 'removed', i, 'entries from beat_history leaving', len(beat_history)
+            break
+        else:
+            intensity_sum -= beat_history[i][INTENSITY]	# pending deletion
+
+    intensity_sum += intensity
+    beat_history += [(node, intensity, timestamp)]	# a list of 3-tuples
+
+    mean_intensity = int(intensity_sum / float(len(beat_history)) + 0.5) 	# no risk of division by zero
+    # there may be a way to do this incrementally similar to intensity_sum
+    deviation_sum = 0
+    for i in range(0, len(beat_history)):
+        deviation_sum += abs(beat_history[i][INTENSITY] - mean_intensity)
+    mean_deviation = int(deviation_sum / float(len(beat_history)) + 0.5) 	# no risk of division by zero
+
+    print 'beat %u intensity %u (mean %u +-%u) at %.3f from node %u' % (len(beat_history), intensity, mean_intensity, mean_deviation, timestamp, node)
+
 do_list(None, None)
 print sorted(control_messages.keys())
 tsunami = music.Music()
@@ -483,7 +517,13 @@ while running:
                         if len(message) == 10:
                             intensity, timestamp = struct.unpack_from('>BQ', message, 1)
                             timestamp /= 1000.0		# convert from milliseconds
-                            print 'beat intensity', intensity, 'at', timestamp, 'from', remote_name[s]
+                            tokens = string.split(remote_name[s], None, 2)
+                            try:
+                                node = int(tokens[1])
+                            except:
+                                print 'beat from unnumbered node at', remote_name[s]
+                            else:
+                                analyze_beat(node, intensity, timestamp)
                     elif message[0:1] == 'm':
                         mega_number = ord(message[1:2])
                         try:
