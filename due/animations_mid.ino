@@ -279,3 +279,46 @@ void mid_scrolling_dim(uint8_t color_mode) {
   }
 }
 
+
+void init_arrow() {
+  //number of transparent pixels between arrow start-end: choose such that integer number of arrows fit in structure
+  //ie, (7+5)*6 = 72 = number of rings
+  uint8_t arrow_length = 7;
+  uint8_t ring_spacing = 5;
+  uint8_t pixel_spacing = 3; //transparent pixels between arrows
+  uint16_t narrow = LEDS_PER_RING / pixel_spacing; //408 / 3 = 136
+  uint8_t maxbrite = 7; //max value of last argument to get_mid_color: brightness == maxbrite 
+  uint8_t maxdim = 12;
+  for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+    for(uint8_t a = 0; a < narrow; a++) {
+      uint16_t pixel = a * pixel_spacing;
+      uint8_t arg = (ring+a*ring_spacing)%(maxbrite+ring_spacing);
+      uint8_t c1 = pixel < 2*RINGS_PER_NODE/3 ? 0 : 1;
+      uint8_t c2 = pixel <   RINGS_PER_NODE/3 ? 1 : 2;
+      uint8_t b  = (pixel%narrow)*maxdim/narrow;
+      mid_layer[ring][pixel] = (arg < maxbrite ? get_mid_color(c1, c2, b, arg) : TRANSPARENT);
+    }
+  }
+}
+
+void arrow() {
+  rotate_mid_layer(1, 5);
+}
+
+//dir not currently used
+void rotate_mid_layer(bool dir, uint8_t rspeed) {
+  uint8_t tmp[LEDS_PER_RING]; 
+  if( mid_count % rspeed == 0 ) {
+    for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++)
+      tmp[pixel] = mid_layer[0][pixel];
+    for(uint8_t ring = 0; ring < RINGS_PER_NODE-1; ring++) {
+      for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++)
+        mid_layer[ring][pixel] = mid_layer[ring+1][pixel];
+    }
+    for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++)
+      mid_layer[RINGS_PER_NODE-1][pixel] = tmp[pixel];
+  }
+}
+
+
+

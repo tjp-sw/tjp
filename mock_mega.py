@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import socket, random, struct, sys, time
+import select, socket, random, struct, sys, time
 
 # declare global variables with bogus values
 remote = None
@@ -104,28 +104,45 @@ def setup():
     unix_epoch_msec = time.time() * 1000.0
     epoch_msec = long(0)
 
-    mega_number = int(100 * random.random() + 100)	# random number from 100 through 199
+    mega_number = random.randint(100, 199)
     server = ('localhost', 3528)
     remote = None
     network_data = None
 
+last_beat_msec = int(time.time() * 1000.0)
 def loop():
-    global loop_start_time_msec, network_data, remote
+    global last_beat_msec, loop_start_time_msec, network_data, remote
 
     loop_start_time_msec = None
     try:
         if remote:
-            message = remote.recv(1024)
-            if message:
-                loop_start_time_msec = millis()
-                network_data += message
-                process_commands()
+            timeout_sec = 5.0 + (last_beat_msec / 1000.0) - time.time()
+            if timeout_sec <= 0:
+                timeout_sec = 0.01
+
+            readable, writable, oops = select.select([remote], [], [], timeout_sec)
+            if len(writable) > 0:
+                print 'ignoring unexpected writable file descriptor(s)'
+            if len(oops) > 0:
+                print 'ignoring unexpected file descriptor(s) in exceptional state'
+            if len(readable) > 0:
+                if len(readable) != 1:
+                    print 'expected exactly 1 readable file descriptor instead of', len(readable)
+                message = remote.recv(1024)
+                if message:
+                    loop_start_time_msec = millis()
+                    network_data += message
+                    process_commands()
+                else:
+                    print 'mega', mega_number, 'closing %s:%d' % remote.getsockname(), 'to %s:%d' % remote.getpeername()
+                    remote.close()
+                    remote = None
+                    network_data = None
+                    time.sleep(10)
             else:
-                print 'mega', mega_number, 'closing %s:%d' % remote.getsockname(), 'to %s:%d' % remote.getpeername()
-                remote.close()
-                remote = None
-                network_data = None
-                time.sleep(10)
+                intensity = mega_number + random.randint(-5, 5)
+                last_beat_msec = int(time.time() * 1000.0)
+                remote.sendall(struct.pack('>cBQ', 'B', intensity, last_beat_msec))	# send a beat message
         else:
             try:
                 time.sleep(random.random())
