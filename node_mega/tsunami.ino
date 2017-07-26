@@ -40,7 +40,7 @@ control_message ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
 
 void setup_tsunami () {
   // initialize serial:
-  Serial.begin(9600);
+  //Serial.begin(9600);
 
   // We should wait for the Tsunami to finish reset before trying to send
   // commands.
@@ -66,7 +66,7 @@ void setup_tsunami () {
 
 void handle_command(char command[]) {
     // Serial.println(command);
-    for( unsigned int letter = 1; letter < sizeof(command)/sizeof(command[0]); a = a + 1 ) {
+    for( unsigned int letter = 1; letter < sizeof(command)/sizeof(command[0]); letter = letter + 1 ) {
         char inChar = command[letter];
 
          if (inChar == '\n') {
