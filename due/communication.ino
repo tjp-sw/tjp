@@ -240,7 +240,7 @@ void process_commands(const int source, String& input) {
         if (input.length() >= size) {
             size += input[1];
             if (input.length() >= size) {
-                // Tsunami.write(input.substring(2, size))
+                handle_command(input.substring(2, size))
             }
             else {
               #ifdef DEBUG

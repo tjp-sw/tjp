@@ -3,9 +3,9 @@ from datetime import datetime
 
 
 # Stores Music library and returns appropriate songs
-RED_LOW = range(1000,1004)
-RED_MID = range(1,60)
-RED_HIGH = range(61,85)
+RED_LOW = range(1000, 1004)
+RED_MID = range(1, 60)
+RED_HIGH = range(61, 85)
 ORANGE_LOW = []
 ORANGE_MID = [1, 8, 12]
 ORANGE_HIGH = [7, 11]
@@ -15,9 +15,9 @@ YELLOW_HIGH = [6]
 GREEN_LOW = []
 GREEN_MID = [7]
 GREEN_HIGH = [8]
-BLUE_LOW = []
-BLUE_MID = [9]
-BLUE_HIGH = [10]
+BLUE_LOW = range(2500, 2512)
+BLUE_MID = range(500, 587)
+BLUE_HIGH = range(1500, 1512)
 PURPLE_LOW = []
 PURPLE_MID = [11]
 PURPLE_HIGH = [12]
@@ -29,7 +29,7 @@ HIGHS = [RED_HIGH, ORANGE_HIGH, YELLOW_HIGH, GREEN_HIGH, BLUE_HIGH, PURPLE_HIGH,
 LOWS = [RED_LOW, ORANGE_LOW, YELLOW_LOW, GREEN_LOW, BLUE_LOW, PURPLE_LOW, WHITE_LOW]
 MEDITATIONS = []
 
-SET_THEME = 0
+SET_THEME = 4
 
 
 def find_low(theme=datetime.today().weekday()):
@@ -42,7 +42,7 @@ def find_mid(theme=datetime.today().weekday()):
     if SET_THEME >= 0:
         theme = SET_THEME
     elif datetime.now().hour >= 21:
-        all_mids = [song for sublist in MIDS for song in sublist]
+        all_mids = [song for sublist in MIDS[0:theme] for song in sublist]
         return random.choice(all_mids)
     return random.choice(MIDS[theme])
 
@@ -51,7 +51,7 @@ def find_high(theme=datetime.today().weekday()):
     if SET_THEME >= 0:
         theme = SET_THEME
     elif datetime.now().hour >= 21:
-        all_highs = [song for sublist in HIGHS for song in sublist]
+        all_highs = [song for sublist in HIGHS[0:theme] for song in sublist]
         return random.choice(all_highs)
     return random.choice(HIGHS[theme])
 

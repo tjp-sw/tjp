@@ -55,7 +55,8 @@ def set_volume(channels, fade_speed=2000, node=0):
 def mute(node=0):
     return send_music(node, 3)
 
-#Can only return one command per tick....need to update looping
+
+# Can only return one command per tick....need to update looping
 class Music:
     def __init__(self):
         self.played_low = -1
@@ -70,7 +71,7 @@ class Music:
             return play([low], looping=1)
 
         msg = [0] * 4
-        if self.played_mid <= (datetime.now() - timedelta(seconds=30)):
+        if self.played_mid <= (datetime.now() - timedelta(seconds=5)):
             msg[1] = songs.find_mid()
             self.played_mid = datetime.now()
 
