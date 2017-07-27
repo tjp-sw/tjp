@@ -5,7 +5,12 @@
 #define SETAUDIO 1
 #define SETVOL 2
 #define MUTEALLAUDIO 3
-#define DEBUG 0
+
+#ifdef DEBUG
+  #define DEBUG_LEVEL 1
+#else
+  #define DEBUG_LEVEL 0
+#endif
 
 Tsunami tsunami;                // Our Tsunami object
 //variables tracking currently playing song data
@@ -76,21 +81,21 @@ void handle_command(char command[]) {
             input_string= "";
             if ((ctrl_msg.node == node_number) || (ctrl_msg.node == 0)){
               new_ctrl_msg = true;
-              if (DEBUG>1)
+              if (DEBUG_LEVEL>1)
                 Serial.println("New Message");
             } else {
               ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
             }
             break;
          } else if (inChar == ';') {
-            if (DEBUG>1) {
+            if (DEBUG_LEVEL>1) {
               Serial.print("input_string=");
               Serial.println(input_string);
             }
             switch (which_field) {
               case 0 :
                 ctrl_msg.node= atoi(input_string.c_str());
-                if (DEBUG) {
+                if (DEBUG_LEVEL) {
                   Serial.print("Node ");
                   Serial.println(ctrl_msg.node);
                 }
@@ -98,7 +103,7 @@ void handle_command(char command[]) {
 
               case 1 :
                 ctrl_msg.command= atoi(input_string.c_str());
-                if (DEBUG) {
+                if (DEBUG_LEVEL) {
                   Serial.print("Command ");
                   Serial.println(ctrl_msg.command);
                 }
@@ -125,7 +130,7 @@ void handle_command(char command[]) {
                     case SETAUDIO :
                       ctrl_msg.channels[ch] = atoi(ch_string.c_str());
                       ch_string= "";
-                      if (DEBUG) {
+                      if (DEBUG_LEVEL) {
                         Serial.print("channel ");
                         Serial.print(ch);
                         Serial.print(">");
@@ -135,7 +140,7 @@ void handle_command(char command[]) {
                     case SETVOL :
                       ctrl_msg.gain[ch] = atoi(ch_string.c_str());
                       ch_string= "";
-                      if (DEBUG) {
+                      if (DEBUG_LEVEL) {
                         Serial.print("volume ");
                         Serial.print(ch);
                         Serial.print(">");
@@ -195,7 +200,7 @@ void do_command () {
   switch (ctrl_msg.command) {
     //Change the music playing
     case SETAUDIO :
-      if (DEBUG)
+      if (DEBUG_LEVEL)
           Serial.println("SetAudio");
       for (int ch = 0; ch < 18; ch++) {
         if (ctrl_msg.channels[ch]) {
@@ -206,7 +211,7 @@ void do_command () {
           ch_loop[ch]= ctrl_msg.bool_loop;
           tsunami.trackGain(channels[ch], ch_gain[ch]);
           tsunami.trackLoad(channels[ch], 0, true);
-          if (DEBUG) {
+          if (DEBUG_LEVEL) {
             Serial.print("Gain ");
             Serial.println(ch_gain[ch]);
           }
@@ -222,7 +227,7 @@ void do_command () {
     //change gain 
     //The range for gain is -70 to +10. A value of 0 (no gain) plays the track at the base volume of the wav file. 
     case SETVOL :
-      if (DEBUG)
+      if (DEBUG_LEVEL)
         Serial.println("SetVol");
       for (int ch = 0; ch < 18; ch++) {
         if (ctrl_msg.gain[ch]) {
@@ -234,7 +239,7 @@ void do_command () {
           } else {
             tsunami.trackFade(channels[ch], ch_gain[ch], ctrl_msg.fade_speed, false);
           }
-          if (DEBUG) {
+          if (DEBUG_LEVEL) {
             Serial.print("Fading Channel ");
             Serial.print(ch);
             Serial.print(">");
@@ -280,7 +285,7 @@ void do_tsunami() {
         ch_gain[ch]=0;
       }
     } else {
-     if (DEBUG>2) {
+     if (DEBUG_LEVEL>2) {
         Serial.print("Still playing ");
         Serial.println(channels[ch]);
       }
@@ -303,21 +308,21 @@ void serialEvent() {
         input_string= "";
         if ((ctrl_msg.node == node_number) || (ctrl_msg.node == 0)){
           new_ctrl_msg = true;
-          if (DEBUG>1)
+          if (DEBUG_LEVEL>1)
             Serial.println("New Message");
         } else {
           ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
         }
         break; 
      } else if (inChar == ';') {
-        if (DEBUG>1) {
+        if (DEBUG_LEVEL>1) {
           Serial.print("input_string=");
           Serial.println(input_string);
         } 
         switch (which_field) {
           case 0 :
             ctrl_msg.node= atoi(input_string.c_str());
-            if (DEBUG) {
+            if (DEBUG_LEVEL) {
               Serial.print("Node ");
               Serial.println(ctrl_msg.node);
             }
@@ -325,7 +330,7 @@ void serialEvent() {
             
           case 1 :
             ctrl_msg.command= atoi(input_string.c_str());
-            if (DEBUG) {
+            if (DEBUG_LEVEL) {
               Serial.print("Command ");
               Serial.println(ctrl_msg.command);
             }
@@ -352,7 +357,7 @@ void serialEvent() {
                 case SETAUDIO :
                   ctrl_msg.channels[ch] = atoi(ch_string.c_str());
                   ch_string= "";
-                  if (DEBUG) {
+                  if (DEBUG_LEVEL) {
                     Serial.print("channel ");
                     Serial.print(ch);
                     Serial.print(">");
@@ -362,7 +367,7 @@ void serialEvent() {
                 case SETVOL :
                   ctrl_msg.gain[ch] = atoi(ch_string.c_str());
                   ch_string= "";
-                  if (DEBUG) {
+                  if (DEBUG_LEVEL) {
                     Serial.print("volume ");
                     Serial.print(ch);
                     Serial.print(">");
