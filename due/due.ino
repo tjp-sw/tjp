@@ -76,12 +76,12 @@
 //-------- Manually set animation parameters here --------//
 ////////////////////////////////////////////////////////////
 void manually_set_animation_params() {                    //
-                                                          //
-  BASE_ANIMATION = NONE;                                  //
-  MID_ANIMATION = SNAKE;                                   //
+                                                          //   //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  BASE_ANIMATION = LEE_COLOR_RANGE;                                  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK
+  MID_ANIMATION = NONE;                                   //   //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   SPARKLE_ANIMATION = NONE;                               //
                                                           //
-  BEAT_EFFECT = JERKY_MOTION;                                     //
+  BEAT_EFFECT = JERKY_MOTION; //JERKY_MOTION;                                     //
                                                           //
   BASE_COLOR_THICKNESS = 0;                             //
   BASE_BLACK_THICKNESS = 255;                             //
@@ -239,7 +239,7 @@ if(loop_count % 100 == 0) {
 
   // Apply beat effects
   #ifndef PI_CONTROLLED
-    is_beat = loop_count % 10 == 0; // Generates a fake beat
+    is_beat = loop_count % 100 == 0; // Generates a fake beat - fixme: beats all the time for lee's work
     beat_proximity = loop_count % 100; // beat proximity near 100 means near a beat; dividing by 200 to slow down 
   #endif
   if(is_beat || beat_proximity <= 4 || beat_proximity >= 95) { do_beat_effects(); }
@@ -329,8 +329,9 @@ if(loop_count % 100 == 0) {
 
 
 void do_beat_effects() {
-  //return;
+  return;
   switch(BEAT_EFFECT) {
+
     case COLOR_SWAP: {
       color_swap();
       break;
@@ -506,6 +507,18 @@ void draw_current_base() {
     case EQ_VARIABLE_SPLIT:
       equalizer_variable(DISPLAY_SPLIT);
       break;
+
+    case LEE_COLOR_RANGE:
+      normalized_all_colors();
+      break;
+
+    case LEE_BRIGHTNESS:
+       scale_brightness();
+      break;
+
+    case LEE_CHECK:
+      check_color();
+      break;
       
     default:
       clear_base_layer();
@@ -558,6 +571,14 @@ void draw_current_sparkle() {
 
     case RAIN:
       sparkle_rain();
+      break;
+      
+    case SPARKLE_SETH_TWO_CIRCLES:
+      sparkle_seth_two_circles();
+      break;   
+         
+    case SPARKLE_THREE_CIRCLES:
+      sparkle_three_circles();
       break;
       
     default:
@@ -685,6 +706,13 @@ void init_sparkle_animation() {
           Serial.println("Rain params: " + String(SPARKLE_COLOR_THICKNESS) + ", " + String(SPARKLE_PORTION) + ", " + String(SPARKLE_INTRA_RING_MOTION) + ", " + String(SPARKLE_INTRA_RING_SPEED) + ", " + String(SPARKLE_MAX_DIM) + ", " + String(SPARKLE_RANGE) + ", " + String(SPARKLE_SPAWN_FREQUENCY));
         #endif
       #endif
+      break;
+
+    case SPARKLE_THREE_CIRCLES:
+      clear_sparkle_layer();
+      current_ring = random8(NUM_RINGS);
+      current_pixel = random16(LEDS_PER_RING);
+      current_coin = random8(NUM_RINGS);
       break;
       
     default:
