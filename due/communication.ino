@@ -6,7 +6,8 @@
   #include <Ethernet.h>
   #include <limits.h>    // provides LONG_MAX
   
-  IPAddress brain(169,254,136,0);
+  //IPAddress brain(169,254,136,0);
+  IPAddress brain(169,254,94,48);
   IPAddress subnet_mask(255,255,0,0);
   
   uint8_t mega_number;
@@ -16,6 +17,7 @@
   EthernetClient remote;
   
   #define NodeMate  Serial3
+  #define DEBUG
 
   // declare here when not part of due.ino
   unsigned long long epoch_msec;

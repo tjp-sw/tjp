@@ -5,11 +5,11 @@
    Test shorter delays in read_frequencies
    Change delta from unsigned long to uint16_t?
    Test predictionScore as uint16_t; make sure it doesn't ever overflow in the middle of a calculation
-   In set_audio_hooks(): use a rolling index instead of copying all of the arrays each cycle
+   In set_f): use a rolling index instead of copying all of the arrays each cycle
    Do frequencies[] arrays need to be ints? Would be better as uint8_t, scaling or capping if necessary.
 */
 // ----------------------------------------- Peak/Beat detection ----------------------------------------------------
-#define NOISE_REDUCT 0 // Fixed amount to reduce each spectrum shield read by
+#define NOISE_REDUCT 120 // Fixed amount to reduce each spectrum shield read by
 #define PEAK_WINDOW_SIZE 5 // Size of window for determining peaks, center must be maximum for peak to be marked
 #define PEAK_HISTORY_SIZE 10 // Number of peaks to remember for beat detection
 
@@ -33,6 +33,10 @@
 #define DEBUG_PEAKS
 #define DEBUG_AUDIO_HOOKS
 //
+//MY GLOBALS
+bool isRecording = false;
+unsigned long startMs = millis();
+unsigned long endMs = millis();
 // Globals                                                                    //
 int frequencies_one[NUM_CHANNELS];                                            //
 int frequencies_two[NUM_CHANNELS];                                            //
@@ -114,10 +118,12 @@ void setup_spectrum_shield() {
 
 void loop_spectrum_shield() {
   read_frequencies();
+  readMSGEQ7();
   //set_peak_history();
   //process_peak_history();
   //trigger_beats();
   set_audio_hooks();
+  detect_audio_changes();
   //detect_edm_events();
 }
 
@@ -125,13 +131,21 @@ void setup()
 {
   Serial.begin(115200);
   setup_spectrum_shield();
+  debugToPC("Arduino Ready from ArduinoPC.ino");
+}
+
+void sendToPc()
+{
+  getSerialData();
+  dataToPC();
 }
 
 void loop()
 {
   current_time++;
   loop_spectrum_shield();
-  //printFreqs();
+  //sendToPc();
+  printFreqs();
   //compareLoop();
 }
 
@@ -139,9 +153,10 @@ void compareLoop()
 {
   read_frequencies();
   readMSGEQ7();
-  printFreqs();
-  set_audio_hooks();
-  setAudioHooksSimple();
+  //printFreqs();
+  printFreqDiffs();
+  //set_audio_hooks();
+  //setAudioHooksSimple();
 }
 
 void read_frequencies() {
@@ -536,17 +551,27 @@ void set_audio_hooks() {
 
 
 #ifdef DEBUG_AUDIO_HOOKS
-  String debugOutput = String(overall_volume[0]) + " | ";
-  debugOutput += String(band_distribution[0][0], 2) + " (" + String(low_band_emphasis) + ")  "
-                 + String(band_distribution[0][1], 2) + " (" + String(mid_band_emphasis) + ")  "
-                 + String(band_distribution[0][2], 2) + " (" + String(high_band_emphasis) + ")\t";
-
-  for (uint16_t i = 0; i < downbeat_proximity / 10; i++)
-    debugOutput += ' ';
-  debugOutput += dominant_channel[0];
-
-  Serial.println(debugOutput);
-  debugOutput = "";
+  //if(overall_volume[0] != 0 && overall_volume[1] != 0 && overall_volume[2] != 0 && overall_volume[3] != 0)
+  //{
+    String debugOutput = String(overall_volume[0]) + " | ";
+    debugOutput += String(band_distribution[0][0], 2) + " (" + String(low_band_emphasis) + ")  "
+                   + String(band_distribution[0][1], 2) + " (" + String(mid_band_emphasis) + ")  "
+                   + String(band_distribution[0][2], 2) + " (" + String(high_band_emphasis) + ") | ";
+  
+    //for (uint16_t i = 0; i < downbeat_proximity / 10; i++)
+      //debugOutput += ' ';
+    debugOutput += dominant_channel[0];
+  
+    //Serial.println(debugOutput);
+    char chars [50];
+    debugOutput.toCharArray(chars, 50);
+    debugToPC(chars);
+    //byte bytes [16];
+    //debugOutput.getBytes(bytes, 16);
+    //Serial.write(bytes, 16);
+    
+    debugOutput = "";
+  //}
 #endif
 }
 
@@ -558,6 +583,40 @@ uint8_t get_dominant_channel() {
       retVal = i;
   }
   return retVal;
+}
+
+void detect_audio_changes() {
+  uint16_t amp_avg2 = (overall_volume[0] + overall_volume[1]) / 2;
+  uint16_t amp_avg4 = amp_avg2 / 2 + (overall_volume[2] + overall_volume[3]) / 4;
+  uint16_t amp_avg8 = amp_avg4 / 2 + (overall_volume[4] + overall_volume[5] + overall_volume[6] + overall_volume[7]) / 8;
+  uint16_t amp_avg16 = amp_avg8 / 2 + (overall_volume[8] + overall_volume[9] + overall_volume[10] + overall_volume[11]
+                                       + overall_volume[12] + overall_volume[13] + overall_volume[14] + overall_volume[15] ) / 16;
+//unsigned long endMs = millis();  
+  if(amp_avg16 > 10) //very low threshold due to high NOISE_REDUCTION value
+  {
+    if(isRecording == false)
+    {
+      startMs = millis();
+      isRecording = true;
+      char chars [20];
+      String output = "start"; //[" + String(startMs) + "]";
+      output.toCharArray(chars, 20);
+      debugToPC(chars);
+    }
+  }
+  else
+  {
+    if(isRecording == true)
+    {
+      endMs = millis();
+      isRecording = false;
+      char chars [50];
+      //String output = "end: [" + String(endMs) + "]\ntotalMs: [" + String(endMs-startMs) + "]";
+      String output = "end\ntotalMs: [" + String(endMs-startMs) + "]";
+      output.toCharArray(chars, 50);
+      debugToPC(chars);
+    }
+  }
 }
 
 // This is 100% untested, and more just a way to put down my thoughts on how it could be done.
