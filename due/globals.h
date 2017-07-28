@@ -81,9 +81,10 @@ CRGB* initial_palette = icy_bright;                                 //
 #define GLITTER 1                                             //
 #define RAIN 2                                                //
 #define WARP_SPEED 3                                          //
-#define SPARKLE_SETH_TWO_CIRCLES 4                            //
-#define SPARKLE_THREE_CIRCLES 5                               //
-#define NUM_SPARKLE_ANIMATIONS 3  // Equal to last animation  //
+#define THREE_CIRCLES 4                                       //
+#define TWO_COINS 5                                           //
+#define TWINKLE 6                                             //
+#define NUM_SPARKLE_ANIMATIONS 6  // Equal to last animation  //
                                                               //
 // EDM animations (in the base layer, starting at 128)        //
 #define FREQ_PULSE 1                                          //
@@ -272,7 +273,7 @@ int8_t blacken_node_number = 0;                               //
 //------------------------------------------------------------//
 
 //------------------- Physical structure ---------------------------------//
-#define NUM_NODES 6                                                       //
+#define NUM_NODES 1                                                       //
 #define RINGS_PER_NODE 12                                                 //
 #define STRIPS_PER_NODE 4                                                 //
 #define PHYSICAL_LEDS_PER_RING 420                                        //

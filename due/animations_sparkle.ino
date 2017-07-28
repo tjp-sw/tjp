@@ -138,66 +138,91 @@ inline void sparkle_warp_speed() {
 }
 
 
-
-
-
-
-
-
 //---------------------------------- SPARKLE 3 CIRCLES ---------------------------
 // Highlights the 3 most prominent circles on the torus
 // Each of these circles moves around the torus to parallel circles
 // 
-// fixme: allow speed to change as parameter
-// fixme: add 3rd circle - only 2 easiest circles for now
 
-inline void sparkle_three_circles() {}
+inline void sparkle_three_circles() {
 
-//---------------------------------- SPARKLE 2 CIRCLES ---------------------------
-inline void sparkle_seth_two_circles() {}
-
-
-/* This code is buggy  
-{
-  uint8_t ring, pixel;
-  uint8_t inter_throttle, intra_throttle;
-
+  uint8_t ring, inter_throttle, intra_throttle, coin_throttle;
+  uint8_t slope = LEDS_PER_RING / NUM_RINGS;  // slope in ring-pixel plane of coin circle
+  int pixel;
+  
   uint8_t vertical_color = get_sparkle_color(0, 4);
   uint8_t horizontal_color = get_sparkle_color(1, 6);
 
   clear_sparkle_layer();
-  
+
   // vertical circle
   for (pixel = 0; pixel < LEDS_PER_RING; pixel++) {
-    sparkle_layer[ring-1][pixel] =vertical_color;
+    sparkle_layer[current_ring][pixel] = vertical_color;
   }
 
   // horizontal circle
-  for (ring = 0; ring < 4; ring++) {
-    sparkle_layer[ring-1][pixel] = horizontal_color;
+  for (ring = 0; ring < NUM_RINGS; ring++) {
+    sparkle_layer[ring][current_pixel] = horizontal_color;
   }
 
-  // third circle has a slope of 3
-  // work around rings simultaneously from both sides
-//  for (ring = 0; ring < 4 / 2; ring++) {
-//    for (pixel = 0; pixel < HALF_VISIBLE; pixel += 102) { // fixme: 3 for real structure
- 
-//      sparkle[(ring + current_coin_bottom) % 72][pixel] = CRGB::Purple;
-//      sparkle[3 - (ring + current_coin_bottom) % 72][pixel] = CRGB::Purple;
-//    }
-//  }
+  // diagonal circle
+  for (ring = 0; ring < NUM_RINGS; ring++) {
+      sparkle_layer[(ring + current_coin) % NUM_RINGS][ring * slope] = horizontal_color;
+  }
 
   // move each circle start over one unit according to intra and inter ring speed
-  inter_throttle = SPARKLE_INTER_RING_SPEED % 30 + 20;
+  inter_throttle = SPARKLE_INTER_RING_SPEED % 30 + 10;
   if (sparkle_count % inter_throttle == 0) {
     current_ring = (current_ring + SPARKLE_INTER_RING_MOTION) % NUM_RINGS;
   }
-  intra_throttle = SPARKLE_INTRA_RING_SPEED % 30 + 20;
+  intra_throttle = SPARKLE_INTRA_RING_SPEED % 10 + 10;
   if (sparkle_count % intra_throttle == 0) {
     current_pixel = (current_pixel + SPARKLE_INTRA_RING_MOTION) % LEDS_PER_RING;
   }
+
+  // there's no parameter for this speed
+  coin_throttle = (inter_throttle + intra_throttle) / 2;
+  if (sparkle_count % coin_throttle == 0) {
+    current_coin = (current_coin + 1) % LEDS_PER_RING;
+  } 
 }
 
+
+//---------------------------------- SPARKLE 2 COINS ---------------------------
+// Highlights the 3 most prominent circles on the torus
+// Each of these circles moves around the torus to parallel circles
+// 
+
+inline void sparkle_two_coins() {
+  
+  uint8_t ring, coin_1_throttle, coin_2_throttle;
+  uint8_t slope = LEDS_PER_RING / NUM_RINGS;  // slope in ring-pixel plane of coin circle
+
+  uint8_t coin_1_color = get_sparkle_color(0, 6);
+  uint8_t coin_2_color = get_sparkle_color(1, 6);
+
+  clear_sparkle_layer();
+  
+  for (ring = 0; ring < NUM_RINGS; ring++) {
+      sparkle_layer[(ring + current_coin) % NUM_RINGS][ring * slope] = coin_1_color;
+  }
+
+  // current_ring is a global variable I'm re-using to save space. its meaning is base of coin 2
+  for (ring = 0; ring < NUM_RINGS; ring++) {
+    sparkle_layer[(ring + current_ring) % NUM_RINGS][LEDS_PER_RING- ring * slope] = coin_2_color;
+  }
+
+  // move each circle start over one unit according to intra and inter ring speed
+  coin_1_throttle = SPARKLE_INTER_RING_SPEED % 30 + 10;
+  if (sparkle_count % coin_1_throttle == 0) {
+    current_coin = (current_coin + SPARKLE_INTER_RING_MOTION) % NUM_RINGS;
+  }
+  
+  coin_2_throttle = SPARKLE_INTRA_RING_SPEED % 10 + 10;
+  if (sparkle_count % coin_2_throttle == 0) {
+    current_ring = (current_ring + SPARKLE_INTRA_RING_MOTION) % LEDS_PER_RING;
+  }
+
+}
 
 
 //---------------------------------- SPARKLE TWINKLE ---------------------------
@@ -206,33 +231,37 @@ inline void sparkle_seth_two_circles() {}
 // and then randomly and continuously increases or decreases their intensity over time
 
 inline void sparkle_twinkle() {
-  if (sparkle_count % SPARKLE_INTRA_RING_SPEED == 0) {
+  uint8_t dim, raw_color;
+
+  // fixme: could/should this be tied to parameter?
+  if ((sparkle_count % 2) == 0) {
     for (int ring = 0; ring < NUM_RINGS; ring++) {
-        for (int pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+      for (int pixel = 0; pixel < LEDS_PER_RING; pixel++) {
           
-            // only change intensity if pixel is chosen as star
-            if (get_sparkle_color(ring, pixel) != TRANSPARENT) {
+        // only change intensity if pixel is chosen as star
+        if (sparkle_layer[ring][pixel] != TRANSPARENT) {
 
-// need to update with brian's get dim code
- 
-                // increase or decrease intensity depending on whether dim is even or odd
-                if (dim[ring][pixel] == 6) { dim[ring][pixel] = 5; }
-                else if (dim[ring][pixel] == 1) { dim[ring][pixel] = 0; }
-                else if (dim[ring][pixel] % 2 == 0) { dim[ring][pixel] += 2; }
-                else { dim[ring][pixel] -= 2; }
+          dim = get_sparkle_dim_value(ring, pixel);
+          raw_color = get_sparkle_raw_color(ring, pixel);
 
-                // fixme: I can't figure out how to make this 2 color
-                // would need to know which color had been dimmed before to put same color back with different dimness.
-                // maybe it would look cool to let these colors change, not sure
-                // sparkle_color = (get_sparkle[ring][pixel] == ...) ? 0 : 1;
-                set_sparkle(ring, pixel, get_sparkle_color(0, dim[ring][pixel]));   
-            }
+          // cycle about 1/4 the brightness values each pass
+          // fixme: could this be tied to one of the parameters, rather than just using 4?
+          if (random16(4) == 0) {
 
+            // increase intensity if brightness is even, decrease if odd
+            if (dim == 6) { dim = 5; }
+            else if (dim == 1) { dim = 0; }
+            else if (dim % 2 == 0) { dim += 2; }
+            else { dim = dim - 2; }  
+
+            sparkle_layer[ring][pixel] = get_sparkle_color(raw_color, dim);
+          }
         }
+      }
     }
   }
 }
 
-*/
+
 
 

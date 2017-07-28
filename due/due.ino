@@ -39,8 +39,8 @@ inline void manually_set_animation_params() {             //
   // Use NONE to signify a layer that is off temporarily  //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   BASE_ANIMATION = NONE;                                  //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK
   MID_ANIMATION = NONE;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@    
-  SPARKLE_ANIMATION = NONE;                               //
-  EDM_ANIMATION = OFF;                                    //
+  SPARKLE_ANIMATION = TWINKLE;                            //
+  EDM_ANIMATION = NONE;                                   //
                                                           //
   BASE_COLOR_THICKNESS = 255;                             //
   BASE_BLACK_THICKNESS = 255;                             //
@@ -63,7 +63,7 @@ inline void manually_set_animation_params() {             //
   SPARKLE_COLOR_THICKNESS = 0;                            //
   show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = UP;  //
   SPARKLE_INTRA_RING_SPEED = 128;                         //
-  show_parameters[SPARKLE_INTER_RING_MOTION_INDEX] = NONE;//
+  show_parameters[SPARKLE_INTER_RING_MOTION_INDEX] = DOWN;//
   SPARKLE_INTER_RING_SPEED = 0;                           //
   SPARKLE_MIN_DIM = 0;                                    //
   SPARKLE_MAX_DIM = 255;                                  //
@@ -710,12 +710,16 @@ inline void draw_current_sparkle() {
       sparkle_warp_speed();
       break;
 
-    case SPARKLE_SETH_TWO_CIRCLES:
-      sparkle_seth_two_circles();
+    case THREE_CIRCLES:
+      sparkle_three_circles();
       break;
 
-    case SPARKLE_THREE_CIRCLES:
-      sparkle_three_circles();
+    case TWO_COINS:
+      sparkle_two_coins();
+      break;
+
+    case TWINKLE:
+      sparkle_twinkle();
       break;
 
     default:
@@ -867,12 +871,24 @@ inline void init_sparkle_animation() {
       sparkle_glitter(); // Generate a set of spots to rotate
       break;
 
-    case SPARKLE_THREE_CIRCLES:
-      clear_sparkle_layer();
+    case THREE_CIRCLES:
+    case TWO_COINS:
+      random16_set_seed(0); // Synchronize RNG on different nodes
       current_ring = random8(NUM_RINGS);
       current_pixel = random16(LEDS_PER_RING);
       current_coin = random8(NUM_RINGS);
       break;
+      
+    case TWINKLE:
+      random16_set_seed(0); // Synchronize RNG on different nodes
+      // Always draw full ring and brightness
+      SPARKLE_RANGE = 255;
+      SPARKLE_MIN_DIM = 0;
+      SPARKLE_MAX_DIM = 2;
+        
+      sparkle_glitter();
+      break;
+
 
     default:
       clear_sparkle_layer();
