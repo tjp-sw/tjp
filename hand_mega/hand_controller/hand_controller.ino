@@ -4,7 +4,6 @@
 // clean up parameter section
 // resolve gain?
 // communication, (10 samples per sec of each sensor)
-// stub out color of the day palette 
 // auto change color of the day
 // Test under various light conditions
 // general code clean up (remove globals and pass args)
@@ -45,8 +44,9 @@ uint32_t blue = strip.Color(0, 0, 255);
 uint32_t purple = strip.Color(128,0,128);
 uint32_t indigo = strip.Color(75, 0, 130);
 uint32_t white = strip.Color(255, 255, 255);
-
 uint32_t colorOfTheDay[7] = {red,orange, yellow, green, blue, purple, indigo};
+uint32_t currentColorOfTheDay = colorOfTheDay[0];
+uint32_t defaultTouchColor = currentColorOfTheDay;
 
 // configuration statements
 // use the following parameters to change node number, sensativity or default color scheme
@@ -54,8 +54,8 @@ uint8_t sensativity = 8; // range is 1 to 128
 int handBrightness = 50; // range is 1 to 255 (255 is brightest)
 int touchThreshhold = 10;
 uint32_t defaultStartColor = white;
-uint32_t currentColorOfTheDay = colorOfTheDay[0];
-uint32_t defaultTouchColor = currentColorOfTheDay;
+uint8_t sampleFrequency = 100; // times per sec to look for touches
+
 
 // setup is automatically called first
 void setup() {
@@ -126,7 +126,7 @@ void loop() {
     //colorSet(defaultStartColor); 
   }
   strip.show();
-  delay(10);
+  delay(1000/sampleFrequency);
 }
 
 void setColorPalette(void) {
