@@ -38,9 +38,15 @@ int pin = 6;
 int numberOfPixels = 106;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(numberOfPixels, pin, NEO_GRB + NEO_KHZ800);
 uint32_t red = strip.Color(255, 0, 0);
+uint32_t orange = strip.Color(255, 165, 0);
+uint32_t yellow = strip.Color(255, 255, 0);
 uint32_t green = strip.Color(0, 255, 0);
 uint32_t blue = strip.Color(0, 0, 255);
+uint32_t purple = strip.Color(128,0,128);
+uint32_t indigo = strip.Color(75, 0, 130);
 uint32_t white = strip.Color(255, 255, 255);
+
+uint32_t colorOfTheDay[7] = {red,orange, yellow, green, blue, purple, indigo};
 
 // configuration statements
 // use the following parameters to change node number, sensativity or default color scheme
@@ -48,8 +54,8 @@ uint8_t sensativity = 8; // range is 1 to 128
 int handBrightness = 50; // range is 1 to 255 (255 is brightest)
 int touchThreshhold = 10;
 uint32_t defaultStartColor = white;
-uint32_t defaultColorOfTheDay = blue;
-uint32_t defaultTouchColor = green;
+uint32_t currentColorOfTheDay = colorOfTheDay[0];
+uint32_t defaultTouchColor = currentColorOfTheDay;
 
 // setup is automatically called first
 void setup() {
@@ -61,6 +67,10 @@ void setup() {
 
 // after setup main loop excutes automatically
 void loop() {
+  // check what day it is
+  setColorPalette();
+  
+  // Record Touches
   if (wasThumbTouched() && wasPointerTouched() && wasMiddleTouched() && wasRingTouched() && wasPinkyTouched() && wasPalmTouched()) {
       colorSet(defaultTouchColor);    
   }
@@ -119,6 +129,12 @@ void loop() {
   delay(10);
 }
 
+void setColorPalette(void) {
+  // todo - set color of the day based on day of the week (0-6)
+  currentColorOfTheDay = colorOfTheDay[0];
+  defaultTouchColor = currentColorOfTheDay;
+}
+
 void sendTouchMessage() {
   Serial.println("Send touch received message");
   // TODO - put touch received message to pi code here
@@ -129,7 +145,7 @@ void startUpColorSequence(){
   strip.show(); // Initialize all pixels to 'off'
   strip.setBrightness(handBrightness);
   turnOnHandOutline();
-  colorSet(defaultColorOfTheDay);
+  colorSet(currentColorOfTheDay);
   strip.show();
   
   drawPalm(red);
@@ -306,7 +322,7 @@ void printRegister(int registerToPrint) {
 void turnOnHandOutline(void) {
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
-  colorWipe(white, 10); // white 
+  colorWipe(currentColorOfTheDay, 10); // white 
 }
 
 void drawPalm(uint32_t c){
@@ -348,7 +364,6 @@ void drawThumb(uint32_t c){
 void drawArea(uint32_t c, int start, int end){
   for(uint16_t i = start; i <= end; i++) {
     strip.setPixelColor(i, c);
-    //strip.show();
   } 
 }
 
@@ -364,7 +379,6 @@ void colorSet(uint32_t c) {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
     strip.setPixelColor(i, c);
   }
-  //strip.show();
 }
 
 
