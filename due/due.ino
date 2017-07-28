@@ -36,11 +36,11 @@
 inline void manually_set_animation_params() {             //
                                                           //
   // Set to OFF to disable a layer during CYCLE'ing.      //
-  // Use NONE to signify a layer that is off temporarily  //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  BASE_ANIMATION = NONE;                                  //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK
-  MID_ANIMATION = NONE;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@    
-  SPARKLE_ANIMATION = TWINKLE;                            //
-  EDM_ANIMATION = NONE;                                   //
+  // Use NONE to signify a layer that is off temporarily  //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  BASE_ANIMATION = LEE_PICK_HSV;                          //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK, LEE_PICK_HSV
+  MID_ANIMATION = NONE;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  SPARKLE_ANIMATION = NONE;                               //
+  EDM_ANIMATION = OFF;                                    //
                                                           //
   BASE_COLOR_THICKNESS = 255;                             //
   BASE_BLACK_THICKNESS = 255;                             //
@@ -648,6 +648,10 @@ inline void draw_current_base() {
 
     case LEE_CHECK:
       check_color();
+      break;
+
+    case LEE_PICK_HSV:
+      pick_hsv_colors();
       break;
 
     default:

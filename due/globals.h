@@ -64,6 +64,7 @@ CRGB* initial_palette = icy_bright;                                 //
 #define LEE_COLOR_RANGE 250                                   //
 #define LEE_BRIGHTNESS 249                                    //
 #define LEE_CHECK 248                                         //
+#define LEE_PICK_HSV 247                                      //
 #define NUM_BASE_ANIMATIONS 2  // Equal to last animation     //
                                                               //
 // Mid layer                                                  //

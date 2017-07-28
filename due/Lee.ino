@@ -134,3 +134,115 @@ void check_color() {
     }
   }
 }
+
+void pick_hsv_colors() {
+  Serial.setTimeout(500);
+  uint8_t starting_hue = 0;
+  uint8_t hue_increment = 4;
+  uint8_t brightness = 255;
+  CRGB selected_colors[7] = { CRGB::Black, CRGB::Black, CRGB::Black, CRGB::Black, CRGB::Black, CRGB::Black, CRGB::Black };
+
+  String text;
+  int temp;
+  Serial.println();
+  Serial.println();
+  
+  while(true) {
+    pick_hsv_colors_draw(starting_hue, hue_increment, brightness, selected_colors);
+    Serial.println();
+    Serial.println("1. Set starting hue");
+    Serial.println("2. Set hue increment");
+    Serial.println("3. Set brightness");
+    Serial.println("4. Pick a color");
+
+    while(Serial.available() == 0) ;
+    String text = Serial.readString();
+    switch(text.toInt()) {
+      case 1:
+        Serial.println("Enter starting hue (0 to 255):");
+        while(Serial.available() == 0) ;
+        text = Serial.readString();
+        temp = text.toInt();
+        if(temp < 0 || temp > 255) { Serial.println("Invalid entry"); }
+        else { starting_hue = temp; }
+        break;
+        
+      case 2:
+        Serial.println("Enter hue increment (1 to 10):");
+        while(Serial.available() == 0) ;
+        text = Serial.readString();
+        temp = text.toInt();
+        if(temp < 1 || temp > 10) { Serial.println("Invalid entry"); }
+        else { hue_increment = temp; }
+        break;
+
+      case 3:
+        Serial.println("Enter brightness (1 to 255):");
+        while(Serial.available() == 0) ;
+        text = Serial.readString();
+        temp = text.toInt();
+        if(temp < 1 || temp > 255) { Serial.println("Invalid entry"); }
+        else { brightness = temp; }
+        break;
+
+      case 4:
+        Serial.println("Enter strand # (1 to 10):");
+        while(Serial.available() == 0) ;
+        text = Serial.readString();
+        temp = text.toInt();
+        if(temp < 1 || temp > 10) { Serial.println("Invalid entry"); }
+        else { 
+          uint8_t strand = temp;
+          Serial.println("Enter pixel # (1 to 256):");
+          while(Serial.available() == 0) ;
+          text = Serial.readString();
+          temp = text.toInt();
+          if(temp < 0 || temp > 256) { Serial.println("Invalid entry"); }
+          else {
+            uint8_t pixel = temp - 1;
+            Serial.println("Enter palette color # (1 to 7):");
+            while(Serial.available() == 0) ;
+            text = Serial.readString();
+            temp = text.toInt();
+            if(temp < 1 || temp > 7) { Serial.println("Invalid entry"); }
+            else {
+              selected_colors[temp-1] = CHSV(starting_hue + hue_increment * (strand-1), 256 - pixel, brightness);
+              CRGB tempCol = selected_colors[temp-1]; 
+              Serial.println();
+
+              for(uint8_t i = 0; i < 7; i++) { Serial.println("Color " + String(i+1) + " = rgb(" + String(selected_colors[i].r) + ", " + String(selected_colors[i].g) + ", " + String(selected_colors[i].b) + ")"); }
+              Serial.println();
+            }
+          }
+        }
+        break;
+        
+      default:
+        Serial.println("Invalid entry");
+    }
+  }
+}
+
+void pick_hsv_colors_draw(uint8_t starting_hue, uint8_t hue_increment, uint8_t brightness, CRGB selected_colors[7]) {
+  for(uint8_t ring = 0; ring < 10; ring++) {
+    uint8_t hue = starting_hue + ring*hue_increment;
+    uint16_t curPixel = 0;
+
+    for(int16_t saturation = 255; saturation > 84; saturation--) {
+      set_led(ring, curPixel, CHSV(hue, saturation, brightness));
+      if(++curPixel % 20 == 0) {
+        set_led(ring, curPixel++, CRGB::Black);
+      }
+    }
+  }
+
+  
+  for(uint8_t col = 0; col < 7; col++) {
+    for(uint8_t i = 0; i < 10; i++) {
+      set_led(11, i + 12*col, selected_colors[col]);
+    }
+  }
+  
+  LEDS.show();
+}
+
