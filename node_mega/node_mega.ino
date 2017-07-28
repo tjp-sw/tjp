@@ -1,5 +1,5 @@
 #define PI_CONTROLLED
-#define DEBUG
+//#define DEBUG
 
 void setup()
 {

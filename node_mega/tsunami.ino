@@ -14,8 +14,8 @@
 
 Tsunami tsunami;                // Our Tsunami object
 //variables tracking currently playing song data
-boolean new_ctrl_msg = false;  
-int channels[ 18 ] = { 0 };    
+boolean new_ctrl_msg = false;
+int channels[ 18 ] = { 0 };
 bool ch_loop[ 18 ] = { false };
 int ch_gain[ 18 ] = { 0 };
 //int node = 0;
@@ -37,7 +37,7 @@ struct control_message {
 
 control_message ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
 
-// ***Magically figure out what node this is. 
+// ***Magically figure out what node this is.
 // ***Probably should be slightly less magical in the final version
 //void get_node() {
 //  node = 1;
@@ -54,29 +54,36 @@ void setup_tsunami () {
   // Tsunami startup at 57600
   tsunami.start();
   delay(10);
-  
+
   // Send a stop-all command and reset the sample-rate offset, in case we have
   //  reset while the Tsunami was already playing.
   tsunami.stopAllTracks();
   tsunami.samplerateOffset(0, 0);
-  tsunami.masterGain(0, 0);              // Reset the master gain to 0dB  
+  tsunami.masterGain(0, 0);              // Reset the master gain to 0dB
 
   // Enable track reporting from the Tsunami
   tsunami.setReporting(true);
-  
+
   // Allow time for the Tsunami to respond with the version string and
   //  number of tracks.
-  delay(100); 
+  delay(100);
+  Serial.println("Tsunami Ready");
 }
 
 void handle_command(char command[]) {
-    // Serial.println(command);
-    for( unsigned int letter = 1; letter < sizeof(command)/sizeof(command[0]); letter = letter + 1 ) {
-        char inChar = command[letter];
+    /*Serial.println(command);
+    Serial.print(sizeof(command)/sizeof(command[0]));
+    Serial.println(" characters");
+    //Serial.print(command.length());*/
+    String cmd_str (command);
+    Serial.println(cmd_str);
+    Serial.println (cmd_str.length());
+    for( unsigned int letter = 0; letter < cmd_str.length(); letter = letter + 1 ) {
+        char inChar = cmd_str[letter];
 
          if (inChar == '\n') {
             msg_position = 0;
-            which_field=0;
+            which_field = 0;
             ch_string = "";
             input_string= "";
             if ((ctrl_msg.node == node_number) || (ctrl_msg.node == 0)){
@@ -162,13 +169,24 @@ void handle_command(char command[]) {
           input_string+= inChar;
      }
   }
+  msg_position = 0;
+  which_field = 0;
+  ch_string = "";
+  input_string= "";
+  if ((ctrl_msg.node == node_number) || (ctrl_msg.node == 0)){
+    new_ctrl_msg = true;
+    if (DEBUG_LEVEL>1)
+      Serial.println("New Message");
+  } else {
+    ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
+  }
 }
 
 
 void do_command () {
   Serial.println("---Control Message---");
   Serial.print("Node ");
-  Serial.println(ctrl_msg.node);  
+  Serial.println(ctrl_msg.node);
   Serial.print("Command ");
   Serial.println(ctrl_msg.command);
   for (int x=0; x<18; x++) {
@@ -196,7 +214,7 @@ void do_command () {
     Serial.println(ctrl_msg.bool_loop);
   }
   Serial.println("--------------------");
-    
+
   switch (ctrl_msg.command) {
     //Change the music playing
     case SETAUDIO :
@@ -224,8 +242,8 @@ void do_command () {
       tsunami.resumeAllInSync();
       break;
 
-    //change gain 
-    //The range for gain is -70 to +10. A value of 0 (no gain) plays the track at the base volume of the wav file. 
+    //change gain
+    //The range for gain is -70 to +10. A value of 0 (no gain) plays the track at the base volume of the wav file.
     case SETVOL :
       if (DEBUG_LEVEL)
         Serial.println("SetVol");
@@ -252,14 +270,14 @@ void do_command () {
 
     //Instantly mute all audio on node.
     case MUTEALLAUDIO :
-      Serial.println("MuteAllAudio");   
+      Serial.println("MuteAllAudio");
       tsunami.stopAllTracks();
-      memset(ch_loop,0,sizeof(ch_loop));   
-      memset(channels,0,sizeof(channels)); 
+      memset(ch_loop,0,sizeof(ch_loop));
+      memset(channels,0,sizeof(channels));
       memset(ch_gain,0,sizeof(ch_gain));
       break;
   }
-  ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0}; 
+  ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
 }
 
 void do_tsunami() {
@@ -296,12 +314,12 @@ void do_tsunami() {
   tsunami.resumeAllInSync();
 }
 
-void serialEvent() {  
+void serialEvent() {
   while (Serial.available()) {
       // get the new byte:
      char inChar = (char)Serial.read();
 
-     if (inChar == '\n') { 
+     if (inChar == '\n') {
         msg_position = 0;
         which_field=0;
         ch_string = "";
@@ -313,12 +331,12 @@ void serialEvent() {
         } else {
           ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
         }
-        break; 
+        break;
      } else if (inChar == ';') {
         if (DEBUG_LEVEL>1) {
           Serial.print("input_string=");
           Serial.println(input_string);
-        } 
+        }
         switch (which_field) {
           case 0 :
             ctrl_msg.node= atoi(input_string.c_str());
@@ -327,7 +345,7 @@ void serialEvent() {
               Serial.println(ctrl_msg.node);
             }
            break;
-            
+
           case 1 :
             ctrl_msg.command= atoi(input_string.c_str());
             if (DEBUG_LEVEL) {
@@ -335,7 +353,7 @@ void serialEvent() {
               Serial.println(ctrl_msg.command);
             }
             break;
-            
+
           case 2 :
             switch (ctrl_msg.command) {
               case SETAUDIO :
@@ -346,7 +364,7 @@ void serialEvent() {
                 break;
             }
             break;
-            
+
           case 3 :
            for (int ch = 0; ch < 18; ch++) {
               do  {
@@ -377,7 +395,7 @@ void serialEvent() {
               }
               ch_string = "";
               msg_position++;
-              if (msg_position >= strlen(input_string.c_str())) {  
+              if (msg_position >= strlen(input_string.c_str())) {
                 break;
               }
             }
@@ -387,8 +405,7 @@ void serialEvent() {
         which_field++;
      } else {
       input_string+= inChar;
-     }   
-  }  
+     }
+  }
 }
-
 

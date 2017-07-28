@@ -6,21 +6,21 @@
   #include <Ethernet.h>
   #include <limits.h>    // provides LONG_MAX
   
-  IPAddress brain(169,254,136,0);
+  IPAddress brain(169,254,96,0);
   IPAddress subnet_mask(255,255,0,0);
-  
+
   uint8_t mega_number;
   unsigned long next_connect_msec;
   String network_data;
-  
+
   EthernetClient remote;
-  
+
   #define NodeMate  Serial3
 
   // declare here when not part of due.ino
   unsigned long long epoch_msec;
-  uint8_t node_number; 
-  
+  uint8_t node_number;
+
 #elif defined(I_AM_DUE)
   #define  NodeMate  Serial1
 
@@ -149,11 +149,11 @@ inline void send_audio_packet() {
 // Sets up LED array after being assigned a node by the Pi.
 inline void assign_node(uint8_t node_num) {
   node_number = node_num;
-  
+
   #ifdef DEBUG
     Serial.println("Assigned node #" + String(node_number));
   #endif
-  
+
   for(int i = 0; i < 4; i ++)
     leds[LEDS_PER_STRIP*i] = CRGB::Red;
   LEDS.show();
@@ -217,7 +217,7 @@ inline void setup_communication() {
       print_status("a random 4-digit number is ", random(10000));
       print_status("initialization is complete for mega ", (long)mega_number);
     #endif
-    
+
     delay_next_network_connection(1);
   #endif // I_AM_MEGA
 
@@ -231,7 +231,7 @@ inline void process_commands(const int source, String& input) {
     #ifdef DEBUG
       print_status("bytes available: ", (long)input.length());
     #endif
-    
+
     size_t size = 1;
     char command = input[0];
     switch (command) {
@@ -289,9 +289,9 @@ inline void process_commands(const int source, String& input) {
         network_data = "";
         delay_next_network_connection(10);
         break;
-      
+
       #endif // I_AM_MEGA
- 
+
       case 'n':
       case 'p':
         size += 1;  // unsigned 8-bit integer
@@ -300,13 +300,13 @@ inline void process_commands(const int source, String& input) {
             #ifdef I_AM_DUE
               assign_node(input[1]);
             #endif
-  
+
             led_program = node_number == 0 ? 6 : node_number;  // signal the node number
 
             #ifdef I_AM_MEGA
               NodeMate.write((uint8_t *)input.c_str(), size);
             #endif // I_AM_MEGA
-            
+
           }
           else if (command == 'p') {
             led_program = input[1];
@@ -326,14 +326,14 @@ inline void process_commands(const int source, String& input) {
           #endif
         }
         break;
- 
+
       case 's':
         size += NUM_SHOW_PARAMETERS + 3*NUM_COLORS_PER_PALETTE;
         if (input.length() >= size) {
           #ifdef I_AM_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
           #endif // I_AM_MEGA
-      
+
           #ifdef I_AM_DUE
             uint8_t params[NUM_SHOW_PARAMETERS], colors[3*NUM_COLORS_PER_PALETTE];
             size_t i = 0;
@@ -351,23 +351,23 @@ inline void process_commands(const int source, String& input) {
               uint8_t last_mid_animation = MID_ANIMATION;
               uint8_t last_sparkle_animation = SPARKLE_ANIMATION;
               uint8_t last_edm_animation = EDM_ANIMATION;
-              
+
               memcpy(show_parameters, params, NUM_SHOW_PARAMETERS);
               memcpy(target_palette, colors, 3*NUM_COLORS_PER_PALETTE);
               blend_base_layer = current_palette[0] != target_palette[0] || current_palette[1] != target_palette[1];
               blend_mid_layer = current_palette[2] != target_palette[2] || current_palette[3] != target_palette[3] || current_palette[4] != target_palette[4];
               blend_sparkle_layer = current_palette[5] != target_palette[5] || current_palette[6] != target_palette[6];
-    
+
               if(BASE_ANIMATION != last_base_animation) {
                 cleanup_base_animation(last_base_animation);
                 init_base_animation();
               }
-              
+
               if(MID_ANIMATION != last_mid_animation) {
                 cleanup_mid_animation(last_mid_animation);
                 init_mid_animation();
               }
-    
+
               if(SPARKLE_ANIMATION != last_sparkle_animation) {
                 cleanup_sparkle_animation(last_sparkle_animation);
                 init_sparkle_animation();
@@ -390,7 +390,7 @@ inline void process_commands(const int source, String& input) {
                   Serial.print(' ');
                   Serial.print(colors[i], DEC);
                 }
-    
+
                 Serial.println();
               #endif // DEBUG
             }
@@ -407,8 +407,8 @@ inline void process_commands(const int source, String& input) {
           #endif
         }
         break;
-  
-      
+
+
       case 't':
         size += 8;  // unsigned 64-bit integer
         if (input.length() >= size) {
@@ -419,7 +419,7 @@ inline void process_commands(const int source, String& input) {
             epoch_msec *= 256;
             epoch_msec += (uint8_t)input[i++];
           }
-      
+
           epoch_msec /= 1000; // convert microseconds to milliseconds
           epoch_msec -= loop_start_time_msec;
 
@@ -432,7 +432,7 @@ inline void process_commands(const int source, String& input) {
               print_status("time unchanged!");
             }
           #endif // DEBUG
-          
+
           #ifdef I_AM_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
           #endif // I_AM_MEGA
@@ -443,7 +443,7 @@ inline void process_commands(const int source, String& input) {
           #endif
         }
         break;
-    
+
       default:
         #ifdef DEBUG
           print_status("unknown command: ");
@@ -481,11 +481,11 @@ inline void do_heartbeat() {
     #ifdef I_AM_DUE
       NodeMate.write('d');
     #endif // I_AM_DUE
-    
+
     #ifdef DEBUG
       print_status("announcing");
     #endif
-    
+
     #ifdef I_AM_MEGA
       }
     #endif // I_AM_MEGA
@@ -498,13 +498,13 @@ inline void do_communication() {
   #ifdef I_AM_MEGA
     do_network_input();
   #endif // I_AM_MEGA
-  
+
   do_mate_input();
 
   #ifdef I_AM_THE_BEAT_DUE
     send_audio_packet();
   #endif
-  
+
   do_heartbeat();
   #ifdef DEBUG
     do_led();
