@@ -862,6 +862,7 @@ inline void init_sparkle_animation() {
       break;
 
     case WARP_SPEED:
+    case TWINKLE:
       random16_set_seed(0); // Synchronize RNG on different nodes
       // Always draw full ring and brightness
       SPARKLE_RANGE = 255;
@@ -878,17 +879,6 @@ inline void init_sparkle_animation() {
       current_pixel = random16(LEDS_PER_RING);
       current_coin = random8(NUM_RINGS);
       break;
-      
-    case TWINKLE:
-      random16_set_seed(0); // Synchronize RNG on different nodes
-      // Always draw full ring and brightness
-      SPARKLE_RANGE = 255;
-      SPARKLE_MIN_DIM = 0;
-      SPARKLE_MAX_DIM = 2;
-        
-      sparkle_glitter();
-      break;
-
 
     default:
       clear_sparkle_layer();
