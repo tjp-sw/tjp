@@ -358,14 +358,14 @@ void detect_audio_changes() {
     {
       if (abs(diff) > 1500) //major increase
       {
-        String output = "@@ at " + String(millis()-startMs) + " overall sound intensity change MAJOR event";
+        String output = "@@ at " + String(millis()-startMs) + " " + String(diff) + " overall amplitude change MAJOR event";
         char chars [53];
         output.toCharArray(chars, 53);
         debugToPC(chars);
       }
       else if(abs(diff) > 700) //"minor" increase
       {
-        String output = "@ at " + String(millis()-startMs) + " overall sound intensity change MINOR event";
+        String output = "@ at " + String(millis()-startMs) + " " + String(diff) + " overall amplitude change MINOR event";
         char chars [52];
         output.toCharArray(chars, 52);
         debugToPC(chars);
@@ -397,14 +397,14 @@ void doFreqBandDetection()
   {
     if(abs(diff) > 2)
     {
-      String output = "## at " + String(millis()-startMs) + " overall freqband change MAJOR event";
+      String output = "## at " + String(millis()-startMs) + " " + String(diff) + " overall freqband change MAJOR event";
       char chars [53];
       output.toCharArray(chars, 53);
       debugToPC(chars);
     }
     else if(abs(diff) > 0)
     {
-      String output = "# at " + String(millis()-startMs) + " overall freqband change MINOR event";
+      String output = "# at " + String(millis()-startMs) + " " + String(diff) + " overall freqband change MINOR event";
       char chars [52];
       output.toCharArray(chars, 52);
       debugToPC(chars);

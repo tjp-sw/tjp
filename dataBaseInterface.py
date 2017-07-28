@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from animationInfo import AnimationInfo
 
-#Class for interfacing with the animations database on the pi. 
+#Class for interfacing with the animations database on the pi.
 class DataBaseInterface:
 	'a class for interfacing with the database'
 	animationList = []
@@ -26,7 +26,7 @@ class DataBaseInterface:
 		animationInfo_4 = AnimationInfo(3, {1,2,3}, "animation4")
 		animationInfo_5 = AnimationInfo(4, {3,4,5}, "animation5")
 		mockEntryList = [animationInfo_1, animationInfo_2, animationInfo_3, animationInfo_4, animationInfo_5]
-		
+
 		return mockEntryList
 
 

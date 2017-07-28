@@ -1,55 +1,56 @@
 #!/usr/bin/python
+#from audioEvent import AudioEvent
 from enum import Enum
 
-#Classes for encapsulating animation info post retrieval from DB.
-#The attributes that will be stored in DB are slightly arbitrary but need to be populated...
-#I feel this will be the basis for selecting appropriate animations based on frequency response.
-#Certainly more inputs + randomization is necessary for the final animation output. 
 
-class FreqBand(Enum):
-   LOW = 0
-   MID = 1
-   HIGH = 2
+class AudioFileInfo:
+    events = []
+    event_index = 0
 
-#Frequency bands corresp
-class AnimationInfo:
-   'a class to hold animation characteristics'
+    def __init__(self, name, index, category):
+        self.name = name
+        self.category = category
+        self.file_index = index
 
-   def __init__(self, index, bestFreqBands, name):
-      self.index = index
-      self.bestFreqBands = bestFreqBands
-      self.name = name
+    def __repr__(self):
+        return "%s AudioFileInfo '%s' named_category:%s events: [%s]" % (self.file_index, self.name, self.category, self.events)
 
-   def __repr__(self):
-      return "Animation '%s' [index:%s, bestFreqBands:%s>]" % (self.name, self.index, self.bestFreqBands)
+    def addEvent(self, event):
+        self.events.append(event)
 
-   def displayInfo(self):
-      print "AnimatoinIndex : ", self.index,  ", BestFreqBands: ", self.bestFreqBands
+    def getNextEvent(self):
+        event = self.events[event_index]
+        self.event_index += 1
+        return event
 
-   def addBand(self, band):
-      self.bestFreqBands.add(band)
 
-   def containsBand(self, FreqBand):
-      return FreqBand in bestFreqBands
+class FreqBand:
+    #Low, Mid, High = range(3)
+    low = "low",
+    mid = "mid",
+    high = "high"
 
-class Animations:
-   'A class to contian lists of particular animations for various audio inputs. Ideally should be populated from the Database as the information is non-volitle'
-   totalNumOfAnimations = 0;
-   lowFreqAnimation = [];
-   midFreqAnimation = [];
-   highFreqAnimations = [];
 
-   def displayCount(self):
-     print "Total number of animations %d" % AnimationInfo.totalNumOfAnimations
+class Degree(Enum):
+    MINOR = 0,
+    MAJOR = 1
 
-   #Add animationInfo object to corresponding list(s) of suitable frequency range for the animation.
-   def addAnimation(animation_info):
-      if(FreqBand.LOW in animation_info.bestFreqBands):
-         lowFreqAnimation.append(animation_info);
-      if(FreqBand.MID in animation_info.bestFreqBands):
-         midFreqAnimation.append(animation_info);
-      if(FreqBand.HIGH in animation_info.bestFreqBands):
-         highFreqAnimation.append(animation_info);
 
-      totalNumOfAnimations += 1
+class Kind(Enum):
+    Amplitude = "@",
+    FreqBand = "!"
 
+
+class AudioEvent:
+    'a class to hold an audio event info'
+
+    def __init__(self, time, degree, magnitude, kind):
+        self.time = time
+        self.degree = degree
+        self.magnitude = magnitude
+        self.kind = kind
+
+    #def __repr__(self):
+    #    return "%s event @ %s [%s, magnitude:%s]\n" % (self.kind, self.time, self.degree, self.magnitude)
+    def __repr__(self):
+        return "kind: %s, time: %s, degree: %s, magnitude: %s" % (self.kind, self.time, self.degree, self.magnitude)
