@@ -10,13 +10,13 @@ loop_counter = 60 ms; 1000ms = 1 second. 16.6 loop_counter per second
 byte start_flag = 0; 
 void bloom(byte lock){
   short int ring,pixel,spacing,bound;
-  spacing = round(1200/LEDS_PER_RING); // should be 3;
+  spacing = round(1200/(float)LEDS_PER_RING); // should be 3;
   bound = round((loop_count/16.6)*spacing);
   // make sure everything is black first time into function
   if(!start_flag){
     for( ring = 0; ring < NUM_RINGS; ring++){
       for( pixel = 0; pixel < LEDS_PER_RING; pixel++){
-        base_layer[ring][pixel] = BLACK;
+        mid_layer[ring][pixel] = BLACK;
         start_flag = 1;
       }
     }
@@ -68,14 +68,14 @@ void drip(byte lock){
   if(!start_flagg){
      for( ring = 0; ring < NUM_RINGS; ring++){
       for( pixel = 0; pixel < LEDS_PER_RING; pixel++){
-        base_layer[ring][pixel] = BLACK;
+        mid_layer[ring][pixel] = BLACK;
         start_flagg = 1;
       }
     }
   }
   // determine number of pixels to placed and light them up
   dif = light_pix;
-  light_pix = round(loop_count/50);
+  light_pix = round(loop_count/(float)50);
   for(ring = 0; ring <NUM_RINGS; ring++){
     for(pixel = 0; pixel<light_pix; pixel++){
       mid_layer[ring][pixel] = get_mid_color(0);

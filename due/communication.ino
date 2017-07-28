@@ -38,18 +38,18 @@ String mate_data;
 
 
 #ifdef DEBUG
-unsigned long now_sec(const unsigned long when_msec) {
+inline unsigned long now_sec(const unsigned long when_msec) {
   return (unsigned long)((epoch_msec + when_msec) / 1000);
 }
 
-void print_status(const char* status) {
+inline void print_status(const char* status) {
   Serial.print(status);
   Serial.print(" at ");
   Serial.print(now_sec(millis()), DEC);
   Serial.println(" seconds");
 }
 
-void print_status(const char* status, const long value) {
+inline void print_status(const char* status, const long value) {
   Serial.print(status);
   Serial.print(value, DEC);
   Serial.print(" at ");
@@ -57,7 +57,7 @@ void print_status(const char* status, const long value) {
   Serial.println(" seconds");
 }
 
-void do_led() {
+inline void do_led() {
   uint8_t new_led_state = led_state;  // default to current state
 
   if (led_program == 0) {   // steady off
@@ -141,35 +141,36 @@ void do_network_input() {
 
 
 #ifdef I_AM_DUE
-void send_audio_packet() {
+inline void send_audio_packet() {
   uint8_t audioData[2] = { is_beat, downbeat_proximity };
   NodeMate.write(audioData, sizeof audioData);
 }
 
 // Sets up LED array after being assigned a node by the Pi.
-void assign_node(uint8_t node_num) {
+inline void assign_node(uint8_t node_num) {
   node_number = node_num;
   
   #ifdef DEBUG
     Serial.println("Assigned node #" + String(node_number));
-    for(int i = 0; i < 4; i ++)
-      leds[LEDS_PER_STRIP*i] = CRGB::Red;
-    LEDS.show();
-    delay(500);
-    for(int i = 0; i < 4; i ++)
-      leds[LEDS_PER_STRIP*i] = CRGB::Green;
-    LEDS.show();
-    delay(500);
-    for(int i = 0; i < 4; i ++)
-      leds[LEDS_PER_STRIP*i] = CRGB::Blue;
-    LEDS.show();
-    delay(500);
   #endif
+  
+  for(int i = 0; i < 4; i ++)
+    leds[LEDS_PER_STRIP*i] = CRGB::Red;
+  LEDS.show();
+  delay(500);
+  for(int i = 0; i < 4; i ++)
+    leds[LEDS_PER_STRIP*i] = CRGB::Green;
+  LEDS.show();
+  delay(500);
+  for(int i = 0; i < 4; i ++)
+    leds[LEDS_PER_STRIP*i] = CRGB::Blue;
+  LEDS.show();
+  delay(500);
 }
 #endif
 
 
-void setup_communication() {
+inline void setup_communication() {
   #ifdef DEBUG
     #ifdef I_AM_MEGA
       Serial.begin(115200); // Already called for due in setup()
@@ -225,7 +226,7 @@ void setup_communication() {
   #endif // I_AM_DUE && DEBUG
 }
 
-void process_commands(const int source, String& input) {
+inline void process_commands(const int source, String& input) {
   while (input.length() > 0) {
     #ifdef DEBUG
       print_status("bytes available: ", (long)input.length());
@@ -240,7 +241,7 @@ void process_commands(const int source, String& input) {
         if (input.length() >= size) {
             size += input[1];
             if (input.length() >= size) {
-                handle_command(input.substring(2, size))
+                handle_command(input.substring(2, size).c_str());
             }
             else {
               #ifdef DEBUG
@@ -256,7 +257,7 @@ void process_commands(const int source, String& input) {
         break;
 
       case 'b':
-        size += 54;
+        size += AUDIO_PACKET_SIZE;
         if (input.length() >= size) {
           // pass the beat message through in both directions
           if (source == mate && remote.connected()) {
@@ -349,6 +350,7 @@ void process_commands(const int source, String& input) {
               uint8_t last_base_animation = BASE_ANIMATION;
               uint8_t last_mid_animation = MID_ANIMATION;
               uint8_t last_sparkle_animation = SPARKLE_ANIMATION;
+              uint8_t last_edm_animation = EDM_ANIMATION;
               
               memcpy(show_parameters, params, NUM_SHOW_PARAMETERS);
               memcpy(target_palette, colors, 3*NUM_COLORS_PER_PALETTE);
@@ -370,7 +372,12 @@ void process_commands(const int source, String& input) {
                 cleanup_sparkle_animation(last_sparkle_animation);
                 init_sparkle_animation();
               }
-              
+
+              if(EDM_ANIMATION != last_edm_animation) {
+                cleanup_edm_animation(last_edm_animation);
+                init_edm_animation();
+              }
+
               #ifdef DEBUG
                 Serial.print("params");
                 for (i = 0; i < sizeof params; i++)
@@ -449,7 +456,7 @@ void process_commands(const int source, String& input) {
   }
 }
 
-void do_mate_input() {
+inline void do_mate_input() {
   int len = NodeMate.available();
   if (len > 0) {
     mate_last_input_msec = loop_start_time_msec;
@@ -464,7 +471,7 @@ void do_mate_input() {
   }
 }
 
-void do_heartbeat() {
+inline void do_heartbeat() {
   if (node_number == 255 && loop_start_time_msec > last_announcement_msec + 1000) {
     #ifdef I_AM_MEGA
       if (remote.connected()) {
@@ -486,7 +493,7 @@ void do_heartbeat() {
   }
 }
 
-void do_communication() {
+inline void do_communication() {
   loop_start_time_msec = millis();
   #ifdef I_AM_MEGA
     do_network_input();

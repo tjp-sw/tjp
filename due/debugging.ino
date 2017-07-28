@@ -1,33 +1,11 @@
 
-#ifdef DEBUG_TIMING
-// For debugging only, writes all saved variables
-void write_timing_output() {
-  int num_serial_vals = 0;
-  
-  #ifdef DEBUG_TIMING
-    Serial.print("Timing:");
-    num_serial_vals = 9;
-  #endif
-  
-  for(int i = 0; i < num_serial_vals; i++) {
-    Serial.print("\t" + String(serial_val[i]));
-  }
-
-  if(num_serial_vals > 0)
-  {
-    Serial.println();
-    Serial.flush(); // Guarantees buffer will write if future code hangs
-  }
-}
-#endif
-
 // To help with plugging in strips and troubleshooting. This does not use layers or palettes.
 // Scrolls blocks of pixels around each ring. Rings will be colored RGBWRGBW...
 // Number of lit pixels signals which strand it is for the current node
 // Number of empty pixels singals which node number it is
-void draw_debug_mode() {  
+inline void draw_debug_mode() {  
   uint8_t ringOffset, unlitPixels, throttle;
-  
+
   if(node_number < NUM_NODES) {
     // Node number has been assigned
     ringOffset = node_number*RINGS_PER_NODE;
@@ -49,7 +27,7 @@ void draw_debug_mode() {
   {
     // Pick color based on ring
     uint8_t temp = (ring + ringOffset) % 4;
-    CRGB ringColor = temp == 0 ? CRGB::Red : temp == 1 ? CRGB::Green : temp == 2 ? CRGB::Blue : CRGB::White;
+    CRGB ringColor = temp == 0 ? CRGB::Red : temp == 1 ? CRGB::Green : temp == 2 ? CRGB::Blue : CRGB(90, 90, 90);
 
     
     // Determine strand number and number of pixels to light up
@@ -74,34 +52,35 @@ void draw_debug_mode() {
       if(idx >= LEDS_PER_RING) continue;
 
       if(curPixel % period < litPixels) { // This line references curPixel since we are talking about the pattern
-        leds[get_1d_index(ring, idx)] = ringColor; // This line references idx since we are talking about where the pattern gets written
-        //Serial.println(String(ring) + ", " + String(idx));
+        set_led(ring, idx, ringColor); // This line references idx since we are talking about where the pattern gets written
       }
     }
   }
 }
 
-void test_strands() {
-  const uint16_t delay_inc = 500;
+#define TEST_STRANDS_DELAY_INC 500
+inline void test_strands() {
   static uint16_t delay_factor = 0;
   for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
     if(ring == (loop_count % RINGS_PER_NODE)) {
       if(ring == 0) {
         delay_factor++;
-        Serial.println("delay(" + String(delay_inc * delay_factor) + ")");
+        #ifdef DEBUG
+          Serial.println("delay(" + String(TEST_STRANDS_DELAY_INC * delay_factor) + ")");
+        #endif
       }
       for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
-        leds[get_1d_index(ring, pixel)] = CRGB::White;//CRGB(128,128,128);
+        set_led(ring, pixel, CRGB::White);//CRGB(128,128,128);
       }
     }
     else {
       for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
-        leds[get_1d_index(ring, pixel)] = CRGB::Black;
+        set_led(ring, pixel, CRGB::Black);
       }
     }
   }
   
   LEDS.show();
-  delay(delay_inc * delay_factor);
+  delay(TEST_STRANDS_DELAY_INC * delay_factor);
 }
 
