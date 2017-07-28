@@ -50,7 +50,7 @@ uint32_t defaultTouchColor = currentColorOfTheDay;
 
 // configuration statements
 // use the following parameters to change node number, sensativity or default color scheme
-uint8_t sensativity = 8; // range is 1 to 128
+uint8_t sensativity = 5; // range is 1 to 128
 int handBrightness = 50; // range is 1 to 255 (255 is brightest)
 int touchThreshhold = 10;
 uint32_t defaultStartColor = white;
@@ -68,9 +68,15 @@ void setup() {
 // after setup main loop excutes automatically
 void loop() {
   // check what day it is
-  setColorPalette();
+  //setColorPalette();
   
   // Record Touches
+  checkForTouch();
+ 
+  delay(1000/sampleFrequency);
+}
+
+void checkForTouch(void) {
   if (wasThumbTouched() && wasPointerTouched() && wasMiddleTouched() && wasRingTouched() && wasPinkyTouched() && wasPalmTouched()) {
       colorSet(defaultTouchColor);    
   }
@@ -125,10 +131,9 @@ void loop() {
     proximityDetected();
     //colorSet(defaultStartColor); 
   }
+  
   strip.show();
-  delay(1000/sampleFrequency);
 }
-
 void setColorPalette(void) {
   // todo - set color of the day based on day of the week (0-6)
   currentColorOfTheDay = colorOfTheDay[0];
