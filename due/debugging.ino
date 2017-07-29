@@ -32,12 +32,16 @@ inline void draw_debug_mode() {
     
     // Determine strand number and number of pixels to light up
     uint8_t strand;
-    if(ring < RINGS_PER_NODE/2) {
-      strand = ring % 2;
-    }
-    else {
-      strand = 2 + (ring % 2);
-    }
+    #if STRIPS_PER_NODE == 4
+      if(ring < RINGS_PER_NODE/2) {
+        strand = ring % 2;
+      }
+      else {
+        strand = 2 + (ring % 2);
+      }
+    #elif STRIPS_PER_NODE == 6
+      strand = (ring % 2) + 2*(ring/4);
+    #endif
     
     uint8_t litPixels = 1 + strand;
 

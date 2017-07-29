@@ -274,13 +274,18 @@ int8_t blacken_node_number = 0;                               //
 //------------------------------------------------------------//
 
 //------------------- Physical structure ---------------------------------//
-#define NUM_NODES 1                                                       //
+#define NUM_NODES 6                                                       //
 #define RINGS_PER_NODE 12                                                 //
 #define STRIPS_PER_NODE 4                                                 //
 #define PHYSICAL_LEDS_PER_RING 420                                        //
 #define LEDS_PER_RING 408                                                 //
                                                                           //
-#define LEDS_PER_STRIP (2*PHYSICAL_LEDS_PER_RING + LEDS_PER_RING + 1)     //
+#if STRIPS_PER_NODE == 4                                                  //
+  #define LEDS_PER_STRIP (2*PHYSICAL_LEDS_PER_RING + LEDS_PER_RING + 1)   //
+#elif STRIPS_PER_NODE == 6                                                //
+  #define LEDS_PER_STRIP (PHYSICAL_LEDS_PER_RING + LEDS_PER_RING + 1)     //
+#endif                                                                    //
+                                                                          //
 #define NUM_RINGS (RINGS_PER_NODE * NUM_NODES)                            //
 #define LEDS_PER_NODE (LEDS_PER_RING * RINGS_PER_NODE)                    //
 #define PHYSICAL_LEDS_PER_NODE (LEDS_PER_STRIP*STRIPS_PER_NODE)           //
@@ -305,7 +310,7 @@ unsigned long edm_start_time = 0;                                               
 //  ---------------------------------- LEDs, layers, and palettes ----------------------------//
 #define NUM_COLORS_PER_PALETTE 7                                                              //
                                                                                               //
-CRGB leds[LEDS_PER_STRIP*STRIPS_PER_NODE]; // 1 - 408 - 12 - 408 - 12 - 408 - 1 - 408 - ...   //
+CRGB leds[LEDS_PER_STRIP*STRIPS_PER_NODE]; // 1 - 408 - 12 - 408 - 1 - 408 - 12 - 408 - 1 ... //
 CRGBSet leds_all(leds, LEDS_PER_STRIP*STRIPS_PER_NODE);                                       //
                                                                                               //
 uint8_t mid_layer[NUM_RINGS][LEDS_PER_RING];                                                  //

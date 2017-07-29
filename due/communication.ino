@@ -154,15 +154,15 @@ inline void assign_node(uint8_t node_num) {
     Serial.println("Assigned node #" + String(node_number));
   #endif
   
-  for(int i = 0; i < 4; i ++)
+  for(int i = 0; i < STRIPS_PER_NODE; i ++)
     leds[LEDS_PER_STRIP*i] = CRGB::Red;
   LEDS.show();
   delay(500);
-  for(int i = 0; i < 4; i ++)
+  for(int i = 0; i < STRIPS_PER_NODE; i ++)
     leds[LEDS_PER_STRIP*i] = CRGB::Green;
   LEDS.show();
   delay(500);
-  for(int i = 0; i < 4; i ++)
+  for(int i = 0; i < STRIPS_PER_NODE; i ++)
     leds[LEDS_PER_STRIP*i] = CRGB::Blue;
   LEDS.show();
   delay(500);

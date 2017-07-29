@@ -23,6 +23,33 @@ inline void set_led(uint8_t ring, uint16_t pixel, CRGB color) {
   leds[get_1d_index(ring, pixel)] = color;
 }
 // Takes a ring 0:11, pixel 0:407, returns 1d offset into leds[]. Not to be used when drawing layers.
+#if STRIPS_PER_NODE == 6
+inline uint16_t get_1d_index(uint8_t ring, uint16_t pixel) {
+  #ifdef DEBUG
+    if(ring >= RINGS_PER_NODE) Serial.println("Error in get_1d_index(" + String(ring) + ", " + String(pixel) + "). Ring out of range.");
+    if(pixel >= LEDS_PER_RING) Serial.println("Error in get_1d_index(" + String(ring) + ", " + String(pixel) + "). Pixel out of range.");
+  #endif
+  
+  bool backward_strip = ring < RINGS_PER_NODE/3;
+  uint8_t strip = (ring % 2) + 2*(ring/4);
+  
+  uint16_t pixel_offset = LEDS_PER_STRIP * strip;
+  if(backward_strip) {
+    // pixel offset handles the strip offset
+    // Add LEDS_PER_STRIP-1 to jump to the end of the entire strip (i.e. pixel 0)
+    // Subtract 420 LEDs for every 2 rings you go
+    // Subtract pixel to get to specific LED
+    return pixel_offset + LEDS_PER_STRIP - 1 - PHYSICAL_LEDS_PER_RING*(ring/2) - pixel;
+  }
+  else {
+    // pixel offset handles the strip offset
+    // Add 1 to jump over the test LED
+    // Add 420 LEDs for every 2 rings you go, ignoring the first 4 rings
+    // Add pixel to get to specific LED
+    return pixel_offset + 1 + PHYSICAL_LEDS_PER_RING*((ring % (RINGS_PER_NODE/3))/2) + pixel;
+  }
+}
+#elif STRIPS_PER_NODE == 4
 inline uint16_t get_1d_index(uint8_t ring, uint16_t pixel) {
   #ifdef DEBUG
     if(ring >= RINGS_PER_NODE) Serial.println("Error in get_1d_index(" + String(ring) + ", " + String(pixel) + "). Ring out of range.");
@@ -40,7 +67,7 @@ inline uint16_t get_1d_index(uint8_t ring, uint16_t pixel) {
     return pixel_offset + 1 + PHYSICAL_LEDS_PER_RING*((ring - RINGS_PER_NODE/2)/2) + pixel;
   }
 }
-
+#endif
 
 
 // Functions to rotate layers, might be better to just call the rotate ones directly since we always know which layer we want to rotate

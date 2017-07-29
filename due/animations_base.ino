@@ -23,16 +23,28 @@ inline void base_scrolling_dim() {
 
   for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
     uint8_t color_index = ring % 2;
-    bool backward_strip = ring < RINGS_PER_NODE/2;
-    uint8_t strip = ring % 2 + (backward_strip ? 0 : 2);
-    
-    uint16_t pixel_offset = LEDS_PER_STRIP * strip;
-    if(backward_strip) {
-      pixel_offset += LEDS_PER_STRIP - 1 - PHYSICAL_LEDS_PER_RING*(ring/2);
-    }
-    else {
-      pixel_offset += 1 + PHYSICAL_LEDS_PER_RING*((ring - RINGS_PER_NODE/2)/2);
-    }
+    #if STRIPS_PER_NODE == 4
+      bool backward_strip = ring < RINGS_PER_NODE/2;
+      uint8_t strip = ring % 2 + (backward_strip ? 0 : 2);
+      
+      uint16_t pixel_offset = LEDS_PER_STRIP * strip;
+      if(backward_strip) {
+        pixel_offset += LEDS_PER_STRIP - 1 - PHYSICAL_LEDS_PER_RING*(ring/2);
+      }
+      else {
+        pixel_offset += 1 + PHYSICAL_LEDS_PER_RING*((ring - RINGS_PER_NODE/2)/2);
+      }
+    #elif STRIPS_PER_NODE == 6
+      bool backward_strip = ring < RINGS_PER_NODE/3;
+      uint8_t strip = (ring % 2) + 2*(ring/4);
+      uint16_t pixel_offset = LEDS_PER_STRIP * strip;
+      if(backward_strip) {
+        pixel_offset += LEDS_PER_STRIP - 1 - PHYSICAL_LEDS_PER_RING*(ring/2);
+      }
+      else {
+        pixel_offset += 1 + PHYSICAL_LEDS_PER_RING*((ring % (RINGS_PER_NODE/3))/2);
+      }
+    #endif
     
     for(uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
       uint16_t idx = (pixel + ring*ring_offset + BASE_INTRA_RING_MOTION * intra_speed * base_count / THROTTLE) % extended_led_count;
@@ -82,17 +94,29 @@ inline void base_scrolling_2color_gradient() {
   fill_gradient_RGB(values, color_thickness, current_palette[1], period-1, current_palette[0]);
 
   for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
-    bool backward_strip = ring < RINGS_PER_NODE/2;
-    uint8_t strip = ring % 2 + (backward_strip ? 0 : 2);
-    
-    uint16_t pixel_offset = LEDS_PER_STRIP * strip;
-    if(backward_strip) {
-      pixel_offset += LEDS_PER_STRIP - 1 - PHYSICAL_LEDS_PER_RING*(ring/2);
-    }
-    else {
-      pixel_offset += 1 + PHYSICAL_LEDS_PER_RING*((ring - RINGS_PER_NODE/2)/2);
-    }
-    
+    #if STRIPS_PER_NODE == 4
+      bool backward_strip = ring < RINGS_PER_NODE/2;
+      uint8_t strip = ring % 2 + (backward_strip ? 0 : 2);
+      
+      uint16_t pixel_offset = LEDS_PER_STRIP * strip;
+      if(backward_strip) {
+        pixel_offset += LEDS_PER_STRIP - 1 - PHYSICAL_LEDS_PER_RING*(ring/2);
+      }
+      else {
+        pixel_offset += 1 + PHYSICAL_LEDS_PER_RING*((ring - RINGS_PER_NODE/2)/2);
+      }
+    #elif STRIPS_PER_NODE == 6
+      bool backward_strip = ring < RINGS_PER_NODE/3;
+      uint8_t strip = (ring % 2) + 2*(ring/4);
+      uint16_t pixel_offset = LEDS_PER_STRIP * strip;
+      if(backward_strip) {
+        pixel_offset += LEDS_PER_STRIP - 1 - PHYSICAL_LEDS_PER_RING*(ring/2);
+      }
+      else {
+        pixel_offset += 1 + PHYSICAL_LEDS_PER_RING*((ring % (RINGS_PER_NODE/3))/2);
+      }
+    #endif
+
     for(uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
       uint16_t idx = (pixel + ring*ring_offset + BASE_INTRA_RING_MOTION * intra_speed * base_count / THROTTLE) % extended_led_count;
       if(idx >= LEDS_PER_RING) { continue; }

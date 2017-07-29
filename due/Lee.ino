@@ -207,7 +207,6 @@ void pick_hsv_colors() {
             if(temp < 1 || temp > 7) { Serial.println("Invalid entry"); }
             else {
               selected_colors[temp-1] = CHSV(starting_hue + hue_increment * (strand-1), 256 - pixel, brightness);
-              CRGB tempCol = selected_colors[temp-1]; 
               Serial.println();
 
               for(uint8_t i = 0; i < 7; i++) { Serial.println("Color " + String(i+1) + " = rgb(" + String(selected_colors[i].r) + ", " + String(selected_colors[i].g) + ", " + String(selected_colors[i].b) + ")"); }

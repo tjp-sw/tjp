@@ -31,17 +31,28 @@ inline void write_pixel_data() {
       
       continue;
     }
-    
-    bool backward_strip = ring < RINGS_PER_NODE/2;
-    uint8_t strip = ring % 2 + (backward_strip ? 0 : 2);
-    
-    uint16_t pixel_offset = LEDS_PER_STRIP * strip;
-    if(backward_strip) {
-      pixel_offset += LEDS_PER_STRIP - 1 - PHYSICAL_LEDS_PER_RING*(ring/2);
-    }
-    else {
-      pixel_offset += 1 + PHYSICAL_LEDS_PER_RING*((ring - RINGS_PER_NODE/2)/2);
-    }
+
+    #if STRIPS_PER_NODE == 4
+      int8_t increment_amount = ring < RINGS_PER_NODE/2 ? -1 : 1; // Backward strip or no?
+      uint8_t strip = ring % 2 + (increment_amount == -1 ? 0 : 2);
+      uint16_t pixel_offset = LEDS_PER_STRIP * strip;
+      if(increment_amount == -1) {
+        pixel_offset += LEDS_PER_STRIP - 1 - PHYSICAL_LEDS_PER_RING*(ring/2);
+      }
+      else {
+        pixel_offset += 1 + PHYSICAL_LEDS_PER_RING*((ring - RINGS_PER_NODE/2)/2);
+      }
+    #elif STRIPS_PER_NODE == 6
+      int8_t increment_amount = ring < RINGS_PER_NODE/3 ? -1 : 1; // Backward strip or no?
+      uint8_t strip = (ring % 2) + 2*(ring/4);
+      uint16_t pixel_offset = LEDS_PER_STRIP * strip;
+      if(increment_amount == -1) {
+        pixel_offset += LEDS_PER_STRIP - 1 - PHYSICAL_LEDS_PER_RING*(ring/2);
+      }
+      else {
+        pixel_offset += 1 + PHYSICAL_LEDS_PER_RING*((ring % (RINGS_PER_NODE/3))/2);
+      }
+    #endif
 
     for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
       // Blend in mid layer
@@ -62,8 +73,7 @@ inline void write_pixel_data() {
         nblend(leds[pixel_offset], sparkle_pixel_color, blending);
       }
 
-      if(backward_strip) pixel_offset--;
-      else pixel_offset++;
+      pixel_offset += increment_amount;
     }
   }
 }

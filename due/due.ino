@@ -37,7 +37,7 @@ inline void manually_set_animation_params() {             //
                                                           //
   // Set to OFF to disable a layer during CYCLE'ing.      //
   // Use NONE to signify a layer that is off temporarily  //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  BASE_ANIMATION = LEE_PICK_HSV;                          //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK, LEE_PICK_HSV
+  BASE_ANIMATION = NONE;                                  //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK, LEE_PICK_HSV
   MID_ANIMATION = NONE;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   SPARKLE_ANIMATION = NONE;                               //
   EDM_ANIMATION = OFF;                                    //
@@ -104,7 +104,7 @@ void setup() {
   #endif
 
 
-  // Initialize FastLED parallel output controller (must be 8, even if we only use 4)
+  // Initialize FastLED parallel output controller (must be 8, even if we use fewer)
   LEDS.addLeds<WS2811_PORTD, 8>(leds, LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
 
   // Hold data lines low
@@ -112,6 +112,8 @@ void setup() {
   digitalWrite(26, 0);
   digitalWrite(27, 0);
   digitalWrite(28, 0);
+  digitalWrite(14, 0);
+  digitalWrite(15, 0);
   delay(500);
 
   //  Clear all LEDs
