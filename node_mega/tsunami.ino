@@ -5,12 +5,15 @@
 #define SETAUDIO 1
 #define SETVOL 2
 #define MUTEALLAUDIO 3
-
+/*
 #ifdef DEBUG
   #define DEBUG_LEVEL 1
 #else
-  #define DEBUG_LEVEL 0
+  #define DEBUG_LEVEL 2
 #endif
+*/
+
+#define DEBUG_LEVEL 1
 
 Tsunami tsunami;                // Our Tsunami object
 //variables tracking currently playing song data
@@ -18,7 +21,7 @@ boolean new_ctrl_msg = false;
 int channels[ 18 ] = { 0 };
 bool ch_loop[ 18 ] = { false };
 int ch_gain[ 18 ] = { 0 };
-//int node = 0;
+
 
 //variables for serial input
 int msg_position = 0;
@@ -37,17 +40,8 @@ struct control_message {
 
 control_message ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
 
-// ***Magically figure out what node this is.
-// ***Probably should be slightly less magical in the final version
-//void get_node() {
-//  node = 1;
-//}
-
 void setup_tsunami () {
-  // initialize serial:
-  //Serial.begin(9600);
-
-  // We should wait for the Tsunami to finish reset before trying to send
+// We should wait for the Tsunami to finish reset before trying to send
   // commands.
   delay(1000);
 
@@ -68,33 +62,16 @@ void setup_tsunami () {
   //  number of tracks.
   delay(100);
   Serial.println("Tsunami Ready");
+  //remote.write("Tsunami Ready");
 }
 
 void handle_command(char command[]) {
-    /*Serial.println(command);
-    Serial.print(sizeof(command)/sizeof(command[0]));
-    Serial.println(" characters");
-    //Serial.print(command.length());*/
     String cmd_str (command);
     Serial.println(cmd_str);
-    Serial.println (cmd_str.length());
     for( unsigned int letter = 0; letter < cmd_str.length(); letter = letter + 1 ) {
         char inChar = cmd_str[letter];
 
-         if (inChar == '\n') {
-            msg_position = 0;
-            which_field = 0;
-            ch_string = "";
-            input_string= "";
-            if ((ctrl_msg.node == node_number) || (ctrl_msg.node == 0)){
-              new_ctrl_msg = true;
-              if (DEBUG_LEVEL>1)
-                Serial.println("New Message");
-            } else {
-              ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
-            }
-            break;
-         } else if (inChar == ';') {
+         if (inChar == ';') {
             if (DEBUG_LEVEL>1) {
               Serial.print("input_string=");
               Serial.println(input_string);
@@ -184,11 +161,13 @@ void handle_command(char command[]) {
 
 
 void do_command () {
-  Serial.println("---Control Message---");
-  Serial.print("Node ");
-  Serial.println(ctrl_msg.node);
-  Serial.print("Command ");
-  Serial.println(ctrl_msg.command);
+  if (DEBUG_LEVEL) {
+      Serial.println("---Control Message---");
+      Serial.print("Node ");
+      Serial.println(ctrl_msg.node);
+      Serial.print("Command ");
+      Serial.println(ctrl_msg.command);
+  }
   for (int x=0; x<18; x++) {
     if (ctrl_msg.channels[x]) {
       Serial.print("channels[");
