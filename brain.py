@@ -120,6 +120,10 @@ def do_list(ignored, neglected):
 def do_quit(ignored, neglected):
     global running
     running = False
+    audio_msg = "a0;3;"
+    audio_msg = struct.pack('>cB', audio_msg[0:1], len(audio_msg[1:])) + audio_msg[1:]
+    do_send(None, audio_msg)
+
 
 # send a message to one remote or all
 def do_send(socket, message):

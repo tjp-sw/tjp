@@ -41,7 +41,18 @@ struct control_message {
 control_message ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
 
 void setup_tsunami () {
+
 // We should wait for the Tsunami to finish reset before trying to send
+
+  // initialize serial:
+  #ifndef DEBUG
+    if (DEBUG_LEVEL) {
+        Serial.begin(115200);
+    }
+  #endif
+
+  // We should wait for the Tsunami to finish reset before trying to send
+
   // commands.
   delay(1000);
 
@@ -67,7 +78,9 @@ void setup_tsunami () {
 
 void handle_command(char command[]) {
     String cmd_str (command);
-    Serial.println(cmd_str);
+    if (DEBUG_LEVEL>1)
+        Serial.println(cmd_str);
+
     for( unsigned int letter = 0; letter < cmd_str.length(); letter = letter + 1 ) {
         char inChar = cmd_str[letter];
 
@@ -154,6 +167,7 @@ void handle_command(char command[]) {
     new_ctrl_msg = true;
     if (DEBUG_LEVEL>1)
       Serial.println("New Message");
+      do_command ();
   } else {
     ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
   }
@@ -257,13 +271,16 @@ void do_command () {
       break;
   }
   ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
+  new_ctrl_msg = false;
 }
 
 void do_tsunami() {
+/*
   if (new_ctrl_msg) {
     do_command();
     new_ctrl_msg = false;
   }
+ */
   delay(10);
   tsunami.update();
   for (int ch = 0; ch < 18; ch++) {
@@ -307,6 +324,7 @@ void serialEvent() {
           new_ctrl_msg = true;
           if (DEBUG_LEVEL>1)
             Serial.println("New Message");
+            do_command ();
         } else {
           ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
         }
