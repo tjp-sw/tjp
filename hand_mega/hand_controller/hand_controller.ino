@@ -51,7 +51,7 @@ uint8_t sensativity = 1; // range is 1 to 128
 int handBrightness = 50; // range is 1 to 255 (255 is brightest)
 int touchThreshhold = 10;
 CRGB defaultStartColor = white;
-uint8_t sampleFrequency = 1000; // times per sec to look for touches
+uint8_t sampleFrequency = 10; // times per sec to look for touches
 /////////////////////////////////////////////////////////////////////
 
 // setup is automatically called first
