@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import Queue	# thread safe
-import select, socket, string, struct, sys, time
+import math, numpy, select, socket, string, struct, sys, time
 from random import randint
 from random import sample
 import music
@@ -423,6 +423,18 @@ def disconnect(socket, msg):
     del message_queues[socket]
     del remote_name[socket]
 
+# thanks to http://mathcentral.uregina.ca/QQ/database/QQ.09.07/h/martin4.html
+XYZ = math.sqrt(3.0) / 2.0	# need a better 3-letter name for this constant
+microphone_coordinates = [
+    # (x, y) positive values upward and to the right
+    ( 0.0,  1.0),	# top
+    ( XYZ,  0.5),	# upper right  /\
+    ( XYZ, -0.5),	# lower right |  |
+    ( 0.0, -1.0),	# bottom       \/
+    (-XYZ, -0.5),	# lower left
+    (-XYZ,  0.5),	# upper left
+    ]
+
 # 1. detect presence and direction of a loud beat
 # 2. send beat predictions to the nodes
 beat_history = []
@@ -435,7 +447,7 @@ def analyze_beat(node, intensity, timestamp):
 
     # prune old data
     # beat history timestamps are roughly oldest first
-    keeper = time.time() - 20	# 20 seconds ago
+    keeper = time.time() - 30	# 30 seconds ago
     for i in range(0, len(beat_history)):
         if beat_history[i][TIMESTAMP] > keeper:
             if i > 0:
@@ -456,6 +468,28 @@ def analyze_beat(node, intensity, timestamp):
     mean_deviation = int(deviation_sum / float(len(beat_history)) + 0.5) 	# no risk of division by zero
 
     print 'beat %u intensity %u (mean %u +-%u) at %.3f from node %u' % (len(beat_history), intensity, mean_intensity, mean_deviation, timestamp, node)
+
+    # thanks to Ben at https://stackoverflow.com/questions/1400213/3d-least-squares-plane
+    tmp_A = []
+    tmp_b = []
+    for i in range(0, len(beat_history)):
+        x, y = microphone_coordinates[beat_history[i][NODE] % 6]	# keep mock node numbers in bounds
+        tmp_A.append([x, y, 1])
+        tmp_b.append(beat_history[i][INTENSITY])
+    b = numpy.matrix(tmp_b).T
+    A = numpy.matrix(tmp_A)
+    try:
+        fit = (A.T * A).I * A.T * b
+    except:
+        print sys.exc_value	# usually "Singular matrix" when the data doesn't define a plane
+    else:
+        print 'solution:', 'z = %f x + %f y + %f' % (fit[0], fit[1], fit[2])
+        # errors = b - A * fit
+        # print 'residual:', numpy.linalg.norm(errors)
+        # print 'errors:'
+        # print errors
+
+        # TODO compute the vector along the steepest slope of the plane; it points to the art car
 
 do_list(None, None)
 print sorted(control_messages.keys())
@@ -584,6 +618,7 @@ while running:
         running = False
 
     except:
+        # raise				# uncomment for debugging
         print sys.exc_value
         do_disconnect(None, None)	# TODO: be more selective
 
