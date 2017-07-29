@@ -14,10 +14,7 @@
 // make power up fancy
 
 #include <Wire.h>
-#include <Adafruit_NeoPixel.h>
-#ifdef __AVR__
-  #include <avr/power.h>
-#endif
+#include <FastLED.h>
 
 //system constants
 int sensorInputStatus = 0x03;
@@ -33,35 +30,37 @@ uint8_t CS8 = 0x17; // palm
 uint8_t sensativityControlRegister = 0x1F;
 
 // LED constants
-int pin = 6;
-int numberOfPixels = 106;
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(numberOfPixels, pin, NEO_GRB + NEO_KHZ800);
-uint32_t red = strip.Color(255, 0, 0);
-uint32_t orange = strip.Color(255, 165, 0);
-uint32_t yellow = strip.Color(255, 255, 0);
-uint32_t green = strip.Color(0, 255, 0);
-uint32_t blue = strip.Color(0, 0, 255);
-uint32_t purple = strip.Color(128,0,128);
-uint32_t indigo = strip.Color(75, 0, 130);
-uint32_t white = strip.Color(255, 255, 255);
-uint32_t colorOfTheDay[7] = {red,orange, yellow, green, blue, purple, indigo};
-uint32_t currentColorOfTheDay = colorOfTheDay[0];
-uint32_t defaultTouchColor = currentColorOfTheDay;
+const int pin = 6;
+const int numberOfPixels = 106;
+CRGB leds[numberOfPixels];
+CRGB red = CRGB::Red;
+CRGB orange = CRGB::Orange;
+CRGB yellow = CRGB::Yellow;
+CRGB green = CRGB::Green;
+CRGB blue = CRGB::Blue;
+CRGB purple = CRGB::Purple;
+CRGB indigo = CRGB::Indigo;
+CRGB white = CRGB::White;
+CRGB colorOfTheDay[7] = {red, orange, yellow, green, blue, purple, indigo};
+CRGB currentColorOfTheDay = colorOfTheDay[0];
+CRGB defaultTouchColor = currentColorOfTheDay;
 
-// configuration statements
+// configuration statements /////////////////////////////////////////
 // use the following parameters to change node number, sensativity or default color scheme
-uint8_t sensativity = 5; // range is 1 to 128
+uint8_t sensativity = 1; // range is 1 to 128
 int handBrightness = 50; // range is 1 to 255 (255 is brightest)
 int touchThreshhold = 10;
-uint32_t defaultStartColor = white;
-uint8_t sampleFrequency = 100; // times per sec to look for touches
-
+CRGB defaultStartColor = white;
+uint8_t sampleFrequency = 1000; // times per sec to look for touches
+/////////////////////////////////////////////////////////////////////
 
 // setup is automatically called first
 void setup() {
+  FastLED.addLeds<NEOPIXEL, pin>(leds, numberOfPixels);
   Wire.begin();
   Serial.begin(9600);
   setSensativity(sensativity);
+  LEDS.setBrightness(handBrightness);
   startUpColorSequence();
 }
 
@@ -132,7 +131,7 @@ void checkForTouch(void) {
     //colorSet(defaultStartColor); 
   }
   
-  strip.show();
+  FastLED.show();
 }
 void setColorPalette(void) {
   // todo - set color of the day based on day of the week (0-6)
@@ -142,25 +141,22 @@ void setColorPalette(void) {
 
 void sendTouchMessage() {
   Serial.println("Send touch received message");
-  // TODO - put touch received message to pi code here
+  // TODO - put touch received message to pi code here and call from main loop
 }
 
 void startUpColorSequence(){
-  strip.begin();
-  strip.show(); // Initialize all pixels to 'off'
-  strip.setBrightness(handBrightness);
   turnOnHandOutline();
   colorSet(currentColorOfTheDay);
-  strip.show();
+  FastLED.show();
   
-  drawPalm(red);
-  drawPinky(green);
-  drawRing(red);
-  drawMiddle(green);
-  drawPointer(red);
-  drawThumb(green);
-  strip.show();
-  delay(1000);
+  drawThumb(colorOfTheDay[0]);
+  drawPointer(colorOfTheDay[1]);  
+  drawMiddle(colorOfTheDay[2]); 
+  drawRing(colorOfTheDay[3]);
+  drawPinky(colorOfTheDay[4]);
+  drawPalm(colorOfTheDay[5]);
+  FastLED.show();
+  delay(2000);
   colorSet(defaultStartColor); 
 }
 
@@ -172,10 +168,9 @@ uint8_t proximityDetected(void) {
     int red = (((proximitySensorReading * 2)/bucketSize)*bucketSize);
     int green = red;
     int blue = red;
-    uint32_t newColor = strip.Color(red, green, blue);
+    CRGB newColor = CRGB(red, green, blue);
     colorSet(newColor);
-  }
-  
+  } 
 }
 
 boolean wasThumbTouched(void){
@@ -325,64 +320,62 @@ void printRegister(int registerToPrint) {
 }
 
 void turnOnHandOutline(void) {
-  strip.begin();
-  strip.show(); // Initialize all pixels to 'off'
   colorWipe(currentColorOfTheDay, 10); // white 
 }
 
-void drawPalm(uint32_t c){
+void drawPalm(CRGB c){
   int start = 0;
   int end = 21;
   drawArea(c, start, end);
 }
 
-void drawPinky(uint32_t c){
+void drawPinky(CRGB c){
   int start = 22;
   int end = 33;
   drawArea(c, start, end);
 }
 
-void drawRing(uint32_t c){
+void drawRing(CRGB c){
   int start = 35;
   int end = 53;
   drawArea(c, start, end);
 }
 
-void drawMiddle(uint32_t c){
+void drawMiddle(CRGB c){
   int start = 51;
   int end = 71;
   drawArea(c, start, end);
 }
 
-void drawPointer(uint32_t c){
+void drawPointer(CRGB c){
   int start = 71;
   int end = 87;
   drawArea(c, start, end);
 }
 
-void drawThumb(uint32_t c){
+void drawThumb(CRGB c){
   int start = 93;
   int end = 103;
   drawArea(c, start, end);
 }
 
-void drawArea(uint32_t c, int start, int end){
+void drawArea(CRGB c, int start, int end){
   for(uint16_t i = start; i <= end; i++) {
-    strip.setPixelColor(i, c);
+    leds[i] = c;
   } 
 }
 
-void colorWipe(uint32_t c, uint8_t wait) {
-  for(uint16_t i=0; i<strip.numPixels(); i++) {
-    strip.setPixelColor(i, c);
-    strip.show();
+void colorWipe(CRGB c, uint8_t wait) {
+  for(uint16_t i=0; i < numberOfPixels; i++) {
+    leds[i] = c;
+    FastLED.show();
     delay(wait);
   }
 }
 
-void colorSet(uint32_t c) {
-  for(uint16_t i=0; i<strip.numPixels(); i++) {
-    strip.setPixelColor(i, c);
+void colorSet(CRGB c) {
+  for(uint16_t i=0; i < numberOfPixels; i++) {
+    leds[i] = c;
   }
 }
 
