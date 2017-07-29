@@ -27,6 +27,14 @@ uint8_t CS5 = 0x14; // (guard)
 uint8_t CS6 = 0x15; // ring
 uint8_t CS7 = 0x16; // pinky
 uint8_t CS8 = 0x17; // palm
+
+const uint8_t thumbMask   = 0b00000001;
+const uint8_t pointerMask = 0b00000010;
+const uint8_t middleMask  = 0b00000100;
+const uint8_t ringMask    = 0b00001000;
+const uint8_t pinkyMask   = 0b00010000;
+const uint8_t palmMask    = 0b00100000;
+
 uint8_t sensativityControlRegister = 0x1F;
 
 // LED constants
@@ -51,7 +59,7 @@ uint8_t sensativity = 1; // range is 1 to 128
 int handBrightness = 50; // range is 1 to 255 (255 is brightest)
 int touchThreshhold = 10;
 CRGB defaultStartColor = white;
-uint8_t sampleFrequency = 10; // times per sec to look for touches
+uint8_t sampleFrequency = 10; // times per sec to look for touches (Hz)
 /////////////////////////////////////////////////////////////////////
 
 // setup is automatically called first
@@ -66,23 +74,26 @@ void setup() {
 
 // after setup main loop excutes automatically
 void loop() {
+  uint8_t touchMask = 0b00000000;
   // check what day it is
   //setColorPalette();
   
   // Record Touches
-  checkForTouch();
+  touchMask = checkForTouch();
+  sendTouchMessage(touchMask);
  
-  delay(1000/sampleFrequency);
 }
 
-void checkForTouch(void) {
+uint8_t checkForTouch(void) {
   if (wasThumbTouched() && wasPointerTouched() && wasMiddleTouched() && wasRingTouched() && wasPinkyTouched() && wasPalmTouched()) {
       colorSet(defaultTouchColor);    
   }
   
+  uint8_t touchMask = 0b00000000;
   if (wasThumbTouched() || wasPointerTouched() || wasMiddleTouched() || wasRingTouched() || wasPinkyTouched() || wasPalmTouched()) {
     if (wasThumbTouched()) {
-      drawThumb(defaultTouchColor);    
+      drawThumb(defaultTouchColor);  
+      touchMask |= thumbMask;
     }
     else {
       drawThumb(defaultStartColor);    
@@ -90,6 +101,7 @@ void checkForTouch(void) {
     
     if (wasPointerTouched()) {
       drawPointer(defaultTouchColor);
+      touchMask |= pointerMask;
     }
     else {
       drawPointer(defaultStartColor);    
@@ -97,6 +109,7 @@ void checkForTouch(void) {
     
     if (wasMiddleTouched()) {
       drawMiddle(defaultTouchColor);
+      touchMask |= middleMask;
     }
     else {
       drawMiddle(defaultStartColor);    
@@ -104,6 +117,7 @@ void checkForTouch(void) {
     
     if (wasRingTouched()) {
       drawRing(defaultTouchColor);
+      touchMask |= ringMask;
     }
     else {
       drawRing(defaultStartColor);    
@@ -111,6 +125,7 @@ void checkForTouch(void) {
     
     if (wasPinkyTouched()) {
       drawPinky(defaultTouchColor);
+      touchMask |= pinkyMask;
     } 
     else {
       drawPinky(defaultStartColor);    
@@ -118,13 +133,11 @@ void checkForTouch(void) {
     
     if (wasPalmTouched()) {
       drawPalm(defaultTouchColor);
+      touchMask |= palmMask;
     } 
     else {
       drawPalm(defaultStartColor);    
     }
-   
-    sendTouchMessage();
-   
   }
   else {
     proximityDetected();
@@ -132,6 +145,7 @@ void checkForTouch(void) {
   }
   
   FastLED.show();
+  return touchMask;
 }
 void setColorPalette(void) {
   // todo - set color of the day based on day of the week (0-6)
@@ -139,9 +153,11 @@ void setColorPalette(void) {
   defaultTouchColor = currentColorOfTheDay;
 }
 
-void sendTouchMessage() {
-  Serial.println("Send touch received message");
+void sendTouchMessage(uint8_t touchMask) {
+  Serial.print("Send touch message -> ");
+  Serial.println(touchMask);
   // TODO - put touch received message to pi code here and call from main loop
+  // TODO - be sure to incorporate messageFrequency
 }
 
 void startUpColorSequence(){
@@ -163,8 +179,8 @@ void startUpColorSequence(){
 uint8_t proximityDetected(void) {
   uint8_t proximitySensorReading = getRegister(CS4);
   Serial.println(proximitySensorReading);
-  if (proximitySensorReading <= 127 && proximitySensorReading >= 2) {
-    int bucketSize = 32;
+  if (proximitySensorReading <= 127 && proximitySensorReading >= 32) {
+    int bucketSize = 16;
     int red = (((proximitySensorReading * 2)/bucketSize)*bucketSize);
     int green = red;
     int blue = red;
@@ -262,7 +278,7 @@ boolean wasItTouched(int sensorReading){
 }
 
 void touched(int sensor){
-  Serial.println("touched");
+  //Serial.println("touched:");
 }
 
 void setSensativity(int newSensativity) {
