@@ -326,7 +326,9 @@ void init_arrow() {
 }
 
 void arrow() {
-  for(uint8_t i = 0; i < 5; i++) {
+  uint8_t speed = 5; //only rotate every this mid_count
+  //for(uint8_t i = 0; i < 5; i++) {
+  if( mid_count % speed == 0 ) {
     move_mid_layer_inter_ring(CW);
   }
 }
