@@ -5,15 +5,12 @@
 #define SETAUDIO 1
 #define SETVOL 2
 #define MUTEALLAUDIO 3
-/*
+
 #ifdef DEBUG
   #define DEBUG_LEVEL 1
 #else
   #define DEBUG_LEVEL 2
 #endif
-*/
-
-#define DEBUG_LEVEL 1
 
 Tsunami tsunami;                // Our Tsunami object
 //variables tracking currently playing song data
@@ -23,7 +20,7 @@ bool ch_loop[ 18 ] = { false };
 int ch_gain[ 18 ] = { 0 };
 
 
-//variables for serial input
+//variables for control message input
 int msg_position = 0;
 int which_field = 0;
 String ch_string = "";
@@ -41,9 +38,6 @@ struct control_message {
 control_message ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
 
 void setup_tsunami () {
-
-// We should wait for the Tsunami to finish reset before trying to send
-
   // initialize serial:
   #ifndef DEBUG
     if (DEBUG_LEVEL) {
@@ -52,7 +46,6 @@ void setup_tsunami () {
   #endif
 
   // We should wait for the Tsunami to finish reset before trying to send
-
   // commands.
   delay(1000);
 
@@ -73,11 +66,11 @@ void setup_tsunami () {
   //  number of tracks.
   delay(100);
   Serial.println("Tsunami Ready");
-  //remote.write("Tsunami Ready");
 }
 
 void handle_command(char command[]) {
     String cmd_str (command);
+    //remote.write(cmd_str.c_str());
     if (DEBUG_LEVEL>1)
         Serial.println(cmd_str);
 
@@ -275,14 +268,9 @@ void do_command () {
 }
 
 void do_tsunami() {
-/*
-  if (new_ctrl_msg) {
-    do_command();
-    new_ctrl_msg = false;
-  }
- */
   delay(10);
   tsunami.update();
+
   for (int ch = 0; ch < 18; ch++) {
     if(!(tsunami.isTrackPlaying(channels[ch]))) {
       if (ch_loop[ch]){
@@ -290,10 +278,14 @@ void do_tsunami() {
         Serial.println(channels[ch]);
         tsunami.trackGain(channels[ch], ch_gain[ch]);
         tsunami.trackLoad(channels[ch], 0, true);
+        String msg = "sR" + String (channels[ch]);
+        remote.write(msg.c_str());
       } else {
         if (channels[ch]) {
           Serial.print("Ending ");
           Serial.println(channels[ch]);
+        String msg = "sE" + String (channels[ch]);
+        remote.write(msg.c_str());
         }
         channels[ch]= 0;
         ch_gain[ch]=0;

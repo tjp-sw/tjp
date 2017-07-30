@@ -120,9 +120,7 @@ def do_list(ignored, neglected):
 def do_quit(ignored, neglected):
     global running
     running = False
-    audio_msg = "a0;3;"
-    audio_msg = struct.pack('>cB', audio_msg[0:1], len(audio_msg[1:])) + audio_msg[1:]
-    do_send(None, audio_msg)
+
 
 
 # send a message to one remote or all
@@ -513,6 +511,7 @@ while running:
                     print sys.exc_value
                     message = None
                 if message:
+                    print message
                     if message[0:1] == 'b':
                         if len(message) == 55:
                             do_send(None, message)	# relay to all nodes
@@ -590,6 +589,11 @@ while running:
     except:
         print sys.exc_value
         do_disconnect(None, None)	# TODO: be more selective
+
+for s in remote_name:
+    audio_msg = music.mute()
+    stop_msg = struct.pack('>cB', audio_msg[0:1], len(audio_msg[1:])) + audio_msg[1:]
+    s.send(stop_msg)
 
 for s in sources:
     s.close()
