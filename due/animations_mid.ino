@@ -307,7 +307,7 @@ inline void mid_scrolling_dim(uint8_t color_mode) {
 void init_arrow() {
   //number of transparent pixels between arrow start-end: choose such that integer number of arrows fit in structure
   //ie, (7+5)*6 = 72 = number of rings
-  uint8_t arrow_length = 7;
+  //uint8_t arrow_length = 7;
   uint8_t ring_spacing = 5;
   uint8_t pixel_spacing = 3; //transparent pixels between arrows
   uint16_t narrow = LEDS_PER_RING / pixel_spacing; //408 / 3 = 136

@@ -21,7 +21,7 @@ int ch_gain[ 18 ] = { 0 };
 //int node = 0;
 
 //variables for serial input
-int msg_position = 0;
+unsigned int msg_position = 0;
 int which_field = 0;
 String ch_string = "";
 String input_string = "";
@@ -34,8 +34,9 @@ struct control_message {
   int fade_speed;     //speed to change volume
   bool bool_loop;     //does the audio loop?
 };
+#define EMPTY_CTRL_MSG {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0}
 
-control_message ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
+control_message ctrl_msg = EMPTY_CTRL_MSG;
 
 // ***Magically figure out what node this is. 
 // ***Probably should be slightly less magical in the final version
@@ -69,7 +70,7 @@ void setup_tsunami () {
   delay(100); 
 }
 
-void handle_command(char command[]) {
+void handle_command(const char command[]) {
     // Serial.println(command);
     for( unsigned int letter = 1; letter < sizeof(command)/sizeof(command[0]); letter = letter + 1 ) {
         char inChar = command[letter];
@@ -84,7 +85,7 @@ void handle_command(char command[]) {
               if (DEBUG_LEVEL>1)
                 Serial.println("New Message");
             } else {
-              ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
+              ctrl_msg = EMPTY_CTRL_MSG;
             }
             break;
          } else if (inChar == ';') {
@@ -259,7 +260,7 @@ void do_command () {
       memset(ch_gain,0,sizeof(ch_gain));
       break;
   }
-  ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0}; 
+  ctrl_msg = EMPTY_CTRL_MSG;
 }
 
 void do_tsunami() {
@@ -311,7 +312,7 @@ void serialEvent() {
           if (DEBUG_LEVEL>1)
             Serial.println("New Message");
         } else {
-          ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
+          ctrl_msg = EMPTY_CTRL_MSG;
         }
         break; 
      } else if (inChar == ';') {
