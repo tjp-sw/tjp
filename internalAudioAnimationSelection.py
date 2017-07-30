@@ -99,6 +99,7 @@ show_colors = [[333 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PAL
 
 #event_queue = dllist()
 event_queue = DoublyLinkedList()
+next_audio_event = None
 pp = pprint.PrettyPrinter(indent=4)
 
 NUM_AUDIO_CHANNELS = 7
@@ -177,13 +178,31 @@ def get_audio_file_info(audio_msg):
     return output
 
 # ------------------------------------------------- internal_sound_animations_program() -----------------------------------------------
-# show for when the journey playing its internal audio and there the external audio
-#is not past threshold amount aka art car not detected
+# show for when the journey playing its internal audio and the external audio
+# is not past threshold amount aka art car not detected
 def do_internal_sound_animations(audio_msg, init = False):
     interpret_audio_msg(audio_msg)
 
     #pulls from event_queue
     drive_internal_animations(init)
+
+
+#ensure not looking at events that have already passed
+def progress_audio_event_queue():
+    while True:
+        try:
+            next_audio_event_node = event_queue.pop()
+            next_audio_event = next_audio_event_node.value
+        except:
+            print "event_queue is empty"
+            break
+
+        stale = next_audio_event.time <= time.time() - 10
+        if stale:
+            print "it's " + time.time() + " stale event " + next_audio_event
+        else:
+            break
+
 
 def drive_internal_animations(init):
     if init:
@@ -200,23 +219,31 @@ def drive_internal_animations(init):
         print "initial show colors" , show_colors
         return
 
-    while True:
-        next_audio_event_node = event_queue.pop()
-        next_audio_event = next_audio_event_node.value
-        if next_audio_event.time > time.time(): #valid 'next' event
-            magnitude = next_audio_event.magnitude
-            show_param = randint(0, 27)
-            old_param_value = show_parameters[show_param]
-            if next_audio_event.kind == "freqband":
-                new_param_value = constrained_weighted_parameter(show_param, magnitude)
-                print "Frq event: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
+    progress_audio_event_queue()
 
-            elif next_audio_event.kind == "amplitude":
-                #TODO make this more intelligent
-                new_param_value = constrained_random_parameter(show_param)
-                print "Amp event: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
+    # RJS need to come up with some sort of thresholding for time proximity
+    # and animaiton change frequency. Will know better when I have the final
+    # audio event lists populated (ideally using Antonio's 'cleaner' method)
+    # MAYBE: seperate thread handling polling event_queue and sending animations
+    lower_bounds = time.time() - 10
+    upper_bounds = time.time() + 10
+    valid_time = next_audio_event.time <= time.time() + 10 and next_audio_event.time >= time.time() - 10
+    print "valid? " + str(valid_time) + " aiming for event time between " + str(lower_bounds) + " - " + str(upper_bounds) + " current event time " + str(next_audio_event.time)
 
-            break
+    if valid_time: #valid 'next' event
+        magnitude = next_audio_event.magnitude
+        show_param = randint(0, 27)
+        old_param_value = show_parameters[show_param]
+        if next_audio_event.kind == "freqband":
+            new_param_value = constrained_weighted_parameter(show_param, magnitude)
+            print "Frq event: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
+
+        elif next_audio_event.kind == "amplitude":
+            #TODO make this more intelligent
+            new_param_value = constrained_random_parameter(show_param)
+            print "Amp event: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
+
+
 
 def remove_audio_events_from_queue(audioInfo):
     node_list = [] #retrieving list of llistnodes first as access to nieghbors is O(1) and
