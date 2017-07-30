@@ -130,6 +130,15 @@ class DoublyLinkedList(object):
             cur = cur.next
         return index
 
+    def peek(self):
+        if self.isEmpty():
+            raise ValueError("The list is already empty")
+
+        if self.head is not None:
+            return self.head
+        else:
+            return None
+
     def pop(self, index=None):
         if self.isEmpty():
             raise ValueError("The list is already empty")

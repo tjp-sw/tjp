@@ -35,7 +35,7 @@ class DataBaseInterface:
 	def grabAudioInfo(self, file_num):
 		'grab audio file characteristics from db'
 
-		print "grabbing audioInfo for TRACK: " + file_num
+		#print "grabbing audioInfo for TRACK: " + file_num
 		client = MongoClient('localhost', 27017)
 		db = client.audio
 		audioFile = db.audioFiles
@@ -47,10 +47,10 @@ class DataBaseInterface:
 		if int(file_num) == 1:
 			audioInfo = AudioFileInfo("rain", 1, "mid", 74000)
 			#    def __init__(self, time, degree, magnitude, kind):
-			e1 = AudioEvent(40, -3, "freqband")
+			e1 = AudioEvent(4, -3, "freqband")
 			e2 = AudioEvent(47, 900, "amplitude")
 			e3 = AudioEvent(640, 1, "freqband")
-			e4 = AudioEvent(746, -1300, "amplitude")
+			e4 = AudioEvent(700, -1300, "amplitude")
 
 			audioInfo.addEvent(e1)
 			audioInfo.addEvent(e2)
@@ -71,7 +71,7 @@ class DataBaseInterface:
 		else:
 			audioInfo = AudioFileInfo("wind", 9, "mid", 19000)
 			#    def __init__(self, time, degree, magnitude, kind):
-			e1 = AudioEvent(140, -2, "freqband")
+			e1 = AudioEvent(1, -6, "freqband")
 			e2 = AudioEvent(145, 800, "amplitude")
 			e3 = AudioEvent(240, 3, "freqband")
 			e4 = AudioEvent(245, -1600, "amplitude")
