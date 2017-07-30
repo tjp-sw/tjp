@@ -11,14 +11,24 @@ import music
 # can be passed around in one go. These constants are the indices into this show_parameters
 # array holding that type of parameter value
 
-NUM_7_COLOR_ANIMATIONS = 2
-NUM_BASE_ANIMATIONS = 3
-NUM_MID_ANIMATIONS = 3
-NUM_SPARKLE_ANIMATIONS = 2
+NUM_7_COLOR_ANIMATIONS = 7
+NUM_BASE_ANIMATIONS = 2
+NUM_MID_ANIMATIONS = 7
+NUM_SPARKLE_ANIMATIONS = 6
 
-NUM_BEAT_EFFECTS = 1
-NUM_PARAMETERS = 30
+NUM_BEAT_EFFECTS = 8
+NUM_PARAMETERS = 41
 NUM_COLORS_PER_PALETTE = 7
+
+NUM_BASE_TRANSITIONS = 1
+NUM_MID_TRANSITIONS = 1
+NUM_SPARKLE_TRANSITIONS = 1
+NUM_EDM_TRANSITIONS = 1
+NUM_TRANSITION_SPEEDS = 6
+NUM_PALETTE_CHANGE_STYLES = 5
+
+NUM_MID_ALPHA_MODES = 3
+NUM_SPARKLE_ALPHA_MODES = 2
 
 BASE_TIME_LIMIT = 31
 BASE_PARAMETER_TIME_LIMIT = 19
@@ -65,19 +75,30 @@ show_bounds = [  # order must match show_parameters
         [0, NUM_SPARKLE_ANIMATIONS],  # SPARKLE_INDEX, which sparkle animation to use
         [2, 200],  # sparkle portion
         [0, 255],  # sparkle color thickness
-        [0, 255],  # sparkle black thickness
         [-1, 1],  # sparkle intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
         [0, 255],  # sparkle intra ring speed
         [-1, 1],  # sparkle inter ring motion: -1 = CCW, 0 = none, 1 = CW
         [0, 255],  # sparkle inter ring speed
-        [0, 6], # sparkle max dim
+        [0, 255], # sparkle min dim
+        [0, 255], # sparkle max dim
         [0, 255], # sparkle range
-        [1, 50], # sparkle spawn frequency
-        [0, NUM_7_COLOR_ANIMATIONS - 1],  # which 7 color animation to play, show bound 28
-        [0, len(palette) - 1], # which color palette, show bound 29
-        [0, NUM_BEAT_EFFECTS - 1],  # which beat effect to use to respond to beat with LEDs, show bound 30
-        [0,1], # is_beat boolean, show bound 31
-        [0,100] # beat proximity - how close you are to beat. so when beat prox >= 95 or <= 5, can smooth beat response
+        [0, 50], # sparkle spawn frequency, 0 == off entirely (Functions as a boolean when 0|1)
+        # show bounds 28 through 28 concern 7-color edm animations
+        [0, NUM_7_COLOR_ANIMATIONS],  # which 7 color animation to play, show bound 28
+        #show bounds 29 through 32 recently added (maybe need to be renumbered)
+        [1, NUM_PALETTE_CHANGE_STYLES], # Palette change style (0 is immediate)
+        [0, NUM_BEAT_EFFECTS],  # which beat effect to use to respond to beat with LEDs, show bound 30
+        [0, NUM_MID_ALPHA_MODES], # how to blend mid layer with background layer
+        [0, NUM_SPARKLE_ALPHA_MODES], # how to blend sparkle layer with mid and background layers
+        #show bounds 33 through 40 concern animation transitions
+        [1, NUM_BASE_TRANSITIONS], # how to transition the background animation (0 is immediate)
+        [1, NUM_TRANSITION_SPEEDS], # how fast to transition the background animation
+        [1, NUM_MID_TRANSITIONS], # how to transition the mid animation (0 is immediate)
+        [1, NUM_TRANSITION_SPEEDS], # how fast to transition the mid animation
+        [1, NUM_SPARKLE_TRANSITIONS], # how to transition the sparkle animation (0 is immediate)
+        [1, NUM_TRANSITION_SPEEDS], # how fast to transition the sparkle animation
+        [1, NUM_EDM_TRANSITIONS], # how to transition the EDM animation (0 is immediate)
+        [1, NUM_TRANSITION_SPEEDS], # how fast to transition the EDM animation
     ]
 
 mega_to_node_map = {
