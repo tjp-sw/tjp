@@ -6,7 +6,7 @@ import select, socket, string, struct, sys, time
 from random import randint
 from random import sample
 import Queue	# thread safe
-from audio_event_queue.py import DoublyLinkedList
+from audio_event_queue import DoublyLinkedList
 from llist import dllist, dllistnode
 
 
@@ -116,6 +116,18 @@ def constrained_random_parameter(i):
         new_parameter += 256
     return new_parameter
 
+#TODO make this more intelligent
+def constrained_weighted_parameter(i, magnitude):
+    if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
+        new_parameter = show_bounds[i][randint(0,1)]	# no zero value
+    else:
+        old_parameter = show_bounds[i]
+        new_parameter = old_parameter + magnitude
+    # change to unsigned int for passing to due
+    if new_parameter < 0:
+        new_parameter += 256
+    return new_parameter
+
 def choose_random_colors_from_palette():
     # choose which colors out of the chosen palette to use
     #shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
@@ -143,8 +155,13 @@ def interpret_audio_msg(audio_msg):
     channel_map = get_audio_file_info(audio_msg)
     #pp.pprint(channel_map)
     for channel in channel_map.keys():
+        if current_internal_track_per_channel[channel] > 0: #channel already had a track on it
+            old_audio = current_internal_track_per_channel[channel]
+            remove_audio_events_from_queue(old_audio)
+
         audioInfo = channel_map[channel]
         current_internal_track_per_channel[channel] = audioInfo
+        queue_audio_events(audioInfo)
 
 #RJS I don't like how this hard coded... now if the audio contorl message changes this needs to as well.
 def get_audio_file_info(audio_msg):
@@ -162,13 +179,13 @@ def get_audio_file_info(audio_msg):
 # ------------------------------------------------- internal_sound_animations_program() -----------------------------------------------
 # show for when the journey playing its internal audio and there the external audio
 #is not past threshold amount aka art car not detected
-def do_internal_sound_animations(audio_msg, init = True):
+def do_internal_sound_animations(audio_msg, init = False):
+    interpret_audio_msg(audio_msg)
 
-    #TODO pull from event_queue!
+    #pulls from event_queue
+    drive_internal_animations(init)
 
-    driveInternalAnimations(init)
-
-def driveInternalAnimations(init):
+def drive_internal_animations(init):
     if init:
         if show_colors[0] == [333,333,333]:	# invalid values before initialization
             bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
@@ -183,18 +200,39 @@ def driveInternalAnimations(init):
         print "initial show colors" , show_colors
         return
 
-def deleteAudioFileEventsFromQueue(audioInfo):
+    while True:
+        next_audio_event_node = event_queue.pop()
+        next_audio_event = next_audio_event_node.value
+        if next_audio_event.time > time.time(): #valid 'next' event
+            magnitude = next_audio_event.magnitude
+            show_param = randint(0, 27)
+            old_param_value = show_parameters[show_param]
+            if next_audio_event.kind == "freqband":
+                new_param_value = constrained_weighted_parameter(show_param, magnitude)
+                print "Frq event: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
+
+            elif next_audio_event.kind == "amplitude":
+                #TODO make this more intelligent
+                new_param_value = constrained_random_parameter(show_param)
+                print "Amp event: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
+
+            break
+
+def remove_audio_events_from_queue(audioInfo):
     node_list = [] #retrieving list of llistnodes first as access to nieghbors is O(1) and
                    #doing deletes resets cache thus retrieval would be back O(n) every time
     for event in audioInfo.events:
         #node_list.append(event_queue.nodeat(event.queue_index))
         #event_queue.remove(event.queue_node)
-        event_queue.remove(event.time)
+        try:
+            event_queue.remove(event.time)
+        except ValueError:
+            print "event " + event + " already has been removed from queue"
 
     #for node in node_list:
     #    event_queue.remove(node)
 
-def addAudioEventsToQueue(audioInfo):
+def queue_audio_events(audioInfo):
     cur_time = time.time()
     for event in audioInfo.events:
         event.time += cur_time
@@ -205,23 +243,26 @@ def addAudioEventsToQueue(audioInfo):
 
 msg = "a0;1;0;1,50,2,0"
 
-interpret_audio_msg(msg)
-#do_internal_sound_animations(msg)
 
-a_info = current_internal_track_per_channel[1]
-b_info = current_internal_track_per_channel[0]
+do_internal_sound_animations(msg, True)
+do_internal_sound_animations(msg)
 
-#print a_info
-addAudioEventsToQueue(a_info)
-#print a_info
-addAudioEventsToQueue(b_info)
-print "\n\n"
-print event_queue
+#valid test!! of adding and modifying time property
+#interpret_audio_msg(msg)
+#a_info = current_internal_track_per_channel[1]
+#b_info = current_internal_track_per_channel[0]
 
-deleteAudioFileEventsFromQueue(a_info)
-print "\n\n"
-print event_queue
-print event_queue.size
+##print a_info
+#queue_audio_events(a_info)
+##print a_info
+#queue_audio_events(b_info)
+#print "\n\n"
+#print event_queue
+
+#remove_audio_events_from_queue(a_info)
+#print "\n\n"
+#print event_queue
+#print event_queue.size
 
 
 
