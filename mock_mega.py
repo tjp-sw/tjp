@@ -105,6 +105,16 @@ def setup():
     epoch_msec = long(0)
 
     mega_number = random.randint(100, 199)
+    if len(sys.argv) == 2:
+        try:
+            n = int(sys.argv[1])
+        except:
+            print 'not a node number:', sys.argv[1]
+        else:
+            if 0 <= n and n < 6:
+                mega_number = 200 + n	# mega 200-205 -> node 0-5
+            else:
+                print 'node number', n, 'must be 0-5'
     server = ('localhost', 3528)
     remote = None
     network_data = None
