@@ -1,5 +1,6 @@
 #define PI_CONTROLLED
 #define DEBUG
+#define I_AM_NODE_MEGA
 
 void setup()
 {

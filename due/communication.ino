@@ -240,7 +240,7 @@ inline void process_commands(String& input) {
     size_t size = 1;
     char command = input[0];
     switch (command) {
-      #ifdef I_AM_MEGA
+      #ifdef I_AM_NODE_MEGA
       case 'a': // tsunami audio message
         size += 1;  // unsigned 8-bit integer
         if (input.length() >= size) {
@@ -272,7 +272,9 @@ inline void process_commands(String& input) {
           #endif
         }
         break;
+      #endif // I_AM_NODE_MEGA
 
+      #ifdef I_AM_MEGA
       case 'd':
       {
         const uint8_t node_message[2] = { 'n', node_number };
@@ -288,7 +290,6 @@ inline void process_commands(String& input) {
         network_data = "";
         delay_next_network_connection(10);
         break;
-      
       #endif // I_AM_MEGA
  
       case 'b': // time of the next beat, unsigned 64-bit integer
