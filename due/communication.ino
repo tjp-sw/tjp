@@ -1,21 +1,26 @@
 #include "tjp.h"
 
 #ifdef I_AM_MEGA
-  #include <SPI.h>
+  #ifdef I_AM_NODE_MEGA
+    #include <SPI.h>
+    #include <Ethernet.h>
+
+    IPAddress brain(169,254,136,0);
+    IPAddress subnet_mask(255,255,0,0);
+
+    unsigned long next_connect_msec;
+    String network_data;
+
+    EthernetClient remote;
+
+    #define NodeMate  Serial3
+  #endif // I_AM_NODE_MEGA
+
   #include <EEPROM.h>
-  #include <Ethernet.h>
   #include <limits.h>    // provides LONG_MAX
-  
-  IPAddress brain(169,254,136,0);
-  IPAddress subnet_mask(255,255,0,0);
-  
+  #define HandMate  Serial2
+
   uint8_t mega_number;
-  unsigned long next_connect_msec;
-  String network_data;
-  
-  EthernetClient remote;
-  
-  #define NodeMate  Serial3
 
   // declare here when not part of due.ino
   unsigned long long epoch_msec;
@@ -33,8 +38,11 @@ uint8_t led_state;
 uint8_t led_program;
 unsigned long loop_start_time_msec;
 unsigned long last_announcement_msec;
-unsigned long mate_last_input_msec;
-String mate_data;
+
+#ifdef I_AM_NODE_MEGA
+  unsigned long mate_last_input_msec;
+  String mate_data;
+#endif // I_AM_NODE_MEGA
 
 
 #ifdef DEBUG
@@ -93,7 +101,7 @@ inline void do_led() {
 #endif
 
 
-#ifdef I_AM_MEGA
+#ifdef I_AM_NODE_MEGA
 void delay_next_network_connection(uint8_t seconds) {
   // ensure that the minimum delay is 2 msec
   // add up to 1 second of addtional random delay
@@ -137,7 +145,7 @@ void do_network_input() {
     }
   }
 }
-#endif // I_AM_MEGA
+#endif // I_AM_NODE_MEGA
 
 
 #ifdef I_AM_DUE
@@ -192,9 +200,11 @@ inline void setup_communication() {
 
   last_announcement_msec = 0;
 
+#ifdef I_AM_NODE_MEGA
   NodeMate.begin(115200);
   mate_last_input_msec = 0;
   mate_data = "";
+#endif // I_AM_NODE_MEGA
 
   epoch_msec = 0;
 
@@ -206,24 +216,25 @@ inline void setup_communication() {
       randomSeed(random(LONG_MAX) + analogRead(pin));
     }
 
-    delay(50);      // extra time for Ethernet shield to power on
-    // establish MAC address and IP address of this device
-    byte mac[] = { 0x35, 0x28, 0x35, 0x28, 0x00, mega_number };
-    IPAddress self = brain; // same network
-    self[2] = mega_number;  // unique host
-    self[3] = mega_number;  // unique host
-    // initialize Ethernet shield
-    // Ethernet.begin(mac, ip, dns, gateway, subnet);
-    Ethernet.begin(mac, self, brain, brain, subnet_mask);
-    remote.stop();    // initialize connection state as disconnected
-    network_data = "";
+    #ifdef I_AM_NODE_MEGA
+      delay(50);              // extra time for Ethernet shield to power on
+      // establish MAC address and IP address of this device
+      byte mac[] = { 0x35, 0x28, 0x35, 0x28, 0x00, mega_number };
+      IPAddress self = brain; // same network
+      self[2] = mega_number;  // unique host
+      self[3] = mega_number;  // unique host
+      // initialize Ethernet shield
+      // Ethernet.begin(mac, ip, dns, gateway, subnet);
+      Ethernet.begin(mac, self, brain, brain, subnet_mask);
+      remote.stop();          // initialize connection state as disconnected
+      network_data = "";
+      delay_next_network_connection(1);
+    #endif // I_AM_NODE_MEGA
 
     #ifdef DEBUG
       print_status("a random 4-digit number is ", random(10000));
       print_status("initialization is complete for mega ", (long)mega_number);
     #endif
-    
-    delay_next_network_connection(1);
   #endif // I_AM_MEGA
 
   #if defined(I_AM_DUE) && defined(DEBUG)
@@ -274,7 +285,7 @@ inline void process_commands(String& input) {
         break;
       #endif // I_AM_NODE_MEGA
 
-      #ifdef I_AM_MEGA
+      #ifdef I_AM_NODE_MEGA
       case 'd':
       {
         const uint8_t node_message[2] = { 'n', node_number };
@@ -290,13 +301,13 @@ inline void process_commands(String& input) {
         network_data = "";
         delay_next_network_connection(10);
         break;
-      #endif // I_AM_MEGA
+      #endif // I_AM_NODE_MEGA
  
       case 'b': // time of the next beat, unsigned 64-bit integer
         size += 8;
         if (input.length() >= size) {
 
-          #ifdef I_AM_MEGA
+          #ifdef I_AM_NODE_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
           #endif
 
@@ -326,16 +337,16 @@ inline void process_commands(String& input) {
   
             led_program = node_number == 0 ? 6 : node_number;  // signal the node number
 
-            #ifdef I_AM_MEGA
+            #ifdef I_AM_NODE_MEGA
               NodeMate.write((uint8_t *)input.c_str(), size);
-            #endif // I_AM_MEGA
+            #endif // I_AM_NODE_MEGA
             
           }
           else if (command == 'p') {
             led_program = input[1];
-            #ifdef I_AM_MEGA
+            #ifdef I_AM_NODE_MEGA
               NodeMate.write((uint8_t *)input.c_str(), size);
-            #endif // I_AM_MEGA
+            #endif // I_AM_NODE_MEGA
           }
           else {
             #ifdef DEBUG
@@ -353,9 +364,9 @@ inline void process_commands(String& input) {
       case 's':
         size += NUM_SHOW_PARAMETERS + 3*NUM_COLORS_PER_PALETTE;
         if (input.length() >= size) {
-          #ifdef I_AM_MEGA
+          #ifdef I_AM_NODE_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
-          #endif // I_AM_MEGA
+          #endif // I_AM_NODE_MEGA
       
           #ifdef I_AM_DUE
             uint8_t params[NUM_SHOW_PARAMETERS], colors[3*NUM_COLORS_PER_PALETTE];
@@ -456,9 +467,9 @@ inline void process_commands(String& input) {
             }
           #endif // DEBUG
           
-          #ifdef I_AM_MEGA
+          #ifdef I_AM_NODE_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
-          #endif // I_AM_MEGA
+          #endif // I_AM_NODE_MEGA
         }
         else {
           #ifdef DEBUG
@@ -479,6 +490,7 @@ inline void process_commands(String& input) {
   }
 }
 
+#ifdef I_AM_NODE_MEGA
 inline void do_mate_input() {
   int len = NodeMate.available();
   if (len > 0) {
@@ -493,14 +505,15 @@ inline void do_mate_input() {
     process_commands(mate_data);
   }
 }
+#endif // I_AM_NODE_MEGA
 
 inline void do_heartbeat() {
   if (node_number == 255 && loop_start_time_msec > last_announcement_msec + 1000) {
-    #ifdef I_AM_MEGA
+    #ifdef I_AM_NODE_MEGA
       if (remote.connected()) {
         const char mega_message[3] = {'m', (char)mega_number, '\0'};
         remote.print(mega_message);
-    #endif // I_AM_MEGA
+    #endif // I_AM_NODE_MEGA
     #ifdef I_AM_DUE
       NodeMate.write('d');
     #endif // I_AM_DUE
@@ -509,24 +522,23 @@ inline void do_heartbeat() {
       print_status("announcing");
     #endif
     
-    #ifdef I_AM_MEGA
+    #ifdef I_AM_NODE_MEGA
       }
-    #endif // I_AM_MEGA
+    #endif // I_AM_NODE_MEGA
       last_announcement_msec = millis();
   }
 }
 
 inline void do_communication() {
   loop_start_time_msec = millis();
-  #ifdef I_AM_MEGA
+  #ifdef I_AM_NODE_MEGA
     do_network_input();
-  #endif // I_AM_MEGA
+    do_mate_input();
+  #endif // I_AM_NODE_MEGA
 
   #ifdef I_AM_DUE
     send_audio_out();
   #endif
-
-  do_mate_input();
 
   do_heartbeat();
 
