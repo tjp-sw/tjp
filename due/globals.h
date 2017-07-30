@@ -346,17 +346,20 @@ uint8_t transition_progress_edm = 0;                                            
 #define SS_PIN_RESET 5                                                        //
 #define SS_PIN_DC_ONE A0                                                      //
 #define SS_PIN_DC_TWO A1                                                      //
-#define NUM_CHANNELS 7                                                        //
 #define NUM_BANDS 3 // Bass, Mid, Treble                                      //
                                                                               //
 // Outputs to Pi                                                              //
 uint8_t freq_internal[NUM_CHANNELS];                                          //
 uint8_t freq_external[NUM_CHANNELS];                                          //
-uint8_t freq_smooth[NUM_CHANNELS];                                            //
                                                                               //
 // Inputs from Pi                                                             //
-bool is_beat = false; // This can be inferred from downbeat_proximity         //
-uint8_t downbeat_proximity = 0; // Up and down from 0-255 with the beat       //
+unsigned long long next_beat_prediction = 0;                                  //
+                                                                              //
+// Computed internally                                                        //
+uint8_t freq_smooth[NUM_CHANNELS];                                            //
+unsigned long long last_beat_prediction = 0;                                  //
+uint8_t downbeat_proximity = 0; // 0-255, inferred from beat predictions      //
+bool is_beat = false; // Inferred from downbeat_proximity                     //
 uint8_t band_distribution[NUM_BANDS]; // bass=0, mid=1, treble=2; sums to 255 //
 //----------------------------------------------------------------------------//
 
@@ -370,10 +373,15 @@ uint8_t band_distribution[NUM_BANDS]; // bass=0, mid=1, treble=2; sums to 255 //
 #define BASE_GRADIENT_SIZE 36
 #define MID_GRADIENT_SIZE 12
 
+// Bands
+#define BASS_BAND 0
+#define MID_BAND 1
+#define TREBLE_BAND 2
+
 // Layers
-#define BASE 1
-#define MID 2
-#define SPARKLE 3
+#define BASE_LAYER 1
+#define MID_LAYER 2
+#define SPARKLE_LAYER 3
 
 // Layer colors
 #define TRANSPARENT 0

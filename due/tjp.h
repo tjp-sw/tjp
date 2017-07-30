@@ -1,6 +1,6 @@
 #include <Arduino.h>		// provides _VARIANT_ARDUINO_DUE_X_ on Due
 
-#define AUDIO_PACKET_SIZE 15
+#define NUM_CHANNELS 7 // Number of channels per spectrum shield
 #define NUM_SHOW_PARAMETERS 41
 #define NUM_COLORS_PER_PALETTE 7
 

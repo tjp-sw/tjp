@@ -73,12 +73,12 @@ inline uint16_t get_1d_index(uint8_t ring, uint16_t pixel) {
 // Functions to rotate layers, might be better to just call the rotate ones directly since we always know which layer we want to rotate
 inline void move_inter_ring(uint8_t layer, int8_t direction, uint8_t speed) {
   #ifdef DEBUG
-    if(layer < MID || layer > SPARKLE) {
+    if(layer < MID_LAYER || layer > SPARKLE_LAYER) {
       Serial.println("layer out of bounds in move_inter_ring(" + String(layer) + ", " + String(direction) + ", " + String(speed));
     }
   #endif
   
-  if(layer == MID) {
+  if(layer == MID_LAYER) {
     for(uint8_t i = 0; i < speed; i++)
       move_mid_layer_inter_ring(direction);
   }
@@ -136,13 +136,13 @@ inline void move_sparkle_layer_inter_ring(int8_t direction) {
 // These should only be used if there is no pattern, or the pattern exactly lines up with 408 pixels.
 inline void move_intra_ring(uint8_t layer, uint8_t ring, int8_t direction, uint8_t speed) {
   #ifdef DEBUG
-    if(layer < MID || layer > SPARKLE) {
+    if(layer < MID_LAYER || layer > SPARKLE_LAYER) {
       Serial.println("layer out of bounds in move_intra_ring(" + String(layer) + ", " + String(ring) + ", " + String(direction) + ", " + String(speed));
     }
     if(speed > 127) { Serial.println("speed out of bounds in move_intra_ring: " + String(speed)); }
   #endif
   
-  if(layer == MID) {
+  if(layer == MID_LAYER) {
    move_mid_layer_intra_ring(ring, direction*speed);
   }
   else {

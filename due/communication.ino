@@ -109,7 +109,7 @@ void do_network_input() {
       while (len-- > 0) {
        network_data += (char)remote.read();
       }
-      process_commands(network, network_data);
+      process_commands(network_data);
     }
   }
   else {
@@ -141,9 +141,14 @@ void do_network_input() {
 
 
 #ifdef I_AM_DUE
-inline void send_audio_packet() {
-  uint8_t audioData[2] = { is_beat, downbeat_proximity };
-  NodeMate.write(audioData, sizeof audioData);
+inline void send_audio_out() {
+  uint8_t audio_out[1 + 2*NUM_CHANNELS];
+  audio_out[0] = 'c';
+  for(uint8_t i = 0; i < NUM_CHANNELS; i++) {
+    audio_out[1 + i] = freq_internal[i];
+    audio_out[1 + NUM_CHANNELS + i] = freq_external[i];
+  }
+  NodeMate.write(audio_out, 2*NUM_CHANNELS);
 }
 
 // Sets up LED array after being assigned a node by the Pi.
@@ -226,7 +231,7 @@ inline void setup_communication() {
   #endif // I_AM_DUE && DEBUG
 }
 
-inline void process_commands(const int source, String& input) {
+inline void process_commands(String& input) {
   while (input.length() > 0) {
     #ifdef DEBUG
       print_status("bytes available: ", (long)input.length());
@@ -236,12 +241,12 @@ inline void process_commands(const int source, String& input) {
     char command = input[0];
     switch (command) {
       #ifdef I_AM_MEGA
-      case 'a':
+      case 'a': // tsunami audio message
         size += 1;  // unsigned 8-bit integer
         if (input.length() >= size) {
             size += input[1];
             if (input.length() >= size) {
-                handle_command(input.substring(2, size).c_str());
+              handle_command(input.substring(2, size).c_str());
             }
             else {
               #ifdef DEBUG
@@ -256,20 +261,14 @@ inline void process_commands(const int source, String& input) {
         }
         break;
 
-      case 'b':
-        size += AUDIO_PACKET_SIZE;
+      case 'c': // Channel audio out data, 14 channels/bytes total
+        size += 2 * NUM_CHANNELS;
         if (input.length() >= size) {
-          // pass the beat message through in both directions
-          if (source == mate && remote.connected()) {
-            remote.write((uint8_t *)input.c_str(), size);
-          }
-          else if (source == network) {
-            NodeMate.write((uint8_t *)input.c_str(), size);
-          }
+          remote.write((uint8_t *)input.c_str(), size);
         }
         else {
           #ifdef DEBUG
-            print_status("insufficient beat data");
+            print_status("insufficient channel data");
           #endif
         }
         break;
@@ -292,6 +291,29 @@ inline void process_commands(const int source, String& input) {
       
       #endif // I_AM_MEGA
  
+      case 'b': // time of the next beat, unsigned 64-bit integer
+        size += 8;
+        if (input.length() >= size) {
+
+          #ifdef I_AM_MEGA
+            NodeMate.write((uint8_t *)input.c_str(), size);
+          #endif
+
+          #ifdef I_AM_DUE
+            next_beat_prediction = input[7];
+            for(int8_t i = 6; i >= 0; i--) {
+              next_beat_prediction += input[i] << (8*i);
+            }
+            next_beat_prediction /= 1000; // Convert microseconds to milliseconds
+          #endif
+        }
+        else {
+          #ifdef DEBUG
+            print_status("insufficient beat data");
+          #endif
+        }
+        break;
+      
       case 'n':
       case 'p':
         size += 1;  // unsigned 8-bit integer
@@ -467,7 +489,7 @@ inline void do_mate_input() {
     }
   }
   if (mate_data.length() > 0 && loop_start_time_msec >= mate_last_input_msec + 2) {
-    process_commands(mate, mate_data);
+    process_commands(mate_data);
   }
 }
 
@@ -498,14 +520,15 @@ inline void do_communication() {
   #ifdef I_AM_MEGA
     do_network_input();
   #endif // I_AM_MEGA
-  
+
+  #ifdef I_AM_DUE
+    send_audio_out();
+  #endif
+
   do_mate_input();
 
-  #ifdef I_AM_THE_BEAT_DUE
-    send_audio_packet();
-  #endif
-  
   do_heartbeat();
+
   #ifdef DEBUG
     do_led();
   #endif
