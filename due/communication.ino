@@ -31,9 +31,6 @@
 
 #endif // I_AM_MEGA / I_AM_DUE
 
-
-enum communication_source { network, mate };
-
 uint8_t led_state;
 uint8_t led_program;
 unsigned long loop_start_time_msec;
