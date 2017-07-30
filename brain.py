@@ -481,15 +481,50 @@ def analyze_beat(node, intensity, timestamp):
     try:
         fit = (A.T * A).I * A.T * b
     except:
-        print sys.exc_value	# usually "Singular matrix" when the data doesn't define a plane
+        # print sys.exc_value	# usually "Singular matrix" when the data doesn't define a plane
+        pass
     else:
-        print 'solution:', 'z = %f x + %f y + %f' % (fit[0], fit[1], fit[2])
+        # print 'solution:', 'z = %f x + %f y + %f' % (fit[0], fit[1], fit[2])
         # errors = b - A * fit
         # print 'residual:', numpy.linalg.norm(errors)
         # print 'errors:'
         # print errors
 
-        # TODO compute the vector along the steepest slope of the plane; it points to the art car
+        # Compute the angle in the x/y plane of the steepest slope up
+        # the z axis of the plane we just found.  This is the
+        # direction of the loudest sound source (presumably an art
+        # car).  0 is along the y axis increasing and radians increase
+        # going clockwise as seen from above (pi/2 radians is along
+        # the x axis increasing).
+        if fit[0] == 0:					# no division by zero, please
+            if fit[1] > 0:
+                direction_radians = 0.0			# along y axis positive
+                print "up"
+            else:
+                direction_radians = math.pi		# along y axis negative
+                print "down"
+        else:
+            FULL_CIRCLE = math.pi * 2.0
+            direction_radians = FULL_CIRCLE + math.pi * 0.5 - math.atan(fit[1] / fit[0])
+            if fit[0] < 0:				# toward negative side of x axis
+                direction_radians += math.pi
+            if direction_radians >= FULL_CIRCLE:
+                direction_radians -= FULL_CIRCLE	# normalize
+
+        print 'art car direction = %.2f degrees' % math.degrees(direction_radians)
+
+if False:	# debug art car direction computation
+    fake_time = int(time.time()) - 5
+    while fake_time < time.time():
+        beat_history += [(0, 50, fake_time)]
+#        beat_history += [(1, 50, fake_time)]
+#        beat_history += [(2, 50, fake_time)]
+#        beat_history += [(3, 50, fake_time)]
+        beat_history += [(4, 50, fake_time)]
+        beat_history += [(5, 70, fake_time)]
+        fake_time += 1
+    analyze_beat(*beat_history.pop())
+    sys.exit(0)
 
 do_list(None, None)
 print sorted(control_messages.keys())
