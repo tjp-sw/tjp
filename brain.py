@@ -98,7 +98,7 @@ show_bounds = [  # order must match show_parameters
         [1, NUM_SPARKLE_TRANSITIONS], # how to transition the sparkle animation (0 is immediate)
         [1, NUM_TRANSITION_SPEEDS], # how fast to transition the sparkle animation
         [1, NUM_EDM_TRANSITIONS], # how to transition the EDM animation (0 is immediate)
-        [1, NUM_TRANSITION_SPEEDS], # how fast to transition the EDM animation
+        [1, NUM_TRANSITION_SPEEDS] # how fast to transition the EDM animation
     ]
 
 mega_to_node_map = {
