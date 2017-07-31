@@ -41,7 +41,7 @@ def send_music(node=0, command=1, field2=0, channels=None):
                                   ','.join(str(ch) for ch in channels)]) + ';'
         #print 'audio command:', ctrl_msg
         return (node, ctrl_msg)
-        
+
     return (None, None)
 
 
@@ -58,6 +58,7 @@ def mute(node=0):
 
 #Can only return one command per tick....need to update looping
 debugging = True
+
 class Music:
     def __init__(self):
         if debugging:
@@ -84,9 +85,9 @@ class Music:
                 self.played_low = datetime.today().weekday()
                 return play([low], looping=1)
 
-        if self.played_mid <= (datetime.now() - timedelta(seconds=30)):
-            self.msg[1] = songs.find_mid()
-            msgs[1] = songs.find_mid()
+        msg = [0] * 4
+        if self.played_mid <= (datetime.now() - timedelta(seconds=5)):
+            msg[1] = songs.find_mid()
             self.played_mid = datetime.now()
 
         if self.checked_high <= (datetime.now() - timedelta(minutes=1)):
@@ -111,7 +112,7 @@ music = Music()
 while True:
     music.tick()
 
-  
+
 
 #Set theme
 theme_list= ['RED', 'ORANGE', 'YELLOW', 'GREEN', 'BLUE', 'PURPLE', 'WHITE']
@@ -122,4 +123,3 @@ GREEN= 3
 BLUE= 4
 PURPLE= 5
 WHITE= 6
-

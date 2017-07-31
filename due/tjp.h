@@ -1,5 +1,10 @@
 #include <Arduino.h>		// provides _VARIANT_ARDUINO_DUE_X_ on Due
 
+#define NUM_CHANNELS 7 // Number of channels per spectrum shield
+#define NUM_SHOW_PARAMETERS 41
+#define NUM_COLORS_PER_PALETTE 7
+
+
 #if defined(__AVR_ATmega2560__)
   #define	I_AM_MEGA
 #endif
