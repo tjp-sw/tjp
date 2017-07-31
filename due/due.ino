@@ -2,7 +2,7 @@
 
 //------------------------ Config -----------------------------------//
 // Due controlled versus pi controlled animation choices             //
-//#define PI_CONTROLLED                                              //
+#define PI_CONTROLLED                                              //
 #ifndef PI_CONTROLLED                                                //
   #define TESTING_NODE_NUMBER 0   // To test diff nodes              //
   //#define CYCLE           // Cycles through shows in order         //

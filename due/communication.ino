@@ -18,14 +18,26 @@
 
   #include <EEPROM.h>
   #include <limits.h>    // provides LONG_MAX
-  #define HandMate  Serial2
+
+  //IPAddress brain(169,254,136,0);
+  IPAddress brain(169,254,94,48);
+  IPAddress subnet_mask(255,255,0,0);
 
   uint8_t mega_number;
+  unsigned long next_connect_msec;
+  String network_data;
+
+  EthernetClient remote;
+
+  #define NodeMate  Serial3
+  #define DEBUG
+
+    #define HandMate  Serial2
 
   // declare here when not part of due.ino
   unsigned long long epoch_msec;
-  uint8_t node_number; 
-  
+  uint8_t node_number;
+
 #elif defined(I_AM_DUE)
   #define  NodeMate  Serial1
 
@@ -163,11 +175,11 @@ inline void send_audio_out() {
 // Sets up LED array after being assigned a node by the Pi.
 inline void assign_node(uint8_t node_num) {
   node_number = node_num;
-  
+
   #ifdef DEBUG
     Serial.println("Assigned node #" + String(node_number));
   #endif
-  
+
   for(int i = 0; i < STRIPS_PER_NODE; i ++)
     leds[LEDS_PER_STRIP*i] = CRGB::Red;
   LEDS.show();
@@ -248,7 +260,7 @@ inline void process_commands(String& input) {
     #ifdef DEBUG
       print_status("bytes available: ", (long)input.length());
     #endif
-    
+
     size_t size = 1;
     char command = input[0];
     switch (command) {
@@ -303,7 +315,7 @@ inline void process_commands(String& input) {
         delay_next_network_connection(10);
         break;
       #endif // I_AM_NODE_MEGA
- 
+
       case 'b': // time of the next beat, unsigned 64-bit integer
         size += 8;
         if (input.length() >= size) {
@@ -326,7 +338,7 @@ inline void process_commands(String& input) {
           #endif
         }
         break;
-      
+
       case 'n':
       case 'p':
         size += 1;  // unsigned 8-bit integer
@@ -335,7 +347,7 @@ inline void process_commands(String& input) {
             #ifdef I_AM_DUE
               assign_node(input[1]);
             #endif
-  
+
             #ifdef I_AM_HAND_MEGA
               node_number = input[1];
             #endif
@@ -346,7 +358,7 @@ inline void process_commands(String& input) {
               NodeMate.write((uint8_t *)input.c_str(), size);
               HandMate.write((uint8_t *)input.c_str(), size);
             #endif // I_AM_NODE_MEGA
-            
+
           }
           else if (command == 'p') {
             led_program = input[1];
@@ -367,15 +379,15 @@ inline void process_commands(String& input) {
           #endif
         }
         break;
- 
-      case 's':
+
+      case 's': //message regarding the animations
         size += NUM_SHOW_PARAMETERS + 3*NUM_COLORS_PER_PALETTE;
         if (input.length() >= size) {
           #ifdef I_AM_NODE_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
             HandMate.write((uint8_t *)input.c_str(), size);
           #endif // I_AM_NODE_MEGA
-      
+
           #ifdef I_AM_HAND_MEGA
 	    // copy only the color palette
 	    uint8_t* color_palette = colorOfTheDay;
@@ -402,25 +414,25 @@ inline void process_commands(String& input) {
               uint8_t last_mid_animation = MID_ANIMATION;
               uint8_t last_sparkle_animation = SPARKLE_ANIMATION;
               uint8_t last_edm_animation = EDM_ANIMATION;
-              
+
               memcpy(show_parameters, params, NUM_SHOW_PARAMETERS);
               memcpy(target_palette, colors, 3*NUM_COLORS_PER_PALETTE);
               blend_base_layer = current_palette[0] != target_palette[0] || current_palette[1] != target_palette[1];
               blend_mid_layer = current_palette[2] != target_palette[2] || current_palette[3] != target_palette[3] || current_palette[4] != target_palette[4];
               blend_sparkle_layer = current_palette[5] != target_palette[5] || current_palette[6] != target_palette[6];
-    
+
               if(BASE_ANIMATION != last_base_animation) {
                 transition_out_base_animation = true;
                 next_base_animation = BASE_ANIMATION;
                 BASE_ANIMATION = last_base_animation;
               }
-              
+
               if(MID_ANIMATION != last_mid_animation) {
                 transition_out_mid_animation = true;
                 next_mid_animation = MID_ANIMATION;
                 MID_ANIMATION = last_mid_animation;
               }
-    
+
               if(SPARKLE_ANIMATION != last_sparkle_animation) {
                 transition_out_sparkle_animation = true;
                 next_sparkle_animation = SPARKLE_ANIMATION;
@@ -445,7 +457,7 @@ inline void process_commands(String& input) {
                   Serial.print(' ');
                   Serial.print(colors[i], DEC);
                 }
-    
+
                 Serial.println();
               #endif // DEBUG
             }
@@ -462,8 +474,8 @@ inline void process_commands(String& input) {
           #endif
         }
         break;
-  
-      
+
+
       case 't':
         size += 8;  // unsigned 64-bit integer
         if (input.length() >= size) {
@@ -474,7 +486,7 @@ inline void process_commands(String& input) {
             epoch_msec *= 256;
             epoch_msec += (uint8_t)input[i++];
           }
-      
+
           epoch_msec /= 1000; // convert microseconds to milliseconds
           epoch_msec -= loop_start_time_msec;
 
@@ -487,7 +499,7 @@ inline void process_commands(String& input) {
               print_status("time unchanged!");
             }
           #endif // DEBUG
-          
+
           #ifdef I_AM_NODE_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
             HandMate.write((uint8_t *)input.c_str(), size);
@@ -499,7 +511,7 @@ inline void process_commands(String& input) {
           #endif
         }
         break;
-    
+
       default:
         #ifdef DEBUG
           print_status("unknown command: ");
@@ -539,11 +551,11 @@ inline void do_heartbeat() {
     #ifdef I_AM_DUE
       NodeMate.write('d');
     #endif // I_AM_DUE
-    
+
     #ifdef DEBUG
       print_status("announcing");
     #endif
-    
+
     #ifdef I_AM_NODE_MEGA
       }
     #endif // I_AM_NODE_MEGA

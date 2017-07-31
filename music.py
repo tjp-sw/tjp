@@ -86,7 +86,7 @@ music = Music()
 while True:
     music.tick()
 
-  
+
 
 #Set theme
 theme_list= ['RED', 'ORANGE', 'YELLOW', 'GREEN', 'BLUE', 'PURPLE', 'WHITE']
