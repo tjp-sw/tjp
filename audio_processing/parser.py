@@ -1,9 +1,12 @@
+import sys
+sys.path.insert(0, '../')
+
 from audioInfo import AudioFileInfo, AudioEvent
 
 fileInfos = []
 ind = -1
 
-for line in open("output_t2", 'r'):
+for line in open("sample_processing", 'r'):
     info = line.split()
     if(len(info) > 1):
         if(info[0] == "Processing"):
@@ -19,7 +22,7 @@ for line in open("output_t2", 'r'):
         elif(info[0] == "@@" or info[0] == "##" or info[0] == "@" or info[0] == "#"):
             #print line
             fileI = fileInfos[ind]
-            event = AudioEvent(info[2], info[7], info[3], info[5])
+            event = AudioEvent(info[2], info[3], info[5])
             #print event
             fileI.addEvent(event)
             #print fileInfo

@@ -3,7 +3,9 @@ import datetime
 import pprint
 import ujson
 
-from audioInfo import AudioFileInfo, FreqBand, Kind, AudioEvent, Degree
+import sys
+sys.path.insert(0, '../')
+from audioInfo import AudioFileInfo, AudioEvent
 
 client = MongoClient('localhost', 27017)
 
@@ -14,7 +16,7 @@ files = db.audioFiles
 pprint.pprint(files.find_one())
 
 audioInfo = AudioFileInfo("trees", "9", "high")
-event1 = AudioEvent("453", "minor", "-1", "FreqBand")
+event1 = AudioEvent("453", "-1", "FreqBand")
 audioInfo.addEvent(event1)
 print(audioInfo)
 

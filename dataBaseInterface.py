@@ -45,7 +45,7 @@ class DataBaseInterface:
 
 		#MOCKED return vals
 		if int(file_num) == 1:
-			audioInfo = AudioFileInfo("rain", 1, "mid", 74000)
+			audioInfo = AudioFileInfo("rain", 1, "mid")
 			#    def __init__(self, time, degree, magnitude, kind):
 			e1 = AudioEvent(4, -3, "freqband")
 			e2 = AudioEvent(47, 900, "amplitude")
@@ -57,7 +57,7 @@ class DataBaseInterface:
 			audioInfo.addEvent(e3)
 			audioInfo.addEvent(e4)
 		elif int(file_num) == 2:
-			audioInfo = AudioFileInfo("thunder", 2, "low", 23000)
+			audioInfo = AudioFileInfo("thunder", 2, "low")
 			#    def __init__(self, time, degree, magnitude, kind):
 			e2 = AudioEvent(45, 2200, "amplitude")
 			e1 = AudioEvent(60, 2, "freqband")
@@ -69,7 +69,7 @@ class DataBaseInterface:
 			audioInfo.addEvent(e3)
 			audioInfo.addEvent(e4)
 		else:
-			audioInfo = AudioFileInfo("wind", 9, "mid", 19000)
+			audioInfo = AudioFileInfo("wind", 9, "mid")
 			#    def __init__(self, time, degree, magnitude, kind):
 			e1 = AudioEvent(1, -6, "freqband")
 			e2 = AudioEvent(145, 800, "amplitude")

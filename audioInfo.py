@@ -6,11 +6,10 @@ from enum import Enum
 class AudioFileInfo:
 
 
-    def __init__(self, name, index, category, time):
+    def __init__(self, name, index, category):
         self.name = name
         self.category = category
         self.file_index = index
-        self.time = time
         self.events = []
         self.event_index = 0
 
