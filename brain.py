@@ -177,11 +177,6 @@ while running:
                 show_timeout = last_show_change_sec + TIME_LIMIT - time.time()
                 if show_timeout < timeout:
                     timeout = show_timeout
-            else: #dynamic show change
-                #check if song file selection changed
-                    #check composite frequency analysis of group of audio files selected
-                    #mark 'timeout = show_timeout' to signal paramters need to chage...?
-                    print 'dynamic show time baby!'
 
             if timeout <= 0:
                 timeout = 0.01
