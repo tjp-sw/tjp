@@ -38,7 +38,21 @@ inline void read_frequencies() {
     delayMicroseconds(25);
     freq_external[i] = analogRead(SS_PIN_DC_TWO);
     delayMicroseconds(25);
-    
+
+    /*
+    // Testing mic input on backplane
+    if(freq_internal[i] > 200) {
+      Serial.print("Internal Channel " + String(i) + " = ");
+      Serial.println(freq_internal[i]);
+    }
+
+    if(freq_external[i] > 200) {
+      Serial.print("External Channel " + String(i) + " = ");
+      Serial.println(freq_external[i]);
+    }
+    Serial.print(".");
+    */
+
     #if NOISE_REDUCTION > 0
       freq_internal[i] = freq_internal[i] <= NOISE_REDUCTION ? 0 : freq_internal[i] - NOISE_REDUCTION;
       freq_external[i] = freq_external[i] <= NOISE_REDUCTION ? 0 : freq_external[i] - NOISE_REDUCTION;

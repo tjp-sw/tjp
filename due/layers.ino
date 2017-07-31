@@ -60,7 +60,6 @@ inline void write_pixel_data() {
       if(color_index != 0) {
         CRGB mid_pixel_color = ColorFromPalette(mid_palette, color_index);
         uint8_t blending = get_mid_alpha(ring, pixel);
-        if(MID_TRANSITION == TRANSITION_BY_ALPHA) { if(255 - transition_progress_mid < blending) { blending = 255 - transition_progress_mid; } }
         nblend(leds[pixel_offset], mid_pixel_color, blending);
       }
 
@@ -69,7 +68,6 @@ inline void write_pixel_data() {
       if(color_index != 0) {
         CRGB sparkle_pixel_color = ColorFromPalette(sparkle_palette, color_index);
         uint8_t blending = get_sparkle_alpha(ring, pixel);
-        if(SPARKLE_TRANSITION == TRANSITION_BY_ALPHA) { if(255 - transition_progress_sparkle < blending) { blending = 255 - transition_progress_sparkle; } }
         nblend(leds[pixel_offset], sparkle_pixel_color, blending);
       }
 
@@ -81,32 +79,46 @@ inline void write_pixel_data() {
 
 // Alpha functions: return an amount to blend each layer based on ring/pixel
 inline uint8_t get_sparkle_alpha(uint8_t ring, uint16_t pixel) {
+  uint8_t alpha = get_sparkle_default_alpha(ring, pixel);
+  uint8_t extra_blending = 0;
+
   switch(SPARKLE_ALPHA) {
     case ALPHA_BY_HEIGHT:
-      return get_sparkle_alpha_from_height(pixel);
+      extra_blending = get_sparkle_alpha_from_height(pixel);
 
-    case ALPHA_BY_BRIGHTNESS:
-      return get_sparkle_alpha_from_brightness(ring, pixel);
-    
     default:
-      return 255;
+      break;
   }
+
+  if(SPARKLE_TRANSITION == TRANSITION_BY_ALPHA) {
+    uint8_t max_alpha = 255 - transition_progress_sparkle;
+    if(max_alpha < alpha) { alpha = max_alpha;}
+  }
+
+  return alpha;
 }
 
 inline uint8_t get_mid_alpha(uint8_t ring, uint16_t pixel) {
+  uint8_t alpha = get_mid_default_alpha(ring, pixel);
+  uint8_t extra_blending = 0;
+  
   switch(MID_ALPHA) {
     case ALPHA_BY_HEIGHT:
-      return get_mid_alpha_from_height(pixel);
-
-    case ALPHA_BY_BRIGHTNESS:
-      return get_mid_alpha_from_brightness(ring, pixel);
+      extra_blending = get_mid_alpha_from_height(pixel);
 
     case ALPHA_BY_GRADIENT:
-      return get_mid_alpha_from_gradient(ring, pixel);
+      extra_blending = get_mid_alpha_from_gradient(ring, pixel);
 
     default:
-      return 255;
+      break;
   }
+
+  if(MID_TRANSITION == TRANSITION_BY_ALPHA) {
+    uint8_t max_alpha = 255 - transition_progress_mid;
+    if(max_alpha < alpha) { alpha = max_alpha; }
+  }
+
+  return alpha;
 }
 
 
@@ -116,12 +128,16 @@ inline uint8_t get_sparkle_alpha_from_height(uint16_t pixel) {
   return pixel * 255 / HALF_RING;
 }
 
-inline uint8_t get_sparkle_alpha_from_brightness(uint8_t ring, uint16_t pixel) {
+inline uint8_t get_sparkle_default_alpha(uint8_t ring, uint16_t pixel) {
+  return 255 * (MAX_DIMMING - get_sparkle_dim_value(ring, pixel)) / MAX_DIMMING;
+
+  /*
   // Only sparkle layer's brightness is considered
   CRGB color = sparkle_palette.entries[sparkle_layer[ring][pixel]];
   uint8_t luma = color.getLuma();
   if(luma >= 64) { return 255; }
   else { return 4 * luma; }
+  */
 }
 
 
@@ -130,12 +146,16 @@ inline uint8_t get_mid_alpha_from_height(uint16_t pixel) {
   return (HALF_RING - 1 - pixel) * 255 / HALF_RING;
 }
 
-inline uint8_t get_mid_alpha_from_brightness(uint8_t ring, uint16_t pixel) {
+inline uint8_t get_mid_default_alpha(uint8_t ring, uint16_t pixel) {
+  return 255 * (MAX_DIMMING - get_mid_dim_value(ring, pixel)) / MAX_DIMMING;
+
+  /*
   // Ratio of mid to base layer's brightness
   CRGB color = mid_palette.entries[mid_layer[ring][pixel]];
   uint8_t col_luma = color.getLuma();
   uint8_t base_luma = get_led(ring, pixel).getLuma();
   return 255 * col_luma / (col_luma + base_luma);
+  */
 }
 
 inline uint8_t get_mid_alpha_from_gradient(uint8_t ring, uint16_t pixel) {
