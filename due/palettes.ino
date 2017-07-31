@@ -191,13 +191,16 @@ inline void create_mid_palette(CRGBPalette256* new_palette, CRGB color0, CRGB co
       nblend(temp, color2, 255 * (i-24) / 11);
     }
 
-    new_palette->entries[palette_offset] = temp;
+    for(uint8_t j = 0; j < 7; j++)
+      new_palette->entries[palette_offset + j] = temp;
+    /*
     new_palette->entries[palette_offset + 1] = CRGB(temp.r / 2, temp.g / 2, temp.b / 2);
     new_palette->entries[palette_offset + 2] = CRGB(temp.r / 4, temp.g / 4, temp.b / 4);
     new_palette->entries[palette_offset + 3] = CRGB(temp.r / 6, temp.g / 6, temp.b / 6);
     new_palette->entries[palette_offset + 4] = CRGB(temp.r / 9, temp.g / 9, temp.b / 9);
     new_palette->entries[palette_offset + 5] = CRGB(temp.r / 12, temp.g / 12, temp.b / 12);
     new_palette->entries[palette_offset + 6] = CRGB(temp.r / 15, temp.g / 15, temp.b / 15);
+    */
   }
 }
 

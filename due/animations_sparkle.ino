@@ -42,7 +42,7 @@ inline void sparkle_rain() {
   uint8_t max_dim = scale_param(SPARKLE_MAX_DIM, 1, 4);
   if(max_dim < min_dim) { min_dim = max_dim; }
   uint8_t range = 20;//scale_param(SPARKLE_RANGE, 20, 20);
-  uint8_t spawn_frequency = 20;//scale_param(SPARKLE_SPAWN_FREQUENCY, 20, 20);
+  uint8_t spawn_frequency = SPARKLE_SPAWN_FREQUENCY <= 1 ? SPARKLE_SPAWN_FREQUENCY : 20;//scale_param(SPARKLE_SPAWN_FREQUENCY, 20, 20);
   uint8_t intra_speed = 1 << scale_param(SPARKLE_INTRA_RING_SPEED, 4, 6);
   
   uint8_t throttle = 1;
@@ -80,6 +80,7 @@ inline void sparkle_rain() {
 
 
   // create new raindrops every "frequency" cycles
+  if(SPARKLE_SPAWN_FREQUENCY == 0) { return; }
   if (sparkle_count % spawn_frequency == 0) {
     for (uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
       if(SPARKLE_INTRA_RING_MOTION == DOWN) {

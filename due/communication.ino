@@ -6,6 +6,7 @@
     #include <Ethernet.h>
 
     IPAddress brain(169,254,136,0);
+    //IPAddress brain(169,254,94,48); //RJS my Pi IP
     IPAddress subnet_mask(255,255,0,0);
 
     unsigned long next_connect_msec;
@@ -19,20 +20,9 @@
   #include <EEPROM.h>
   #include <limits.h>    // provides LONG_MAX
 
-  //IPAddress brain(169,254,136,0);
-  IPAddress brain(169,254,94,48);
-  IPAddress subnet_mask(255,255,0,0);
-
   uint8_t mega_number;
-  unsigned long next_connect_msec;
-  String network_data;
 
-  EthernetClient remote;
-
-  #define NodeMate  Serial3
-  #define DEBUG
-
-    #define HandMate  Serial2
+  #define HandMate  Serial2
 
   // declare here when not part of due.ino
   unsigned long long epoch_msec;
@@ -422,23 +412,27 @@ inline void process_commands(String& input) {
               blend_sparkle_layer = current_palette[5] != target_palette[5] || current_palette[6] != target_palette[6];
 
               if(BASE_ANIMATION != last_base_animation) {
-                cleanup_base_animation(last_base_animation);
-                init_base_animation();
+                transition_out_base_animation = true;
+                next_base_animation = BASE_ANIMATION;
+                BASE_ANIMATION = last_base_animation;
               }
 
               if(MID_ANIMATION != last_mid_animation) {
-                cleanup_mid_animation(last_mid_animation);
-                init_mid_animation();
+                transition_out_mid_animation = true;
+                next_mid_animation = MID_ANIMATION;
+                MID_ANIMATION = last_mid_animation;
               }
 
               if(SPARKLE_ANIMATION != last_sparkle_animation) {
-                cleanup_sparkle_animation(last_sparkle_animation);
-                init_sparkle_animation();
+                transition_out_sparkle_animation = true;
+                next_sparkle_animation = SPARKLE_ANIMATION;
+                SPARKLE_ANIMATION = last_sparkle_animation;
               }
 
               if(EDM_ANIMATION != last_edm_animation) {
-                cleanup_edm_animation(last_edm_animation);
-                init_edm_animation();
+                transition_out_edm_animation = true;
+                next_edm_animation = EDM_ANIMATION;
+                EDM_ANIMATION = last_edm_animation;
               }
 
               #ifdef DEBUG

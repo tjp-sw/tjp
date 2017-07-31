@@ -3,13 +3,13 @@ from datetime import datetime
 
 
 # Stores Music library and returns appropriate songs
-RED_LOW = range(1000, 1004)
+RED_LOW = [20]
 RED_MID = range(1, 60)
 RED_HIGH = range(61, 85)
-ORANGE_LOW = []
-ORANGE_MID = [1, 8, 12]
-ORANGE_HIGH = [7, 11]
-YELLOW_LOW = []
+ORANGE_LOW = range(1, 77)
+ORANGE_MID = range(1, 77)
+ORANGE_HIGH = range(1, 77)
+YELLOW_LOW = range(1, 85)
 YELLOW_MID = [5]
 YELLOW_HIGH = [6]
 GREEN_LOW = []
@@ -29,7 +29,7 @@ HIGHS = [RED_HIGH, ORANGE_HIGH, YELLOW_HIGH, GREEN_HIGH, BLUE_HIGH, PURPLE_HIGH,
 LOWS = [RED_LOW, ORANGE_LOW, YELLOW_LOW, GREEN_LOW, BLUE_LOW, PURPLE_LOW, WHITE_LOW]
 MEDITATIONS = []
 
-SET_THEME = 4
+SET_THEME = 0
 
 
 def find_low(theme=datetime.today().weekday()):
@@ -56,24 +56,8 @@ def find_high(theme=datetime.today().weekday()):
     return random.choice(HIGHS[theme])
 
 
-def get_meditation(this_time=datetime.now()):
+def find_meditation(this_time=datetime.now()):
     if this_time.hour < 12:
         return MEDITATIONS[this_time.day * 2]
     return MEDITATIONS[1 + this_time.day * 2]
 
-"""
-        if this_time.day == 0:
-            return MEDITATIONS[0];
-        if this_time.day == 1:
-            return MEDITATIONS[2];
-        if this_time.day == 2:
-            return MEDITATIONS[4];
-        if this_time.day == 3:
-            return MEDITATIONS[];
-        if this_time.day == 0
-            return MEDITATIONS[0];
-        if this_time.day == 0
-            return MEDITATIONS[0];
-        if this_time.day == 0
-            return MEDITATIONS[0];
-"""

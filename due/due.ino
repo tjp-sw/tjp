@@ -2,7 +2,7 @@
 
 //------------------------ Config -----------------------------------//
 // Due controlled versus pi controlled animation choices             //
-#define PI_CONTROLLED                                              //
+//#define PI_CONTROLLED                                              //
 #ifndef PI_CONTROLLED                                                //
   #define TESTING_NODE_NUMBER 0   // To test diff nodes              //
   //#define CYCLE           // Cycles through shows in order         //
@@ -21,7 +21,7 @@
 #endif                                                               //
                                                                      //
                                                                      //
-// How fast animations/palettes will cycle                           //                                                                     
+// How fast animations/palettes will cycle                           //
 #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS) //
   #define BASE_ANIMATION_TIME 13000                                  //
   #define MID_ANIMATION_TIME 9000                                    //
@@ -72,8 +72,8 @@ inline void manually_set_animation_params() {             //
                                                           //
   BEAT_EFFECT = NONE;                                     //
   PALETTE_CHANGE = PALETTE_CHANGE_IMMEDIATE;              //
-  MID_ALPHA = ALPHA_BY_BRIGHTNESS;                        //
-  SPARKLE_ALPHA = ALPHA_BY_BRIGHTNESS;                    //
+  MID_ALPHA = NONE;                                       //
+  SPARKLE_ALPHA = NONE;                                   //
                                                           //
   BASE_TRANSITION = TRANSITION_BY_ALPHA;                  //
   BASE_TRANSITION_SPEED = FAST_TRANSITION;                //
@@ -240,14 +240,14 @@ void loop() {
 
 
   // Draw layers
-  draw_current_base();
+  draw_current_base(0, NUM_RINGS-1);
   #ifdef DEBUG_TIMING
     now = millis();
     serial_val[6] = now - last_debug_time;
     last_debug_time = now;
   #endif
 
-  draw_current_mid();
+  draw_current_mid(0, NUM_RINGS-1);
   #ifdef DEBUG_TIMING
     now = millis();
     serial_val[7] = now - last_debug_time;
@@ -342,7 +342,7 @@ inline void transition_animations() {
       if(!transition_in_base_animation) { base_start_time = current_time; }
     #endif
   }
-  
+
   if(transition_out_mid_animation) {
     transition_out_mid_animation = transition_out_mid();
     transition_in_mid_animation = false;
@@ -361,7 +361,7 @@ inline void transition_animations() {
     #endif
   }
 
-  
+
   if(transition_out_sparkle_animation) {
     transition_out_sparkle_animation = transition_out_sparkle();
     transition_in_sparkle_animation = false;
@@ -526,7 +526,7 @@ inline void cycle_through_animations() {
            if(initial_palette == fruit_loop) { initial_palette = icy_bright; }
       else if(initial_palette == icy_bright) { initial_palette = watermelon; }
       else if(initial_palette == watermelon) { initial_palette = fruit_loop; }
-      else { 
+      else {
         #ifdef DEBUG
           Serial.println("Undefined palette loaded!");
         #endif
@@ -536,12 +536,9 @@ inline void cycle_through_animations() {
     memcpy(target_palette, initial_palette, 3*NUM_COLORS_PER_PALETTE);
     blend_base_layer = blend_mid_layer = blend_sparkle_layer = true;
     #ifdef CYCLE_RANDOM
-      do {
-        PALETTE_CHANGE = random8(NUM_PALETTE_CHANGE_TYPES);
-      } while(PALETTE_CHANGE == PALETTE_CHANGE_IMMEDIATE); // Disable immediate changes when cycling
-
+      PALETTE_CHANGE = 1 + random8(NUM_PALETTE_CHANGE_TYPES);
     #elif defined(CYCLE) || defined(CYCLE_PARAMS)
-      PALETTE_CHANGE = (PALETTE_CHANGE+1) % NUM_PALETTE_CHANGE_TYPES;
+      PALETTE_CHANGE = (PALETTE_CHANGE+1) % (NUM_PALETTE_CHANGE_TYPES+1);
     #endif
 
     #ifdef DEBUG
@@ -563,8 +560,8 @@ inline void cycle_through_animations() {
         BASE_TRANSITION = 1 + random8(NUM_BASE_TRANSITION_MODES);
         BASE_TRANSITION_SPEED = 1 + random8(MAX_TRANSITION_SPEED);
       #elif defined(CYCLE)
-        next_base_animation = 1 + (BASE_ANIMATION % NUM_BASE_ANIMATIONS);
-        BASE_TRANSITION = 1 + (BASE_TRANSITION % NUM_BASE_TRANSITION_MODES);
+        next_base_animation = (BASE_ANIMATION+1) % (NUM_BASE_ANIMATIONS+1);
+        BASE_TRANSITION = (BASE_TRANSITION+1) % (NUM_BASE_TRANSITION_MODES+1);
         BASE_TRANSITION_SPEED = 1 + (BASE_TRANSITION_SPEED % MAX_TRANSITION_SPEED);
       #else
         next_base_animation = BASE_ANIMATION;
@@ -575,14 +572,14 @@ inline void cycle_through_animations() {
   if(MID_ANIMATION != OFF) {
     if ((current_time - mid_start_time >= MID_ANIMATION_TIME) && !(transition_out_mid_animation || transition_in_mid_animation)) {
       transition_out_mid_animation = true;
-      
+
       #ifdef CYCLE_RANDOM
         next_mid_animation = 1 + random8(NUM_MID_ANIMATIONS);
         MID_TRANSITION = 1 + random8(NUM_MID_TRANSITION_MODES);
         MID_TRANSITION_SPEED = 1 + random8(MAX_TRANSITION_SPEED);
       #elif defined(CYCLE)
-        next_mid_animation = 1 + (MID_ANIMATION % NUM_MID_ANIMATIONS);
-        MID_TRANSITION = 1 + (MID_TRANSITION % NUM_MID_TRANSITION_MODES);
+        next_mid_animation = (MID_ANIMATION+1) % (NUM_MID_ANIMATIONS+1);
+        MID_TRANSITION = (MID_TRANSITION+1) % (NUM_MID_TRANSITION_MODES+1);
         MID_TRANSITION_SPEED = 1 + (MID_TRANSITION_SPEED % MAX_TRANSITION_SPEED);
       #else
         next_mid_animation = MID_ANIMATION;
@@ -599,8 +596,8 @@ inline void cycle_through_animations() {
         SPARKLE_TRANSITION = 1 + random8(NUM_SPARKLE_TRANSITION_MODES);
         SPARKLE_TRANSITION_SPEED = 1 + random8(MAX_TRANSITION_SPEED);
       #elif defined(CYCLE)
-        next_sparkle_animation = 1 + (SPARKLE_ANIMATION % NUM_SPARKLE_ANIMATIONS);
-        SPARKLE_TRANSITION = 1 + (SPARKLE_TRANSITION % NUM_SPARKLE_TRANSITION_MODES);
+        next_sparkle_animation = (SPARKLE_ANIMATION+1) % (NUM_SPARKLE_ANIMATIONS+1);
+        SPARKLE_TRANSITION = (SPARKLE_TRANSITION+1) % (NUM_SPARKLE_TRANSITION_MODES+1);
         SPARKLE_TRANSITION_SPEED = 1 + (SPARKLE_TRANSITION_SPEED % MAX_TRANSITION_SPEED);
       #else
         next_sparkle_animation = SPARKLE_ANIMATION;
@@ -617,9 +614,9 @@ inline void cycle_through_animations() {
         EDM_TRANSITION = 1 + random8(NUM_EDM_TRANSITION_MODES);
         EDM_TRANSITION_SPEED = 1 + random8(MAX_TRANSITION_SPEED);
       #elif defined(CYCLE)
-        next_edm_animation = 1 + (EDM_ANIMATION % NUM_EDM_ANIMATIONS);
-        EDM_TRANSITION = 1 + (EDM_TRANSITION % NUM_EDM_TRANSITION_MODES);
-        EDM_TRANSITION_SPEED = 1 + (EDM_TRANSITION_SPEED % MAX_TRANSITION_SPEED);
+        next_edm_animation = (EDM_ANIMATION+1) % (NUM_EDM_ANIMATIONS+1);
+        EDM_TRANSITION = (EDM_TRANSITION+1) % (NUM_EDM_TRANSITION_MODES+1);
+        EDM_TRANSITION_SPEED = (EDM_TRANSITION_SPEED % MAX_TRANSITION_SPEED);
       #else
         next_edm_animation = EDM_ANIMATION;
       #endif
@@ -630,14 +627,14 @@ inline void cycle_through_animations() {
 
 
 // Layer-specific drawing functions
-inline void draw_current_base() {
+inline void draw_current_base(uint8_t min_ring, uint8_t max_ring) {
   switch(BASE_ANIMATION) {
     case BASE_SCROLLING_DIM:
-      base_scrolling_dim();
+      base_scrolling_dim(min_ring, max_ring);
       break;
 
     case BASE_2COLOR_GRADIENT:
-      base_scrolling_2color_gradient();
+      base_scrolling_2color_gradient(min_ring, max_ring);
       break;
 
     case LEE_COLOR_RANGE:
@@ -662,39 +659,43 @@ inline void draw_current_base() {
   }
 }
 
-inline void draw_current_mid() {
+inline void draw_current_mid(uint8_t min_ring, uint8_t max_ring) {
   switch(MID_ANIMATION) {
     case SNAKE:
-      snake(ALL_RINGS);
+      snake(ALL_RINGS, min_ring, max_ring);
       break;
 
     case FIRE:
-      fire(ALL_RINGS, FIRE_PALETTE_STANDARD, true);
+      fire(ALL_RINGS, FIRE_PALETTE_STANDARD, true, min_ring, max_ring);
       break;
 
-    case FIRE_WHOOPS:
-      fire(ALL_RINGS, FIRE_PALETTE_DISABLED, true);
+    case DISCO_FIRE:
+      fire(ALL_RINGS, FIRE_PALETTE_DISABLED, true, min_ring, max_ring);
       break;
 
     case FIRE_SNAKE:
-      fire(ODD_RINGS, FIRE_PALETTE_STANDARD, true);
-      snake(EVEN_RINGS);
+      fire(ODD_RINGS, FIRE_PALETTE_STANDARD, true, min_ring, max_ring);
+      snake(EVEN_RINGS, min_ring, max_ring);
       break;
 
     case FIRE_ONE_SIDED:
-      fire(ALL_RINGS, FIRE_PALETTE_STANDARD, false);
+      fire(ALL_RINGS, FIRE_PALETTE_STANDARD, false, min_ring, max_ring);
       break;
 
     case MID_SCROLLING_DIM:
-      mid_scrolling_dim(COLOR_BY_LOCATION);
+      mid_scrolling_dim(COLOR_BY_LOCATION, min_ring, max_ring);
       break;
 
     case MID_SCROLLING_DIM2:
-      mid_scrolling_dim(COLOR_BY_PATTERN);
+      mid_scrolling_dim(COLOR_BY_PATTERN, min_ring, max_ring);
       break;
 
     case MID_SCROLLING_DIM3:
-      mid_scrolling_dim(COLOR_BY_PATTERN_OFFSET);
+      mid_scrolling_dim(COLOR_BY_PATTERN_OFFSET, min_ring, max_ring);
+      break;
+
+    case ARROW:
+      arrow();
       break;
 
     default:
@@ -759,11 +760,11 @@ inline void draw_current_edm() {
     case EQ_VARIABLE_FIRE:
       equalizer_variable(DISPLAY_FULL);
       break;
-      
+
     case EQ_VARIABLE_SPLIT:
       equalizer_variable(DISPLAY_SPLIT);
       break;
-  
+
     default:
       break;
   }
@@ -774,7 +775,7 @@ inline void draw_current_edm() {
 inline void init_base_animation() {
   base_start_time = current_time;
   base_count = 0;
-  
+
   #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
     BASE_COLOR_THICKNESS = random8();
     BASE_BLACK_THICKNESS = random8();
@@ -784,7 +785,7 @@ inline void init_base_animation() {
     BASE_INTER_RING_SPEED = random8();
     show_parameters[BASE_RING_OFFSET_INDEX] = random8() - 128;
   #endif
-  
+
   switch(BASE_ANIMATION) {
     default:
       break;
@@ -805,7 +806,7 @@ inline void init_base_animation() {
 inline void init_mid_animation() {
   mid_start_time = current_time;
   mid_count = 0;
-  
+
   #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
     MID_NUM_COLORS = random8(1, 4);
     MID_COLOR_THICKNESS = random8();
@@ -817,14 +818,19 @@ inline void init_mid_animation() {
     show_parameters[MID_RING_OFFSET_INDEX] = random8() - 128;
     //MID_ALPHA = random8(NUM_MID_ALPHA_MODES);
   #endif
-  
+
   switch(MID_ANIMATION) {
     case FIRE:
-    case FIRE_WHOOPS:
+    case DISCO_FIRE:
     case FIRE_ONE_SIDED:
     case FIRE_SNAKE:
       clear_mid_layer(); // Clear old pixels which are now "heat" values
-    
+      break;
+
+    case ARROW:
+      init_arrow();
+      break;
+
     default:
       clear_mid_layer();
       break;
@@ -860,7 +866,7 @@ inline void init_sparkle_animation() {
     //SPARKLE_ALPHA = random8(NUM_SPARKLE_ALPHA_MODES);
   #endif
 
-  
+
   switch(SPARKLE_ANIMATION) {
     case GLITTER:
     case RAIN:
@@ -905,7 +911,7 @@ inline void init_sparkle_animation() {
 
 inline void init_edm_animation() {
   edm_start_time = current_time;
-  
+
   #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
     if(EDM_ANIMATION != NONE) {
       BASE_COLOR_THICKNESS = random8();
@@ -917,19 +923,19 @@ inline void init_edm_animation() {
       show_parameters[BASE_RING_OFFSET_INDEX] = random8() - 128;
     }
   #endif
-  
+
   switch(EDM_ANIMATION) {
     case NONE:
     case OFF:
       break; // Don't disable layers
-      
+
     case EQ_VARIABLE_FIRE:
       BASE_ANIMATION = OFF;
       SPARKLE_ANIMATION = OFF;
       MID_ANIMATION = FIRE_ONE_SIDED;
       init_mid_animation();
       break;
-      
+
     default:
       BASE_ANIMATION = OFF;
       SPARKLE_ANIMATION = OFF;
@@ -961,7 +967,7 @@ inline void cleanup_base_animation(uint8_t animation_index) {
 inline void cleanup_mid_animation(uint8_t animation_index) {
   switch(animation_index) {
     case FIRE:
-    case FIRE_WHOOPS:
+    case DISCO_FIRE:
     case FIRE_SNAKE:
     case FIRE_ONE_SIDED:
       cleanup_fire();
@@ -985,5 +991,3 @@ inline void cleanup_edm_animation(uint8_t animation_index) {
       break;
   }
 }
-
-

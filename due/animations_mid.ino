@@ -1,49 +1,12 @@
 // This file is for completed mid animations
 
-// this updated animation needs testing by diane
-//-------------------------------- SNAKE --------------------------------
-// Sends alternating bands of colors rotating around the rings
-// Creates repeated snakes with NUM_COLORS colors, with each color repeated COLOR_THICKNESS times, separated by BLACK_THICKNESS black LEDs.
-// MID_NUM_COLORS(1-3), MID_COLOR_THICKNESS(1-20), MID_BLACK_THICKNESS(0-60), MID_INTRA_RING_MOTION(-1, 1), MID_RING_OFFSET(0-20), MID_INTRA_RING_SPEED(8-127)
-inline void old_snake(uint8_t ring_mode) {
-   
-  uint8_t period = MID_NUM_COLORS * MID_COLOR_THICKNESS + MID_BLACK_THICKNESS;
-  uint16_t extended_led_count = ((LEDS_PER_RING-1)/period+1)*period;
-
-  uint8_t ring_start = node_number*RINGS_PER_NODE + (ring_mode == ODD_RINGS ? 1 : 0);
-  uint8_t ring_inc = ring_mode == ALL_RINGS ? 1 : 2;
-  for (uint8_t ring = ring_start; ring < (node_number+1)*RINGS_PER_NODE; ring += ring_inc) {
-    for (uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
-      uint16_t idx;
-      if(MID_INTRA_RING_MOTION != SPLIT) {
-        idx = (pixel + MID_RING_OFFSET*ring + MID_INTRA_RING_MOTION * MID_INTRA_RING_SPEED * loop_count / THROTTLE) % extended_led_count;
-      }
-      if(idx >= LEDS_PER_RING) { continue; }
-
-      uint8_t pattern_idx = pixel % period;
-      if(pattern_idx < MID_BLACK_THICKNESS) {
-        mid_layer[ring][idx] = TRANSPARENT;
-      }
-      else if(pattern_idx < MID_BLACK_THICKNESS + MID_COLOR_THICKNESS) {
-        mid_layer[ring][idx] = get_mid_color(0);
-      }
-      else if(pattern_idx < MID_BLACK_THICKNESS + 2*MID_COLOR_THICKNESS) {
-        mid_layer[ring][idx] = get_mid_color(1);
-      }
-      else {
-        mid_layer[ring][idx] = get_mid_color(2);
-      }
-    }
-  }
-}
-
 //-------------------------------- SNAKE --------------------------------
 // Sends alternating bands of colors rotating around the rings
 // Creates repeated snakes with MID_NUM_COLORS colors, with each color repeated COLOR_THICKNESS times, separated by BLACK_THICKNESS black LEDs.
-// MID_NUM_COLORS(1:3), MID_COLOR_THICKNESS(2:5), MID_BLACK_THICKNESS(5:50), MID_INTRA_RING_MOTION(-1:1), MID_RING_OFFSET(-period/2:period/2), MID_INTRA_RING_SPEED(8-32)
-inline void snake(uint8_t ring_mode) {
+// MID_NUM_COLORS(1:3), MID_COLOR_THICKNESS(2:5), MID_BLACK_THICKNESS(6:50), MID_INTRA_RING_MOTION(-1:1), MID_RING_OFFSET(-period/2:period/2), MID_INTRA_RING_SPEED(8-32)
+inline void snake(uint8_t ring_mode, uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(MID_COLOR_THICKNESS, 2, 5);
-  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 5, 50);
+  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 6, 50);
   uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 5);
   uint8_t period = MID_NUM_COLORS * color_thickness + black_thickness;
   int8_t ring_offset = scale_param(MID_RING_OFFSET, -1 * period/2, period/2);
@@ -52,12 +15,15 @@ inline void snake(uint8_t ring_mode) {
 
   uint8_t ring_start = node_number*RINGS_PER_NODE + (ring_mode == ODD_RINGS ? 1 : 0);
   uint8_t ring_inc = ring_mode == ALL_RINGS ? 1 : 2;
-  for (uint8_t ring = ring_start; ring < (node_number+1)*RINGS_PER_NODE; ring += ring_inc) {
+  if(ring_start > min_ring) { min_ring = ring_start; }
+  if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
+  for (uint8_t ring = min_ring; ring < max_ring; ring += ring_inc) {
       // if alternating rotation style, alternate direction of every other ring
       alternating_multiplier = ((MID_INTRA_RING_MOTION == ALTERNATE) && ((ring % 2) == 0)) ? -1 : 1;
+      uint16_t motion_offset = ring_offset*ring + alternating_multiplier * MID_INTRA_RING_MOTION * intra_speed * mid_count / THROTTLE;
     
       for (uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
-          uint16_t idx = (pixel + ring_offset*ring + alternating_multiplier * MID_INTRA_RING_MOTION * intra_speed * mid_count / THROTTLE) % extended_led_count;
+          uint16_t idx = (pixel + motion_offset) % extended_led_count;
           if(idx >= LEDS_PER_RING) { continue; }
 
           uint8_t pattern_idx = pixel % period;
@@ -120,7 +86,7 @@ inline void snake(uint8_t ring_mode) {
 #define MAX_WIND_COOLING 65 // Largest extra cooling, at center of the wind
 #define MAX_WIND_RANGE 6    // Wind cooling reaches 6 rings in either direction from center
 #define MIN_HEAT_LEVEL 9    // This value and lower are rounded to 0
-inline void fire(uint8_t ring_mode, uint8_t palette_type, bool draw_inner_half) {
+inline void fire(uint8_t ring_mode, uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, uint8_t max_ring) {
   uint8_t cooling = 15;//scale_param(MID_BLACK_THICKNESS, 15, 15);
   uint8_t sparking_chance = 130;//scale_param(MID_COLOR_THICKNESS, 130, 130);
   uint8_t min_spark_size = 150;//scale_param(MID_NUM_COLORS, 150, 150);
@@ -135,10 +101,12 @@ inline void fire(uint8_t ring_mode, uint8_t palette_type, bool draw_inner_half) 
 
   uint8_t ring_start = node_number*RINGS_PER_NODE + (ring_mode == ODD_RINGS ? 1 : 0);
   uint8_t ring_inc = ring_mode == ALL_RINGS ? 1 : 2;
+  if(ring_start > min_ring) { min_ring = ring_start; }
+  if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
   
   // Step 1.  Cool down every 4th cell a little, and add an extra cooling wind that moves around the structure
   uint8_t coldest_ring = (mid_count * wind_speed / THROTTLE) % NUM_RINGS;
-  for(uint8_t ring = ring_start; ring < (node_number+1)*RINGS_PER_NODE; ring += ring_inc) {
+  for(uint8_t ring = min_ring; ring < max_ring; ring += ring_inc) {
     uint8_t dist = ring > coldest_ring ? ring - coldest_ring : coldest_ring - ring;
 
     uint8_t wind_cooling = 0;
@@ -163,7 +131,7 @@ inline void fire(uint8_t ring_mode, uint8_t palette_type, bool draw_inner_half) 
     }
   }
 
-  for(uint8_t ring = ring_start; ring < (node_number+1)*RINGS_PER_NODE; ring += ring_inc) {
+  for(uint8_t ring = min_ring; ring < max_ring; ring += ring_inc) {
     
     // Step 2.  Heat from each cell drifts 'up' and diffuses a little
     for(uint16_t pixel = 1; pixel < HALF_RING - 1; pixel++) {
@@ -192,7 +160,7 @@ inline void fire(uint8_t ring_mode, uint8_t palette_type, bool draw_inner_half) 
   }
 
   uint16_t min_pixel = draw_inner_half ? 0 : HALF_RING;
-  for(uint8_t ring = ring_start; ring < (node_number+1)*RINGS_PER_NODE; ring += ring_inc) {
+  for(uint8_t ring = min_ring; ring < max_ring; ring += ring_inc) {
     for(uint16_t pixel = min_pixel; pixel < LEDS_PER_RING-1; pixel++) {
       if(mid_layer[ring][pixel] < MIN_HEAT_LEVEL) { mid_layer[ring][pixel] = TRANSPARENT; }
     }
@@ -261,19 +229,24 @@ inline void cleanup_fire() {
 
 //-------------------------------- SCROLLING DIM ---------------------------------
 // Draws single-colored bands that fade in and out and scroll around rings
-// MID_NUM_COLORS(1:3), MID_COLOR_THICKNESS(1:6), MID_BLACK_THICKNESS(2:15), MID_INTRA_RING_MOTION(-1:1), MID_RING_OFFSET(-period/2:period/2), MID_INTRA_RING_SPEED(8:64)
-inline void mid_scrolling_dim(uint8_t color_mode) {
+// MID_NUM_COLORS(1:3), MID_COLOR_THICKNESS(1:6), MID_BLACK_THICKNESS(6:18), MID_INTRA_RING_MOTION(-1:1), MID_RING_OFFSET(-period/2:period/2), MID_INTRA_RING_SPEED(8:64)
+inline void mid_scrolling_dim(uint8_t color_mode, uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(MID_COLOR_THICKNESS, 1, 6);
-  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 2, 15);
+  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 6, 18);
   uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 6);
   uint8_t dim_period = color_thickness + black_thickness + 2*MAX_DIMMING;
   uint8_t full_period = dim_period * MID_NUM_COLORS;
   int8_t ring_offset = scale_param(MID_RING_OFFSET, -1 * dim_period/2, dim_period/2);
   uint16_t extended_led_count = ((LEDS_PER_RING-1)/full_period+1)*full_period;
 
-  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+
+  if(node_number*RINGS_PER_NODE > min_ring) { min_ring = node_number*RINGS_PER_NODE; }
+  if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
+  for(uint8_t ring = min_ring; ring < max_ring; ring++) {
+    uint16_t motion_offset = ring*ring_offset + MID_INTRA_RING_MOTION * intra_speed * mid_count / THROTTLE;
+    
     for(uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
-      uint16_t idx = (pixel + ring*ring_offset + MID_INTRA_RING_MOTION * intra_speed * mid_count / THROTTLE) % extended_led_count;
+      uint16_t idx = (pixel + motion_offset) % extended_led_count;
       if(idx >= LEDS_PER_RING) { continue; }
 
       uint8_t color_index;
