@@ -2,7 +2,9 @@
 import numpy,time
 from random import randint
 from random import sample
-
+from dataBaseInterface import DataBaseInterface
+from audioInfo import AudioEvent, AudioFileInfo
+from audio_event_queue import SortedDLL
 
 # Non-Color Animation Parameter Constants
 #
@@ -107,6 +109,12 @@ last_show_change_sec = 0.0
 
 show_parameters = [0] * NUM_PARAMETERS
 show_colors = [[333 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALETTE)]	# invalid values
+
+event_queue = SortedDLL() #create sorted dll to act as the audio event queue (with super duper special powers)
+#next_audio_event  #= AudioEvent(-1, -1, "init")
+
+NUM_AUDIO_CHANNELS = 7
+current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
 
 def constrained_random_parameter(i):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
@@ -301,3 +309,141 @@ def playa_program(init=False):
         print 'palette changed', show_colors
 
     print 'playa time advanced to', time.ctime(virtual_time), 'on day', bm_day_index, 'in', mode
+
+# ------------------------------------------------- internal_sound_animations_program() -----------------------------------------------
+# show for when the journey playing its internal audio and the external audio
+# is not past threshold amount aka art car not detected
+
+# still very much under development.... fine tuning audio_events processing and
+# handling here to avoid too frequent or not frequent enough animation parameter changes
+def do_internal_sound_animations(audio_msg, init = False):
+    interpret_audio_msg(audio_msg)
+
+    #pulls from event_queue
+    drive_internal_animations(init)
+
+def progress_audio_queue():
+    global event_queue, next_audio_event
+    # ensure not looking at events that have already passed
+    while True:
+        try:
+            next_audio_event_node = event_queue.peek()
+            next_audio_event = next_audio_event_node.value
+            # print "next audio event " + str(next_audio_event)
+        except:
+            # print "event_queue is empty"
+            break
+
+        stale = next_audio_event.time <= timeMs() - 10
+        # print "diff event - now = " + str(next_audio_event.time - timeMs())
+        if stale:
+            print "it's " + str(timeMs()) + " stale event " + str(next_audio_event) + " popping!"
+            event_queue.remove(next_audio_event.time)
+        else:
+            break
+
+def drive_internal_animations(init):
+    global next_audio_event, event_queue
+    if init:
+        if show_colors[0] == [333,333,333]:	# invalid values before initialization
+            bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
+
+            # choose random starting values for each of the parameters
+            for i in range(0, NUM_PARAMETERS):
+                show_parameters[i] = constrained_random_parameter(i)
+            constrain_show()
+            choose_random_colors_from_palette()
+
+        print "initial show parameters ", show_parameters
+        print "initial show colors" , show_colors
+        return
+
+    progress_audio_queue()
+
+    if next_audio_event is not None:
+        # RJS need to come up with some sort of thresholding for time proximity
+        # and animaiton change frequency. Will know better when I have the final
+        # audio event lists populated (ideally using Antonio's 'cleaner' method)
+        # MAYBE: seperate thread handling polling event_queue and sending animations
+        lower_bounds = timeMs() - 10
+        upper_bounds = timeMs() + 10
+        valid_time = next_audio_event.time <= upper_bounds and next_audio_event.time >= lower_bounds
+        #print "valid? " + str(valid_time) + " aiming for event time between " + str(lower_bounds) + " - " + str(upper_bounds) + " current event time " + str(next_audio_event.time)
+
+        if valid_time: #valid 'next' event
+            magnitude = next_audio_event.magnitude
+            show_param = randint(0, 27)
+            old_param_value = show_parameters[show_param]
+            if next_audio_event.kind == "freqband":
+                new_param_value = constrained_weighted_parameter(show_param, magnitude)
+                print "Frq event [" + str(next_audio_event) +"]: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
+
+            elif next_audio_event.kind == "amplitude":
+                #TODO make this actually intelligent
+                new_param_value = constrained_random_parameter(show_param)
+                print "Amp event: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
+
+            try:
+                if event_queue.size > 0:
+                    event_queue.remove(next_audio_event.time)
+                else:
+                    next_audio_event = None
+            except AttributeError:
+                print "event_queue is empty"
+
+#TODO make this actually intelligent
+def constrained_weighted_parameter(i, magnitude):
+    if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
+        new_parameter = show_bounds[i][randint(0,1)]	# no zero value
+    else:
+        old_parameter = show_parameters[i]
+        new_parameter = old_parameter + magnitude
+    # change to unsigned int for passing to due
+    if new_parameter < 0:
+        new_parameter += 256
+    return new_parameter
+
+
+def interpret_audio_msg(audio_msg):
+    channel_map = get_audio_file_info(audio_msg)
+    for channel in channel_map.keys():
+        if current_internal_track_per_channel[channel] > 0: #channel already had a track on it
+            old_audio = current_internal_track_per_channel[channel]
+            remove_audio_events_from_queue(old_audio)
+
+        audioInfo = channel_map[channel]
+        current_internal_track_per_channel[channel] = audioInfo
+        queue_audio_events(audioInfo)
+
+
+# RJS I don't like how this hard coded... if the audio contorl message changes this needs to as well.
+def get_audio_file_info(audio_msg):
+    # current msg format: a0;1;0;0,50,0,0
+    info = audio_msg.split(";")
+    tracks = info[3].split(",")
+    output = {}
+    i = 0
+    while(i < len(tracks)):
+        if int(tracks[i]) > 0:
+            output[i] = (DataBaseInterface().grabAudioInfo(tracks[i]))
+        i += 1
+    return output
+
+
+def remove_audio_events_from_queue(audioInfo):
+    for event in audioInfo.events:
+        try:
+            event_queue.remove(event.time)
+        except ValueError:
+            print "event " + event + " already has been removed from queue"
+
+
+def queue_audio_events(audioInfo):
+    cur_time_ms = timeMs()
+    for event in audioInfo.events:
+        event.time += cur_time_ms
+        node = event_queue.add(event)
+
+
+def timeMs():
+    return int(round(time.time() * 1000))

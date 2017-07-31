@@ -73,7 +73,7 @@ def do_show(cmd, param):
     do_send(None, struct.pack('>c%uB' % (len(show_parameters) + len(show_colors_list)), 's', *(show_parameters + show_colors_list)))
     print 'show:', repr(show_parameters), repr(show_colors)
 
-#do a dynamically changing show based on internal audio selections. maybe inlcude hand inputs as well. 
+#do a dynamically changing show based on internal audio selections. maybe inlcude hand inputs as well.
 #TODO
 def do_dyn_show(cmd, param):
     global show_colors, show_parameters
@@ -281,12 +281,6 @@ while running:
         if time.time() > next_timesync_sec:
             do_time('time', None)
 
-        #pushing animation parameters across nodes
-        if auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
-            auto_show()
-            last_show_change_sec = time.time()
-            do_show(None, None)
-
         #sending internal audio selection across nodes
         (node, audio_msg) = tsunami.tick()
         if audio_msg is not None:
@@ -294,6 +288,14 @@ while running:
                 # hope the length is less than 256
                 audio_msg = struct.pack('>cB', audio_msg[0:1], len(audio_msg[1:])) + audio_msg[1:]
             do_send(None, audio_msg)	# always send to all nodes
+
+        #pushing animation parameters across nodes
+        if auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
+            auto_show()
+            last_show_change_sec = time.time()
+            do_show(None, None)
+        #else internal_audio_show:
+        #    do_dyn_show(audio_msg)
 
     except KeyboardInterrupt:
         running = False

@@ -38,7 +38,7 @@ class Node(object):
         return self.prev
 
 
-class DoublyLinkedList(object):
+class SortedDLL(object):
     'sorted by AudioEvent.time property doubly linked list'
     def __init__(self):
         self.head = None
@@ -170,28 +170,3 @@ class DoublyLinkedList(object):
             prev = cur
             cur = cur.next
             cur_index += 1
-
-
-new_list = DoublyLinkedList()
-print "isEmpty:", new_list.isEmpty()
-a_info = DataBaseInterface().grabAudioInfo("5")
-new_list.add(a_info.events[0])
-new_list.add(a_info.events[1])
-print new_list.size
-print "isEmpty:", new_list.isEmpty()
-#new_list.add(20)
-#new_list.add(30)
-#new_list.add(40)
-#new_list.add(25)
-print "search(time):", new_list.search(a_info.events[0].time)
-print "search(10):", new_list.search(10)
-print "size:", new_list.size
-print "remove(time):", new_list.remove(a_info.events[0].time)
-print "size:", new_list.size
-#print "index(25):", new_list.index(25)
-#print "pop(2):", new_list.pop(2).data
-#print "size:", new_list.size
-#print "pop(1):", new_list.pop(1).data
-#print "size:", new_list.size
-#print "pop(1):", new_list.pop(1).data
-#print "pop():", new_list.pop().data
