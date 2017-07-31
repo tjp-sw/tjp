@@ -1,6 +1,6 @@
 import random
 from datetime import datetime, timedelta
-import songs
+import sounds
 
 
 # Just random....this signal is coming from the touchpad which is not written yet.
@@ -29,9 +29,9 @@ def send_music(node=0, command=1, field2=0, channels=None):
     if empty_msg is False:
         ctrl_msg = 'a' + ';'.join([str(node), str(command), str(field2),
                                   ','.join(str(ch) for ch in channels)]) + ';'
-        print 'audio command:', ctrl_msg
-        return (node, ctrl_msg)
-    return (None, None)
+        # print 'audio command:', ctrl_msg
+        return ctrl_msg
+    return None
 
 
 def play(channels, node=0, looping=0):
@@ -49,53 +49,44 @@ def mute(node=0):
 # Can only return one command per tick....need to update looping
 class Music:
     def __init__(self):
+        self.meditation = False
         self.played_low = datetime.min
         self.played_mid = datetime.min
         self.checked_high = datetime.min
         self.played_high = datetime.min
         self.drone = datetime.min
-        self.drone_count = 0
+        self.drone_count = 0  # Todo: change drone?
 
     def tick(self):
-        if self.played_low != datetime.today().weekday():  # Changes at midnight. This probably should be changed
-            low = songs.find_low()
-            self.played_low = datetime.today().weekday()
-            return play([low], looping=1)
+        if self.meditation:
+            return None
+        # Todo: Turn off meditation
+        # Todo: Play meditations manually
+        meditation = sounds.play_meditation()
+        if meditation is not None:
+            self.meditation = True
+            return play([0, meditation])
 
-        msg = [0] * 4
+        msg = [0] * 4  # Todo: Loop channel 0 on the mega
+        if self.played_low != datetime.today().weekday():  # Todo: change drone after meditation
+            low = sounds.find_low()
+            self.played_low = datetime.today().weekday()
+            msg[0] = low
+
         if self.played_mid <= (datetime.now() - timedelta(seconds=2)):
-            msg[1] = songs.find_mid()
+            msg[1] = sounds.find_mid()
             self.played_mid = datetime.now()
 
         if self.checked_high <= (datetime.now() - timedelta(seconds=30)):
             play_chance = random.randint(0, 4)
             if play_chance == 0 or \
                self.played_high <= (datetime.now() - timedelta(minutes=2)):
-                msg[2] = songs.find_high()
+                msg[2] = sounds.find_high()
                 self.played_high = datetime.now()
             self.checked_high = datetime.now()
 
         if panel_touched():
-            msg[3] = songs.find_high()
+            msg[3] = sounds.find_high()
 
         return play(msg)
 
-"""
-music = Music()
-
-while True:
-    music.tick()
-
-  
-
-#Set theme
-theme_list= ['RED', 'ORANGE', 'YELLOW', 'GREEN', 'BLUE', 'PURPLE', 'WHITE']
-RED= 0
-ORANGE= 1
-YELLOW= 2
-GREEN= 3
-BLUE= 4
-PURPLE= 5
-WHITE= 6
-
-"""

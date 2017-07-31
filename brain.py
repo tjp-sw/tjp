@@ -152,7 +152,7 @@ def disconnect(socket, msg):
 
 do_list(None, None)
 print sorted(control_messages.keys())
-tsunami = music.Music()
+music = music.Music()
 running = True
 while running:
     try:
@@ -266,7 +266,7 @@ while running:
             last_show_change_sec = time.time()
             do_show(None, None)
 
-        (node, audio_msg) = tsunami.tick()
+        audio_msg = music.tick()
         if audio_msg is not None:
             if audio_msg[0:1] == 'a':
                 # hope the length is less than 256
