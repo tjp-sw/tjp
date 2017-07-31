@@ -113,7 +113,7 @@ show_colors = [[333 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PAL
 event_queue = SortedDLL() #create sorted dll to act as the audio event queue (with super duper special powers)
 NUM_AUDIO_CHANNELS = 7
 current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
-internal_audio_show = True #triggers internal audio animations..
+internal_audio_show = False #triggers internal audio animations..
 
 def constrained_random_parameter(i):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
