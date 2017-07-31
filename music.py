@@ -12,26 +12,15 @@ def panel_touched():
 
 
 def status_update(message):
+    message = message[1:]
     print (message)
-
-"""
-# sends a control message to the mega
-class ControlMessage:
-    def __init__(self, node=0, command=1, field2=0, channels=None):
-        self.node = node
-        self.command = command
-        self.field2 = field2
-        if channels is not None:
-            self.channels = channels
-        else:
-            self.channels = [0] * 7
-"""
-
 
 def send_music(node=0, command=1, field2=0, channels=None):
     empty_msg = True
     if command == 3:
-        empty_msg = False
+        # empty_msg = False
+        return 'a' + '0' + ';' + '3'+ ';'
+        # channels= []
     if channels is not None:
         for ch in channels:
             if ch > 0:

@@ -142,6 +142,7 @@ def do_quit(ignored, neglected):
     global running
     running = False
 
+
 # send a message to one remote or all
 def do_send(socket, message):
     global message_queues, writing
@@ -677,6 +678,11 @@ while running:
         # raise				# uncomment for debugging
         print sys.exc_value
         do_disconnect(None, None)	# TODO: be more selective
+
+for s in remote_name:
+    audio_msg = music.mute()
+    stop_msg = struct.pack('>cB', audio_msg[0:1], len(audio_msg[1:])) + audio_msg[1:]
+    s.send(stop_msg)
 
 for s in sources:
     s.close()
