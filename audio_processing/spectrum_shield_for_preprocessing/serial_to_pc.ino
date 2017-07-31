@@ -1,4 +1,5 @@
-// 12 Mar 2014
+// From Robin2 https://forum.arduino.cc/index.php?topic=225329.0
+
 // this works with ComArduino.py and ComArduinoA4e.rb
 // this version uses a start marker 254 and an end marker of 255
 //  it uses 253 as a special byte to be able to reproduce 253, 254 and 255
@@ -21,11 +22,11 @@ byte dataSentNum = 0; // the transmitted value of the number of bytes in the pac
 byte dataRecvCount = 0;
 
 
-byte dataRecvd[maxMessage]; 
-byte dataSend[maxMessage];  
+byte dataRecvd[maxMessage];
+byte dataSend[maxMessage];
 byte tempBuffer[maxMessage];
 
-byte dataToSend[maxMessage];  
+byte dataToSend[maxMessage];
 byte dataToSendCount = 0;
 byte dataTotalToSend = 0;
 
@@ -42,7 +43,7 @@ boolean allReceived = false;
   pinMode(13, OUTPUT); // the onboard LED
   Serial.begin(115200);
   debugToPC("Arduino Ready from ArduinoPC.ino");
-  
+
   delay(500);
   blinkLED(5); // just so we know it's alive
 }*/
@@ -52,7 +53,7 @@ boolean allReceived = false;
 /*void loop() {
 
   getSerialData();
-  
+
   processData();
 
 }*/
@@ -64,19 +65,19 @@ void getSerialData() {
      // Receives data into tempBuffer[]
      //   saves the number of bytes that the PC said it sent - which will be in tempBuffer[1]
      //   uses decodeHighBytes() to copy data from tempBuffer to dataRecvd[]
-     
+
      // the Arduino program will use the data it finds in dataRecvd[]
 
   while(Serial.available() > 0) {
 
     byte x = Serial.read();
-    //if (x == startMarker) { 
-      bytesRecvd = 0; 
+    //if (x == startMarker) {
+      bytesRecvd = 0;
       inProgress = true;
       // blinkLED(2);
       // debugToPC("start received");
     //}
-      
+
     if(inProgress) {
       dataToSend[bytesRecvd] = x;
       dataToSendCount ++;
@@ -85,10 +86,10 @@ void getSerialData() {
     if (x == endMarker) {
       inProgress = false;
       allReceived = true;
-      
+
         // save the number of bytes that were sent
       dataSentNum = tempBuffer[1];
-  
+
       decodeHighBytes();
     }*/
   }
@@ -101,7 +102,7 @@ void processData() {
     // processes the data that is in dataRecvd[]
 
   if (allReceived) {
-  
+
       // for demonstration just copy dataRecvd to dataSend
     dataSendCount = dataRecvCount;
     for (byte n = 0; n < dataRecvCount; n++) {
@@ -111,7 +112,7 @@ void processData() {
     dataToPC();
 
     delay(100);
-    allReceived = false; 
+    allReceived = false;
   }
 }
 

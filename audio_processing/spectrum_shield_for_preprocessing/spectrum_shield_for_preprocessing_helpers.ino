@@ -1,3 +1,6 @@
+//This file contains old helper functions... most of which aren't used anymore.
+//A clean up should happen... eventually.
+
 void set_peak_history() {
 #ifdef DEBUG_PEAKS
   String debugOutput = String(current_time) + "\t";

@@ -1,3 +1,7 @@
+#file for parsing the processed audio info
+#from here will go into Mongo. Waiting on whatever new format before completing
+#that circle... Mongo retrieval is mocked in the brain.py side.
+
 import sys
 sys.path.insert(0, '../')
 

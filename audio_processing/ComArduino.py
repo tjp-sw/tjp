@@ -1,17 +1,15 @@
-# 12 Mar 2014
-
-# in case any of this upsets Python purists it has been converted from an equivalent JRuby program
+# From Robin2 https://forum.arduino.cc/index.php?topic=225329.0
 
 # this is designed to work with ... ArduinoPC.ino ...
 
-# the purpose of this program and the associated Arduino program is to demonstrate a system for sending 
+# the purpose of this program and the associated Arduino program is to demonstrate a system for sending
 #   and receiving data between a PC and an Arduino.
 
 # The key functions are:
-#    sendToArduino(str) which sends the given string to the Arduino. The string may 
+#    sendToArduino(str) which sends the given string to the Arduino. The string may
 #                       contain characters with any of the values 0 to 255
 #
-#    recvFromArduino()  which returns an array. 
+#    recvFromArduino()  which returns an array.
 #                         The first element contains the number of bytes that the Arduino said it included in
 #                             message. This can be used to check that the full message was received.
 #                         The second element contains the message as a string
@@ -56,8 +54,8 @@
 #       this program does NOT include a checkbyte that could be used to verify that there are no
 #          errors in the message. This could easily be added.
 #
-#       as written the Arduino program can only receive a maximum of 16 bytes. 
-#          This must include the start- and end-markers, the length byte and any extra bytes needed 
+#       as written the Arduino program can only receive a maximum of 16 bytes.
+#          This must include the start- and end-markers, the length byte and any extra bytes needed
 #             to encode values of 253 or over
 #          the arduino program could easily be modified to accept longer messages by changing
 #                #define maxMessage 16
@@ -85,48 +83,48 @@ def sendToArduino(sendStr):
 
 def recvFromArduino():
   global startMarker, endMarker
-  
+
   ck = ""
   x = "z" # any value that is not an end- or startMarker
   byteCount = -1 # to allow for the fact that the last increment will be one too many
-  
+
   # wait for the start character
-  while  ord(x) != startMarker: 
+  while  ord(x) != startMarker:
     x = ser.read()
-  
+
   # save data until the end marker is found
   while ord(x) != endMarker:
-    ck = ck + x 
+    ck = ck + x
     x = ser.read()
     byteCount += 1
-    
+
   # save the end marker byte
-  ck = ck + x 
-  
+  ck = ck + x
+
   returnData = []
   returnData.append(ord(ck[1]))
   returnData.append(decodeHighBytes(ck))
 #  print "RETURNDATA " + str(returnData[0])
-  
+
   return(returnData)
 
 #======================================
 
 def encodeHighBytes(inStr):
   global specialByte
-  
+
   outStr = ""
   s = len(inStr)
-  
+
   for n in range(0, s):
     x = ord(inStr[n])
-    
+
     if x >= specialByte:
        outStr = outStr + chr(specialByte)
        outStr = outStr + chr(x - specialByte)
     else:
        outStr = outStr + chr(x)
-       
+
 #  print "encINSTR  " + bytesToString(inStr)
 #  print "encOUTSTR " + bytesToString(outStr)
 
@@ -138,10 +136,10 @@ def encodeHighBytes(inStr):
 def decodeHighBytes(inStr):
 
   global specialByte
-  
+
   outStr = ""
   n = 0
-  
+
   while n < len(inStr):
      if ord(inStr[n]) == specialByte:
         n += 1
@@ -150,7 +148,7 @@ def decodeHighBytes(inStr):
         x = inStr[n]
      outStr = outStr + x
      n += 1
-     
+
   #print "decINSTR  " + bytesToString(inStr)
   #print "decOUTSTR " + bytesToString(outStr)
 
@@ -174,11 +172,11 @@ def bytesToString(data):
 
   byteString = ""
   n = len(data)
-  
+
   for s in range(0, n):
     byteString = byteString + str(ord(data[s]))
     byteString = byteString + "-"
-    
+
   return(byteString)
 
 
@@ -197,9 +195,9 @@ def waitForArduino():
 
    # wait until the Arduino sends 'Arduino Ready' - allows time for Arduino reset
    # it also ensures that any bytes left over from a previous message are discarded
-   
+
     global endMarker
-    
+
     msg = ""
     while msg.find("Arduino Ready") == -1:
 
@@ -215,7 +213,7 @@ def waitForArduino():
 
       displayDebug(msg)
       print
-      
+
 
 #======================================
 
@@ -282,4 +280,3 @@ while n < numLoops:
     #time.sleep(0.3)
 
 ser.close
-
