@@ -2,7 +2,7 @@
 
 //------------------------ Config -----------------------------------//
 // Due controlled versus pi controlled animation choices             //
-#define PI_CONTROLLED                                              //
+//#define PI_CONTROLLED                                              //
 #ifndef PI_CONTROLLED                                                //
   #define TESTING_NODE_NUMBER 0   // To test diff nodes              //
   //#define CYCLE           // Cycles through shows in order         //
@@ -21,7 +21,7 @@
 #endif                                                               //
                                                                      //
                                                                      //
-// How fast animations/palettes will cycle                           //                                                                     
+// How fast animations/palettes will cycle                           //
 #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS) //
   #define BASE_ANIMATION_TIME 13000                                  //
   #define MID_ANIMATION_TIME 9000                                    //
@@ -342,7 +342,7 @@ inline void transition_animations() {
       if(!transition_in_base_animation) { base_start_time = current_time; }
     #endif
   }
-  
+
   if(transition_out_mid_animation) {
     transition_out_mid_animation = transition_out_mid();
     transition_in_mid_animation = false;
@@ -361,7 +361,7 @@ inline void transition_animations() {
     #endif
   }
 
-  
+
   if(transition_out_sparkle_animation) {
     transition_out_sparkle_animation = transition_out_sparkle();
     transition_in_sparkle_animation = false;
@@ -526,7 +526,7 @@ inline void cycle_through_animations() {
            if(initial_palette == fruit_loop) { initial_palette = icy_bright; }
       else if(initial_palette == icy_bright) { initial_palette = watermelon; }
       else if(initial_palette == watermelon) { initial_palette = fruit_loop; }
-      else { 
+      else {
         #ifdef DEBUG
           Serial.println("Undefined palette loaded!");
         #endif
@@ -572,7 +572,7 @@ inline void cycle_through_animations() {
   if(MID_ANIMATION != OFF) {
     if ((current_time - mid_start_time >= MID_ANIMATION_TIME) && !(transition_out_mid_animation || transition_in_mid_animation)) {
       transition_out_mid_animation = true;
-      
+
       #ifdef CYCLE_RANDOM
         next_mid_animation = 1 + random8(NUM_MID_ANIMATIONS);
         MID_TRANSITION = 1 + random8(NUM_MID_TRANSITION_MODES);
@@ -697,7 +697,7 @@ inline void draw_current_mid(uint8_t min_ring, uint8_t max_ring) {
     case ARROW:
       arrow();
       break;
-      
+
     default:
       break;
   }
@@ -760,11 +760,11 @@ inline void draw_current_edm() {
     case EQ_VARIABLE_FIRE:
       equalizer_variable(DISPLAY_FULL);
       break;
-      
+
     case EQ_VARIABLE_SPLIT:
       equalizer_variable(DISPLAY_SPLIT);
       break;
-  
+
     default:
       break;
   }
@@ -775,7 +775,7 @@ inline void draw_current_edm() {
 inline void init_base_animation() {
   base_start_time = current_time;
   base_count = 0;
-  
+
   #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
     BASE_COLOR_THICKNESS = random8();
     BASE_BLACK_THICKNESS = random8();
@@ -785,7 +785,7 @@ inline void init_base_animation() {
     BASE_INTER_RING_SPEED = random8();
     show_parameters[BASE_RING_OFFSET_INDEX] = random8() - 128;
   #endif
-  
+
   switch(BASE_ANIMATION) {
     default:
       break;
@@ -806,7 +806,7 @@ inline void init_base_animation() {
 inline void init_mid_animation() {
   mid_start_time = current_time;
   mid_count = 0;
-  
+
   #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
     MID_NUM_COLORS = random8(1, 4);
     MID_COLOR_THICKNESS = random8();
@@ -818,7 +818,7 @@ inline void init_mid_animation() {
     show_parameters[MID_RING_OFFSET_INDEX] = random8() - 128;
     //MID_ALPHA = random8(NUM_MID_ALPHA_MODES);
   #endif
-  
+
   switch(MID_ANIMATION) {
     case FIRE:
     case DISCO_FIRE:
@@ -866,7 +866,7 @@ inline void init_sparkle_animation() {
     //SPARKLE_ALPHA = random8(NUM_SPARKLE_ALPHA_MODES);
   #endif
 
-  
+
   switch(SPARKLE_ANIMATION) {
     case GLITTER:
     case RAIN:
@@ -911,7 +911,7 @@ inline void init_sparkle_animation() {
 
 inline void init_edm_animation() {
   edm_start_time = current_time;
-  
+
   #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
     if(EDM_ANIMATION != NONE) {
       BASE_COLOR_THICKNESS = random8();
@@ -923,19 +923,19 @@ inline void init_edm_animation() {
       show_parameters[BASE_RING_OFFSET_INDEX] = random8() - 128;
     }
   #endif
-  
+
   switch(EDM_ANIMATION) {
     case NONE:
     case OFF:
       break; // Don't disable layers
-      
+
     case EQ_VARIABLE_FIRE:
       BASE_ANIMATION = OFF;
       SPARKLE_ANIMATION = OFF;
       MID_ANIMATION = FIRE_ONE_SIDED;
       init_mid_animation();
       break;
-      
+
     default:
       BASE_ANIMATION = OFF;
       SPARKLE_ANIMATION = OFF;
@@ -991,5 +991,3 @@ inline void cleanup_edm_animation(uint8_t animation_index) {
       break;
   }
 }
-
-

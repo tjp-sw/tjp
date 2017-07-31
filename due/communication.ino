@@ -5,7 +5,7 @@
     #include <SPI.h>
     #include <Ethernet.h>
 
-    IPAddress brain(169,254,136,0);
+//    IPAddress brain(169,254,136,0);
     IPAddress subnet_mask(255,255,0,0);
 
     unsigned long next_connect_msec;
@@ -21,18 +21,15 @@
 
   //IPAddress brain(169,254,136,0);
   IPAddress brain(169,254,94,48);
-  IPAddress subnet_mask(255,255,0,0);
+//  IPAddress subnet_mask(255,255,0,0);
 
   uint8_t mega_number;
-  unsigned long next_connect_msec;
-  String network_data;
+//  unsigned long next_connect_msec;
+//  String network_data;
 
-  EthernetClient remote;
+//  EthernetClient remote;
 
-  #define NodeMate  Serial3
-  #define DEBUG
-
-    #define HandMate  Serial2
+  #define HandMate  Serial2
 
   // declare here when not part of due.ino
   unsigned long long epoch_msec;

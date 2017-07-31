@@ -1,6 +1,5 @@
 #!/usr/bin/python
 #from audioEvent import AudioEvent
-from enum import Enum
 
 
 class AudioFileInfo:
