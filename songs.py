@@ -56,24 +56,8 @@ def find_high(theme=datetime.today().weekday()):
     return random.choice(HIGHS[theme])
 
 
-def get_meditation(this_time=datetime.now()):
+def find_meditation(this_time=datetime.now()):
     if this_time.hour < 12:
         return MEDITATIONS[this_time.day * 2]
     return MEDITATIONS[1 + this_time.day * 2]
 
-"""
-        if this_time.day == 0:
-            return MEDITATIONS[0];
-        if this_time.day == 1:
-            return MEDITATIONS[2];
-        if this_time.day == 2:
-            return MEDITATIONS[4];
-        if this_time.day == 3:
-            return MEDITATIONS[];
-        if this_time.day == 0
-            return MEDITATIONS[0];
-        if this_time.day == 0
-            return MEDITATIONS[0];
-        if this_time.day == 0
-            return MEDITATIONS[0];
-"""
