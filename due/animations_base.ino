@@ -3,7 +3,7 @@
 // Scrolls bands of darkness over constant background color, offset on each ring
 // To do: if this is expanded like mid_scrolling_dim(), be sure to include additional period (dimming period vs full period with multiple colors)
 // BASE_COLOR_THICKNESS(1:6), BASE_BLACK_THICKNESS(0:3), BASE_INTRA_RING_MOTION(-1:1), BASE_RING_OFFSET(-period/2:period/2), BASE_INTRA_RING_SPEED(8:32)
-inline void base_scrolling_dim() {
+inline void base_scrolling_dim(uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 1, 5);
   uint8_t black_thickness = scale_param(BASE_BLACK_THICKNESS, 0, 3);
   uint8_t intra_speed = 1 << scale_param(BASE_INTRA_RING_SPEED, 3, 5);
@@ -21,7 +21,9 @@ inline void base_scrolling_dim() {
     shades[i][5] = CRGB(current_palette[i].r / 6, current_palette[i].g / 6, current_palette[i].b / 6);
   }
 
-  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+  if(node_number*RINGS_PER_NODE > min_ring) { min_ring = node_number*RINGS_PER_NODE; }
+  if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
+  for(uint8_t ring = min_ring; ring < max_ring; ring++) {
     uint8_t color_index = ring % 2;
     #if STRIPS_PER_NODE == 4
       bool backward_strip = ring < RINGS_PER_NODE/2;
@@ -79,7 +81,7 @@ inline void base_scrolling_dim() {
 //-------------------------- SCROLLING 2-COLOR GRADIENT --------------------------
 // Draws a gradient moving from one base color to the other and back again
 // BASE_COLOR_THICKNESS(8-255), BASE_INTRA_RING_MOTION(-1:1), BASE_RING_OFFSET(-period/2:period/2), BASE_INTRA_RING_SPEED(4:16 if short, *=2 @ 40/70/120)
-inline void base_scrolling_2color_gradient() {
+inline void base_scrolling_2color_gradient(uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 8, 64);
   uint8_t intra_speed = 1 << scale_param(BASE_INTRA_RING_SPEED, 2, 4);
   if(color_thickness >= 120)     { intra_speed <<= 3; }
@@ -93,7 +95,9 @@ inline void base_scrolling_2color_gradient() {
   fill_gradient_RGB(values, 0, current_palette[0], color_thickness-1, current_palette[1]);
   fill_gradient_RGB(values, color_thickness, current_palette[1], period-1, current_palette[0]);
 
-  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+  if(node_number*RINGS_PER_NODE > min_ring) { min_ring = node_number*RINGS_PER_NODE; }
+  if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
+  for(uint8_t ring = min_ring; ring < max_ring; ring++) {
     #if STRIPS_PER_NODE == 4
       bool backward_strip = ring < RINGS_PER_NODE/2;
       uint8_t strip = ring % 2 + (backward_strip ? 0 : 2);

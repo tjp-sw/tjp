@@ -184,3 +184,10 @@ inline void move_leds_intra_ring(uint8_t ring, int16_t offset) {
   }
 }
 
+// Hopefully slightly faster blend implementation due to inlining and no return val
+inline void tjp_nblend(CRGB& existing, const CRGB& overlay, uint8_t amountOfOverlay) {
+  existing.red   = blend8( existing.red,   overlay.red,   amountOfOverlay);
+  existing.green = blend8( existing.green, overlay.green, amountOfOverlay);
+  existing.blue  = blend8( existing.blue,  overlay.blue,  amountOfOverlay);
+}
+

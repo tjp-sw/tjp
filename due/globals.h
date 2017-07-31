@@ -70,13 +70,14 @@ CRGB* initial_palette = icy_bright;                                 //
 // Mid layer                                                  //
 #define SNAKE 1                                               //
 #define FIRE 2                                                //
-#define FIRE_WHOOPS 3                                         //
+#define DISCO_FIRE 3                                         //
 #define FIRE_SNAKE 4                                          //
 #define FIRE_ONE_SIDED 254  // Only used with EDM animation   //
 #define MID_SCROLLING_DIM 5                                   //
 #define MID_SCROLLING_DIM2 6                                  //
 #define MID_SCROLLING_DIM3 7                                  //
-#define NUM_MID_ANIMATIONS 7  // Equal to last animation      //
+#define ARROW 8                                               //
+#define NUM_MID_ANIMATIONS 8  // Equal to last animation      //
                                                               //
 // Sparkle layer                                              //
 #define GLITTER 1                                             //
@@ -217,7 +218,7 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
 #define PALETTE_CHANGE_MEDIUM_BLEND 3         //
 #define PALETTE_CHANGE_FAST_BLEND 4           //
 #define PALETTE_CHANGE_VERY_FAST_BLEND 5      //
-#define NUM_PALETTE_CHANGE_TYPES 6            //
+#define NUM_PALETTE_CHANGE_TYPES 5            //
 //--------------------------------------------//
 
 //------------------ Palette blend rates ---------------------------//
@@ -229,12 +230,11 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
 //------------------------------------------------------------------//
 
 //----------- Alpha blending -------------//
-#define ALPHA_BY_BRIGHTNESS 1             //
-#define ALPHA_BY_HEIGHT 2                 //
-#define ALPHA_BY_GRADIENT 3               //
+#define ALPHA_BY_HEIGHT 1                 //
+#define ALPHA_BY_GRADIENT 2               //
                                           //
-#define NUM_MID_ALPHA_MODES 3             //
-#define NUM_SPARKLE_ALPHA_MODES 2         //
+#define NUM_MID_ALPHA_MODES 2             //
+#define NUM_SPARKLE_ALPHA_MODES 1         //
 //----------------------------------------//
 
 //------- Animation transitions ----------//
@@ -250,6 +250,7 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
 #define VERY_SLOW_TRANSITION 1                                      //
 #define SLOW_TRANSITION 2                                           //
 #define MEDIUM_TRANSITION 3                                         //
+// 4 will function as expected but isn't named                      //
 #define FAST_TRANSITION 5                                           //
 #define VERY_FAST_TRANSITION 6                                      //
 #define MAX_TRANSITION_SPEED 6    // Set equal to highest value     //
