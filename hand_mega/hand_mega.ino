@@ -16,6 +16,8 @@
 #include <Wire.h>
 #include <FastLED.h>
 
+#define I_AM_HAND_MEGA
+
 //system constants
 int sensorInputStatus = 0x03;
 int handAddress = 0x28;
@@ -70,6 +72,7 @@ void setup() {
   setSensativity(sensativity);
   LEDS.setBrightness(handBrightness);
   startUpColorSequence();
+  setup_communication();
 }
 
 // after setup main loop excutes automatically
@@ -82,6 +85,7 @@ void loop() {
   touchMask = checkForTouch();
   sendTouchMessage(touchMask);
  
+  do_communication();
 }
 
 uint8_t checkForTouch(void) {

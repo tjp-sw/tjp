@@ -36,11 +36,15 @@ uint8_t led_program;
 unsigned long loop_start_time_msec;
 unsigned long last_announcement_msec;
 
-#ifdef I_AM_NODE_MEGA
+#ifndef I_AM_HAND_MEGA
   unsigned long mate_last_input_msec;
   String mate_data;
-#endif // I_AM_NODE_MEGA
+#endif // !I_AM_HAND_MEGA
 
+#ifndef I_AM_DUE
+  unsigned long hand_last_input_msec;
+  String hand_data;
+#endif // !I_AM_DUE
 
 #ifdef DEBUG
 inline unsigned long now_sec(const unsigned long when_msec) {
@@ -181,27 +185,27 @@ inline void assign_node(uint8_t node_num) {
 
 
 inline void setup_communication() {
-  #ifdef DEBUG
-    #ifdef I_AM_MEGA
-      Serial.begin(115200); // Already called for due in setup()
-    #endif
-
-
+  #if defined(DEBUG) || defined(I_AM_MEGA)
   // turn off the LED
   pinMode(LED_BUILTIN, OUTPUT);
   led_state = LOW;    // off
   digitalWrite(LED_BUILTIN, led_state);
   led_program = 8;    // default program selection
-  #endif // DEBUG && I_AM_MEGA
-
+  #endif // DEBUG || I_AM_MEGA
 
   last_announcement_msec = 0;
 
-#ifdef I_AM_NODE_MEGA
+#ifndef I_AM_HAND_MEGA
   NodeMate.begin(115200);
   mate_last_input_msec = 0;
   mate_data = "";
-#endif // I_AM_NODE_MEGA
+#endif // !I_AM_HAND_MEGA
+
+#ifndef I_AM_DUE
+  HandMate.begin(115200);
+  hand_last_input_msec = 0;
+  hand_data = "";
+#endif // !I_AM_DUE
 
   epoch_msec = 0;
 
@@ -332,10 +336,15 @@ inline void process_commands(String& input) {
               assign_node(input[1]);
             #endif
   
+            #ifdef I_AM_HAND_MEGA
+              node_number = input[1];
+            #endif
+
             led_program = node_number == 0 ? 6 : node_number;  // signal the node number
 
             #ifdef I_AM_NODE_MEGA
               NodeMate.write((uint8_t *)input.c_str(), size);
+              HandMate.write((uint8_t *)input.c_str(), size);
             #endif // I_AM_NODE_MEGA
             
           }
@@ -343,6 +352,7 @@ inline void process_commands(String& input) {
             led_program = input[1];
             #ifdef I_AM_NODE_MEGA
               NodeMate.write((uint8_t *)input.c_str(), size);
+              HandMate.write((uint8_t *)input.c_str(), size);
             #endif // I_AM_NODE_MEGA
           }
           else {
@@ -363,8 +373,18 @@ inline void process_commands(String& input) {
         if (input.length() >= size) {
           #ifdef I_AM_NODE_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
+            HandMate.write((uint8_t *)input.c_str(), size);
           #endif // I_AM_NODE_MEGA
       
+          #ifdef I_AM_HAND_MEGA
+	    // copy only the color palette
+	    uint8_t* color_palette = colorOfTheDay;
+            size_t i = size - 3*NUM_COLORS_PER_PALETTE;
+            while (i < size) {
+              *color_palette++ = input[i++];
+            }
+          #endif // I_AM_HAND_MEGA
+
           #ifdef I_AM_DUE
             uint8_t params[NUM_SHOW_PARAMETERS], colors[3*NUM_COLORS_PER_PALETTE];
             size_t i = 0;
@@ -466,6 +486,7 @@ inline void process_commands(String& input) {
           
           #ifdef I_AM_NODE_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
+            HandMate.write((uint8_t *)input.c_str(), size);
           #endif // I_AM_NODE_MEGA
         }
         else {
