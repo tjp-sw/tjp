@@ -379,8 +379,10 @@ inline void process_commands(String& input) {
           #endif // I_AM_NODE_MEGA
 
           #ifdef I_AM_HAND_MEGA
-	    // copy only the color palette
-	    uint8_t* color_palette = colorOfTheDay;
+            extern CRGB colorOfTheDay[];
+
+            // copy only the color palette
+            uint8_t* color_palette = (uint8_t*)colorOfTheDay;
             size_t i = size - 3*NUM_COLORS_PER_PALETTE;
             while (i < size) {
               *color_palette++ = input[i++];
