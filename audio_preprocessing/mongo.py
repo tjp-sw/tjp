@@ -1,35 +1,75 @@
 from pymongo import MongoClient
-import datetime
-import pprint
 import ujson
+
+import parser
 
 import sys
 sys.path.insert(0, '../')
 from audioInfo import AudioFileInfo, AudioEvent
 
-client = MongoClient('localhost', 27017)
 
-db = client.test
+def encode_custom_event(event):
+    return {"_type:": "AudioEvent", "time": event.time, "magnitude": event.magnitude, "kind": event.kind}
 
-files = db.audioFiles
 
-pprint.pprint(files.find_one())
+def decode_custom_event(document):
+    return AudioEvent(document["time"], document["magnitude"], document["kind"])
 
-audioInfo = AudioFileInfo("trees", "9", "high")
-event1 = AudioEvent("453", "-1", "FreqBand")
-audioInfo.addEvent(event1)
-print(audioInfo)
 
-postt = ujson.dumps(audioInfo)
+def encode_custom(audioInfo):
+    return {"_type": "AudioFileInfo", "name": audioInfo.name, "category": audioInfo.category, "file_index": audioInfo.file_index, "events": ujson.dumps(audioInfo.events)}
 
-print postt
 
-#NOT WORKING YET.... IN PROGRESS!!! 7/27
-post = {"_id": audioInfo.file_index,
-        "name": audioInfo.name,
-        "category": audioInfo.category,
-        "events": audioInfo.events}
+def decode_custom(document):
+    name = document["name"]
+    cat = document["category"]
+    fi = document["file_index"]
 
-files.insert_one(post)
+    events_json = ujson.loads(document["events"])
+    events = []
+    for event in events_json:
+        events.append(decode_custom_event(event))
 
-#print(ujson.dumps(audioInfo))
+    return AudioFileInfo(name, cat, fi, events)
+
+
+def get_collection():
+    global files
+    try:
+        client = MongoClient('localhost', 27017)
+        db = client.audioInfo
+        files = db.audioFiles
+    except:
+        print 'mongo database:', sys.exc_value
+        files = {}
+    return files
+
+
+def insert_audio_data(audioInfoList):
+    global files
+    files = get_collection()
+
+    files.delete_many({})
+    for audioInfo in audioInfoList:
+        to_mongo(audioInfo)
+
+
+def to_mongo(audioInfo):
+    global files
+
+    ec = encode_custom(audioInfo)
+    # print ec
+    files.insert({"_id": audioInfo.file_index, "AudioFileInfo": ec})
+
+
+def grab_audio_info(file_num):
+    try:
+        audioInfo = decode_custom(files.find_one({"_id": file_num})["AudioFileInfo"])
+        return audioInfo
+    except:
+        print "Invalid audio file number... something went pretty wrong!"
+
+
+#infoList = parser.parseProcessedAudioData()
+#insert_audio_data(infoList)
+#grab_audio_info("8092")

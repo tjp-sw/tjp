@@ -5,7 +5,8 @@
     #include <SPI.h>
     #include <Ethernet.h>
 
-//    IPAddress brain(169,254,136,0);
+    IPAddress brain(169,254,136,0);
+    //IPAddress brain(169,254,94,48); //RJS my Pi IP
     IPAddress subnet_mask(255,255,0,0);
 
     unsigned long next_connect_msec;
@@ -19,15 +20,7 @@
   #include <EEPROM.h>
   #include <limits.h>    // provides LONG_MAX
 
-  //IPAddress brain(169,254,136,0);
-  IPAddress brain(169,254,94,48);
-//  IPAddress subnet_mask(255,255,0,0);
-
   uint8_t mega_number;
-//  unsigned long next_connect_msec;
-//  String network_data;
-
-//  EthernetClient remote;
 
   #define HandMate  Serial2
 
@@ -386,8 +379,10 @@ inline void process_commands(String& input) {
           #endif // I_AM_NODE_MEGA
 
           #ifdef I_AM_HAND_MEGA
-	    // copy only the color palette
-	    uint8_t* color_palette = colorOfTheDay;
+            extern CRGB colorOfTheDay[];
+
+            // copy only the color palette
+            uint8_t* color_palette = (uint8_t*)colorOfTheDay;
             size_t i = size - 3*NUM_COLORS_PER_PALETTE;
             while (i < size) {
               *color_palette++ = input[i++];

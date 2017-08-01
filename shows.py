@@ -111,10 +111,9 @@ show_parameters = [0] * NUM_PARAMETERS
 show_colors = [[333 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALETTE)]	# invalid values
 
 event_queue = SortedDLL() #create sorted dll to act as the audio event queue (with super duper special powers)
-#next_audio_event  #= AudioEvent(-1, -1, "init")
-
 NUM_AUDIO_CHANNELS = 7
 current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
+internal_audio_show = False #triggers internal audio animations..
 
 def constrained_random_parameter(i):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
@@ -334,7 +333,7 @@ def progress_audio_queue():
             # print "event_queue is empty"
             break
 
-        stale = next_audio_event.time <= timeMs() - 10
+        stale = next_audio_event.time <= timeMs() - 1000
         # print "diff event - now = " + str(next_audio_event.time - timeMs())
         if stale:
             print "it's " + str(timeMs()) + " stale event " + str(next_audio_event) + " popping!"
@@ -365,8 +364,8 @@ def drive_internal_animations(init):
         # and animaiton change frequency. Will know better when I have the final
         # audio event lists populated (ideally using Antonio's 'cleaner' method)
         # MAYBE: seperate thread handling polling event_queue and sending animations
-        lower_bounds = timeMs() - 10
-        upper_bounds = timeMs() + 10
+        lower_bounds = timeMs() - 1000
+        upper_bounds = timeMs() + 1000
         valid_time = next_audio_event.time <= upper_bounds and next_audio_event.time >= lower_bounds
         #print "valid? " + str(valid_time) + " aiming for event time between " + str(lower_bounds) + " - " + str(upper_bounds) + " current event time " + str(next_audio_event.time)
 

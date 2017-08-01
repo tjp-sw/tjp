@@ -5,11 +5,11 @@
 class AudioFileInfo:
 
 
-    def __init__(self, name, index, category):
+    def __init__(self, name, index, category, events = []):
         self.name = name
         self.category = category
         self.file_index = index
-        self.events = []
+        self.events = events
         self.event_index = 0
 
     def __repr__(self):
@@ -31,9 +31,7 @@ class AudioEvent:
         self.time = time
         self.magnitude = magnitude
         self.kind = kind
-        self.queue_node = -1
 
-    #def __repr__(self):
-    #    return "%s event @ %s [%s, magnitude:%s]\n" % (self.kind, self.time, self.degree, self.magnitude)
+
     def __repr__(self):
         return "kind: %s, time: %s, magnitude: %s" % (self.kind, self.time, self.magnitude)

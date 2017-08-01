@@ -59,7 +59,9 @@ inline void write_pixel_data() {
       uint8_t color_index = mid_layer[ring_offset+ring][pixel];
       if(color_index != 0) {
         CRGB mid_pixel_color = ColorFromPalette(mid_palette, color_index);
-        uint8_t blending = get_mid_alpha(ring, pixel);
+        uint8_t blending;
+        if(override_default_alpha) { blending = color_index; }
+        else { blending = get_mid_alpha(ring, pixel); }
         nblend(leds[pixel_offset], mid_pixel_color, blending);
       }
 
@@ -129,7 +131,7 @@ inline uint8_t get_sparkle_alpha_from_height(uint16_t pixel) {
 }
 
 inline uint8_t get_sparkle_default_alpha(uint8_t ring, uint16_t pixel) {
-  return 255 * (MAX_DIMMING - get_sparkle_dim_value(ring, pixel)) / MAX_DIMMING;
+  return 255 * (MAX_SPARKLE_DIMMING - get_sparkle_dim_value(ring, pixel)) / MAX_SPARKLE_DIMMING;
 
   /*
   // Only sparkle layer's brightness is considered
@@ -147,7 +149,7 @@ inline uint8_t get_mid_alpha_from_height(uint16_t pixel) {
 }
 
 inline uint8_t get_mid_default_alpha(uint8_t ring, uint16_t pixel) {
-  return 255 * (MAX_DIMMING - get_mid_dim_value(ring, pixel)) / MAX_DIMMING;
+  return 255 * (MAX_MID_DIMMING - get_mid_dim_value(ring, pixel)) / MAX_MID_DIMMING;
 
   /*
   // Ratio of mid to base layer's brightness
