@@ -17,10 +17,11 @@ class DataBaseInterface:
 
 		if not RETURN_MOCK:
 			# print "grabbing audioInfo for TRACK: " + file_num
-			files = mongo.get_collection()
 
-			audioInfo = mongo.grab_audio_info(file_num)
-			#  print str(ai)
+			files = mongo.get_collection()
+			audioInfo = mongo.grab_audio_info(files, file_num)
+			# print str(audioInfo)
+
 			return audioInfo
 		else:
 			#MOCKED return vals

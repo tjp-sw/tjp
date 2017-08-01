@@ -114,6 +114,7 @@ event_queue = SortedDLL() #create sorted dll to act as the audio event queue (wi
 NUM_AUDIO_CHANNELS = 7
 current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
 internal_audio_show = False #triggers internal audio animations..
+next_audio_event = AudioEvent(-1, -1, "init")
 
 def constrained_random_parameter(i):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
@@ -355,7 +356,6 @@ def drive_internal_animations(init):
 
         print "initial show parameters ", show_parameters
         print "initial show colors" , show_colors
-        return
 
     progress_audio_queue()
 
@@ -420,12 +420,15 @@ def get_audio_file_info(audio_msg):
     # current msg format: a0;1;0;0,50,0,0
     info = audio_msg.split(";")
     tracks = info[3].split(",")
+    # print "tracks: " +  str(tracks)
     output = {}
     i = 0
-    while(i < len(tracks)):
-        if int(tracks[i]) > 0:
-            output[i] = (DataBaseInterface().grabAudioInfo(tracks[i]))
-        i += 1
+    if tracks[i] is not "" and tracks[i] != '':
+        while(i < len(tracks)):
+            if int(tracks[i]) > 0:
+                output[i] = (DataBaseInterface().grabAudioInfo(tracks[i]))
+            i += 1
+
     return output
 
 
@@ -434,15 +437,17 @@ def remove_audio_events_from_queue(audioInfo):
         try:
             event_queue.remove(event.time)
         except ValueError:
-            print "event " + event + " already has been removed from queue"
+            print "event " + str(event) + " already has been removed from queue"
 
 
 def queue_audio_events(audioInfo):
     cur_time_ms = timeMs()
-    for event in audioInfo.events:
-        event.time += cur_time_ms
-        node = event_queue.add(event)
-
+    if audioInfo is not None:
+        for event in audioInfo.events:
+            event.time += cur_time_ms
+            node = event_queue.add(event)
+    else:
+        print "seems like it was a database miss... this will happen while we don't have all the auido files"
 
 def timeMs():
     return int(round(time.time() * 1000))

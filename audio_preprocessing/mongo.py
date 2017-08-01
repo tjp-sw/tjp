@@ -1,11 +1,19 @@
 from pymongo import MongoClient
-import ujson
-
+import json
 import parser
 
 import sys
 sys.path.insert(0, '../')
 from audioInfo import AudioFileInfo, AudioEvent
+
+
+def encode_events(events):
+    output = []
+    for event in events:
+        j = json.dumps(event.__dict__)
+        output.append(j)
+
+    return output
 
 
 def encode_custom_event(event):
@@ -17,18 +25,19 @@ def decode_custom_event(document):
 
 
 def encode_custom(audioInfo):
-    return {"_type": "AudioFileInfo", "name": audioInfo.name, "category": audioInfo.category, "file_index": audioInfo.file_index, "events": ujson.dumps(audioInfo.events)}
-
+    return {"_type": "AudioFileInfo", "name": audioInfo.name, "category": audioInfo.category, "file_index": audioInfo.file_index, "events": encode_events(audioInfo.events)}
 
 def decode_custom(document):
     name = document["name"]
     cat = document["category"]
     fi = document["file_index"]
 
-    events_json = ujson.loads(document["events"])
+    #events_json = json.loads(document["events"])
+    events_json = document["events"]
+    #print events_json
     events = []
     for event in events_json:
-        events.append(decode_custom_event(event))
+        events.append(decode_custom_event(json.loads(event)))
 
     return AudioFileInfo(name, cat, fi, events)
 
@@ -49,7 +58,8 @@ def insert_audio_data(audioInfoList):
     global files
     files = get_collection()
 
-    files.delete_many({})
+    res = files.delete_many({})
+    print res.deleted_count
     for audioInfo in audioInfoList:
         to_mongo(audioInfo)
 
@@ -62,14 +72,17 @@ def to_mongo(audioInfo):
     files.insert({"_id": audioInfo.file_index, "AudioFileInfo": ec})
 
 
-def grab_audio_info(file_num):
+def grab_audio_info(colleciton, file_num):
+    global files
     try:
         audioInfo = decode_custom(files.find_one({"_id": file_num})["AudioFileInfo"])
         return audioInfo
-    except:
+    except TypeError:
         print "Invalid audio file number... something went pretty wrong!"
 
 
 #infoList = parser.parseProcessedAudioData()
 #insert_audio_data(infoList)
-#grab_audio_info("8092")
+#ai = grab_audio_info(get_collection(), "8098")
+#print ai
+#print ai.getNextEvent()
