@@ -53,6 +53,18 @@ CRGB fruit_loop[7] = {                                              //
 CRGB* initial_palette = icy_bright;                                 //
 //------------------------------------------------------------------//
 
+//----------------- Show modes -----------------------------------------//
+//                                                                      //
+#define SUNRISE 0;                                                      //
+#define DAY 1;                                                          //
+#define SUNSET 2;                                                       //
+#define NIGHT 3;                                                        //
+#define ART_CAR 4;                                                      //
+#define NO_ART_CAR 0;                                                   //
+//                                                                      //
+// set to estimated ring nearest art car if art car is recognized       //
+uint8_t art_car = NO_ART_CAR;                                           //
+//----------------------------------------------------------------------//
 
 //----------------- Animation indexes ------------------------//
 #define OFF 255    // Disables a layer, CYCLE will ignore it  //
