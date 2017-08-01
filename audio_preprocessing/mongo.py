@@ -35,9 +35,13 @@ def decode_custom(document):
 
 def get_collection():
     global files
-    client = MongoClient('localhost', 27017)
-    db = client.audioInfo
-    files = db.audioFiles
+    try:
+        client = MongoClient('localhost', 27017)
+        db = client.audioInfo
+        files = db.audioFiles
+    except:
+        print 'mongo database:', sys.exc_value
+        files = {}
     return files
 
 
