@@ -5,6 +5,8 @@
 #define SETAUDIO 1
 #define SETVOL 2
 #define MUTEALLAUDIO 3
+#define CHECKMEDITATION 4
+#define CHECKDRONE 5
 
 #ifdef DEBUG
   #define DEBUG_LEVEL 1
@@ -18,6 +20,7 @@ boolean new_ctrl_msg = false;
 int channels[ 18 ] = { 0 };
 bool ch_loop[ 18 ] = { false };
 int ch_gain[ 18 ] = { 0 };
+bool meditation = false;
 
 
 //variables for control message input
@@ -33,7 +36,7 @@ struct control_message {
   int channels[18];   //Array of tracks to change
   int gain[18];       //Optional volume
   int fade_speed;     //speed to change volume
-  bool bool_loop;     //does the audio loop?
+  bool bool_loop;     //does the audio loop?  <--this is deprecated Only Channel 0 will loop
 };
 #define EMPTY_CTRL_MSG {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0}
 
@@ -60,7 +63,8 @@ void setup_tsunami () {
   // Allow time for the Tsunami to respond with the version string and
   //  number of tracks.
   delay(100);
-  Serial.println("Tsunami Ready");
+  if (DEBUG_LEVEL)
+    Serial.println("Tsunami Ready");
 }
 
 
@@ -162,6 +166,16 @@ void handle_command(const char command[]) {
   }
 }
 
+void fade_out(unsigned int fade_speed=5) {
+  for (int ch = 0; ch < 18; ch++) {
+    if (channels[ch]) {
+      tsunami.trackFade(channels[ch], -70, fade_speed * 1000, true);
+    }
+  }
+  memset(ch_loop,0,sizeof(ch_loop));
+  memset(channels,0,sizeof(channels));
+  memset(ch_gain,0,sizeof(ch_gain));
+}
 
 void do_command () {
   if (DEBUG_LEVEL) {
@@ -170,38 +184,43 @@ void do_command () {
       Serial.println(ctrl_msg.node);
       Serial.print("Command ");
       Serial.println(ctrl_msg.command);
-  }
-  for (int x=0; x<18; x++) {
-    if (ctrl_msg.channels[x]) {
-      Serial.print("channels[");
-      Serial.print(x);
-      Serial.print("] ");
-      Serial.println(ctrl_msg.channels[x]);
-    }
-  }
-  for (int x=0; x<18; x++) {
-    if (ctrl_msg.gain[x]) {
-      Serial.print("gain[");
-      Serial.print(x);
-      Serial.print("] ");
-      Serial.println(ctrl_msg.gain[x]);
-    }
-  }
-  if (ctrl_msg.fade_speed){
-    Serial.print("fade_speed ");
-    Serial.println(ctrl_msg.fade_speed);
-  }
-  if (ctrl_msg.command == SETAUDIO){
-    Serial.print("Looping ");
-    Serial.println(ctrl_msg.bool_loop);
-  }
-  Serial.println("--------------------");
+      for (int x=0; x<18; x++) {
+        if (ctrl_msg.channels[x]) {
+          Serial.print("channels[");
+          Serial.print(x);
+          Serial.print("] ");
+          Serial.println(ctrl_msg.channels[x]);
+        }
+      }
+      for (int x=0; x<18; x++) {
+        if (ctrl_msg.gain[x]) {
+          Serial.print("gain[");
+          Serial.print(x);
+          Serial.print("] ");
+          Serial.println(ctrl_msg.gain[x]);
+        }
+      }
+      if (ctrl_msg.fade_speed){
+        Serial.print("fade_speed ");
+        Serial.println(ctrl_msg.fade_speed);
+      }
+      if (ctrl_msg.command == SETAUDIO){
+        Serial.print("Looping ");
+        Serial.println(ctrl_msg.bool_loop);
+      }
+      Serial.println("--------------------");
+   }
 
   switch (ctrl_msg.command) {
     //Change the music playing
     case SETAUDIO :
       if (DEBUG_LEVEL)
           Serial.println("SetAudio");
+      if (ctrl_msg.channels[1]>4000) { //Start Meditation
+        fade_out(60);
+        meditation = true;
+      }
+
       for (int ch = 0; ch < 18; ch++) {
         if (ctrl_msg.channels[ch]) {
           if (channels[ch]){
@@ -250,14 +269,35 @@ void do_command () {
       }
       break;
 
-    //Instantly mute all audio on node.
+    //Mute all audio on node.
     case MUTEALLAUDIO :
-      Serial.println("MuteAllAudio");
-      tsunami.stopAllTracks();
-      memset(ch_loop,0,sizeof(ch_loop));
-      memset(channels,0,sizeof(channels));
-      memset(ch_gain,0,sizeof(ch_gain));
+      if (DEBUG_LEVEL)
+        Serial.println("MuteAllAudio");
+      fade_out();
       break;
+
+      //Check if Meditation is finished
+     case CHECKMEDITATION :
+        tsunami.update();
+        if (channels[1] > 4000 && tsunami.isTrackPlaying(channels[1])) {
+            String msg = "sP" + String (channels[1]);
+            remote.write(msg.c_str());
+            meditation = true;
+        } else {
+            String msg = "sE" + String (channels[1]);
+            remote.write(msg.c_str());
+            meditation = false;
+        }
+
+      case CHECKDRONE :
+        tsunami.update();
+        if (channels[0] > 0 && tsunami.isTrackPlaying(channels[0])) {
+            String msg = "sP" + String (channels[1]);
+            remote.write(msg.c_str());
+        } else {
+            remote.write("sN");
+        }
+
   }
   ctrl_msg = EMPTY_CTRL_MSG;
 }
@@ -268,19 +308,23 @@ void do_tsunami() {
 
   for (int ch = 0; ch < 18; ch++) {
     if(!(tsunami.isTrackPlaying(channels[ch]))) {
-      if (ch_loop[ch]){
-        Serial.print("Replaying ");
-        Serial.println(channels[ch]);
+      if (ch == 0 && channels[ch] > 0){
+        if (DEBUG_LEVEL){
+            Serial.print("Replaying ");
+            Serial.println(channels[ch]);
+        }
         tsunami.trackGain(channels[ch], ch_gain[ch]);
         tsunami.trackLoad(channels[ch], 0, true);
         String msg = "sR" + String (channels[ch]);
         remote.write(msg.c_str());
       } else {
         if (channels[ch]) {
-          Serial.print("Ending ");
-          Serial.println(channels[ch]);
-        String msg = "sE" + String (channels[ch]);
-        remote.write(msg.c_str());
+          if (DEBUG_LEVEL) {
+              Serial.print("Ending ");
+              Serial.println(channels[ch]);
+          }
+          String msg = "sE" + String (channels[ch]);
+          remote.write(msg.c_str());
         }
         channels[ch]= 0;
         ch_gain[ch]=0;
@@ -292,6 +336,7 @@ void do_tsunami() {
       }
     }
   }
+
   tsunami.samplerateOffset(0, 0);        // Reset sample rate offset to 0
   tsunami.masterGain(0, 0);              // Reset the master gain to 0dB
   tsunami.resumeAllInSync();

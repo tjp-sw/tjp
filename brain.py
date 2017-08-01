@@ -15,6 +15,7 @@ mega_to_node_map = {
     7: 3,
     }
 
+meditation = False # Will be True during meditations, and False otherwise
 
 # close all TCP connections and continue to run
 def do_disconnect(ignored, neglected):
@@ -165,7 +166,7 @@ def disconnect(socket, msg):
 
 do_list(None, None)
 print sorted(control_messages.keys())
-music = music.Music()
+mega = music.Music()
 running = True
 while running:
     try:
@@ -245,7 +246,8 @@ while running:
                             remote_name[s] = 'node %u' % node_number
                             do_send(s, struct.pack('>cB', 'n', node_number))
                     elif message[0:1] == 's':
-                        music.status_update(message)
+                        if music.status_update(message):
+                            mega.played_low = 0
 
                     else:
                         print 'received', repr(message), 'from', remote_name[s]
@@ -281,12 +283,12 @@ while running:
             last_show_change_sec = time.time()
             do_show(None, None)
 
-        audio_msg = music.tick()
+        #audio commands
+        dummy_art_car_bool = False
+        audio_msg = mega.tick(dummy_art_car_bool)
         if audio_msg is not None:
-            if audio_msg[0:1] == 'a':
-                # hope the length is less than 256
-                audio_msg = struct.pack('>cB', audio_msg[0:1], len(audio_msg[1:])) + audio_msg[1:]
             do_send(None, audio_msg)	# always send to all nodes
+        meditation = mega.meditation
 
         #pushing animation parameters across nodes
         if auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
@@ -299,15 +301,15 @@ while running:
     except KeyboardInterrupt:
         running = False
 
+
     except:
         # raise				# uncomment for debugging
         print sys.exc_value
         do_disconnect(None, None)	# TODO: be more selective
 
+
 for s in remote_name:
-    audio_msg = music.mute()
-    stop_msg = struct.pack('>cB', audio_msg[0:1], len(audio_msg[1:])) + audio_msg[1:]
-    s.send(stop_msg)
+    s.send(music.mute())
 
 for s in sources:
     s.close()
