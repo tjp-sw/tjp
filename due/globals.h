@@ -70,14 +70,14 @@ CRGB* initial_palette = icy_bright;                                 //
 // Mid layer                                                  //
 #define SNAKE 1                                               //
 #define FIRE 2                                                //
-#define DISCO_FIRE 3                                         //
-#define FIRE_SNAKE 4                                          //
+#define DISCO_FIRE 3                                          //
 #define FIRE_ONE_SIDED 254  // Only used with EDM animation   //
-#define MID_SCROLLING_DIM 5                                   //
-#define MID_SCROLLING_DIM2 6                                  //
-#define MID_SCROLLING_DIM3 7                                  //
-#define ARROW 8                                               //
-#define NUM_MID_ANIMATIONS 8  // Equal to last animation      //
+#define DISCO_FIRE_ONE_SIDED 253                              //
+#define MID_SCROLLING_DIM 4                                   //
+#define MID_SCROLLING_DIM2 5                                  //
+#define MID_SCROLLING_DIM3 6                                  //
+#define ARROW 7                                               //
+#define NUM_MID_ANIMATIONS 7  // Equal to last animation      //
                                                               //
 // Sparkle layer                                              //
 #define GLITTER 1                                             //
@@ -235,6 +235,7 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
                                           //
 #define NUM_MID_ALPHA_MODES 2             //
 #define NUM_SPARKLE_ALPHA_MODES 1         //
+bool override_default_alpha = false;      //
 //----------------------------------------//
 
 //------- Animation transitions ----------//
@@ -318,7 +319,7 @@ uint8_t mid_layer[NUM_RINGS][LEDS_PER_RING];                                    
 uint8_t sparkle_layer[NUM_RINGS][LEDS_PER_RING];                                              //
                                                                                               //
 CRGBPalette256 mid_palette;                                                                   //
-CRGBPalette16 sparkle_palette;                                                                //
+CRGBPalette256 sparkle_palette;                                                                //
 CRGB target_palette[NUM_COLORS_PER_PALETTE];  // Used to smoothly blend into next palette     //
 CRGB current_palette[NUM_COLORS_PER_PALETTE]; // The current 7-color palette                  //
                                                                                               //
@@ -367,12 +368,14 @@ uint8_t band_distribution[NUM_BANDS]; // bass=0, mid=1, treble=2; sums to 255 //
 
 
 //------ Misc enumerations and values --------//
-// Animation constants and parameters
-#define MAX_DIMMING 6
-#define NUM_DIMMING_LEVELS (MAX_DIMMING + 1)
 #define THROTTLE 16 // Allows INTRA_RING_SPEED to speed up OR slow down an animation
-#define BASE_GRADIENT_SIZE 36
-#define MID_GRADIENT_SIZE 12
+
+// Palettes
+#define MID_GRADIENT_SIZE 7
+#define MAX_MID_DIMMING 11
+#define NUM_MID_DIMMING_LEVELS (MAX_MID_DIMMING + 1)
+#define MAX_SPARKLE_DIMMING 126
+#define NUM_SPARKLE_DIMMING_LEVELS (MAX_SPARKLE_DIMMING + 1)
 
 // Bands
 #define BASS_BAND 0
@@ -400,11 +403,6 @@ uint8_t band_distribution[NUM_BANDS]; // bass=0, mid=1, treble=2; sums to 255 //
 // Sparkle INTRA_RING_MOTION values
 #define DOWN 1
 #define UP -1
-
-// Animation ring modes (which rings to draw to)
-#define ALL_RINGS 0
-#define ODD_RINGS 1
-#define EVEN_RINGS 2
 
 // EDM animations that can be displayed one-sided or mirrored
 #define DISPLAY_FULL 0

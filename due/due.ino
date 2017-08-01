@@ -662,24 +662,23 @@ inline void draw_current_base(uint8_t min_ring, uint8_t max_ring) {
 inline void draw_current_mid(uint8_t min_ring, uint8_t max_ring) {
   switch(MID_ANIMATION) {
     case SNAKE:
-      snake(ALL_RINGS, min_ring, max_ring);
+      snake(min_ring, max_ring);
       break;
 
     case FIRE:
-      fire(ALL_RINGS, FIRE_PALETTE_STANDARD, true, min_ring, max_ring);
-      break;
-
-    case DISCO_FIRE:
-      fire(ALL_RINGS, FIRE_PALETTE_DISABLED, true, min_ring, max_ring);
-      break;
-
-    case FIRE_SNAKE:
-      fire(ODD_RINGS, FIRE_PALETTE_STANDARD, true, min_ring, max_ring);
-      snake(EVEN_RINGS, min_ring, max_ring);
+      fire(FIRE_PALETTE_STANDARD, true, min_ring, max_ring);
       break;
 
     case FIRE_ONE_SIDED:
-      fire(ALL_RINGS, FIRE_PALETTE_STANDARD, false, min_ring, max_ring);
+      fire(FIRE_PALETTE_STANDARD, false, min_ring, max_ring);
+      break;
+
+    case DISCO_FIRE:
+      fire(FIRE_PALETTE_DISABLED, true, min_ring, max_ring);
+      break;
+
+    case DISCO_FIRE_ONE_SIDED:
+      fire(FIRE_PALETTE_DISABLED, false, min_ring, max_ring);
       break;
 
     case MID_SCROLLING_DIM:
@@ -821,9 +820,10 @@ inline void init_mid_animation() {
 
   switch(MID_ANIMATION) {
     case FIRE:
-    case DISCO_FIRE:
     case FIRE_ONE_SIDED:
-    case FIRE_SNAKE:
+      override_default_alpha = true;
+    case DISCO_FIRE:
+    case DISCO_FIRE_ONE_SIDED:
       clear_mid_layer(); // Clear old pixels which are now "heat" values
       break;
 
@@ -874,6 +874,7 @@ inline void init_sparkle_animation() {
       break;
 
     case WARP_SPEED:
+      SPARKLE_PORTION = 100;
     case TWINKLE:
       random16_set_seed(0); // Synchronize RNG on different nodes
       // Always draw full ring and brightness
@@ -967,9 +968,10 @@ inline void cleanup_base_animation(uint8_t animation_index) {
 inline void cleanup_mid_animation(uint8_t animation_index) {
   switch(animation_index) {
     case FIRE:
-    case DISCO_FIRE:
-    case FIRE_SNAKE:
     case FIRE_ONE_SIDED:
+      override_default_alpha = false;
+    case DISCO_FIRE:
+    case DISCO_FIRE_ONE_SIDED:
       cleanup_fire();
       break;
 
