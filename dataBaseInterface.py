@@ -8,7 +8,7 @@ import mongo
 
 RETURN_MOCK = False
 
-#Class for interfacing with the animations database on the pi.
+# Class for interfacing with the audio database on the pi.
 class DataBaseInterface:
 	'a class for interfacing with the database'
 
@@ -24,7 +24,7 @@ class DataBaseInterface:
 
 			return audioInfo
 		else:
-			#MOCKED return vals
+			# MOCKED return vals
 			if int(file_num) == 1:
 				audioInfo = AudioFileInfo("rain", 1, "mid")
 				#    def __init__(self, time, degree, magnitude, kind):
@@ -64,5 +64,5 @@ class DataBaseInterface:
 
 			return audioInfo
 
-dbinter = DataBaseInterface()
-dbinter.grabAudioInfo("8")
+#dbinter = DataBaseInterface()
+#dbinter.grabAudioInfo("8")

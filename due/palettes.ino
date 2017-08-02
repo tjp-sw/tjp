@@ -115,14 +115,14 @@ inline uint8_t get_mid_blending(uint8_t ring, uint16_t pixel) {
 inline uint8_t get_mid_raw_color(uint8_t color) {
   uint8_t section = (color - 4) / (NUM_MID_DIMMING_LEVELS * MID_GRADIENT_SIZE);
   bool use_color0 = ((color - 4) / NUM_MID_DIMMING_LEVELS) % MID_GRADIENT_SIZE <= MID_GRADIENT_SIZE/2;
-  
+
   if(section == 0)      { return use_color0 ? 0 : 1; }
   else if(section == 1) { return use_color0 ? 0 : 2; }
   else                  { return use_color0 ? 1 : 2; }
 }
 
 inline uint8_t get_mid_raw_color(uint8_t color, uint16_t pixel) {
-  return get_mid_raw_color(mid_layer[ring][pixel]);
+  return get_mid_raw_color(mid_layer[0][pixel]);
 }
 
 #ifdef DEBUG
@@ -139,7 +139,7 @@ void test_palette_utils() {
   for(uint8_t i = 0; i < 3; i++) {
     for(uint8_t k = 0; k < 3; k++) {
       if (i == k) { continue; }
-      
+
       for(uint8_t j = 0; j < NUM_MID_DIMMING_LEVELS; j++) {
         for(uint8_t b = 0; b < MID_GRADIENT_SIZE; b++) {
           mid_layer[0][0] = get_mid_color(i, k, b, j);
@@ -147,14 +147,14 @@ void test_palette_utils() {
           uint8_t second_col = i < k ? k : i;
           uint8_t dominant_col = b > MID_GRADIENT_SIZE/2 ? k : i;
           uint8_t expected_blending = i == first_col ? b : MID_GRADIENT_SIZE-1-b;
-          
+
           if(get_mid_raw_color0(0,0) != first_col) { Serial.println("Wrong mid color0 at: " + String(i) + ", " + String(k) + ", " + String(b) + ", " + String(j)); }
           if(get_mid_raw_color1(0,0) != second_col) { Serial.println("Wrong mid color1 at: " + String(i) + ", " + String(k) + ", " + String(b) + ", " + String(j)); }
           if(get_mid_blending(0,0) != expected_blending) { Serial.println("Wrong mid blending at: " + String(i) + ", " + String(k) + ", " + String(b) + ", " + String(j)); Serial.println(expected_blending); Serial.println(get_mid_blending(0,0)); }
           if(get_mid_dim_value(0,0) != j) { Serial.println("Wrong mid dimming at: " + String(i) + ", " + String(k) + ", " + String(b) + ", " + String(j)); }
           if(b == MID_GRADIENT_SIZE/2) { dominant_col = i < k ? i : k; }
           if(get_mid_raw_color(0,0) != dominant_col) { Serial.println("Wrong mid dom color at: " + String(i) + ", " + String(k) + ", " + String(b) + ", " + String(j)); }
-          
+
         }
       }
     }
@@ -186,7 +186,7 @@ inline void create_mid_palette(CRGBPalette256* new_palette, CRGB color0, CRGB co
       temp = color1;
       nblend(temp, color2, 255 * (i-2*MID_GRADIENT_SIZE) / (MID_GRADIENT_SIZE-1));
     }
-    
+
     for(uint8_t j = 0; j < NUM_MID_DIMMING_LEVELS; j++) {
       new_palette->entries[palette_offset + j] = temp;
     }
@@ -241,7 +241,7 @@ inline bool blend_base_palette(uint8_t max_changes, bool use_fast_blend_function
   // Bytes 0-5 of current_palette
   if(use_fast_blend_function) { blend_palette_fast(0, 5, max_changes); }
   else { blend_palette(0, 5, max_changes); }
-  
+
   return current_palette[0] != target_palette[0] || current_palette[1] != target_palette[1];
 }
 
@@ -249,7 +249,7 @@ inline bool blend_mid_palette(uint8_t max_changes, bool use_fast_blend_function)
   // Bytes 6-14 of current_palette
   if(use_fast_blend_function) { blend_palette_fast(6, 14, max_changes); }
   else { blend_palette(6, 14, max_changes); }
-  
+
   create_mid_palette(&mid_palette, current_palette[2], current_palette[3], current_palette[4]); // Apply changes to CRGBPalette256
   return current_palette[2] != target_palette[2] || current_palette[3] != target_palette[3] || current_palette[4] != target_palette[4];
 }
@@ -258,7 +258,7 @@ inline bool blend_sparkle_palette(uint8_t max_changes, bool use_fast_blend_funct
   // Bytes 15-20 of current_palette
   if(use_fast_blend_function) { blend_palette_fast(15, 20, max_changes); }
   else { blend_palette(15, 20, max_changes); }
-  
+
   create_sparkle_palette(&sparkle_palette, current_palette[5], current_palette[6]); // Apply changes to CRGBPalette16
   return current_palette[5] != target_palette[5] || current_palette[6] != target_palette[6];
 }
@@ -308,4 +308,3 @@ inline void blend_palette_fast(uint8_t iMin, uint8_t iMax, uint8_t max_changes) 
     if(changes >= max_changes) { break; }
   }
 }
-

@@ -2,6 +2,7 @@ from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 import json
 import parser
+import parser_new
 
 import sys
 sys.path.insert(0, '../')
@@ -27,6 +28,7 @@ def decode_custom_event(document):
 
 def encode_custom(audioInfo):
     return {"_type": "AudioFileInfo", "name": audioInfo.name, "category": audioInfo.category, "file_index": audioInfo.file_index, "events": encode_events(audioInfo.events)}
+
 
 def decode_custom(document):
     name = document["name"]
@@ -81,10 +83,11 @@ def grab_audio_info(colleciton, file_num):
     except ServerSelectionTimeoutError:
         print 'mongo database:', sys.exc_value
     except TypeError:
-        print "Invalid audio file number... something went pretty wrong!"
+        print "Invalid audio file number " + file_num + "... something went pretty wrong!"
 
 
 #infoList = parser.parseProcessedAudioData()
+#infoList = parser_new.parseProcessedAudioData()
 #insert_audio_data(infoList)
 #ai = grab_audio_info(get_collection(), "8098")
 #print ai

@@ -1,4 +1,3 @@
-# USED FOR OLD AUDIO PROCESSING METHOD 
 # Parsing the processed audio info.
 # From here will go into Mongo.
 
@@ -11,16 +10,15 @@ from audioInfo import AudioFileInfo, AudioEvent
 def parseProcessedAudioData():
     global fileInfos
     fileInfos = []
-    ind = -1
     events = []
     pack = False
     name = ""
     file_index = ""
     category = ""
-    for line in open("sample_processing", 'r'):
+    for line in open("sample_processing_new", 'r'):
         info = line.split()
         if(len(info) > 1):
-            if(info[0] == "Processing"):
+            if(info[0] == "anayalzing"):
                 if pack:
                     ai = AudioFileInfo(name, file_index, category, events)
                     fileInfos.append(ai)
@@ -39,12 +37,12 @@ def parseProcessedAudioData():
                 category = ids[2]
                 pack = True
 
-            elif(info[0] == "@@" or info[0] == "##" or info[0] == "@" or info[0] == "#"):
-                #print line
-                event = AudioEvent(info[2], info[3], info[5])
-                #print event
+            elif(info[0] == "EVENT:"):
+                # print line
+                time = info[1].split(".")
+                event = AudioEvent(str(int(time[0]) * 1000 + int(time[1])), info[3], "amplitude")
+                # print event
                 events.append(event)
-                #print fileInfo
 
     return fileInfos
 
