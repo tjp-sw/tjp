@@ -121,7 +121,7 @@ inline uint8_t get_mid_raw_color(uint8_t color) {
   else                  { return use_color0 ? 1 : 2; }
 }
 
-inline uint8_t get_mid_raw_color(uint8_t color, uint16_t pixel) {
+inline uint8_t get_mid_raw_color(uint8_t ring, uint16_t pixel) {
   return get_mid_raw_color(mid_layer[ring][pixel]);
 }
 

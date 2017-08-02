@@ -310,4 +310,76 @@ inline void sparkle_twinkle() {
 
 
 
+// ----------------- Variable spin -----------------
+// Each ring rotates blocks of pixels around rings at different rates.
+// Goal is to find cool periods that result in several unique alignments forming
+// (Goal was not met but hey it's a thing...)
+#define VARIABLE_SPIN_STEP_SIZE 5
+void variable_spin() {
+  // 6 spin rates, centered at the middle of each node, so node edges line up with each other.
+  // First half of node spins one way, second half the other way. Reverse direction on odd numbered nodes so node edges line up.
+  const uint8_t spinRates[12] = { 2, 3, 4, 5, 6, 7 };
+  static int16_t centerPoints[12] = { HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING };
+  for(uint8_t i = 0; i < 6; i++)
+  {
+      centerPoints[i] -= spinRates[i];
+      if(centerPoints[i] < 0) { centerPoints[i] += LEDS_PER_RING; }
+
+      centerPoints[11-i] += spinRates[i];
+      if(centerPoints[11-i] > LEDS_PER_RING-1) { centerPoints[11-i] -= LEDS_PER_RING; }
+  }
+
+  clear_sparkle_layer();
+  
+  for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+    uint8_t cur_color = get_sparkle_color(ring % 2, 70);
+    uint16_t centerPoint = centerPoints[ring];
+
+    sparkle_layer[ring][centerPoint] = cur_color;
+    
+    if(centerPoint == 0) {
+      sparkle_layer[ring][LEDS_PER_RING - 1] = cur_color;
+      sparkle_layer[ring][LEDS_PER_RING - 2] = cur_color;
+      //sparkle_layer[ring][LEDS_PER_RING - 3] = cur_color;
+    }
+    else if(centerPoint == 1) {
+      sparkle_layer[ring][0] = cur_color;
+      sparkle_layer[ring][LEDS_PER_RING - 1] = cur_color;
+      //sparkle_layer[ring][LEDS_PER_RING - 2] = cur_color;
+    }
+    else if(centerPoint == 2) {
+      sparkle_layer[ring][1] = cur_color;
+      sparkle_layer[ring][0] = cur_color;
+      //sparkle_layer[ring][LEDS_PER_RING - 1] = cur_color;
+    }
+    else {
+      sparkle_layer[ring][centerPoint-1] = cur_color;
+      sparkle_layer[ring][centerPoint-2] = cur_color;
+      //sparkle_layer[ring][centerPoint-3] = cur_color;
+    }
+
+    if(centerPoint == LEDS_PER_RING - 1) {
+      sparkle_layer[ring][0] = cur_color;
+      sparkle_layer[ring][1] = cur_color;
+      //sparkle_layer[ring][2] = cur_color;
+    }
+    else if(centerPoint == LEDS_PER_RING - 2) {
+      sparkle_layer[ring][LEDS_PER_RING-1] = cur_color;
+      sparkle_layer[ring][0] = cur_color;
+      //sparkle_layer[ring][1] = cur_color;
+    }
+    else if(centerPoint == LEDS_PER_RING - 3) {
+      sparkle_layer[ring][LEDS_PER_RING-2] = cur_color;
+      sparkle_layer[ring][LEDS_PER_RING-1] = cur_color;
+      //sparkle_layer[ring][0] = cur_color;
+    }
+    else {
+      sparkle_layer[ring][centerPoint+1] = cur_color;
+      sparkle_layer[ring][centerPoint+2] = cur_color;
+      //sparkle_layer[ring][centerPoint+3] = cur_color;
+    }
+  }
+}
+
+
 

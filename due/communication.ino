@@ -286,9 +286,7 @@ inline void process_commands(String& input) {
           #endif
         }
         break;
-      #endif // I_AM_NODE_MEGA
 
-      #ifdef I_AM_NODE_MEGA
       case 'd':
       {
         const uint8_t node_message[2] = { 'n', node_number };
