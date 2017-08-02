@@ -100,10 +100,13 @@ uint8_t art_car = NO_ART_CAR;                                           //
 #define GLITTER 1                                             //
 #define RAIN 2                                                //
 #define WARP_SPEED 3                                          //
-#define THREE_CIRCLES 4                                       //
-#define TWO_COINS 5                                           //
-#define TWINKLE 6                                             //
-#define VARIABLE_SPIN 7
+#define TWINKLE 4                                             //
+#define VARIABLE_SPIN 5                                       //
+#define THREE_CIRCLES 6                                       //
+#define THREE_CIRCLE_TRAILS 7                                 //
+#define TWO_COINS 8                                           //
+#define TORUS_KNOT 9                                          //
+#define TORUS_LINK 10                                         //
 #define NUM_SPARKLE_ANIMATIONS 7  // Equal to last animation  //
                                                               //
 // EDM animations (in the base layer, starting at 128)        //

@@ -755,6 +755,10 @@ inline void draw_current_sparkle() {
       sparkle_three_circles();
       break;
 
+    case THREE_CIRCLE_TRAILS:
+      sparkle_three_circle_trails();
+      break;
+
     case TWO_COINS:
       sparkle_two_coins();
       break;
@@ -767,6 +771,14 @@ inline void draw_current_sparkle() {
       variable_spin();
       break;
 
+    case TORUS_KNOT:
+      sparkle_torus_knot();
+      break;
+
+    case TORUS_LINK:
+      sparkle_torus_link();
+      break;
+      
     default:
       break;
   }
@@ -943,6 +955,7 @@ inline void init_sparkle_animation() {
       break;
 
     case THREE_CIRCLES:
+    case THREE_CIRCLE_TRAILS:
     case TWO_COINS:
       random16_set_seed(0); // Synchronize RNG on different nodes
       current_ring = random8(NUM_RINGS);
@@ -950,6 +963,8 @@ inline void init_sparkle_animation() {
       current_coin = random8(NUM_RINGS);
       break;
 
+    case TORUS_KNOT:
+    case TORUS_LINK:
     case NONE:
       clear_sparkle_layer();
 
