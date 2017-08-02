@@ -43,13 +43,19 @@ BACKGROUND_INDEX = 0
 MIDLAYER_INDEX = 8
 SPARKLE_INDEX = 17
 
-# Pre-defined color palettes
-fruit_loop = [[25,0,25], [25,15,0], [180,10,70], [140,60,180], [180,60,60], [255,255,120], [255,100,180]]
-icy_bright = [[37,28,60], [70,0,28], [255,108,189], [0,172,238], [44,133,215], [255,255,255], [254,207,24]]
-watermelon = [[40,29,35], [5,45,15], [47,140,9], [72,160,5], [148,33,137], [47,192,91], [70,190,91]]
-pride = [[255, 0, 0], [255, 127, 0], [255, 255, 0], [0, 255, 0], [0, 0, 255], [75, 0, 130], [148, 0, 211]]
-edirp = [[148, 0, 211], [75, 0, 130], [0, 0, 255], [0, 255, 0], [255, 255, 0], [255, 127, 0], [255, 0, 0]]
-palette = [fruit_loop, icy_bright, watermelon, pride, edirp]
+# bounding indices to ease reading of parameter printout
+BASE_PARAM_START = 0
+BASE_PARAM_END = 7
+MID_PARAM_START = 8
+MID_PARAM_END = 16
+SPARKLE_PARAM_START = 17
+SPARKLE_PARAM_END = 27
+SEVEN_PAL_BEAT_PARAM_START = 28
+SEVEN_PAL_BEAT_PARAM_END = 30
+ALPHA_PARAM_START = 31
+ALPHA_PARAM_END = 32
+TRANS_PARAM_START = 33
+TRANS_PARAM_END = 40
 
 show_bounds = [  # order must match show_parameters
         # [min, max]
@@ -102,6 +108,89 @@ show_bounds = [  # order must match show_parameters
         [1, NUM_TRANSITION_SPEEDS] # how fast to transition the EDM animation
     ]
 
+# Pre-defined color palettes for each chakra color
+NUM_BASE_COLORS_PER_FAMILY = 4
+NUM_MID_COLORS_PER_FAMILY = 6
+NUM_SPARKLE_COLORS_PER_FAMILY = 4
+
+red_dim_colors = [[255, 0, 0], [250, 0, 0], [245, 0, 0], [240, 0, 0]]
+orange_dim_colors = [[255, 127, 0], [250, 122, 0], [245, 117, 0], [240, 112, 0]]
+yellow_dim_colors = [[255, 255, 0], [250, 250, 0], [245, 245, 0], [240, 240, 0]]
+green_dim_colors = [[0, 255, 0], [0, 250, 0], [0, 245, 0], [0, 240, 0]]
+blue_dim_colors = [[0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240]]
+purple_dim_colors = [[75, 0, 130], [70, 0, 125], [65, 0, 120], [60, 0, 115]]
+white_dim_colors = [[37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45]]
+red_mid_colors = [[255, 0, 0], [250, 0, 0], [245, 0, 0], [240, 0, 0], [235, 0, 0], [230, 0, 0]]
+orange_mid_colors = [[255, 127, 0], [250, 122, 0], [245, 117, 0], [240, 112, 0], [235, 107, 0], [230, 102, 0]]
+yellow_mid_colors = [[255, 255, 0], [250, 250, 0], [245, 245, 0], [240, 240, 0], [235, 235, 0], [230, 230, 0]]
+green_mid_colors = [[0, 255, 0], [0, 250, 0], [0, 245, 0], [0, 240, 0], [0, 235, 0], [0, 230, 0]]
+blue_mid_colors = [[0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240], [0, 0, 235], [0, 0, 230]]
+purple_mid_colors = [[75, 0, 130], [70, 0, 125], [65, 0, 120], [60, 0, 115], [55, 0, 110], [50, 0, 105]]
+white_mid_colors = [[37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45], [27, 18, 50], [22, 13, 45]]
+red_bright_colors = [[255, 0, 0], [250, 0, 0], [245, 0, 0], [240, 0, 0]]
+orange_bright_colors = [[255, 127, 0], [250, 122, 0], [245, 117, 0], [240, 112, 0]]
+yellow_bright_colors = [[255, 255, 0], [250, 250, 0], [245, 245, 0], [240, 240, 0]]
+green_bright_colors = [[0, 255, 0], [0, 250, 0], [0, 245, 0], [0, 240, 0]]
+blue_bright_colors = [[0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240]]
+purple_bright_colors = [[75, 0, 130], [70, 0, 125], [65, 0, 120], [65, 0, 120]]
+white_bright_colors = [[37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45]]
+red_colors = [red_dim_colors, red_mid_colors, red_bright_colors]
+orange_colors = [orange_dim_colors, orange_mid_colors, orange_bright_colors]
+yellow_colors = [yellow_dim_colors, yellow_mid_colors, yellow_bright_colors]
+green_colors = [green_dim_colors, green_mid_colors, green_bright_colors]
+blue_colors = [blue_dim_colors, blue_mid_colors, blue_bright_colors]
+purple_colors = [purple_dim_colors, purple_mid_colors, purple_bright_colors]
+white_colors = [white_dim_colors, white_mid_colors, white_bright_colors]
+playa_palette = [red_colors, orange_colors, yellow_colors, green_colors, blue_colors, purple_colors, white_colors]
+
+# Extra color palettes defined by Lee and used in pride and other events
+fruit_loop = [[25,0,25], [25,15,0], [180,10,70], [140,60,180], [180,60,60], [255,255,120], [255,100,180]]
+icy_bright = [[37,28,60], [70,0,28], [255,108,189], [0,172,238], [44,133,215], [255,255,255], [254,207,24]]
+watermelon = [[40,29,35], [5,45,15], [47,140,9], [72,160,5], [148,33,137], [47,192,91], [70,190,91]]
+pride = [[255, 0, 0], [255, 127, 0], [255, 255, 0], [0, 255, 0], [0, 0, 255], [75, 0, 130], [148, 0, 211]]
+edirp = [[148, 0, 211], [75, 0, 130], [0, 0, 255], [0, 255, 0], [255, 255, 0], [255, 127, 0], [255, 0, 0]]
+edm_palettes = [fruit_loop, icy_bright, watermelon, pride, edirp]
+
+#  Time constants
+STATIC_START = time.mktime(time.strptime('2017-Aug-27 06:20', '%Y-%b-%d %H:%M'))  # Sunrise Sunday
+STATIC_END = time.mktime(time.strptime('2017-Aug-28 06:21', '%Y-%b-%d %H:%M'))  # Sunrise Monday
+BURNING_MAN_START = time.mktime(time.strptime('2017-Aug-28 06:21', '%Y-%b-%d %H:%M'))
+BURNING_MAN_END   = time.mktime(time.strptime('2017-Sep-4 19:23', '%Y-%b-%d %H:%M'))
+sunrise_time = [time.mktime(time.strptime('2017-Aug-27 06:20', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-28 06:21', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-29 06:22', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-30 06:23', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-31 06:24', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-1 06:25', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-2 06:26', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-3 06:27', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-4 06:28', '%Y-%b-%d %H:%M'))]
+sunset_time = [time.mktime(time.strptime('2017-Aug-27 19:36', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-28 19:35', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-29 19:33', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-30 19:31', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-31 19:30', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-1 19:28', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-2 19:27', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-3 19:25', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-4 19:23', '%Y-%b-%d %H:%M'))]
+
+
+#  Show modes
+SUNRISE = 0
+DAY = 1
+SUNSET = 2
+NIGHT = 3
+show_mode = SUNRISE
+
+#  Art car values
+NO_ART_CAR = -1
+ART_CAR_HELLO_DURATION = 30
+art_car_hello = False
+art_car = NO_ART_CAR  # if art car is detected, set to ring number nearest art car
+
+
+
 NUM_ANIMATIONS = 9	# animation programs are numbered 0 through 8
 TIME_LIMIT = 5		# number of seconds between animation changes
 auto_show = None
@@ -131,7 +220,141 @@ def constrain_show():
     if show_parameters[BACKGROUND_INDEX] == 0 and show_parameters[MIDLAYER_INDEX] == 0 and show_parameters[SPARKLE_INDEX] == 0:
         show_parameters[BACKGROUND_INDEX] = 1	# never black
 
-def choose_random_colors_from_palette():
+
+# ------------------------------------------------- get random color ------------------------------------------------
+# very much in progress
+#  returns one sanctioned color as an *index* into fixed color array, weightedly-randomly chosen
+# progresses through different time periods starting at end of sunset meditation; at each
+# time period more of previous days' colors are allowed, with proportions rising first for
+# previous day's color, then for day before that's color, etc
+#
+# at the end of the periods, today's chakra color is twice as likely to be chosen from as any of the
+# previous days' colors, and choices remain this way until following sunrise meditation
+
+
+def get_random_color(day, desired_period):
+    # percentage color increase or decrease per time interval
+    percent_step = 5
+    percent_scaling_factor = 10
+
+    num_colors_today = day * COLORS_PER_DAY
+    max_value = num_colors_today * percent_scaling_factor
+    current_color = day - 1
+
+    # target_other is probably not a multiple of increment, so last step for each color will move probability here
+    # target_chakra = target_other * 2: final evolved probability for the day's chakra, twice as large as others
+
+    target_other = max_value / (day + 1)
+
+    increment = percent_step * max_value / 100
+    iterations = 0
+
+    probability_array = [0 for j in range(NUM_DAYS)]
+    cumulative_array = [0 for j in range(NUM_DAYS)]
+
+    # initialize percentages as scaled percent_step% for previous colors,
+    # and rest% for day's color
+
+    for ind in range(1, day):
+        probability_array[ind] = increment
+        cumulative_array[ind] = cumulative_array[ind - 1] + probability_array[ind]
+
+        # the current day always has the highest probability
+        probability_array[day] = max_value - increment * (day - 1)
+        cumulative_array[day] = cumulative_array[day - 1] + probability_array[day]
+
+    while (current_color >= 1) and (iterations <= desired_period):
+        iterations += 1
+
+        # update current color value until full / it tips at target_other
+        if (probability_array[current_color] + increment) < target_other:
+
+            # increase this color percent
+            probability_array[current_color] += increment
+            probability_array[day] -= increment
+
+        else:
+
+            remainder = target_other - probability_array[current_color]
+            probability_array[current_color] = target_other
+            probability_array[day] -= remainder
+
+            # move to previous color index
+            current_color -= 1
+
+    # now in color probability situation for desired_period
+
+    cumulative_array = [0 for j in range(NUM_DAYS)]
+    cumulative_value = 0
+
+    for ind in range(1, day + 1):
+        cumulative_value += probability_array[ind]
+        cumulative_array[ind] = cumulative_value
+
+    print('probability array', probability_array)
+    print('cumulative array', cumulative_array)
+
+    # now use the cumulative probabilily array to generate a weighted random color
+
+    rand = randint(1, max_value)
+    ind = 1
+
+    while rand > cumulative_array[ind]:
+        ind += 1
+
+    specific_color_index = rand / percent_scaling_factor
+
+    # print('rand is', rand, 'color is', ind, "specific is", specific_color_index)
+
+    return specific_color_index
+
+
+# ------------------------------------------ choose_new_playa_palette () ----------------------------------------------
+# function still in progress - will always return a palette, but maybe not the right one
+# I include it early so that others will see that there are two types of palettes:
+# - ones for internal sound mode which are generated here, and
+# - ones for art car response called edm_palettes which are chosen in choose_random_colors_from_edm_palette()
+# also, waiting for Lee to finish color choices
+
+def choose_new_playa_palette(today):
+    global SUNRISE, DAY, SUNSET, NIGHT
+
+    #  need to use today
+    if (show_mode == SUNRISE) or (show_mode == DAY):
+        # use only day's chakra colors
+        bg_order = sample(range(NUM_BASE_COLORS_PER_FAMILY * today, NUM_BASE_COLORS_PER_FAMILY * (today + 1)), 2)
+        mid_order = sample(range(NUM_MID_COLORS_PER_FAMILY * today, NUM_MID_COLORS_PER_FAMILY * (today + 1)), 3)
+        sp_order = sample(range(NUM_SPARKLE_COLORS_PER_FAMILY * today, NUM_SPARKLE_COLORS_PER_FAMILY * (today + 1)), 2)
+
+    elif show_mode == SUNSET:
+        # use color growth
+        # fixme::: has to be updated to use color growth
+        bg_order = sample(range(NUM_BASE_COLORS_PER_FAMILY * today, NUM_BASE_COLORS_PER_FAMILY * (today + 1)), 2)
+        mid_order = sample(range(NUM_MID_COLORS_PER_FAMILY * today, NUM_MID_COLORS_PER_FAMILY * (today + 1)), 3)
+        sp_order = sample(range(NUM_SPARKLE_COLORS_PER_FAMILY * today, NUM_SPARKLE_COLORS_PER_FAMILY * (today + 1)), 2)
+
+    else:  # night time
+        # use all previous colors
+        # background must always be chosen from day's chakara color
+
+        bg_order = sample(range(NUM_BASE_COLORS_PER_FAMILY * today, NUM_BASE_COLORS_PER_FAMILY * (today + 1)), 2)
+        mid_order = sample(range(0, NUM_MID_COLORS_PER_FAMILY * (today + 1)), 3)
+        sp_order = sample(range(0, NUM_SPARKLE_COLORS_PER_FAMILY * (today + 1)), 2)
+
+    show_colors[0] = playa_palette[today][0][bg_order[0]]
+    show_colors[1] = playa_palette[today][0][bg_order[1]]
+    show_colors[2] = playa_palette[mid_order[0] / NUM_MID_COLORS_PER_FAMILY][1][mid_order[0] % NUM_MID_COLORS_PER_FAMILY]
+    show_colors[3] = playa_palette[mid_order[1] / NUM_MID_COLORS_PER_FAMILY][1][mid_order[1] % NUM_MID_COLORS_PER_FAMILY]
+    show_colors[4] = playa_palette[mid_order[2] / NUM_MID_COLORS_PER_FAMILY][1][mid_order[2] % NUM_MID_COLORS_PER_FAMILY]
+    show_colors[5] = playa_palette[sp_order[0] / NUM_SPARKLE_COLORS_PER_FAMILY][2][sp_order[0] % NUM_SPARKLE_COLORS_PER_FAMILY]
+    show_colors[6] = playa_palette[sp_order[1] / NUM_SPARKLE_COLORS_PER_FAMILY][2][sp_order[1] % NUM_SPARKLE_COLORS_PER_FAMILY]
+
+    print "show colors", show_colors
+
+
+# ----------------------------- choose_random_colors_from_edm_palette() -------------------------------------
+
+def choose_random_colors_from_edm_palette():
     # choose which colors out of the chosen palette to use
     #shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
     bg_order = sample(range(0,2), 2)
@@ -139,15 +362,16 @@ def choose_random_colors_from_palette():
     sp_order = sample(range(5,7), 2)
 
     current_palette = show_parameters[29]
-    show_colors[0] = palette[current_palette][bg_order[0]]
-    show_colors[1] = palette[current_palette][bg_order[1]]
-    show_colors[2] = palette[current_palette][mid_order[0]]
-    show_colors[3] = palette[current_palette][mid_order[1]]
-    show_colors[4] = palette[current_palette][mid_order[2]]
-    show_colors[5] = palette[current_palette][sp_order[0]]
-    show_colors[6] = palette[current_palette][sp_order[1]]
+    show_colors[0] = edm_palettes[current_palette][bg_order[0]]
+    show_colors[1] = edm_palettes[current_palette][bg_order[1]]
+    show_colors[2] = edm_palettes[current_palette][mid_order[0]]
+    show_colors[3] = edm_palettes[current_palette][mid_order[1]]
+    show_colors[4] = edm_palettes[current_palette][mid_order[2]]
+    show_colors[5] = edm_palettes[current_palette][sp_order[0]]
+    show_colors[6] = edm_palettes[current_palette][sp_order[1]]
 
-# ------------------------------------------------- edm_program() -----------------------------------------------
+
+# ------------------------------------- edm_program() -----------------------------------------------
 # show for when the journey is installed at an event with electronic dance music only
 # parameters are somewhat randomly chosen
 
@@ -163,10 +387,17 @@ def edm_program(init=False):
             for i in range(0, NUM_PARAMETERS):
                 show_parameters[i] = constrained_random_parameter(i)
             constrain_show()
-            choose_random_colors_from_palette()
+            choose_random_colors_from_edm_palette()
 
-        print "initial show parameters ", show_parameters
-        print "initial show colors" , show_colors
+        print "initial show parameters:"
+        print "  base parameters", show_parameters[BASE_PARAM_START:BASE_PARAM_END+1]
+        print "  mid parameters", show_parameters[MID_PARAM_START:MID_PARAM_END+1]
+        print "  sparkle parameters", show_parameters[SPARKLE_PARAM_START:SPARKLE_PARAM_END+1]
+        print "  7 color, palette change, beat", show_parameters[SEVEN_PAL_BEAT_PARAM_START:SEVEN_PAL_BEAT_PARAM_END+1]
+        print "  alpha parameters", show_parameters[ALPHA_PARAM_START:ALPHA_PARAM_END+1]
+        print "  transition parameters", show_parameters[TRANS_PARAM_START:TRANS_PARAM_END+1]
+        print "initial show colors:"
+        print "  ", show_colors
         return
 
     bg_time = bg_parameter_time = mid_time = mid_parameter_time = sparkle_time = sparkle_parameter_time = palette_time = time.time()
@@ -227,90 +458,113 @@ def edm_program(init=False):
         palette_start_time = palette_time
 
         show_parameters[29] = constrained_random_parameter(29)
-        choose_random_colors_from_palette()
+        choose_random_colors_from_edm_palette()
         print "palette changed ", show_colors
 
-# ------------ playa_program() --------------------------------------------------------
-# a partially scripted program for Burning Man 2017
+
+
+# fixme: ART_CAR mode will be set by Jeff's code
+#    if art_car_detected for first ART_CAR_HELLO_DURATION seconds:
+#        art_car_hello = true
+#        art_car = ring number closest to art car, 0 to 72
+#    else if art car sticks around past ART_CAR_HELLO_DURATION seconds:
+#        art_car_hello = false
+#    else if art car has departed
+#        art_car = NO_ART_CAR
+#
+
 
 TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
-MEDITATION_MINUTES = 20
-BURNING_MAN_START = time.mktime(time.strptime('2017-Aug-28 00:00', '%Y-%b-%d %H:%M'))
-BURNING_MAN_END   = time.mktime(time.strptime('2017-Sep-04 00:00', '%Y-%b-%d %H:%M'))
 NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
 
-daynight = None
-def major_playa_mode(when):
-    global daynight
+# ------------------------ set_playa_mode() -------------------------------
+# returns SUNRISE, DAY, SUNSET, NIGHT
 
-    sunrise_time = [1503839940, 1503926400, 1504012860, 1504099320, 1504185780,
-                    1504272240, 1504358700, 1504445160, 1504531620]
-    sunset_time  = [1503887940, 1503974220, 1504060500, 1504146840, 1504233120,
-                    1504319460, 1504405740, 1504492020, 1504578360]
+def set_playa_mode(when, mode):
 
-    meditation = None
-    if sunrise_time[0] <= when and when < sunset_time[len(sunset_time)-1] + meditation_sec:
-        for meditation_start in sunrise_time:
-            meditation_end = meditation_start + meditation_sec
-            if meditation_start <= when and when < meditation_end:
-                meditation = 'sunrise'
-                daynight = 'daytime'
-                break
-        if meditation == None:
-            for meditation_start in sunset_time:
-                meditation_end = meditation_start + meditation_sec
-                if meditation_start <= when and when < meditation_end:
-                    meditation = 'sunset'
-                    daynight = 'nighttime'
-                    break
+    global SUNRISE, DAY, SUNSET, NIGHT, NUM_DAYS
+
+    bm_day_index = int((when - BURNING_MAN_START) / 86400) % NUM_DAYS
+
+    if (mode == NIGHT) and (when >= sunrise_time[bm_day_index]):
+        mode = SUNRISE
+
+    elif (mode == DAY) and (when >= sunset_time[bm_day_index]):
+        mode = SUNSET
+
+    # fixme: Kienen's code will set day and night modes at end of meditations
+    #   i'll set these next 2 on timer for now, but this won't work for playa bc meditations are not same length
+
+    #    if show_mode == SUNRISE:
+    #        play sunrise meditation
+    #    if show_mode == SUNSET:
+    #        play sunset meditation
+    #    if sunrise_meditation_just_ended:
+    #        show_mode = DAY
+    #    if sunset_meditation_just_ended:
+    #        show_mode = NIGHT
+
+    elif (mode == SUNRISE) and (when >= (sunrise_time[bm_day_index] + meditation_sec)):
+        mode = DAY
+
+    elif (mode == SUNSET) and (when >= (sunset_time[bm_day_index] + meditation_sec)):
+        mode = NIGHT
+
     else:
-        daynight = None
-    if meditation == None and daynight == None:	# pretend that daytime is between 6 AM and 6 PM
-        hour = int(time.strftime('%-H', time.localtime(when)))
-        if (6 <= hour and hour < 18):
-            daynight = 'daytime'
-        else:
-            daynight = 'nighttime'
-    return meditation or daynight	# meditation has precedence
+        print 'not at burning man'
+        #exit()
+
+    return mode
+
+
+
+# ------------------------------- playa_program() ----------------------------------
+#  This function initializes the playa program. If time is before burning man start, then it sets variables
+#  so that a 3 minute test program runs
 
 real_start_time = -1.0
 def playa_program(init=False):
-    global real_start_time, meditation_sec, time_compression_factor
+    global real_start_time, meditation_sec, time_compression_factor, show_mode
+    IDEAL_MEDITATION_MINUTES = 20
 
     real_time = time.time()
-    if init:
+    if init:  # run test program
         if real_start_time < 0:
             time_compression_factor = float(NUM_DAYS * 60 * 24) / TEST_CYCLE_MINUTES	# 60*24 == minutes per day
-            meditation_sec = int(MEDITATION_MINUTES * 60 * time_compression_factor / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
+            meditation_sec = int(IDEAL_MEDITATION_MINUTES * 60 * time_compression_factor / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
             real_start_time = real_time
             edm_program(init)	# good enough for now
             show_parameters[29] = 999	# invalid
+            show_mode = SUNRISE
         return
 
     if real_start_time == BURNING_MAN_START:
         virtual_time = real_time	# this is the live show at Burning Man
+        show_mode = SUNRISE
     else:
         if BURNING_MAN_START <= real_time and real_time < BURNING_MAN_END:
             time_compression_factor = 1.0
-            meditation_sec = MEDITATION_MINUTES * 60
+            #meditation_sec = MEDITATION_MINUTES * 60
             print 'Welcome home!'	# Burning Man has just begun!
             real_start_time = BURNING_MAN_START
             virtual_time = real_time
         else:
             virtual_time = BURNING_MAN_START + (real_time - real_start_time) * time_compression_factor
 
-    mode = major_playa_mode(virtual_time)
+    show_mode = set_playa_mode(virtual_time, show_mode)
 
     bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
-    new_palette = bm_day_index % len(palette)
+    new_palette = bm_day_index % len(edm_palettes)
     if show_parameters[29] != new_palette:
         show_parameters[29] = new_palette
-        choose_random_colors_from_palette()
+        choose_new_playa_palette(bm_day_index)
         print 'palette changed', show_colors
 
-    print 'playa time advanced to', time.ctime(virtual_time), 'on day', bm_day_index, 'in', mode
+    print 'playa time advanced to', time.ctime(virtual_time), 'on day', bm_day_index, 'in', show_mode
 
-# ------------------------------------------------- internal_sound_animations_program() -----------------------------------------------
+
+
+# ------------------------------ internal_sound_animations_program() -----------------------------------------------
 # show for when the journey playing its internal audio and the external audio
 # is not past threshold amount aka art car not detected
 
@@ -352,10 +606,18 @@ def drive_internal_animations(init):
             for i in range(0, NUM_PARAMETERS):
                 show_parameters[i] = constrained_random_parameter(i)
             constrain_show()
-            choose_random_colors_from_palette()
+            choose_random_colors_from_edm_palette()
 
-        print "initial show parameters ", show_parameters
-        print "initial show colors" , show_colors
+        print "initial show parameters:"
+        print "  base parameters", show_parameters[BASE_PARAM_START:BASE_PARAM_END+1]
+        print "  mid parameters", show_parameters[MID_PARAM_START:MID_PARAM_END+1]
+        print "  sparkle parameters", show_parameters[SPARKLE_PARAM_START:SPARKLE_PARAM_END+1]
+        print "  7 color, palette change, beat", show_parameters[SEVEN_PAL_BEAT_PARAM_START:SEVEN_PAL_BEAT_PARAM_END+1]
+        print "  alpha parameters", show_parameters[ALPHA_PARAM_START:ALPHA_PARAM_END+1]
+        print "  transition parameters", show_parameters[TRANS_PARAM_START:TRANS_PARAM_END+1]
+        print "initial show colors:"
+        print "  ", show_colors
+        return
 
     progress_audio_queue()
 
