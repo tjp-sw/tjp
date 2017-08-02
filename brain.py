@@ -106,6 +106,12 @@ def do_simple(cmd, param):
     else:
         do_send(None, cmd[0:1])
 
+#play mediation manually
+def do_meditation (ignored, meditation_num):
+    meditation_play = music.manual_meditation(meditation_num)
+    if meditation_play:
+        do_send(None, meditation_play)
+
 control_messages = {
 #    'SetAllAudio':	    do_unimplemented,
 #    'SetAudioCh':	    do_unimplemented,
@@ -127,6 +133,7 @@ control_messages = {
     'reconnect':	(do_simple, None, None),
     'send':		(do_send, None, None),
     'time':		(do_time, None, None),
+    'meditation': (do_meditation, None, None)
     }
 
 # listen for TCP connections on the specified port
@@ -184,6 +191,7 @@ while running:
                 try:
                     command, parameters = string.split(message, None, 1)	# one word separated by whitespace from the parameter(s)
                 except ValueError:				# no whitespace
+                    print "c"
                     command = message
                     parameters = None
                 try:
