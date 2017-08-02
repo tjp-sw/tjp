@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from pymongo.errors import ServerSelectionTimeoutError
 import json
 import parser
 
@@ -77,6 +78,8 @@ def grab_audio_info(colleciton, file_num):
     try:
         audioInfo = decode_custom(files.find_one({"_id": file_num})["AudioFileInfo"])
         return audioInfo
+    except ServerSelectionTimeoutError:
+        print 'mongo database:', sys.exc_value
     except TypeError:
         print "Invalid audio file number... something went pretty wrong!"
 
