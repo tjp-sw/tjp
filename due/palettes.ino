@@ -122,7 +122,7 @@ inline uint8_t get_mid_raw_color(uint8_t color) {
 }
 
 inline uint8_t get_mid_raw_color(uint8_t color, uint16_t pixel) {
-  return get_mid_raw_color(mid_layer[0][pixel]);
+  return get_mid_raw_color(mid_layer[ring][pixel]);
 }
 
 #ifdef DEBUG
