@@ -3,16 +3,25 @@
 
 
 class AudioFileInfo:
-    def __init__(self, name, index, category, events = []):
+    def __init__(self, name, index, category, events = [], animations = []):
         self.name = name
         self.category = category
         self.file_index = index
         self.events = events
         self.event_index = 0
+        self.animations = animations
 
 
     def __repr__(self):
-        return "%s AudioFileInfo '%s' named_category:%s events: [%s]" % (self.file_index, self.name, self.category, self.events)
+        return "%s AudioFileInfo '%s' named_category:%s suitable_animations: [%s] events: [%s]" % (self.file_index, self.name, self.category, self.animations, self.events)
+
+
+    def addAnimation(self, animation):
+        self.animations.append(animation)
+
+
+    def getRandomSuitableAnimation(self):
+        return animations[randint(0, len(animations))]
 
 
     def addEvent(self, event):

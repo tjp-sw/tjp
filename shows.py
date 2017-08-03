@@ -42,6 +42,14 @@ PALETTE_TIME_LIMIT = 7
 # For Lee testing
 # PALETTE_TIME_LIMIT = 5
 
+# constants to protect against too frequent param changes during dynamic show
+BASE_MAIN_ANIMATION_SWITCH_LAG = 15
+BASE_PARAMETER_SWTICH_LAG = 2.9
+MID_MAIN_ANIMATION_SWITCH_LAG =  10
+MID_PARAMETER_SWTICH_LAG = 1.9
+SPARKLE_MAIN_ANIMATION_SWITCH_LAG = 5
+SPARKLE_PARAMETER_SWTICH_LAG = 0.9
+
 BACKGROUND_INDEX = 0
 MIDLAYER_INDEX = 8
 SPARKLE_INDEX = 17
@@ -204,11 +212,11 @@ show_parameters = [0] * NUM_PARAMETERS
 show_colors = [[33 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALETTE)]	# invalid values
 bm_day_index = 0
 
-event_queue = SortedDLL() #create sorted dll to act as the audio event queue (with super duper special powers)
+event_queue = SortedDLL()  # create sorted dll to act as the audio event queue (with super duper special powers)
 NUM_AUDIO_CHANNELS = 7
 current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
-internal_audio_show = False #triggers internal audio animations..
-next_audio_event = AudioEvent(-1, -1, "init")
+internal_audio_show = False  # triggers internal audio animations..
+next_audio_event = AudioEvent(-1, -1, "init", "init")
 
 def constrained_random_parameter(i):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
@@ -594,7 +602,7 @@ def do_internal_sound_animations(audio_msg, init = False):
 def interpret_audio_msg(audio_msg):
     channel_map = get_audio_file_info(audio_msg)
     for channel in channel_map.keys():
-        if current_internal_track_per_channel[channel] > 0: #channel already had a track on it
+        if current_internal_track_per_channel[channel] > 0: # channel already had a track on it
             old_audio = current_internal_track_per_channel[channel]
             remove_audio_events_from_queue(old_audio)
 
@@ -602,9 +610,29 @@ def interpret_audio_msg(audio_msg):
         current_internal_track_per_channel[channel] = audioInfo
         queue_audio_events(audioInfo)
 
+        set_appropriate_layer_main_animation(audioInfo)
+
+
+# set the appropriate layer's main animation based on audioInfo's predetermined suitiable animations
+def set_appropriate_layer_main_animation(audioInfo):
+    global bg_start_time, mid_start_time, sparkle_start_time, palette_start_time
+    suitable_main_animation = audioInfo.getRandomSuitableAnimation()
+
+    if audioInfo.category == "LOW" and time.time() - bg_start_time > BASE_MAIN_ANIMATION_SWITCH_LAG:
+        show_parameters[BASE_PARAM_START] = suitable_main_animation
+        bg_start_time = time.time()
+    elif audioInfo.category == "MID" and time.time() - mid_start_time > MID_MAIN_ANIMATION_SWITCH_LAG:
+        show_parameters[MID_PARAM_START] = suitable_main_animation
+        mid_start_time = time.time()
+    elif audioInfo.category == "HIGH" and time.time() - sparkle_start_time > SPARKLE_MAIN_ANIMATION_SWITCH_LAG:
+        show_parameters[SPARKLE_PARAM_START] = suitable_main_animation
+        sparkle_start_time = time.time()
+
 
 def drive_internal_animations(init):
     global next_audio_event, event_queue
+    global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
+
     if init:
         if show_colors[0] == [33,33,33]:	# invalid values before initialization
             bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
@@ -647,11 +675,11 @@ def drive_internal_animations(init):
             # Selecting a random animaiton paramter to change (exluding the main animations)
             # Maybe should include what band the audio event is in while adding to Mongo so that here I can limit param changes to that layer...
             if next_audio_event.category == "LOW":
-                show_param = random.choice(range(1, 7))
+                show_param = random.choice(range(BASE_PARAM_START + 1, BASE_PARAM_END))
             elif next_audio_event.category == "MID":
-                show_param = random.choice(range(9,16))
+                show_param = random.choice(range(MID_PARAM_START + 1, MID_PARAM_END))
             elif next_audio_event.category == "HIGH":
-                show_param = random.choice(range(18, 27))
+                show_param = random.choice(range(SPARKLE_PARAM_START + 1, SPARKLE_PARAM_END))
 
             old_param_value = show_parameters[show_param]
 
@@ -671,6 +699,8 @@ def drive_internal_animations(init):
                     next_audio_event = None
             except AttributeError:
                 print "event_queue is empty"
+
+        constrain_show()
 
 
 def progress_audio_queue():

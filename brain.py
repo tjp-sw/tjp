@@ -126,7 +126,7 @@ control_messages = {
 #    'SetVolCh':		do_unimplemented,
 #    'MuteAllAudio':	do_unimplemented,
     'SetAnimation':	    (do_show, None, None),
-    'SetDynAnimation':	(do_dyn_show, None, None),
+    'SetDynAnimation':	(do_dyn_show, None),
 #    'AllLEDoff':	    (do_simple, 'program', '0'),
 #    'CheckHandStat':	do_unimplemented,
 #    'CheckAudioIn':	do_unimplemented,
