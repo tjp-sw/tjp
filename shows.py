@@ -109,25 +109,27 @@ show_bounds = [  # order must match show_parameters
     ]
 
 # Pre-defined color palettes for each chakra color
-NUM_BASE_COLORS_PER_FAMILY = 4
-NUM_MID_COLORS_PER_FAMILY = 6
-NUM_SPARKLE_COLORS_PER_FAMILY = 4
+NUM_BASE_COLORS_PER_FAMILY = 7
+NUM_MID_COLORS_PER_FAMILY = 24
+NUM_SPARKLE_COLORS_PER_FAMILY = 7
 
-red_dim_colors = [[255, 0, 0], [250, 0, 0], [245, 0, 0], [240, 0, 0]]
+red_dim_colors = [[20, 0, 0], [13, 3, 5], [17, 2, 0], [13, 6, 4], [14, 4, 5], [15, 6, 6], [13, 7, 5]]
 orange_dim_colors = [[255, 127, 0], [250, 122, 0], [245, 117, 0], [240, 112, 0]]
 yellow_dim_colors = [[255, 255, 0], [250, 250, 0], [245, 245, 0], [240, 240, 0]]
 green_dim_colors = [[0, 255, 0], [0, 250, 0], [0, 245, 0], [0, 240, 0]]
 blue_dim_colors = [[0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240]]
 purple_dim_colors = [[75, 0, 130], [70, 0, 125], [65, 0, 120], [60, 0, 115]]
 white_dim_colors = [[37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45]]
-red_mid_colors = [[255, 0, 0], [250, 0, 0], [245, 0, 0], [240, 0, 0], [235, 0, 0], [230, 0, 0]]
+red_mid_colors = [232, 8, 16], [232, 0, 32], [224, 32, 0], [224, 24, 8], [224, 16, 16], [224, 8, 24], [224, 0, 32],
+[128, 4, 9], [253, 0, 2], [217, 1, 23], [253, 0, 2], [142, 0, 5], [132, 6, 6], [254, 253, 253]
 orange_mid_colors = [[255, 127, 0], [250, 122, 0], [245, 117, 0], [240, 112, 0], [235, 107, 0], [230, 102, 0]]
 yellow_mid_colors = [[255, 255, 0], [250, 250, 0], [245, 245, 0], [240, 240, 0], [235, 235, 0], [230, 230, 0]]
 green_mid_colors = [[0, 255, 0], [0, 250, 0], [0, 245, 0], [0, 240, 0], [0, 235, 0], [0, 230, 0]]
 blue_mid_colors = [[0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240], [0, 0, 235], [0, 0, 230]]
 purple_mid_colors = [[75, 0, 130], [70, 0, 125], [65, 0, 120], [60, 0, 115], [55, 0, 110], [50, 0, 105]]
 white_mid_colors = [[37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45], [27, 18, 50], [22, 13, 45]]
-red_bright_colors = [[255, 0, 0], [250, 0, 0], [245, 0, 0], [240, 0, 0]]
+red_bright_colors = [[168, 39, 64], [174, 54, 71], [180, 52, 63], [189, 35, 41], [194, 41, 41],
+[186, 65, 60], [183, 91, 82]]
 orange_bright_colors = [[255, 127, 0], [250, 122, 0], [245, 117, 0], [240, 112, 0]]
 yellow_bright_colors = [[255, 255, 0], [250, 250, 0], [245, 245, 0], [240, 240, 0]]
 green_bright_colors = [[0, 255, 0], [0, 250, 0], [0, 245, 0], [0, 240, 0]]
@@ -319,6 +321,7 @@ def get_random_color(day, desired_period):
 def choose_new_playa_palette(today):
     global SUNRISE, DAY, SUNSET, NIGHT
 
+    print "in choose new playa palette show_mode = ", show_mode
     #  need to use today
     if (show_mode == SUNRISE) or (show_mode == DAY):
         # use only day's chakra colors
