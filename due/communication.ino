@@ -514,7 +514,7 @@ inline void process_commands(String& input) {
   }
 }
 
-#ifdef I_AM_NODE_MEGA
+#if defined(I_AM_NODE_MEGA) || defined(I_AM_DUE)
 inline void do_mate_input() {
   int len = NodeMate.available();
   if (len > 0) {
@@ -529,7 +529,7 @@ inline void do_mate_input() {
     process_commands(mate_data);
   }
 }
-#endif // I_AM_NODE_MEGA
+#endif // I_AM_NODE_MEGA || I_AM_DUE
 
 inline void do_heartbeat() {
   if (node_number == 255 && loop_start_time_msec > last_announcement_msec + 1000) {
@@ -561,7 +561,10 @@ inline void do_communication() {
   #endif // I_AM_NODE_MEGA
 
   #ifdef I_AM_DUE
-    send_audio_out();
+    do_mate_input();
+    if(node_number < NUM_NODES) {
+      send_audio_out();
+    }
   #endif
 
   do_heartbeat();

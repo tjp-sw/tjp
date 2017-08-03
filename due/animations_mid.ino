@@ -223,7 +223,7 @@ inline void set_fire_palette() {
   target = steps[0];
   for(uint8_t i = 0; i < 90; i++) {
     start = CRGB::Black;
-    nblend(start, target, 255 * i / 90);
+    tjp_nblend(start, target, 255 * i / 90);
     mid_palette.entries[i] = start;
   }
 
@@ -231,7 +231,7 @@ inline void set_fire_palette() {
   target = steps[1];
   for(uint8_t i = 90; i < 160; i++) {
     start = steps[0];
-    nblend(start, target, 255 * (i-90) / 70);
+    tjp_nblend(start, target, 255 * (i-90) / 70);
     mid_palette.entries[i] = start;
   }
 
@@ -239,7 +239,7 @@ inline void set_fire_palette() {
   target = steps[2];
   for(uint8_t i = 160; i < 240; i++) {
     start = steps[1];
-    nblend(start, target, 255 * (i-160) / 80);
+    tjp_nblend(start, target, 255 * (i-160) / 80);
     mid_palette.entries[i] = start;
   }
 
@@ -247,7 +247,7 @@ inline void set_fire_palette() {
   target = CRGB(255, 255, 255);
   for(uint16_t i = 240; i < 256; i++) {
     start = steps[2];
-    nblend(start, target, 255 * (i-240) / 16);
+    tjp_nblend(start, target, 255 * (i-240) / 16);
     mid_palette.entries[i] = start;
   }
 }
@@ -499,8 +499,8 @@ void init_arrow() {
   uint8_t ring_spacing = 5;
   uint8_t pixel_spacing = 3; //transparent pixels between arrows
   uint16_t narrow = LEDS_PER_RING / pixel_spacing; //408 / 3 = 136
-  uint8_t maxbrite = 7; //max value of last argument to get_mid_color: brightness == maxbrite 
-  uint8_t maxdim = 12;
+  uint8_t maxbrite = NUM_MID_DIMMING_LEVELS; //7; //max value of last argument to get_mid_color: brightness == maxbrite 
+  uint8_t maxdim = MID_GRADIENT_SIZE; //12;
   for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
     for(uint8_t a = 0; a < narrow; a++) {
       uint16_t pixel = a * pixel_spacing;
@@ -554,12 +554,13 @@ void wave() {
     //Serial.println();
 	  //move wave for next loop
 	  if( mid_count % wspeed[i%nwave] == 0 )
-	    start_ring[i%nwave] = (start_ring[i%nwave] < NUM_RINGS-1 ? ++start_ring[i%nwave] : 0);
+	    start_ring[i%nwave] = (start_ring[i%nwave] < NUM_RINGS-1 ? start_ring[i%nwave]+1 : 0);
   }
   
 }
 
 
+//-------------------------------- RADIATION SYMBOL ---------------------------------
 void init_radiation_symbol() {
   for(uint8_t ring = 0; ring < NUM_RINGS; ring++) {
     uint16_t pixel = 0;
@@ -582,7 +583,7 @@ void radiation_symbol() {
 }
 
 
-
+//-------------------------------- ROTATING RINGS ---------------------------------
 void ring_intersecting_periods() {
   static uint8_t ring[6];
   if(mid_count == 0) {
@@ -640,30 +641,35 @@ void ring_intersecting_periods() {
   }
 }
 
+
+//-------------------------------- SQUARE PATTERN ---------------------------------
 void square_pattern() {
   const uint8_t height = 24;
-  const uint8_t width = 6;
+  const uint8_t width = 12;
 
   static uint8_t current_height1 = 0;
   static uint8_t current_width1 = 0;
   static uint8_t current_height2 = 0;
   static uint8_t current_width2 = 0;
+
+  uint8_t vertical_color = get_mid_color(0);
+  uint8_t horizontal_color = get_mid_color(MID_NUM_COLORS-1);
   
   clear_mid_layer();
 
   // Draw vertical lines
   for(uint8_t ring = current_width1; ring < NUM_RINGS; ring += width) {
-    if(ring > node_number*RINGS_PER_NODE && ring < (node_number+1)*RINGS_PER_NODE) {
+    if(ring >= node_number*RINGS_PER_NODE && ring < (node_number+1)*RINGS_PER_NODE) {
       for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
-        mid_layer[ring][pixel] = current_palette[3];
+        mid_layer[ring][pixel] = vertical_color;
       }
     }
   }
 
   for(uint8_t ring = current_width2; ring < NUM_RINGS; ring += width) {
-    if(ring > node_number*RINGS_PER_NODE && ring < (node_number+1)*RINGS_PER_NODE) {
+    if(ring >= node_number*RINGS_PER_NODE && ring < (node_number+1)*RINGS_PER_NODE) {
       for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
-        mid_layer[ring][pixel] = current_palette[3];
+        mid_layer[ring][pixel] = vertical_color;
       }
     }
   }
@@ -671,20 +677,104 @@ void square_pattern() {
   // Draw horizontal lines at 0, 24, 48, 72, ... <408
   for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
     for(uint16_t pixel = current_height1; pixel < LEDS_PER_RING; pixel += height) {
-      uint8_t phase = pixel % width;
-      if(phase == current_width1 || phase == current_width2) { mid_layer[ring][pixel] = WHITE; }
-      else { mid_layer[ring][pixel] = current_palette[2]; }
+      uint8_t phase = ring % width;
+      if(phase == current_width1 || phase == current_width2) { mid_layer[ring][pixel] = BLACK; }
+      else { mid_layer[ring][pixel] = horizontal_color; }
     }
     for(uint16_t pixel = current_height2; pixel < LEDS_PER_RING; pixel += height) {
-      uint8_t phase = pixel % width;
-      if(phase == current_width1 || phase == current_width2) { mid_layer[ring][pixel] = WHITE; }
-      else { mid_layer[ring][pixel] = current_palette[2]; }
+      uint8_t phase = ring % width;
+      if(phase == current_width1 || phase == current_width2) { mid_layer[ring][pixel] = BLACK; }
+      else { mid_layer[ring][pixel] = horizontal_color; }
     }
   }
 
   if(++current_height1 == height) { current_height1 = 0; }
   if(--current_height2 == 255) { current_height2 = height - 1; }
-  if(mid_count % (height/width) == 0) { if(++current_width1 == width) { current_width1 = 0; } }
-  if(mid_count % (height/width) == 0) { if(--current_width2 == 255) { current_width2 = width; } }
+  if(mid_count % (height/width) == 0) {
+    if(++current_width1 == width) { current_width1 = 0; }
+    if(--current_width2 == 255) { current_width2 = width-1; }
+  }
+}
+
+void square_pattern2() {
+  const uint8_t height = 34;
+  const uint8_t width = 12;
+
+  static bool moving_height = true;
+
+  static uint8_t current_height1 = 0;
+  static uint8_t current_width1 = 0;
+  static uint8_t current_height2 = 0;
+  static uint8_t current_width2 = 0;
+
+  static uint8_t vert_col_index1 = 0;
+  static uint8_t vert_col_index2 = 1 % MID_NUM_COLORS;
+  static uint8_t hor_col_index1 = 2 % MID_NUM_COLORS;
+  static uint8_t hor_col_index2 = 0;
+  
+  uint8_t vertical_color1 = vert_col_index1 == MID_NUM_COLORS ? BLACK : get_mid_color(vert_col_index1);
+  uint8_t vertical_color2 = vert_col_index2 == MID_NUM_COLORS ? BLACK : get_mid_color(vert_col_index2);
+  uint8_t horizontal_color1 = hor_col_index1 == MID_NUM_COLORS ? BLACK : get_mid_color(hor_col_index1);
+  uint8_t horizontal_color2 = hor_col_index2 == MID_NUM_COLORS ? BLACK : get_mid_color(hor_col_index2);
+  
+  clear_mid_layer();
+
+  // Draw vertical lines
+  for(uint8_t ring = current_width1; ring < NUM_RINGS; ring += width) {
+    if(ring >= node_number*RINGS_PER_NODE && ring < (node_number+1)*RINGS_PER_NODE) {
+      for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+        mid_layer[ring][pixel] = vertical_color1;
+      }
+    }
+  }
+
+  for(uint8_t ring = current_width2; ring < NUM_RINGS; ring += width) {
+    if(ring >= node_number*RINGS_PER_NODE && ring < (node_number+1)*RINGS_PER_NODE) {
+      for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+        mid_layer[ring][pixel] = vertical_color2;
+      }
+    }
+  }
+
+  // Draw horizontal lines at 0, 24, 48, 72, ... <408
+  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+    for(uint16_t pixel = current_height1; pixel < LEDS_PER_RING; pixel += height) {
+      uint8_t phase = ring % width;
+      if(phase == current_width1 || phase == current_width2) { mid_layer[ring][pixel] = BLACK; }
+      else { mid_layer[ring][pixel] = horizontal_color1; }
+    }
+    for(uint16_t pixel = current_height2; pixel < LEDS_PER_RING; pixel += height) {
+      uint8_t phase = ring % width;
+      if(phase == current_width1 || phase == current_width2) { mid_layer[ring][pixel] = BLACK; }
+      else { mid_layer[ring][pixel] = horizontal_color2; }
+    }
+  }
+
+  if(moving_height) {
+    if(++current_height1 == height) { current_height1 = 0; }
+    if(--current_height2 == 255) { current_height2 = height - 1; }
+    if(current_height1 == current_height2) {
+      moving_height = false;
+      hor_col_index1 = random8(MID_NUM_COLORS + 1);
+      vert_col_index2 = random8(MID_NUM_COLORS + 1);
+      if(hor_col_index2 == MID_NUM_COLORS && vert_col_index2 == MID_NUM_COLORS) {
+        hor_col_index1 = random8(MID_NUM_COLORS);
+      }
+    }
+  }
+  else {
+    if(mid_count % (height/width) == 0) {
+      if(++current_width1 == width) { current_width1 = 0; }
+      if(--current_width2 == 255) { current_width2 = width-1; }
+      if(current_width1 == current_width2) {
+        moving_height = true;
+        vert_col_index1 = random8(MID_NUM_COLORS + 1);
+        hor_col_index2 = random8(MID_NUM_COLORS + 1);
+        if(hor_col_index2 == MID_NUM_COLORS && vert_col_index2 == MID_NUM_COLORS) {
+          hor_col_index2 = random8(MID_NUM_COLORS);
+      }
+      }
+    }
+  }
 }
 

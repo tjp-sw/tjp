@@ -62,7 +62,7 @@ inline void write_pixel_data() {
         uint8_t blending;
         if(override_default_blending) { blending = color_index; }
         else { blending = get_mid_alpha(ring, pixel); }
-        nblend(leds[pixel_offset], mid_pixel_color, blending);
+        tjp_nblend(leds[pixel_offset], mid_pixel_color, blending);
       }
 
       // Blend in sparkle layer
@@ -70,7 +70,7 @@ inline void write_pixel_data() {
       if(color_index != 0) {
         CRGB sparkle_pixel_color = ColorFromPalette(sparkle_palette, color_index);
         uint8_t blending = get_sparkle_alpha(ring, pixel);
-        nblend(leds[pixel_offset], sparkle_pixel_color, blending);
+        tjp_nblend(leds[pixel_offset], sparkle_pixel_color, blending);
       }
 
       pixel_offset += increment_amount;

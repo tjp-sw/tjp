@@ -39,10 +39,10 @@ inline void manually_set_animation_params() {             //
                                                           //
   // Set to OFF to disable a layer during CYCLE'ing.      //
   // Use NONE to signify a layer that is off temporarily  //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  BASE_ANIMATION = OFF;                                  //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK, LEE_PICK_HSV
-  MID_ANIMATION = RADIATION;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  SPARKLE_ANIMATION = OFF;                               //
-  EDM_ANIMATION = DEBUG_MODE;                                    //
+  BASE_ANIMATION = NONE;                                  //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK, LEE_PICK_HSV
+  MID_ANIMATION = SQUARE2;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  SPARKLE_ANIMATION = NONE;                               //
+  EDM_ANIMATION = OFF;                                    //
                                                           //
   BASE_COLOR_THICKNESS = 255;                             //
   BASE_BLACK_THICKNESS = 255;                             //
@@ -732,6 +732,18 @@ inline void draw_current_mid(uint8_t min_ring, uint8_t max_ring) {
       radiation_symbol();
       break;
 
+    case SQUARE:
+      square_pattern();
+      break;
+
+    case SQUARE2:
+      square_pattern2();
+      break;
+
+    case WAVE:
+      wave();
+      break;
+
     default:
       break;
   }
@@ -885,6 +897,7 @@ inline void init_mid_animation() {
       break;
 
     case RADIATION:
+      clear_mid_layer();
       init_radiation_symbol();
       break;
 

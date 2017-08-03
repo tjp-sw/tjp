@@ -13,39 +13,49 @@ inline uint8_t get_mid_color(uint8_t color0, uint8_t color1, uint8_t blending, u
     if(dimming >= NUM_MID_DIMMING_LEVELS) Serial.println("Error in get_mid_color(), dimming == " + String(dimming));
   #endif
 
+  return get_mid_color(color0, color1, blending) + dimming;
+}
+inline uint8_t get_mid_color(uint8_t color0, uint8_t color1, uint8_t blending) {
+  #ifdef DEBUG
+    if(color0 > 2) Serial.println("Error in get_mid_color(), color0 == " + String(color0));
+    if(color1 > 2) Serial.println("Error in get_mid_color(), color1 == " + String(color1));
+    if(blending >= MID_GRADIENT_SIZE) Serial.println("Error in get_mid_color(), blending == " + String(blending));
+  #endif
+  
   if(color0 == 0) {
     if(color1 == 1) {
-      return 4 + NUM_MID_DIMMING_LEVELS*blending + dimming;
+      return 4 + NUM_MID_DIMMING_LEVELS*blending;
     }
     else {
-      return 4 + NUM_MID_DIMMING_LEVELS*(MID_GRADIENT_SIZE + blending) + dimming;
+      return 4 + NUM_MID_DIMMING_LEVELS*(MID_GRADIENT_SIZE + blending);
     }
   }
   else if(color0 == 1) {
     if(color1 == 0) {
-      return 4 + NUM_MID_DIMMING_LEVELS*(MID_GRADIENT_SIZE - 1 - blending) + dimming;
+      return 4 + NUM_MID_DIMMING_LEVELS*(MID_GRADIENT_SIZE - 1 - blending);
     }
     else {
-      return 4 + NUM_MID_DIMMING_LEVELS*(2*MID_GRADIENT_SIZE + blending) + dimming;
+      return 4 + NUM_MID_DIMMING_LEVELS*(2*MID_GRADIENT_SIZE + blending);
     }
   }
   else {
     if(color1 == 0) {
-      return 4 + NUM_MID_DIMMING_LEVELS*(2*MID_GRADIENT_SIZE - 1 - blending) + dimming;
+      return 4 + NUM_MID_DIMMING_LEVELS*(2*MID_GRADIENT_SIZE - 1 - blending);
     }
     else {
-      return 4 + NUM_MID_DIMMING_LEVELS*(3*MID_GRADIENT_SIZE - 1 - blending) + dimming;
+      return 4 + NUM_MID_DIMMING_LEVELS*(3*MID_GRADIENT_SIZE - 1 - blending);
     }
   }
 }
-inline uint8_t get_mid_color(uint8_t color0, uint8_t color1, uint8_t blending) {
-  return get_mid_color(color0, color1, blending, 0);
-}
 inline uint8_t get_mid_color(uint8_t color0, uint8_t dimming) {
-  return get_mid_color(color0, color0, 0, dimming);
+  #ifdef DEBUG
+    if(color0 > 2) Serial.println("Error in get_mid_color(), color0 == " + String(color0));
+    if(dimming >= NUM_MID_DIMMING_LEVELS) Serial.println("Error in get_mid_color(), dimming == " + String(dimming));
+  #endif
+  return dimming + get_mid_color(color0);
 }
 inline uint8_t get_mid_color(uint8_t color0) {
-  return get_mid_color(color0, color0, 0, 0);
+  return color0 == 0 ? 4 : color0 == 1 ? 4 + MID_GRADIENT_SIZE*NUM_MID_DIMMING_LEVELS : 4 + (2*MID_GRADIENT_SIZE-1)*NUM_MID_DIMMING_LEVELS;
 }
 
 inline uint8_t get_sparkle_color(uint8_t color, uint8_t dimming) {
@@ -54,10 +64,14 @@ inline uint8_t get_sparkle_color(uint8_t color, uint8_t dimming) {
     if(dimming >= NUM_SPARKLE_DIMMING_LEVELS) Serial.println("Error in get_sparkle_color(), dimming == " + String(dimming));
   #endif
 
-  return 2 + NUM_SPARKLE_DIMMING_LEVELS*color + dimming;
+  return get_sparkle_color(color) + dimming;
 }
 inline uint8_t get_sparkle_color(uint8_t color) {
-  return get_sparkle_color(color, 0);
+  #ifdef DEBUG
+    if(color > 1) Serial.println("Error in get_sparkle_color(), color == " + String(color));
+  #endif
+  
+  return 2 + NUM_SPARKLE_DIMMING_LEVELS*color;
 }
 
 
@@ -176,15 +190,15 @@ inline void create_mid_palette(CRGBPalette256* new_palette, CRGB color0, CRGB co
     // 12 color0 -> color1, 12 color0 -> color2, 12 color1 -> color2
     if(i < MID_GRADIENT_SIZE) {
       temp = color0;
-      nblend(temp, color1, 255 * i / (MID_GRADIENT_SIZE-1));
+      tjp_nblend(temp, color1, 255 * i / (MID_GRADIENT_SIZE-1));
     }
     else if(i < 2*MID_GRADIENT_SIZE) {
       temp = color0;
-      nblend(temp, color2, 255 * (i-MID_GRADIENT_SIZE) / (MID_GRADIENT_SIZE-1));
+      tjp_nblend(temp, color2, 255 * (i-MID_GRADIENT_SIZE) / (MID_GRADIENT_SIZE-1));
     }
     else {
       temp = color1;
-      nblend(temp, color2, 255 * (i-2*MID_GRADIENT_SIZE) / (MID_GRADIENT_SIZE-1));
+      tjp_nblend(temp, color2, 255 * (i-2*MID_GRADIENT_SIZE) / (MID_GRADIENT_SIZE-1));
     }
 
     for(uint8_t j = 0; j < NUM_MID_DIMMING_LEVELS; j++) {
