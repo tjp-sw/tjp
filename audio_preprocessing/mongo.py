@@ -18,12 +18,8 @@ def encode_events(events):
     return output
 
 
-def encode_custom_event(event):
-    return {"_type:": "AudioEvent", "time": event.time, "magnitude": event.magnitude, "kind": event.kind}
-
-
 def decode_custom_event(document):
-    return AudioEvent(document["time"], document["magnitude"], document["kind"])
+    return AudioEvent(document["time"], document["magnitude"], document["kind"], document["category"])
 
 
 def encode_custom(audioInfo):

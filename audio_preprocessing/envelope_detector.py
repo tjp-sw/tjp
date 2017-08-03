@@ -7,7 +7,7 @@ import sys
 
 #filein='/Users/raysmets/Downloads/tjp_songs/38_DAY1_MID_rain-on-window-sill-#2.wav'
 filein = sys.argv[1]
-print "anayalzing " + str(sys.argv[1])
+print "analyzing " + str(sys.argv[1])
 
 def max_filter1d_valid(a, W):
     hW = (W-1)//2 # Half window size
@@ -18,7 +18,7 @@ def down_avg(arr, n):
     return np.mean(np.array( arr[:end] ).reshape(-1, n), 1)
 
 def find_env_outliers( filein,
-						stdevs = 4.5,
+						stdevs = 3.0,
 						histrs = 1,
 						dwn_samp = 1,
 						env_buf_size = .05 # 50 ms buffer for envelope

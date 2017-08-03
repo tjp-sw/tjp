@@ -1,5 +1,5 @@
 #!/bin/bash
-FILES=/Users/raysmets/Downloads/tjp_songs/*
+FILES=/Users/raysmets/Downloads/Processed/*
 for f in $FILES
 do
   #cat $f

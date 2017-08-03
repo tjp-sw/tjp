@@ -2,6 +2,7 @@
 import numpy,time
 from random import randint
 from random import sample
+from random import choice
 from dataBaseInterface import DataBaseInterface
 from audioInfo import AudioEvent, AudioFileInfo
 from audio_event_queue import SortedDLL
@@ -589,25 +590,18 @@ def do_internal_sound_animations(audio_msg, init = False):
     #pulls from event_queue
     drive_internal_animations(init)
 
-def progress_audio_queue():
-    global event_queue, next_audio_event
-    # ensure not looking at events that have already passed
-    while True:
-        try:
-            next_audio_event_node = event_queue.peek()
-            next_audio_event = next_audio_event_node.value
-            # print "next audio event " + str(next_audio_event)
-        except:
-            # print "event_queue is empty"
-            break
 
-        stale = next_audio_event.time <= timeMs() - 1000
-        # print "diff event - now = " + str(next_audio_event.time - timeMs())
-        if stale:
-            print "it's " + str(timeMs()) + " stale event " + str(next_audio_event) + " popping!"
-            event_queue.remove(next_audio_event.time)
-        else:
-            break
+def interpret_audio_msg(audio_msg):
+    channel_map = get_audio_file_info(audio_msg)
+    for channel in channel_map.keys():
+        if current_internal_track_per_channel[channel] > 0: #channel already had a track on it
+            old_audio = current_internal_track_per_channel[channel]
+            remove_audio_events_from_queue(old_audio)
+
+        audioInfo = channel_map[channel]
+        current_internal_track_per_channel[channel] = audioInfo
+        queue_audio_events(audioInfo)
+
 
 def drive_internal_animations(init):
     global next_audio_event, event_queue
@@ -646,16 +640,29 @@ def drive_internal_animations(init):
 
         if valid_time: #valid 'next' event
             magnitude = next_audio_event.magnitude
-            show_param = randint(0, 27)
+
+            #selecting any base, mind, sparkler layer param - very rudimentary.
+            # show_param = randint(0, 27)
+
+            # Selecting a random animaiton paramter to change (exluding the main animations)
+            # Maybe should include what band the audio event is in while adding to Mongo so that here I can limit param changes to that layer...
+            if next_audio_event.category == "LOW":
+                show_param = random.choice(range(1, 7))
+            elif next_audio_event.category == "MID":
+                show_param = random.choice(range(9,16))
+            elif next_audio_event.category == "HIGH":
+                show_param = random.choice(range(18, 27))
+
             old_param_value = show_parameters[show_param]
+
             if next_audio_event.kind == "freqband":
                 new_param_value = constrained_weighted_parameter(show_param, magnitude)
                 print "Frq event [" + str(next_audio_event) +"]: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
 
             elif next_audio_event.kind == "amplitude":
                 #TODO make this actually intelligent
-                new_param_value = constrained_random_parameter(show_param)
-                print "Amp event: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
+                new_param_value = constrained_weighted_parameter(show_param, magnitude)
+                print "Amp event: [" + str(next_audio_event) +"]: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
 
             try:
                 if event_queue.size > 0:
@@ -665,29 +672,44 @@ def drive_internal_animations(init):
             except AttributeError:
                 print "event_queue is empty"
 
-#TODO make this actually intelligent
+
+def progress_audio_queue():
+    global event_queue, next_audio_event
+    # ensure not looking at events that have already passed
+    while True:
+        try:
+            next_audio_event_node = event_queue.peek()
+            next_audio_event = next_audio_event_node.value
+            # print "next audio event " + str(next_audio_event)
+        except:
+            # print "event_queue is empty"
+            break
+
+        stale = next_audio_event.time <= timeMs() - 1000
+        # print "diff event - now = " + str(next_audio_event.time - timeMs())
+        if stale:
+            print "it's " + str(timeMs()) + " stale event " + str(next_audio_event) + " popping!"
+            event_queue.remove(next_audio_event.time)
+        else:
+            break
+
+
+#TODO make this more intelligent
 def constrained_weighted_parameter(i, magnitude):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
         new_parameter = show_bounds[i][randint(0,1)]	# no zero value
     else:
         old_parameter = show_parameters[i]
-        new_parameter = old_parameter + magnitude
+        up_down = randint(0, 1)
+        if up_down == 1:
+            new_parameter = old_parameter + quantify_magnitude_impact(magnitude)
+        else:
+            new_parameter = old_parameter - quantify_magnitude_impact(magnitude)
+
     # change to unsigned int for passing to due
     if new_parameter < 0:
         new_parameter += 256
     return new_parameter
-
-
-def interpret_audio_msg(audio_msg):
-    channel_map = get_audio_file_info(audio_msg)
-    for channel in channel_map.keys():
-        if current_internal_track_per_channel[channel] > 0: #channel already had a track on it
-            old_audio = current_internal_track_per_channel[channel]
-            remove_audio_events_from_queue(old_audio)
-
-        audioInfo = channel_map[channel]
-        current_internal_track_per_channel[channel] = audioInfo
-        queue_audio_events(audioInfo)
 
 
 # RJS I don't like how this hard coded... if the audio contorl message changes this needs to as well.
@@ -723,6 +745,25 @@ def queue_audio_events(audioInfo):
             node = event_queue.add(event)
     else:
         print "seems like it was a database miss... this will happen while we don't have all the auido files"
+
+
+# quantifying the standard deviation aka magnitude of event into show param quantities
+def quantify_magnitude_impact(magnitude):
+    magnitude = float(magnitude)
+
+    if magnitude > 5.5:
+        return randint(26,30)
+    elif magnitude > 5.0:
+        return randint(21,25)
+    elif magnitude > 4.5:
+        return randint(16,20)
+    elif magnitude > 4.0:
+        return randint(11,15)
+    elif magnitude > 3.5:
+        return randint(6,10)
+    else:
+        return randint(1,5)
+
 
 def timeMs():
     return int(round(time.time() * 1000))

@@ -15,10 +15,10 @@ def parseProcessedAudioData():
     name = ""
     file_index = ""
     category = ""
-    for line in open("sample_processing_new", 'r'):
+    for line in open("sample_processing_new_std_3", 'r'):
         info = line.split()
         if(len(info) > 1):
-            if(info[0] == "anayalzing"):
+            if(info[0] == "analyzing"):
                 if pack:
                     ai = AudioFileInfo(name, file_index, category, events)
                     fileInfos.append(ai)
@@ -28,19 +28,22 @@ def parseProcessedAudioData():
                     events = []
 
                 #print line
-                name = info[1].split("/")
-                #print name[5]
-                ids = name[5].split("_")
-                #print ids[0] + " " + ids[2]
-                name = name[5]
-                file_index = ids[0]
-                category = ids[2]
-                pack = True
+                try:
+                    name = info[1].split("/")
+                    #print name[5]
+                    ids = name[5].split("_")
+                    #print ids[0] + " " + ids[2]
+                    name = name[5]
+                    file_index = ids[0]
+                    category = ids[2]
+                    pack = True
+                except IndexError:
+                    print str(name) + " isn't an audio file."
 
             elif(info[0] == "EVENT:"):
                 # print line
                 time = info[1].split(".")
-                event = AudioEvent(str(int(time[0]) * 1000 + int(time[1])), info[3], "amplitude")
+                event = AudioEvent(str(int(time[0]) * 1000 + int(time[1])), info[3], "amplitude", category)
                 # print event
                 events.append(event)
 
