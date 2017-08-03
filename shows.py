@@ -64,7 +64,7 @@ show_bounds = [  # order must match show_parameters
         [0, 255], # base color thickness
         [0, 255], # base black thickness
         [-128,127], # base ring offset
-        [-1, 1], # base intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
+        [-1, 2], # base intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
         [0, 255], # base intra ring speed
         [-1,1], # base inter ring motion: -1 = CCW, 0 = none, 1 = CW
         [0,255], # base inter ring speed
@@ -74,7 +74,7 @@ show_bounds = [  # order must match show_parameters
         [0, 255],  # mid color thickness
         [0, 255],  # mid black thickness
         [-128,127],  # mid ring offset
-        [-1, 1],  # mid intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
+        [-1, 2],  # mid intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
         [0, 255],  # mid intra ring speed
         [-1, 1],  # mid inter ring motion: -1 = CCW, 0 = none, 1 = CW
         [0, 255],  # mid inter ring speed
@@ -82,14 +82,14 @@ show_bounds = [  # order must match show_parameters
         [0, NUM_SPARKLE_ANIMATIONS],  # SPARKLE_INDEX, which sparkle animation to use
         [2, 200],  # sparkle portion
         [0, 255],  # sparkle color thickness
-        [-1, 1],  # sparkle intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
+        [-1, 2],  # sparkle intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
         [0, 255],  # sparkle intra ring speed
         [-1, 1],  # sparkle inter ring motion: -1 = CCW, 0 = none, 1 = CW
         [0, 255],  # sparkle inter ring speed
         [0, 255], # sparkle min dim
         [0, 255], # sparkle max dim
         [0, 255], # sparkle range
-        [0, 50], # sparkle spawn frequency, 0 == off entirely (Functions as a boolean when 0|1)
+        [0, 255], # sparkle spawn frequency, 0 == off entirely (Functions as a boolean when 0|1)
         # show bounds 28 through 28 concern 7-color edm animations
         [0, NUM_7_COLOR_ANIMATIONS],  # which 7 color animation to play, show bound 28
         #show bounds 29 through 32 recently added (maybe need to be renumbered)
@@ -197,7 +197,7 @@ auto_show = None
 last_show_change_sec = 0.0
 
 show_parameters = [0] * NUM_PARAMETERS
-show_colors = [[333 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALETTE)]	# invalid values
+show_colors = [[33 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALETTE)]	# invalid values
 
 event_queue = SortedDLL() #create sorted dll to act as the audio event queue (with super duper special powers)
 NUM_AUDIO_CHANNELS = 7
