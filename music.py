@@ -1,11 +1,7 @@
 import random, struct
 from datetime import datetime, timedelta, time
 import sounds, shows
-
-SUNRISE = 0
-DAY = 1
-SUNSET = 2
-NIGHT = 3
+import time as epoch_time
 
 # Just random....this signal is coming from the touchpad which is not written yet.
 def panel_touched():
@@ -18,9 +14,18 @@ def manual_meditation(med):
     meditation_num = int(med)
     if meditation_num in range(1,14):
         Music.meditation = True
+        if (meditation_num % 2):  # odd
+            shows.show_mode = shows.SUNRISE
+        else:
+            shows.show_mode = shows.SUNSET
         return play([0, 4000+meditation_num])
     return None
 
+def check_meditation(node=0):
+    return send_music(node, 4)
+
+# --------------------Receives information from the Tsunami--------------------------------
+# Returns True if the tsunami is playing the looping drone, False if it is not.
 def status_update(message):
     message = message[1:]
     if message[0] == 'E':
@@ -29,10 +34,11 @@ def status_update(message):
         if int(message[1:]) > 4000:
             print "Meditation Finished"
             Music.meditation = False
-            if datetime.now().time() > time(hour=12):
+            if datetime.now().time() > time(hour=19):
                 shows.show_mode = shows.NIGHT
             else:
                 shows.show_mode = shows.DAY
+            return True
     elif message[0] == 'N':
         print "Need Drone"
         return True
@@ -41,6 +47,7 @@ def status_update(message):
     return False
 
 
+# -------------------Formats information to send to the Tsunami---------------------------
 def send_music(node=0, command=1, field2=0, channels=None):
     empty_msg = True
     if command == 3:
@@ -58,9 +65,6 @@ def send_music(node=0, command=1, field2=0, channels=None):
         return struct.pack('>cB', ctrl_msg[0:1], len(ctrl_msg[1:])) + ctrl_msg[1:]
     return None
 
-
-def check_meditation(node=0):
-    return send_music(node, 4)
 
 def check_drone(node=0):
     return send_music(node, 5)
@@ -95,6 +99,7 @@ class Music:
 
     def tick(self, silent=False):
         now_time = datetime.now()
+        bm_day = now_time.weekday()
         if Music.meditation:
             if self.checked_meditation <= (now_time - timedelta(minutes=1)):
                 self.checked_meditation = now_time
@@ -103,15 +108,27 @@ class Music:
         if silent:
             return None
 
-        this_meditation = sounds.play_meditation()
-        if this_meditation is not None:
+        this_meditation = sounds.play_meditation(now_time)
+        if this_meditation is None:
+            Music.meditation = False
+            if datetime.fromtimestamp(shows.sunrise_time[ bm_day +1 ]) >= now_time >= \
+               datetime.fromtimestamp(shows.sunrise_time[ bm_day +1 ]):
+                shows.show_mode = shows.DAY
+            else:
+                shows.show_mode = shows.NIGHT
+        else:
             Music.meditation = True
+            if this_meditation % 2: # odd
+                shows.show_mode = shows.SUNRISE
+            else:  # even
+                shows.show_mode = shows.SUNSET
             return play([0, this_meditation])
 
         msg = [0] * 4
-        if self.played_low != datetime.today().weekday():  # Todo: change drone after meditation
+        if self.played_low != bm_day:  # Todo: change drone after meditation
             low = sounds.find_low()
-            self.played_low = datetime.today().weekday()
+            self.played_low = bm_day
+
             self.drone = now_time
             msg[0] = low
         if self.drone < now_time - timedelta (minutes= 1):

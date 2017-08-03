@@ -1,32 +1,33 @@
 import random, itertools
 from datetime import datetime, time, timedelta
+import shows
 
 
 # Stores Music library and returns appropriate songs
-RED_LOW = [20]
-RED_MID = range(1, 60)
-RED_HIGH = range(61, 85)
-ORANGE_LOW = range(1, 77)
-ORANGE_MID = range(1, 77)
-ORANGE_HIGH = range(1, 77)
-YELLOW_LOW = range(1, 85)
-YELLOW_MID = [5]
-YELLOW_HIGH = [6]
-GREEN_LOW = []
-GREEN_MID = [7]
-GREEN_HIGH = [8]
-BLUE_LOW = range(2500, 2512)
-BLUE_MID = range(500, 587)
-BLUE_HIGH = range(1500, 1512)
-PURPLE_LOW = []
-PURPLE_MID = [11]
-PURPLE_HIGH = [12]
-WHITE_LOW = []
-WHITE_MID = [13]
-WHITE_HIGH = [14]
-MIDS = [RED_MID, ORANGE_MID, YELLOW_MID, GREEN_MID, BLUE_MID, PURPLE_MID, WHITE_MID]
-HIGHS = [RED_HIGH, ORANGE_HIGH, YELLOW_HIGH, GREEN_HIGH, BLUE_HIGH, PURPLE_HIGH, WHITE_HIGH]
-LOWS = [RED_LOW, ORANGE_LOW, YELLOW_LOW, GREEN_LOW, BLUE_LOW, PURPLE_LOW, WHITE_LOW]
+DAY1_LOW = range(1,7)
+DAY1_MID = range(7, 56)
+DAY1_HIGH = range(1000,1019)
+DAY2_LOW = range(2100,2105)
+DAY2_MID = range(100, 159)
+DAY2_HIGH = range(1100,1135)
+DAY3_LOW = range(2200,2207)
+DAY3_MID = range(1200, 1277)
+DAY3_HIGH = range(200, 217)
+DAY4_LOW = [20]
+DAY4_MID = range(1300,1325)
+DAY4_HIGH = range(300,304)
+DAY5_LOW = range(2500, 2512)
+DAY5_MID = range(501, 587)
+DAY5_HIGH = range(1500, 1512)
+DAY6_LOW = [20]
+DAY6_MID = [20]
+DAY6_HIGH = [20]
+DAY7_LOW = [20]
+DAY7_MID = [20]
+DAY7_HIGH = [20]
+MIDS = [DAY1_MID, DAY2_MID, DAY3_MID, DAY4_MID, DAY5_MID, DAY6_MID, DAY7_MID]
+HIGHS = [DAY1_HIGH, DAY2_HIGH, DAY3_HIGH, DAY4_HIGH, DAY5_HIGH, DAY6_HIGH, DAY7_HIGH]
+LOWS = [DAY1_LOW, DAY2_LOW, DAY3_LOW, DAY4_LOW, DAY5_LOW, DAY6_LOW, DAY7_LOW]
 MEDITATIONS_SOUNDS = range(4001,4014)
 
 MEDITATIONS_TIMES = ["06:19 28/8/17",  # Monday
@@ -47,6 +48,7 @@ MEDITATIONS = dict(itertools.izip([datetime.strptime(m, "%H:%M %d/%m/%y") for m 
 
 SET_THEME = 0
 
+#If it is time to play a meditation will return the number of the correct meditation. Otherwise returns None.
 def play_meditation(this_time=datetime.now()):
     approx_time= datetime.time(this_time)
     if (approx_time < time(6, 18) or approx_time > time(6, 31)) and \
@@ -67,7 +69,7 @@ def find_low(theme=datetime.today().weekday()):
 def find_mid(theme=datetime.today().weekday()):
     if SET_THEME >= 0:
         theme = SET_THEME
-    elif datetime.now().hour >= 21:
+    elif shows.show_mode == shows.NIGHT:
         all_mids = [song for sublist in MIDS[0:theme] for song in sublist]
         return random.choice(all_mids)
     return random.choice(MIDS[theme])
@@ -76,7 +78,7 @@ def find_mid(theme=datetime.today().weekday()):
 def find_high(theme=datetime.today().weekday()):
     if SET_THEME >= 0:
         theme = SET_THEME
-    elif datetime.now().hour >= 21:
+    elif shows.show_mode == shows.NIGHT:
         all_highs = [song for sublist in HIGHS[0:theme] for song in sublist]
         return random.choice(all_highs)
     return random.choice(HIGHS[theme])
