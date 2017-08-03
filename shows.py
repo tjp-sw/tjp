@@ -38,18 +38,26 @@ MID_PARAMETER_TIME_LIMIT = 17
 SPARKLE_TIME_LIMIT = 37
 SPARKLE_PARAMETER_TIME_LIMIT =  13
 PALETTE_TIME_LIMIT = 7
+# For Lee testing
+# PALETTE_TIME_LIMIT = 5
 
 BACKGROUND_INDEX = 0
 MIDLAYER_INDEX = 8
 SPARKLE_INDEX = 17
 
-# Pre-defined color palettes
-fruit_loop = [[25,0,25], [25,15,0], [180,10,70], [140,60,180], [180,60,60], [255,255,120], [255,100,180]]
-icy_bright = [[37,28,60], [70,0,28], [255,108,189], [0,172,238], [44,133,215], [255,255,255], [254,207,24]]
-watermelon = [[40,29,35], [5,45,15], [47,140,9], [72,160,5], [148,33,137], [47,192,91], [70,190,91]]
-pride = [[255, 0, 0], [255, 127, 0], [255, 255, 0], [0, 255, 0], [0, 0, 255], [75, 0, 130], [148, 0, 211]]
-edirp = [[148, 0, 211], [75, 0, 130], [0, 0, 255], [0, 255, 0], [255, 255, 0], [255, 127, 0], [255, 0, 0]]
-palette = [fruit_loop, icy_bright, watermelon, pride, edirp]
+# bounding indices to ease reading of parameter printout
+BASE_PARAM_START = 0
+BASE_PARAM_END = 7
+MID_PARAM_START = 8
+MID_PARAM_END = 16
+SPARKLE_PARAM_START = 17
+SPARKLE_PARAM_END = 27
+SEVEN_PAL_BEAT_PARAM_START = 28
+SEVEN_PAL_BEAT_PARAM_END = 30
+ALPHA_PARAM_START = 31
+ALPHA_PARAM_END = 32
+TRANS_PARAM_START = 33
+TRANS_PARAM_END = 40
 
 show_bounds = [  # order must match show_parameters
         # [min, max]
@@ -58,7 +66,7 @@ show_bounds = [  # order must match show_parameters
         [0, 255], # base color thickness
         [0, 255], # base black thickness
         [-128,127], # base ring offset
-        [-1, 1], # base intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
+        [-1, 2], # base intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
         [0, 255], # base intra ring speed
         [-1,1], # base inter ring motion: -1 = CCW, 0 = none, 1 = CW
         [0,255], # base inter ring speed
@@ -68,7 +76,7 @@ show_bounds = [  # order must match show_parameters
         [0, 255],  # mid color thickness
         [0, 255],  # mid black thickness
         [-128,127],  # mid ring offset
-        [-1, 1],  # mid intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
+        [-1, 2],  # mid intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
         [0, 255],  # mid intra ring speed
         [-1, 1],  # mid inter ring motion: -1 = CCW, 0 = none, 1 = CW
         [0, 255],  # mid inter ring speed
@@ -76,14 +84,14 @@ show_bounds = [  # order must match show_parameters
         [0, NUM_SPARKLE_ANIMATIONS],  # SPARKLE_INDEX, which sparkle animation to use
         [2, 200],  # sparkle portion
         [0, 255],  # sparkle color thickness
-        [-1, 1],  # sparkle intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
+        [-1, 2],  # sparkle intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
         [0, 255],  # sparkle intra ring speed
         [-1, 1],  # sparkle inter ring motion: -1 = CCW, 0 = none, 1 = CW
         [0, 255],  # sparkle inter ring speed
         [0, 255], # sparkle min dim
         [0, 255], # sparkle max dim
         [0, 255], # sparkle range
-        [0, 50], # sparkle spawn frequency, 0 == off entirely (Functions as a boolean when 0|1)
+        [0, 255], # sparkle spawn frequency, 0 == off entirely (Functions as a boolean when 0|1)
         # show bounds 28 through 28 concern 7-color edm animations
         [0, NUM_7_COLOR_ANIMATIONS],  # which 7 color animation to play, show bound 28
         #show bounds 29 through 32 recently added (maybe need to be renumbered)
@@ -102,18 +110,104 @@ show_bounds = [  # order must match show_parameters
         [1, NUM_TRANSITION_SPEEDS] # how fast to transition the EDM animation
     ]
 
+# Pre-defined color palettes for each chakra color
+NUM_BASE_COLORS_PER_FAMILY = 7
+NUM_MID_COLORS_PER_FAMILY = 14
+NUM_SPARKLE_COLORS_PER_FAMILY = 7
+
+red_dim_colors = [[20, 0, 0], [13, 3, 5], [17, 2, 0], [13, 6, 4], [14, 4, 5], [15, 6, 6], [13, 7, 5]]
+orange_dim_colors = [[255, 127, 0], [250, 122, 0], [245, 117, 0], [240, 112, 0], [255, 127, 0], [250, 122, 0], [245, 117, 0], [240, 112, 0]]
+yellow_dim_colors = [[255, 255, 0], [250, 250, 0], [245, 245, 0], [240, 240, 0], [255, 255, 0], [250, 250, 0], [245, 245, 0], [240, 240, 0]]
+green_dim_colors = [[255, 255, 0], [250, 250, 0], [245, 245, 0], [240, 240, 0], [255, 255, 0], [250, 250, 0], [245, 245, 0], [240, 240, 0]]
+blue_dim_colors = [[0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240], [0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240]]
+purple_dim_colors = [[75, 0, 130], [70, 0, 125], [65, 0, 120], [60, 0, 115], [75, 0, 130], [70, 0, 125], [65, 0, 120], [60, 0, 115]]
+white_dim_colors = [[37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45], [37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45]]
+red_mid_colors = [[232, 8, 16], [232, 0, 32], [224, 32, 0], [224, 24, 8], [224, 16, 16], [224, 8, 24], [224, 0, 32],
+[128, 4, 9], [253, 0, 2], [217, 1, 23], [253, 0, 2], [142, 0, 5], [132, 6, 6], [254, 253, 253]]
+orange_mid_colors = [[255, 127, 0], [250, 122, 0], [245, 117, 0], [240, 112, 0], [235, 107, 0], [230, 102, 0], [255, 127, 0], [250, 122, 0], [245, 117, 0], [240, 112, 0], [235, 107, 0], [230, 102, 0], [255, 127, 0], [250, 122, 0], [245, 117, 0], [240, 112, 0], [235, 107, 0], [230, 102, 0]]
+yellow_mid_colors = [[255, 255, 0], [250, 250, 0], [245, 245, 0], [240, 240, 0], [235, 235, 0], [230, 230, 0], [255, 255, 0], [250, 250, 0], [245, 245, 0], [240, 240, 0], [235, 235, 0], [230, 230, 0], [255, 255, 0], [250, 250, 0], [245, 245, 0], [240, 240, 0], [235, 235, 0], [230, 230, 0]]
+green_mid_colors = [[0, 255, 0], [0, 250, 0], [0, 245, 0], [0, 240, 0], [0, 235, 0], [0, 230, 0], [0, 255, 0], [0, 250, 0], [0, 245, 0], [0, 240, 0], [0, 235, 0], [0, 230, 0], [0, 255, 0], [0, 250, 0], [0, 245, 0], [0, 240, 0], [0, 235, 0], [0, 230, 0]]
+blue_mid_colors = [[0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240], [0, 0, 235], [0, 0, 230], [0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240], [0, 0, 235], [0, 0, 230], [0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240], [0, 0, 235], [0, 0, 230]]
+purple_mid_colors = [[75, 0, 130], [70, 0, 125], [65, 0, 120], [60, 0, 115], [55, 0, 110], [50, 0, 105], [75, 0, 130], [70, 0, 125], [65, 0, 120], [60, 0, 115], [55, 0, 110], [50, 0, 105], [75, 0, 130], [70, 0, 125], [65, 0, 120], [60, 0, 115], [55, 0, 110], [50, 0, 105]]
+white_mid_colors = [[37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45], [27, 18, 50], [22, 13, 45], [37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45], [27, 18, 50], [22, 13, 45], [37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45], [27, 18, 50], [22, 13, 45]]
+red_bright_colors = [[168, 39, 64], [174, 54, 71], [180, 52, 63], [189, 35, 41], [194, 41, 41], [186, 65, 60], [183, 91, 82]]
+orange_bright_colors = [[255, 127, 0], [250, 122, 0], [245, 117, 0], [240, 112, 0], [255, 127, 0], [250, 122, 0], [245, 117, 0], [240, 112, 0]]
+yellow_bright_colors = [[255, 255, 0], [250, 250, 0], [245, 245, 0], [240, 240, 0], [255, 255, 0], [250, 250, 0], [245, 245, 0], [240, 240, 0]]
+green_bright_colors = [[0, 255, 0], [0, 250, 0], [0, 245, 0], [0, 240, 0], [0, 255, 0], [0, 250, 0], [0, 245, 0], [0, 240, 0]]
+blue_bright_colors = [[0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240], [0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240]]
+purple_bright_colors = [[75, 0, 130], [70, 0, 125], [65, 0, 120], [65, 0, 120], [75, 0, 130], [70, 0, 125], [65, 0, 120], [65, 0, 120]]
+white_bright_colors = [[37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45], [37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45]]
+red_colors = [red_dim_colors, red_mid_colors, red_bright_colors]
+orange_colors = [orange_dim_colors, orange_mid_colors, orange_bright_colors]
+yellow_colors = [yellow_dim_colors, yellow_mid_colors, yellow_bright_colors]
+green_colors = [green_dim_colors, green_mid_colors, green_bright_colors]
+blue_colors = [blue_dim_colors, blue_mid_colors, blue_bright_colors]
+purple_colors = [purple_dim_colors, purple_mid_colors, purple_bright_colors]
+white_colors = [white_dim_colors, white_mid_colors, white_bright_colors]
+playa_palette = [red_colors, orange_colors, yellow_colors, green_colors, blue_colors, purple_colors, white_colors]
+
+# Extra color palettes defined by Lee and used in pride and other events
+fruit_loop = [[25,0,25], [25,15,0], [180,10,70], [140,60,180], [180,60,60], [255,255,120], [255,100,180]]
+icy_bright = [[37,28,60], [70,0,28], [255,108,189], [0,172,238], [44,133,215], [255,255,255], [254,207,24]]
+watermelon = [[40,29,35], [5,45,15], [47,140,9], [72,160,5], [148,33,137], [47,192,91], [70,190,91]]
+pride = [[255, 0, 0], [255, 127, 0], [255, 255, 0], [0, 255, 0], [0, 0, 255], [75, 0, 130], [148, 0, 211]]
+edirp = [[148, 0, 211], [75, 0, 130], [0, 0, 255], [0, 255, 0], [255, 255, 0], [255, 127, 0], [255, 0, 0]]
+edm_palettes = [fruit_loop, icy_bright, watermelon, pride, edirp]
+
+#  Time constants
+STATIC_START = time.mktime(time.strptime('2017-Aug-27 06:20', '%Y-%b-%d %H:%M'))  # Sunrise Sunday
+STATIC_END = time.mktime(time.strptime('2017-Aug-28 06:21', '%Y-%b-%d %H:%M'))  # Sunrise Monday
+BURNING_MAN_START = time.mktime(time.strptime('2017-Aug-28 06:21', '%Y-%b-%d %H:%M'))
+BURNING_MAN_END   = time.mktime(time.strptime('2017-Sep-4 19:23', '%Y-%b-%d %H:%M'))
+sunrise_time = [time.mktime(time.strptime('2017-Aug-27 06:20', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-28 06:21', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-29 06:22', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-30 06:23', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-31 06:24', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-1 06:25', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-2 06:26', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-3 06:27', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-4 06:28', '%Y-%b-%d %H:%M'))]
+sunset_time = [time.mktime(time.strptime('2017-Aug-27 19:36', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-28 19:35', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-29 19:33', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-30 19:31', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Aug-31 19:30', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-1 19:28', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-2 19:27', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-3 19:25', '%Y-%b-%d %H:%M')),
+                time.mktime(time.strptime('2017-Sep-4 19:23', '%Y-%b-%d %H:%M'))]
+
+
+#  Show modes
+SUNRISE = 0
+DAY = 1
+SUNSET = 2
+NIGHT = 3
+show_mode = SUNRISE
+
+#  Art car values
+NO_ART_CAR = -1
+ART_CAR_HELLO_DURATION = 30
+art_car_hello = False
+art_car = NO_ART_CAR  # if art car is detected, set to ring number nearest art car
+
+
+
 NUM_ANIMATIONS = 9	# animation programs are numbered 0 through 8
 TIME_LIMIT = 5		# number of seconds between animation changes
 auto_show = None
 last_show_change_sec = 0.0
 
 show_parameters = [0] * NUM_PARAMETERS
-show_colors = [[333 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALETTE)]	# invalid values
+show_colors = [[33 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALETTE)]	# invalid values
+bm_day_index = 0
 
 event_queue = SortedDLL() #create sorted dll to act as the audio event queue (with super duper special powers)
 NUM_AUDIO_CHANNELS = 7
 current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
 internal_audio_show = False #triggers internal audio animations..
+next_audio_event = AudioEvent(-1, -1, "init")
 
 def constrained_random_parameter(i):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
@@ -130,7 +224,143 @@ def constrain_show():
     if show_parameters[BACKGROUND_INDEX] == 0 and show_parameters[MIDLAYER_INDEX] == 0 and show_parameters[SPARKLE_INDEX] == 0:
         show_parameters[BACKGROUND_INDEX] = 1	# never black
 
-def choose_random_colors_from_palette():
+
+# ------------------------------------------------- get random color ------------------------------------------------
+# very much in progress
+#  returns one sanctioned color as an *index* into fixed color array, weightedly-randomly chosen
+# progresses through different time periods starting at end of sunset meditation; at each
+# time period more of previous days' colors are allowed, with proportions rising first for
+# previous day's color, then for day before that's color, etc
+#
+# at the end of the periods, today's chakra color is twice as likely to be chosen from as any of the
+# previous days' colors, and choices remain this way until following sunrise meditation
+
+
+def get_random_color(day, desired_period):
+    # percentage color increase or decrease per time interval
+    percent_step = 5
+    percent_scaling_factor = 10
+
+    # fixme: check num mid, sparkle.
+    num_colors_today = day * NUM_BASE_COLORS_PER_FAMILY
+    max_value = num_colors_today * percent_scaling_factor
+    current_color = day - 1
+
+    # target_other is probably not a multiple of increment, so last step for each color will move probability here
+    # target_chakra = target_other * 2: final evolved probability for the day's chakra, twice as large as others
+
+    target_other = max_value / (day + 1)
+
+    increment = percent_step * max_value / 100
+    iterations = 0
+
+    probability_array = [0 for j in range(NUM_DAYS)]
+    cumulative_array = [0 for j in range(NUM_DAYS)]
+
+    # initialize percentages as scaled percent_step% for previous colors,
+    # and rest% for day's color
+
+    for ind in range(1, day):
+        probability_array[ind] = increment
+        cumulative_array[ind] = cumulative_array[ind - 1] + probability_array[ind]
+
+        # the current day always has the highest probability
+        probability_array[day] = max_value - increment * (day - 1)
+        cumulative_array[day] = cumulative_array[day - 1] + probability_array[day]
+
+    while (current_color >= 1) and (iterations <= desired_period):
+        iterations += 1
+
+        # update current color value until full / it tips at target_other
+        if (probability_array[current_color] + increment) < target_other:
+
+            # increase this color percent
+            probability_array[current_color] += increment
+            probability_array[day] -= increment
+
+        else:
+
+            remainder = target_other - probability_array[current_color]
+            probability_array[current_color] = target_other
+            probability_array[day] -= remainder
+
+            # move to previous color index
+            current_color -= 1
+
+    # now in color probability situation for desired_period
+
+    cumulative_array = [0 for j in range(NUM_DAYS)]
+    cumulative_value = 0
+
+    for ind in range(1, day + 1):
+        cumulative_value += probability_array[ind]
+        cumulative_array[ind] = cumulative_value
+
+    print('probability array', probability_array)
+    print('cumulative array', cumulative_array)
+
+    # now use the cumulative probabilily array to generate a weighted random color
+
+    rand = randint(1, max_value)
+    ind = 1
+
+    while rand > cumulative_array[ind]:
+        ind += 1
+
+    specific_color_index = rand / percent_scaling_factor
+
+    # print('rand is', rand, 'color is', ind, "specific is", specific_color_index)
+
+    return specific_color_index
+
+
+# ------------------------------------------ choose_new_playa_palette () ----------------------------------------------
+# function still in progress - will always return a palette, but maybe not the right one
+# I include it early so that others will see that there are two types of palettes:
+# - ones for internal sound mode which are generated here, and
+# - ones for art car response called edm_palettes which are chosen in choose_random_colors_from_edm_palette()
+# also, waiting for Lee to finish color choices
+
+def choose_new_playa_palette():
+    global SUNRISE, DAY, SUNSET, NIGHT
+
+    if (show_mode == SUNRISE) or (show_mode == DAY):
+        # use only day's chakra colors
+
+        bg_order = sample(range(NUM_BASE_COLORS_PER_FAMILY * bm_day_index, NUM_BASE_COLORS_PER_FAMILY * (bm_day_index + 1)-1), 2)
+        mid_order = sample(range(NUM_MID_COLORS_PER_FAMILY * bm_day_index, NUM_MID_COLORS_PER_FAMILY * (bm_day_index + 1)-1), 3)
+        sp_order = sample(range(NUM_SPARKLE_COLORS_PER_FAMILY * bm_day_index, NUM_SPARKLE_COLORS_PER_FAMILY * (bm_day_index + 1)-1), 2)
+
+    elif show_mode == SUNSET:
+        # use color growth
+        # fixme::: has to be updated to use color growth
+        bg_order = sample(range(NUM_BASE_COLORS_PER_FAMILY * bm_day_index, NUM_BASE_COLORS_PER_FAMILY * (bm_day_index + 1)-1), 2)
+        mid_order = sample(range(NUM_MID_COLORS_PER_FAMILY * bm_day_index, NUM_MID_COLORS_PER_FAMILY * (bm_day_index + 1)-1), 3)
+        sp_order = sample(range(NUM_SPARKLE_COLORS_PER_FAMILY * bm_day_index, NUM_SPARKLE_COLORS_PER_FAMILY * (bm_day_index + 1)-1), 2)
+
+
+    else:  # night time
+        # use all previous colors
+        # background must always be chosen from day's chakara color
+
+        bg_order = sample(range(NUM_MID_COLORS_PER_FAMILY * bm_day_index, NUM_BASE_COLORS_PER_FAMILY * (bm_day_index + 1) -1), 2)
+        mid_order = sample(range(0, NUM_MID_COLORS_PER_FAMILY * (bm_day_index + 1)-1), 3)
+        sp_order = sample(range(0, NUM_SPARKLE_COLORS_PER_FAMILY * (bm_day_index + 1)-1), 2)
+
+    show_colors[0] = playa_palette[bm_day_index][0][bg_order[0] % NUM_BASE_COLORS_PER_FAMILY]
+    show_colors[1] = playa_palette[bm_day_index][0][bg_order[1] % NUM_BASE_COLORS_PER_FAMILY]
+    show_colors[2] = playa_palette[mid_order[0] / NUM_MID_COLORS_PER_FAMILY][1][mid_order[0] % NUM_MID_COLORS_PER_FAMILY]
+    show_colors[3] = playa_palette[mid_order[1] / NUM_MID_COLORS_PER_FAMILY][1][mid_order[1] % NUM_MID_COLORS_PER_FAMILY]
+    show_colors[4] = playa_palette[mid_order[2] / NUM_MID_COLORS_PER_FAMILY][1][mid_order[2] % NUM_MID_COLORS_PER_FAMILY]
+    show_colors[5] = playa_palette[sp_order[0] / NUM_SPARKLE_COLORS_PER_FAMILY][2][sp_order[0] % NUM_SPARKLE_COLORS_PER_FAMILY]
+    show_colors[6] = playa_palette[sp_order[1] / NUM_SPARKLE_COLORS_PER_FAMILY][2][sp_order[1] % NUM_SPARKLE_COLORS_PER_FAMILY]
+
+    print "show colors", show_colors
+
+
+# ----------------------------- choose_random_colors_from_edm_palette() -------------------------------------
+
+def choose_random_colors_from_edm_palette():
     # choose which colors out of the chosen palette to use
     #shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
     bg_order = sample(range(0,2), 2)
@@ -138,15 +368,16 @@ def choose_random_colors_from_palette():
     sp_order = sample(range(5,7), 2)
 
     current_palette = show_parameters[29]
-    show_colors[0] = palette[current_palette][bg_order[0]]
-    show_colors[1] = palette[current_palette][bg_order[1]]
-    show_colors[2] = palette[current_palette][mid_order[0]]
-    show_colors[3] = palette[current_palette][mid_order[1]]
-    show_colors[4] = palette[current_palette][mid_order[2]]
-    show_colors[5] = palette[current_palette][sp_order[0]]
-    show_colors[6] = palette[current_palette][sp_order[1]]
+    show_colors[0] = edm_palettes[current_palette][bg_order[0]]
+    show_colors[1] = edm_palettes[current_palette][bg_order[1]]
+    show_colors[2] = edm_palettes[current_palette][mid_order[0]]
+    show_colors[3] = edm_palettes[current_palette][mid_order[1]]
+    show_colors[4] = edm_palettes[current_palette][mid_order[2]]
+    show_colors[5] = edm_palettes[current_palette][sp_order[0]]
+    show_colors[6] = edm_palettes[current_palette][sp_order[1]]
 
-# ------------------------------------------------- edm_program() -----------------------------------------------
+
+# ------------------------------------- edm_program() -----------------------------------------------
 # show for when the journey is installed at an event with electronic dance music only
 # parameters are somewhat randomly chosen
 
@@ -155,17 +386,26 @@ def edm_program(init=False):
     global show_parameters, show_colors
 
     if init:
-        if show_colors[0] == [333,333,333]:	# invalid values before initialization
+        if show_colors[0] == [33,33,33]:	# invalid values before initialization
             bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
 
             # choose random starting values for each of the parameters
             for i in range(0, NUM_PARAMETERS):
                 show_parameters[i] = constrained_random_parameter(i)
             constrain_show()
-            choose_random_colors_from_palette()
+            choose_random_colors_from_edm_palette()
+            # For Lee testing: uncomment this to use playa palette instead
+            #choose_new_playa_palette()
 
-        print "initial show parameters ", show_parameters
-        print "initial show colors" , show_colors
+        print "initial show parameters:"
+        print "  base parameters", show_parameters[BASE_PARAM_START:BASE_PARAM_END+1]
+        print "  mid parameters", show_parameters[MID_PARAM_START:MID_PARAM_END+1]
+        print "  sparkle parameters", show_parameters[SPARKLE_PARAM_START:SPARKLE_PARAM_END+1]
+        print "  7 color, palette change, beat", show_parameters[SEVEN_PAL_BEAT_PARAM_START:SEVEN_PAL_BEAT_PARAM_END+1]
+        print "  alpha parameters", show_parameters[ALPHA_PARAM_START:ALPHA_PARAM_END+1]
+        print "  transition parameters", show_parameters[TRANS_PARAM_START:TRANS_PARAM_END+1]
+        print "initial show colors:"
+        print "  ", show_colors
         return
 
     bg_time = bg_parameter_time = mid_time = mid_parameter_time = sparkle_time = sparkle_parameter_time = palette_time = time.time()
@@ -226,90 +466,118 @@ def edm_program(init=False):
         palette_start_time = palette_time
 
         show_parameters[29] = constrained_random_parameter(29)
-        choose_random_colors_from_palette()
+        choose_random_colors_from_edm_palette()
+        # For Lee testing: uncomment this to stick with day 1 colors
+        #choose_new_playa_palette()
         print "palette changed ", show_colors
 
-# ------------ playa_program() --------------------------------------------------------
-# a partially scripted program for Burning Man 2017
+
+
+# fixme: ART_CAR mode will be set by Jeff's code
+#    if art_car_detected for first ART_CAR_HELLO_DURATION seconds:
+#        art_car_hello = true
+#        art_car = ring number closest to art car, 0 to 72
+#    else if art car sticks around past ART_CAR_HELLO_DURATION seconds:
+#        art_car_hello = false
+#    else if art car has departed
+#        art_car = NO_ART_CAR
+#
+
 
 TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
-MEDITATION_MINUTES = 20
-BURNING_MAN_START = time.mktime(time.strptime('2017-Aug-28 00:00', '%Y-%b-%d %H:%M'))
-BURNING_MAN_END   = time.mktime(time.strptime('2017-Sep-04 00:00', '%Y-%b-%d %H:%M'))
+# For Lee testing: uncomment this
+#TEST_CYCLE_MINUTES = 15
 NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
 
-daynight = None
-def major_playa_mode(when):
-    global daynight
 
-    sunrise_time = [1503839940, 1503926400, 1504012860, 1504099320, 1504185780,
-                    1504272240, 1504358700, 1504445160, 1504531620]
-    sunset_time  = [1503887940, 1503974220, 1504060500, 1504146840, 1504233120,
-                    1504319460, 1504405740, 1504492020, 1504578360]
+# ------------------------ set_playa_mode() -------------------------------
+# returns SUNRISE, DAY, SUNSET, NIGHT
 
-    meditation = None
-    if sunrise_time[0] <= when and when < sunset_time[len(sunset_time)-1] + meditation_sec:
-        for meditation_start in sunrise_time:
-            meditation_end = meditation_start + meditation_sec
-            if meditation_start <= when and when < meditation_end:
-                meditation = 'sunrise'
-                daynight = 'daytime'
-                break
-        if meditation == None:
-            for meditation_start in sunset_time:
-                meditation_end = meditation_start + meditation_sec
-                if meditation_start <= when and when < meditation_end:
-                    meditation = 'sunset'
-                    daynight = 'nighttime'
-                    break
+def set_playa_mode(when, mode):
+
+    global SUNRISE, DAY, SUNSET, NIGHT, NUM_DAYS, bm_day_index
+
+    bm_day_index = int((when - BURNING_MAN_START) / 86400) % NUM_DAYS
+
+    if (mode == NIGHT) and (when >= sunrise_time[bm_day_index]):
+        mode = SUNRISE
+
+    elif (mode == DAY) and (when >= sunset_time[bm_day_index]):
+        mode = SUNSET
+
+    # fixme: Kienen's code will set day and night modes at end of meditations
+    #   i'll set these next 2 on timer for now, but this won't work for playa bc meditations are not same length
+
+    #    if show_mode == SUNRISE:
+    #        play sunrise meditation
+    #    if show_mode == SUNSET:
+    #        play sunset meditation
+    #    if sunrise_meditation_just_ended:
+    #        show_mode = DAY
+    #    if sunset_meditation_just_ended:
+    #        show_mode = NIGHT
+
+    elif (mode == SUNRISE) and (when >= (sunrise_time[bm_day_index] + meditation_sec)):
+        mode = DAY
+
+    elif (mode == SUNSET) and (when >= (sunset_time[bm_day_index] + meditation_sec)):
+        mode = NIGHT
+
     else:
-        daynight = None
-    if meditation == None and daynight == None:	# pretend that daytime is between 6 AM and 6 PM
-        hour = int(time.strftime('%-H', time.localtime(when)))
-        if (6 <= hour and hour < 18):
-            daynight = 'daytime'
-        else:
-            daynight = 'nighttime'
-    return meditation or daynight	# meditation has precedence
+        print 'not at burning man'
+        #exit()
+
+    return mode
+
+
+
+# ------------------------------- playa_program() ----------------------------------
+#  This function initializes the playa program. If time is before burning man start, then it sets variables
+#  so that a 3 minute test program runs
 
 real_start_time = -1.0
 def playa_program(init=False):
-    global real_start_time, meditation_sec, time_compression_factor
+    global real_start_time, meditation_sec, time_compression_factor, show_mode
+    IDEAL_MEDITATION_MINUTES = 20
 
     real_time = time.time()
-    if init:
+    if init:  # run test program
         if real_start_time < 0:
             time_compression_factor = float(NUM_DAYS * 60 * 24) / TEST_CYCLE_MINUTES	# 60*24 == minutes per day
-            meditation_sec = int(MEDITATION_MINUTES * 60 * time_compression_factor / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
+            meditation_sec = int(IDEAL_MEDITATION_MINUTES * 60 * time_compression_factor / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
             real_start_time = real_time
             edm_program(init)	# good enough for now
             show_parameters[29] = 999	# invalid
+            show_mode = SUNRISE
         return
 
     if real_start_time == BURNING_MAN_START:
         virtual_time = real_time	# this is the live show at Burning Man
+        show_mode = SUNRISE
     else:
         if BURNING_MAN_START <= real_time and real_time < BURNING_MAN_END:
             time_compression_factor = 1.0
-            meditation_sec = MEDITATION_MINUTES * 60
+            #meditation_sec = MEDITATION_MINUTES * 60
             print 'Welcome home!'	# Burning Man has just begun!
             real_start_time = BURNING_MAN_START
             virtual_time = real_time
         else:
             virtual_time = BURNING_MAN_START + (real_time - real_start_time) * time_compression_factor
 
-    mode = major_playa_mode(virtual_time)
+    show_mode = set_playa_mode(virtual_time, show_mode)
 
     bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
-    new_palette = bm_day_index % len(palette)
+    new_palette = bm_day_index % len(edm_palettes)
     if show_parameters[29] != new_palette:
         show_parameters[29] = new_palette
-        choose_random_colors_from_palette()
+        choose_new_playa_palette()
         print 'palette changed', show_colors
 
-    print 'playa time advanced to', time.ctime(virtual_time), 'on day', bm_day_index, 'in', mode
+    print 'playa time advanced to', time.ctime(virtual_time), 'on day', bm_day_index, 'in', show_mode
 
-# ------------------------------------------------- internal_sound_animations_program() -----------------------------------------------
+
+
+# ------------------------------ internal_sound_animations_program() -----------------------------------------------
 # show for when the journey playing its internal audio and the external audio
 # is not past threshold amount aka art car not detected
 
@@ -344,17 +612,24 @@ def progress_audio_queue():
 def drive_internal_animations(init):
     global next_audio_event, event_queue
     if init:
-        if show_colors[0] == [333,333,333]:	# invalid values before initialization
+        if show_colors[0] == [33,33,33]:	# invalid values before initialization
             bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
 
             # choose random starting values for each of the parameters
             for i in range(0, NUM_PARAMETERS):
                 show_parameters[i] = constrained_random_parameter(i)
             constrain_show()
-            choose_random_colors_from_palette()
+            choose_new_playa_palette(1)  # start with day 1 color palette
 
-        print "initial show parameters ", show_parameters
-        print "initial show colors" , show_colors
+        print "initial show parameters:"
+        print "  base parameters", show_parameters[BASE_PARAM_START:BASE_PARAM_END+1]
+        print "  mid parameters", show_parameters[MID_PARAM_START:MID_PARAM_END+1]
+        print "  sparkle parameters", show_parameters[SPARKLE_PARAM_START:SPARKLE_PARAM_END+1]
+        print "  7 color, palette change, beat", show_parameters[SEVEN_PAL_BEAT_PARAM_START:SEVEN_PAL_BEAT_PARAM_END+1]
+        print "  alpha parameters", show_parameters[ALPHA_PARAM_START:ALPHA_PARAM_END+1]
+        print "  transition parameters", show_parameters[TRANS_PARAM_START:TRANS_PARAM_END+1]
+        print "initial show colors:"
+        print "  ", show_colors
         return
 
     progress_audio_queue()
@@ -420,12 +695,15 @@ def get_audio_file_info(audio_msg):
     # current msg format: a0;1;0;0,50,0,0
     info = audio_msg.split(";")
     tracks = info[3].split(",")
+    # print "tracks: " +  str(tracks)
     output = {}
     i = 0
-    while(i < len(tracks)):
-        if int(tracks[i]) > 0:
-            output[i] = (DataBaseInterface().grabAudioInfo(tracks[i]))
-        i += 1
+    if tracks[i] is not "" and tracks[i] != '':
+        while(i < len(tracks)):
+            if int(tracks[i]) > 0:
+                output[i] = (DataBaseInterface().grabAudioInfo(tracks[i]))
+            i += 1
+
     return output
 
 
@@ -434,15 +712,17 @@ def remove_audio_events_from_queue(audioInfo):
         try:
             event_queue.remove(event.time)
         except ValueError:
-            print "event " + event + " already has been removed from queue"
+            print "event " + str(event) + " already has been removed from queue"
 
 
 def queue_audio_events(audioInfo):
     cur_time_ms = timeMs()
-    for event in audioInfo.events:
-        event.time += cur_time_ms
-        node = event_queue.add(event)
-
+    if audioInfo is not None:
+        for event in audioInfo.events:
+            event.time += cur_time_ms
+            node = event_queue.add(event)
+    else:
+        print "seems like it was a database miss... this will happen while we don't have all the auido files"
 
 def timeMs():
     return int(round(time.time() * 1000))

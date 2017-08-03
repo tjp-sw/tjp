@@ -21,6 +21,7 @@ CRGB fruit_loop[7] = {                                              //
   CRGB icy_bright[7] = {                                            //
     CRGB(37,28,60), CRGB(70,0,28),                        // dark   //
     CRGB(128,54,90), CRGB(0,83,115), CRGB(20,64,100), // medium     //
+    //CRGB(255,0,0), CRGB(0,255,0), CRGB(0,0,255), // medium     //
     CRGB(128,128,128), CRGB(128,100,120)};                // light  //
                                                                     //
   CRGB watermelon[7] = {                                            //
@@ -50,9 +51,21 @@ CRGB fruit_loop[7] = {                                              //
 #endif                                                              //
 */                                                                  //
                                                                     //
-CRGB* initial_palette = icy_bright;                                 //
+CRGB* initial_palette = fruit_loop;                                 //
 //------------------------------------------------------------------//
 
+//----------------- Show modes -----------------------------------------//
+//                                                                      //
+#define SUNRISE 0;                                                      //
+#define DAY 1;                                                          //
+#define SUNSET 2;                                                       //
+#define NIGHT 3;                                                        //
+#define ART_CAR 4;                                                      //
+#define NO_ART_CAR 255;                                                 //
+//                                                                      //
+// set to estimated ring nearest art car if art car is recognized       //
+uint8_t art_car = NO_ART_CAR;                                           //
+//----------------------------------------------------------------------//
 
 //----------------- Animation indexes ------------------------//
 #define OFF 255    // Disables a layer, CYCLE will ignore it  //
@@ -61,32 +74,43 @@ CRGB* initial_palette = icy_bright;                                 //
 // Base layer                                                 //
 #define BASE_SCROLLING_DIM 1                                  //
 #define BASE_2COLOR_GRADIENT 2                                //
+#define BASE_SCROLLING_HALF_DIM 3                             //
 #define LEE_COLOR_RANGE 250                                   //
 #define LEE_BRIGHTNESS 249                                    //
 #define LEE_CHECK 248                                         //
 #define LEE_PICK_HSV 247                                      //
-#define NUM_BASE_ANIMATIONS 2  // Equal to last animation     //
+#define NUM_BASE_ANIMATIONS 3  // Equal to last animation     //
                                                               //
 // Mid layer                                                  //
 #define SNAKE 1                                               //
 #define FIRE 2                                                //
-#define DISCO_FIRE 3                                         //
-#define FIRE_SNAKE 4                                          //
+#define DISCO_FIRE 3                                          //
 #define FIRE_ONE_SIDED 254  // Only used with EDM animation   //
-#define MID_SCROLLING_DIM 5                                   //
-#define MID_SCROLLING_DIM2 6                                  //
-#define MID_SCROLLING_DIM3 7                                  //
-#define ARROW 8                                               //
-#define NUM_MID_ANIMATIONS 8  // Equal to last animation      //
+#define DISCO_FIRE_ONE_SIDED 253                              //
+#define MID_SCROLLING_DIM1 4                                  //
+#define MID_SCROLLING_DIM2 5                                  //
+#define MID_SCROLLING_DIM3 6                                  //
+#define MID_SCROLLING_DIM4 7                                  //
+#define MID_SCROLLING_DIM5 8                                  //
+#define ARROW 9                                               //
+#define RADIATION 10                                          //
+#define SQUARE 11                                             //
+#define SQUARE2 12                                            //
+#define WAVE 13                                               //
+#define NUM_MID_ANIMATIONS 13  // Equal to last animation     //
                                                               //
 // Sparkle layer                                              //
 #define GLITTER 1                                             //
 #define RAIN 2                                                //
 #define WARP_SPEED 3                                          //
-#define THREE_CIRCLES 4                                       //
-#define TWO_COINS 5                                           //
-#define TWINKLE 6                                             //
-#define NUM_SPARKLE_ANIMATIONS 6  // Equal to last animation  //
+#define TWINKLE 4                                             //
+#define VARIABLE_SPIN 5                                       //
+#define THREE_CIRCLES 6                                       //
+#define THREE_CIRCLE_TRAILS 7                                 //
+#define TWO_COINS 8                                           //
+#define TORUS_KNOT 9                                          //
+#define TORUS_LINK 10                                         //
+#define NUM_SPARKLE_ANIMATIONS 10  // Equal to last animation //
                                                               //
 // EDM animations (in the base layer, starting at 128)        //
 #define FREQ_PULSE 1                                          //
@@ -230,11 +254,7 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
 //------------------------------------------------------------------//
 
 //----------- Alpha blending -------------//
-#define ALPHA_BY_HEIGHT 1                 //
-#define ALPHA_BY_GRADIENT 2               //
-                                          //
-#define NUM_MID_ALPHA_MODES 2             //
-#define NUM_SPARKLE_ALPHA_MODES 1         //
+bool override_default_blending = false;   //
 //----------------------------------------//
 
 //------- Animation transitions ----------//
@@ -277,7 +297,7 @@ int8_t blacken_node_number = 0;                               //
 //------------------- Physical structure ---------------------------------//
 #define NUM_NODES 6                                                       //
 #define RINGS_PER_NODE 12                                                 //
-#define STRIPS_PER_NODE 4                                                 //
+#define STRIPS_PER_NODE 4 // Everyone should update this to 6! Leaving it at 4 to not impose, since it may require re-wiring your LED strips. //
 #define PHYSICAL_LEDS_PER_RING 420                                        //
 #define LEDS_PER_RING 408                                                 //
                                                                           //
@@ -304,6 +324,7 @@ unsigned long edm_start_time = 0;                                               
                                                                                   //
 #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)              //
   unsigned long palette_start_time = 0;                                           //
+  unsigned long beat_effect_start_time = 0;                                       //
 #endif                                                                            //
 //--------------------------------------------------------------------------------//
 
@@ -318,7 +339,7 @@ uint8_t mid_layer[NUM_RINGS][LEDS_PER_RING];                                    
 uint8_t sparkle_layer[NUM_RINGS][LEDS_PER_RING];                                              //
                                                                                               //
 CRGBPalette256 mid_palette;                                                                   //
-CRGBPalette16 sparkle_palette;                                                                //
+CRGBPalette256 sparkle_palette;                                                                //
 CRGB target_palette[NUM_COLORS_PER_PALETTE];  // Used to smoothly blend into next palette     //
 CRGB current_palette[NUM_COLORS_PER_PALETTE]; // The current 7-color palette                  //
                                                                                               //
@@ -367,12 +388,14 @@ uint8_t band_distribution[NUM_BANDS]; // bass=0, mid=1, treble=2; sums to 255 //
 
 
 //------ Misc enumerations and values --------//
-// Animation constants and parameters
-#define MAX_DIMMING 6
-#define NUM_DIMMING_LEVELS (MAX_DIMMING + 1)
 #define THROTTLE 16 // Allows INTRA_RING_SPEED to speed up OR slow down an animation
-#define BASE_GRADIENT_SIZE 36
-#define MID_GRADIENT_SIZE 12
+
+// Palettes
+#define MID_GRADIENT_SIZE 7
+#define MAX_MID_DIMMING 11
+#define NUM_MID_DIMMING_LEVELS (MAX_MID_DIMMING + 1)
+#define MAX_SPARKLE_DIMMING 126
+#define NUM_SPARKLE_DIMMING_LEVELS (MAX_SPARKLE_DIMMING + 1)
 
 // Bands
 #define BASS_BAND 0
@@ -394,17 +417,12 @@ uint8_t band_distribution[NUM_BANDS]; // bass=0, mid=1, treble=2; sums to 255 //
 //#define NONE 0 // Defined above in animations
 #define CW 1
 #define CCW -1
-#define SPLIT 2
-#define ALTERNATE 3
+#define ALTERNATE 2
+#define SPLIT 3
 
-// Sparkle INTRA_RING_MOTION values
+// Sparkle INTRA_RING_MOTION values (also used in MID_FIRE animations)
 #define DOWN 1
 #define UP -1
-
-// Animation ring modes (which rings to draw to)
-#define ALL_RINGS 0
-#define ODD_RINGS 1
-#define EVEN_RINGS 2
 
 // EDM animations that can be displayed one-sided or mirrored
 #define DISPLAY_FULL 0
@@ -414,11 +432,6 @@ uint8_t band_distribution[NUM_BANDS]; // bass=0, mid=1, treble=2; sums to 255 //
 // Fire palettes
 #define FIRE_PALETTE_DISABLED 0
 #define FIRE_PALETTE_STANDARD 1
-
-// 2color_gradient modes
-#define COLOR_BY_LOCATION 0
-#define COLOR_BY_PATTERN 1
-#define COLOR_BY_PATTERN_OFFSET 2
 
 // Diane's sparkle globals - if this gets to be too much I'll try to figure out a way to be more space efficient
 uint8_t current_ring;

@@ -15,6 +15,7 @@ mega_to_node_map = {
     7: 3,
     }
 
+meditation = False # Will be True during meditations, and False otherwise
 
 # close all TCP connections and continue to run
 def do_disconnect(ignored, neglected):
@@ -71,7 +72,15 @@ def do_show(cmd, param):
     for i in range(0, NUM_COLORS_PER_PALETTE):
         show_colors_list += show_colors[i]
     do_send(None, struct.pack('>c%uB' % (len(show_parameters) + len(show_colors_list)), 's', *(show_parameters + show_colors_list)))
-    print 'show:', repr(show_parameters), repr(show_colors)
+    print 'show:'
+    print "  base parameters", show_parameters[BASE_PARAM_START:BASE_PARAM_END + 1]
+    print "  mid parameters", show_parameters[MID_PARAM_START:MID_PARAM_END + 1]
+    print "  sparkle parameters", show_parameters[SPARKLE_PARAM_START:SPARKLE_PARAM_END + 1]
+    print "  7 color, palette change, beat", show_parameters[SEVEN_PAL_BEAT_PARAM_START:SEVEN_PAL_BEAT_PARAM_END + 1]
+    print "  alpha parameters", show_parameters[ALPHA_PARAM_START:ALPHA_PARAM_END + 1]
+    print "  transition parameters", show_parameters[TRANS_PARAM_START:TRANS_PARAM_END + 1]
+    print 'colors:'
+    print repr(show_colors)
 
 #do a dynamically changing show based on internal audio selections. maybe inlcude hand inputs as well.
 def do_dyn_show(audio_msg):
@@ -105,6 +114,12 @@ def do_simple(cmd, param):
     else:
         do_send(None, cmd[0:1])
 
+#play mediation manually
+def do_meditation (ignored, meditation_num):
+    meditation_play = music.manual_meditation(meditation_num)
+    if meditation_play:
+        do_send(None, meditation_play)
+
 control_messages = {
 #    'SetAllAudio':	    do_unimplemented,
 #    'SetAudioCh':	    do_unimplemented,
@@ -126,6 +141,7 @@ control_messages = {
     'reconnect':	(do_simple, None, None),
     'send':		(do_send, None, None),
     'time':		(do_time, None, None),
+    'meditation': (do_meditation, None, None)
     }
 
 # listen for TCP connections on the specified port
@@ -159,7 +175,7 @@ def disconnect(socket, msg):
 
 do_list(None, None)
 print sorted(control_messages.keys())
-tsunami = music.Music()
+mega = music.Music()
 running = True
 while running:
     try:
@@ -183,6 +199,7 @@ while running:
                 try:
                     command, parameters = string.split(message, None, 1)	# one word separated by whitespace from the parameter(s)
                 except ValueError:				# no whitespace
+                    print "c"
                     command = message
                     parameters = None
                 try:
@@ -239,7 +256,8 @@ while running:
                             remote_name[s] = 'node %u' % node_number
                             do_send(s, struct.pack('>cB', 'n', node_number))
                     elif message[0:1] == 's':
-                        music.status_update(message)
+                        if music.status_update(message):
+                            mega.played_low = 0
 
                     else:
                         print 'received', repr(message), 'from', remote_name[s]
@@ -270,17 +288,22 @@ while running:
         if time.time() > next_timesync_sec:
             do_time('time', None)
 
-        #sending internal audio selection across nodes
-        (node, audio_msg) = tsunami.tick()
-        if audio_msg is not None:
-            if audio_msg[0:1] == 'a':
-                # hope the length is less than 256
-                audio_msg = struct.pack('>cB', audio_msg[0:1], len(audio_msg[1:])) + audio_msg[1:]
-            do_send(None, audio_msg)	# always send to all nodes
+        if auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
+            auto_show()
+            last_show_change_sec = time.time()
+            do_show(None, None)
 
+        #audio commands
+        dummy_art_car_bool = False
+        audio_msg = mega.tick(dummy_art_car_bool)
+        if audio_msg is not None:
+            do_send(None, audio_msg)	# always send to all nodes
+        meditation = mega.meditation
+
+        (ignored, ctrl_msg) = audio_msg
         #pushing animation parameters across nodes
         if internal_audio_show:
-            do_dyn_show(audio_msg)
+            do_dyn_show(ctrl_msg)
         elif auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
             auto_show()
             last_show_change_sec = time.time()
@@ -289,15 +312,15 @@ while running:
     except KeyboardInterrupt:
         running = False
 
+
     except:
         # raise				# uncomment for debugging
         print sys.exc_value
         do_disconnect(None, None)	# TODO: be more selective
 
+
 for s in remote_name:
-    audio_msg = music.mute()
-    stop_msg = struct.pack('>cB', audio_msg[0:1], len(audio_msg[1:])) + audio_msg[1:]
-    s.send(stop_msg)
+    s.send(music.mute())
 
 for s in sources:
     s.close()

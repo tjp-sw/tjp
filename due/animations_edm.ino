@@ -136,7 +136,7 @@ inline void equalizer_pulse() {
           leds[index] = color;
         }
         else {
-          nblend(leds[index], color, 128);
+          tjp_nblend(leds[index], color, 128);
         }
       }
     }

@@ -1,6 +1,6 @@
 # From Robin2 https://forum.arduino.cc/index.php?topic=225329.0
 
-# this is designed to work with ... ArduinoPC.ino ...
+# this is designed to work with ... serial_to_pc.ino ...
 
 # the purpose of this program and the associated Arduino program is to demonstrate a system for sending
 #   and receiving data between a PC and an Arduino.

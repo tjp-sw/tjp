@@ -1,5 +1,6 @@
 // This file is for completed sparkle animations
 
+
 //---------------------------------------- SPARKLE GLITTER ---------------------------------------
 //  Creates sparkles of glitter randomly all over the structure
 // SPARKLE_COLOR_THICKNESS(1:2), SPARKLE_PORTION(16:127), SPARKLE_MIN_DIM(0:2), SPARKLE_MAX_DIM(1:4), SPARKLE_RANGE(40:204)
@@ -126,15 +127,54 @@ inline void spawn_raindrop(uint8_t ring, uint16_t pixel, uint8_t color_thickness
 //  To do: not yet plugged into parameters
 // SPARKLE_COLOR_THICKNESS(1-6), SPARKLE_PORTION(1-100), SPARKLE_MAX_DIM(0-6), SPARKLE_RANGE(10-100), SPARKLE_SPAWN_FREQUENCY(1-127), SPARKLE_INTRA_RING_MOTION(-1, 1), SPARKLE_INTRA_RING_SPEED(4-64)
 
-#define CYCLES_PER_STEP 15
+#define WARP_SPEED_STEP1 40
+#define WARP_SPEED_STEP2 70
+#define WARP_SPEED_STEP3 95
+#define WARP_SPEED_STEP4 120
+#define WARP_SPEED_STEP5 140
+#define WARP_SPEED_STEP6 160
+
 inline void sparkle_warp_speed() {
-  if ((sparkle_count >= 4*CYCLES_PER_STEP) ||
-      (sparkle_count < CYCLES_PER_STEP  &&  sparkle_count % 5 == 0) ||
-      (sparkle_count < 2*CYCLES_PER_STEP && sparkle_count % 4 == 0) ||
-      (sparkle_count < 3*CYCLES_PER_STEP && sparkle_count % 3 == 0) ||
-      (sparkle_count < 4*CYCLES_PER_STEP && sparkle_count % 2 == 0))
+  if (sparkle_count < WARP_SPEED_STEP1)
   {
+    if(sparkle_count % 6 == 0) { move_sparkle_layer_inter_ring(CW); }
+  }
+  else if(sparkle_count < WARP_SPEED_STEP2) {
+    if(sparkle_count % 4 == 0) { move_sparkle_layer_inter_ring(CW); }
+  }
+  else if(sparkle_count < WARP_SPEED_STEP3) {
+    if(sparkle_count % 3 == 0) { move_sparkle_layer_inter_ring(CW); }
+  }
+  else if(sparkle_count < WARP_SPEED_STEP5) {
+    if(sparkle_count % 2 == 0) { move_sparkle_layer_inter_ring(CW); }
+  }
+  else if(sparkle_count < WARP_SPEED_STEP6) {
     move_sparkle_layer_inter_ring(CW);
+  }
+  else {
+    move_sparkle_layer_inter_ring(CW);
+    move_sparkle_layer_inter_ring(CW);
+  }
+  
+
+  // Extend length of sparkles
+  if(sparkle_count == WARP_SPEED_STEP1 || sparkle_count == WARP_SPEED_STEP2 || sparkle_count == WARP_SPEED_STEP3 || sparkle_count == WARP_SPEED_STEP4) {
+    uint8_t temp[LEDS_PER_RING];
+    memcpy(temp, sparkle_layer[0], LEDS_PER_RING);
+      
+    for(uint8_t ring = 1; ring < NUM_RINGS-1; ring++) {
+      for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+        if(sparkle_layer[ring][pixel] != TRANSPARENT) {
+          sparkle_layer[ring-1][pixel] = sparkle_layer[ring][pixel];
+        }
+      }
+    }
+
+    for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+      if(temp[pixel] != TRANSPARENT) {
+        sparkle_layer[NUM_RINGS-1][pixel] = temp[pixel];
+      }
+    }
   }
 }
 
@@ -230,13 +270,13 @@ inline void sparkle_two_coins() {
 //
 // Chooses random location for stars, with random starting intensities, 
 // and then randomly and continuously increases or decreases their intensity over time
-
+#define TWINKLE_STEP_SIZE 8 // This value must be even
 inline void sparkle_twinkle() {
   uint8_t dim, raw_color;
 
   // fixme: could/should this be tied to parameter?
-  if ((sparkle_count % 2) == 0) {
-    for (int ring = 0; ring < NUM_RINGS; ring++) {
+  if ((sparkle_count % 1) == 0) {
+    for (int ring = 0; ring < RINGS_PER_NODE; ring++) {
       for (int pixel = 0; pixel < LEDS_PER_RING; pixel++) {
           
         // only change intensity if pixel is chosen as star
@@ -250,10 +290,16 @@ inline void sparkle_twinkle() {
           if (random16(4) == 0) {
 
             // increase intensity if brightness is even, decrease if odd
-            if (dim == 6) { dim = 5; }
-            else if (dim == 1) { dim = 0; }
-            else if (dim % 2 == 0) { dim += 2; }
-            else { dim = dim - 2; }  
+            if (dim % 2 == 0) {
+              // Increasing dim
+              if(dim > MAX_SPARKLE_DIMMING - TWINKLE_STEP_SIZE) { dim = MAX_SPARKLE_DIMMING-1; }
+              else { dim += TWINKLE_STEP_SIZE; }
+            }
+            else {
+              // Decreasing dim
+              if (dim <= TWINKLE_STEP_SIZE) { dim = 0; }
+              else { dim -= TWINKLE_STEP_SIZE; }
+            }
 
             sparkle_layer[ring][pixel] = get_sparkle_color(raw_color, dim);
           }
@@ -263,6 +309,224 @@ inline void sparkle_twinkle() {
   }
 }
 
+
+//---------------------------- SPARKLE 3 CIRCLE TRAILS ---------------------------
+// Highlights the 3 most prominent circles on the torus
+// Each of these circles moves around the torus to parallel circles, leaving trails of dimmer circles
+// 
+
+inline void sparkle_three_circle_trails() {
+
+  uint8_t ring, inter_throttle, intra_throttle, coin_throttle;
+  uint8_t dimming, dim_step = 10; //fixme: tie this to a parameter
+  uint8_t slope = LEDS_PER_RING / NUM_RINGS;  // slope in ring-pixel plane of coin circle
+  int pixel;
+ 
+  uint8_t vertical_color = random8(2);
+  uint8_t horizontal_color = random8(2);
+  uint8_t coin_color = random8(2);
+  
+  clear_sparkle_layer();
+
+  // vertical circle
+  for (pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+    //sparkle_layer[current_ring][pixel] = get_sparkle_color(0, 6);
+    for (dimming = 0; dimming < 127; dimming += dim_step) {
+        sparkle_layer[(current_ring + dimming) % NUM_RINGS][pixel] = get_sparkle_color(vertical_color, 127 - dimming);
+    }
+  }
+
+  // horizontal circle
+  for (ring = 0; ring < NUM_RINGS; ring++) {
+    for (dimming = 0; dimming < 127; dimming += dim_step) {
+      sparkle_layer[ring][(current_pixel + dimming) % LEDS_PER_RING] = get_sparkle_color(horizontal_color, 127 - dimming);
+    }
+  }
+
+  // diagonal circle fixme: need to test this dimming
+  for (ring = 0; ring < NUM_RINGS; ring++) {
+    for (dimming = 0; dimming < 127; dimming += dim_step) {
+      sparkle_layer[(ring + current_coin + dimming) % NUM_RINGS][ring * slope] = get_sparkle_color(coin_color, 127 - dimming);
+    }
+  }
+
+  // move each circle start over one unit according to intra and inter ring speed
+  inter_throttle = SPARKLE_INTER_RING_SPEED % 30 + 10;
+  if (sparkle_count % inter_throttle == 0) {
+    current_ring = (current_ring + SPARKLE_INTER_RING_MOTION) % NUM_RINGS;
+  }
+  intra_throttle = SPARKLE_INTRA_RING_SPEED % 10 + 10;
+  if (sparkle_count % intra_throttle == 0) {
+    current_pixel = (current_pixel + SPARKLE_INTRA_RING_MOTION) % LEDS_PER_RING;
+  }
+
+  // there's no parameter for this speed
+  coin_throttle = (inter_throttle + intra_throttle) / 2;
+  if (sparkle_count % coin_throttle == 0) {
+    current_coin = (current_coin + 1) % LEDS_PER_RING;
+  } 
+}
+
+
+
+
+//---------------------------------- SPARKLE TORUS_KNOT ---------------------------
+// This code assumes there would be 504 = 72 * 7 pixels all the way around one ring, if pixels went under the floor
+
+inline void sparkle_torus_knot() {
+  int num_extended_pixels = 72 * 7;
+  uint8_t knot_width = SPARKLE_COLOR_THICKNESS;
+  int pixel;
+
+  uint8_t num_stripes_options[] = {1, 2, 3, 4, 6, 8, 9, 12, 18, 24, 36, 72};  // # stripes of the knot passing through any one ring must be divisor of 72
+  uint8_t num_stripes = num_stripes_options[random16(12)];  
+  int segment_length = num_extended_pixels / num_stripes;  // split one ring's pixels into num_stripes separate segments
+
+  // for aesthetic reasons, rotate no more than 1/8th of a ring from one ring to next, so max_pixels_rotated <= num_extended_pixels / 8 = 63
+  // need n such that n * segment_length <= 63
+  // in order to rotate n segments worth (n x segment_length pixels) over the 72 rings with above conditions, must 
+  // rotate num_pixels_rotated = n x (7/segment_length) from one ring to the next. must make num_pixels_rotated <= 63
+  // this works out to needing n <= 9 * segment_length
+  uint8_t max_n = 9 * segment_length;
+  uint8_t n = random16(max_n) + 1;
+
+  float pixels_rotated_in_decimal = n * 7.0 / segment_length;
+
+  for (uint8_t ring = 0; ring < NUM_RINGS; ring++) {
+    uint8_t inter_rotation = (uint8_t) (((float) ring) * pixels_rotated_in_decimal);
+    for (uint8_t stripe = 0; stripe < num_stripes; stripe++) {
+      for (pixel = 0; pixel < knot_width; pixel++) {
+        sparkle_layer[(ring + sparkle_count) % NUM_RINGS][stripe * segment_length + pixel + inter_rotation] = get_sparkle_color(0,6);
+      }
+      for (pixel = knot_width; pixel < segment_length; pixel++) {
+        sparkle_layer[(ring + sparkle_count) % NUM_RINGS][stripe * segment_length + pixel + inter_rotation] = TRANSPARENT;
+      }
+    }
+  }  
+}
+
+
+//---------------------------------- SPARKLE TORUS_LINK ---------------------------
+// This code assumes there would be 504 = 72 * 7 pixels all the way around one ring, if pixels went under the floor
+
+inline void sparkle_torus_link() {
+  int num_extended_pixels = 72 * 7;
+  uint8_t knot_1_width = SPARKLE_COLOR_THICKNESS;
+  uint8_t knot_2_width = scale_param(SPARKLE_PORTION, 1, 7);
+  int pixel;
+
+  uint8_t num_stripes_options[] = {1, 2, 3, 4, 6, 8, 9, 12, 18, 24, 36, 72};  // # stripes of the knot passing through any one ring must be divisor of 72
+  uint8_t num_1_stripes = num_stripes_options[random16(12)];  
+  int segment_1_length = num_extended_pixels / num_1_stripes;  // split one ring's pixels into num_stripes separate segments
+  uint8_t num_2_stripes = num_stripes_options[random16(12)];  
+  int segment_2_length = num_extended_pixels / num_2_stripes;  // split one ring's pixels into num_stripes separate segments
+
+  // for aesthetic reasons, rotate no more than 1/8th of a ring from one ring to next, so max_pixels_rotated <= num_extended_pixels / 8 = 63
+  // need n such that n * segment_length <= 63
+  // in order to rotate n segments worth (n x segment_length pixels) over the 72 rings with above conditions, must 
+  // rotate num_pixels_rotated = n x (7/segment_length) from one ring to the next. must make num_pixels_rotated <= 63
+  // this works out to needing n <= 9 * segment_length
+  uint8_t max_1_n = 9 * segment_1_length;
+  uint8_t n_1 = random16(max_1_n) + 1;
+  uint8_t max_2_n = 9 * segment_2_length;
+  uint8_t n_2 = random16(max_2_n) + 1;
+  
+  float pixels_1_rotated_in_decimal = n_1 * 7.0 / segment_1_length;
+  float pixels_2_rotated_in_decimal = n_2 * 7.0 / segment_2_length;
+
+  for (uint8_t ring = 0; ring < NUM_RINGS; ring++) {
+    uint8_t inter_1_rotation = (uint8_t) (((float) ring) * pixels_1_rotated_in_decimal);
+    uint8_t inter_2_rotation = (uint8_t) (((float) ring) * pixels_2_rotated_in_decimal);
+    for (uint8_t stripe = 0; stripe < num_1_stripes; stripe++) {
+      for (pixel = 0; pixel < knot_1_width; pixel++) {
+        // fixme: maybe do something with dimming values 
+        sparkle_layer[(ring + sparkle_count) % NUM_RINGS][stripe * segment_1_length + pixel + inter_1_rotation] = get_sparkle_color(0,6);
+      }
+      for (pixel = knot_1_width; pixel < segment_1_length; pixel++) {
+        sparkle_layer[(ring + sparkle_count) % NUM_RINGS][stripe * segment_1_length + pixel + inter_1_rotation] = TRANSPARENT;
+      }
+    }
+    for (uint8_t stripe = 0; stripe < num_2_stripes; stripe++) {
+      for (pixel = 0; pixel < knot_2_width; pixel++) {
+        sparkle_layer[(ring + sparkle_count) % NUM_RINGS][stripe * segment_2_length + pixel - inter_2_rotation] = get_sparkle_color(1,6);
+      }
+      for (pixel = knot_2_width; pixel < segment_2_length; pixel++) {
+        sparkle_layer[(ring + sparkle_count) % NUM_RINGS][stripe * segment_2_length + pixel - inter_2_rotation] = TRANSPARENT;
+      }
+    }
+  }  
+}
+
+// ----------------- Variable spin -----------------
+// Each ring rotates blocks of pixels around rings at different rates.
+// Goal is to find cool periods that result in several unique alignments forming
+// (Goal was not met but hey it's a thing...)
+#define VARIABLE_SPIN_STEP_SIZE 5
+void variable_spin() {
+  // 6 spin rates, centered at the middle of each node, so node edges line up with each other.
+  // First half of node spins one way, second half the other way. Reverse direction on odd numbered nodes so node edges line up.
+  const uint8_t spinRates[12] = { 2, 3, 4, 5, 6, 7 };
+  static int16_t centerPoints[12] = { HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING, HALF_RING };
+  for(uint8_t i = 0; i < 6; i++)
+  {
+    centerPoints[i] -= spinRates[i];
+    if(centerPoints[i] < 0) { centerPoints[i] += LEDS_PER_RING; }
+
+    centerPoints[11-i] += spinRates[i];
+    if(centerPoints[11-i] > LEDS_PER_RING-1) { centerPoints[11-i] -= LEDS_PER_RING; }
+  }
+
+  clear_sparkle_layer();
+
+  for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
+    uint8_t cur_color = get_sparkle_color(ring % 2, 70);
+    uint16_t centerPoint = centerPoints[ring];
+
+    sparkle_layer[ring][centerPoint] = cur_color;
+
+    if(centerPoint == 0) {
+      sparkle_layer[ring][LEDS_PER_RING - 1] = cur_color;
+      sparkle_layer[ring][LEDS_PER_RING - 2] = cur_color;
+      //sparkle_layer[ring][LEDS_PER_RING - 3] = cur_color;
+    }
+    else if(centerPoint == 1) {
+      sparkle_layer[ring][0] = cur_color;
+      sparkle_layer[ring][LEDS_PER_RING - 1] = cur_color;
+      //sparkle_layer[ring][LEDS_PER_RING - 2] = cur_color;
+    }
+    else if(centerPoint == 2) {
+      sparkle_layer[ring][1] = cur_color;
+      sparkle_layer[ring][0] = cur_color;
+      //sparkle_layer[ring][LEDS_PER_RING - 1] = cur_color;
+    }
+    else {
+      sparkle_layer[ring][centerPoint-1] = cur_color;
+      sparkle_layer[ring][centerPoint-2] = cur_color;
+      //sparkle_layer[ring][centerPoint-3] = cur_color;
+    }
+
+    if(centerPoint == LEDS_PER_RING - 1) {
+      sparkle_layer[ring][0] = cur_color;
+      sparkle_layer[ring][1] = cur_color;
+      //sparkle_layer[ring][2] = cur_color;
+    }
+    else if(centerPoint == LEDS_PER_RING - 2) {
+      sparkle_layer[ring][LEDS_PER_RING-1] = cur_color;
+      sparkle_layer[ring][0] = cur_color;
+      //sparkle_layer[ring][1] = cur_color;
+    }
+    else if(centerPoint == LEDS_PER_RING - 3) {
+      sparkle_layer[ring][LEDS_PER_RING-2] = cur_color;
+      sparkle_layer[ring][LEDS_PER_RING-1] = cur_color;
+      //sparkle_layer[ring][0] = cur_color;
+    }
+    else {
+      sparkle_layer[ring][centerPoint+1] = cur_color;
+      sparkle_layer[ring][centerPoint+2] = cur_color;
+      //sparkle_layer[ring][centerPoint+3] = cur_color;
+    }
+  }
+}
 
 
 

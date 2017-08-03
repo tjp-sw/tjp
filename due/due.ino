@@ -27,7 +27,9 @@
   #define MID_ANIMATION_TIME 9000                                    //
   #define SPARKLE_ANIMATION_TIME 7000                                //
   #define PALETTE_CHANGE_TIME 5000                                   //
-  #define EDM_ANIMATION_TIME 20000                                   //
+                                                                     //
+  #define EDM_ANIMATION_TIME 10000                                   //
+  #define BEAT_EFFECT_TIME 6000                                      //
 #endif                                                               //
                                                                      //
 ///////////////////////////////////////////////////////////////////////
@@ -38,7 +40,7 @@ inline void manually_set_animation_params() {             //
   // Set to OFF to disable a layer during CYCLE'ing.      //
   // Use NONE to signify a layer that is off temporarily  //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   BASE_ANIMATION = NONE;                                  //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK, LEE_PICK_HSV
-  MID_ANIMATION = NONE;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  MID_ANIMATION = SQUARE2;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   SPARKLE_ANIMATION = NONE;                               //
   EDM_ANIMATION = OFF;                                    //
                                                           //
@@ -53,7 +55,7 @@ inline void manually_set_animation_params() {             //
   MID_NUM_COLORS = 3;                                     //
   MID_COLOR_THICKNESS = 100;                              //
   MID_BLACK_THICKNESS = 255;                              //
-  show_parameters[MID_INTRA_RING_MOTION_INDEX] = CW;      //
+  show_parameters[MID_INTRA_RING_MOTION_INDEX] = DOWN;    //
   MID_INTRA_RING_SPEED = 120;                             //
   show_parameters[MID_INTER_RING_MOTION_INDEX] = NONE;    //
   MID_INTER_RING_SPEED = 0;                               //
@@ -70,8 +72,8 @@ inline void manually_set_animation_params() {             //
   SPARKLE_RANGE = 0;                                      //
   SPARKLE_SPAWN_FREQUENCY = 0;                            //
                                                           //
-  BEAT_EFFECT = NONE;                                     //
   PALETTE_CHANGE = PALETTE_CHANGE_IMMEDIATE;              //
+  BEAT_EFFECT = NONE;                                     //
   MID_ALPHA = NONE;                                       //
   SPARKLE_ALPHA = NONE;                                   //
                                                           //
@@ -117,7 +119,7 @@ void setup() {
   delay(500);
 
   //  Clear all LEDs
-  LEDS.clear();
+  LEDS.clear(true);
   LEDS.show();
   delay(500); // Hold LEDs off
 
@@ -162,12 +164,14 @@ void setup() {
   edm_start_time = temp;
   #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
     palette_start_time = temp;
+    beat_effect_start_time = temp;
   #endif
 }
 
 
 // the loop function runs over and over again forever
 void loop() {
+  //delay(700);
   #ifdef DEBUG_TIMING
     static uint16_t serial_val[20];
     static unsigned long last_debug_time;
@@ -214,15 +218,17 @@ void loop() {
 
 
   // Apply beat effects
-  #ifndef PI_CONTROLLED
-    // Simulate a beat
-    is_beat = loop_count % 10 == 0;
-    uint16_t step = loop_count % 20;
-    if(step > 10) { step = 20 - step; }
-    downbeat_proximity = step * 255 / 9; // Using full range of downbeat_proximity (0-255)
-  #endif
-
-  do_beat_effects();
+  if(EDM_ANIMATION != OFF && EDM_ANIMATION != NONE) {
+    #ifndef PI_CONTROLLED
+      // Simulate a beat
+      is_beat = loop_count % 10 == 0;
+      uint16_t step = loop_count % 20;
+      if(step > 10) { step = 20 - step; }
+      downbeat_proximity = step * 255 / 9; // Using full range of downbeat_proximity (0-255)
+    #endif
+  
+    do_beat_effects();
+  }
   #ifdef DEBUG_TIMING
     now = millis();
     serial_val[4] = now - last_debug_time;
@@ -552,7 +558,7 @@ inline void cycle_through_animations() {
   }
 
 
-  if(BASE_ANIMATION != OFF) {
+  if(BASE_ANIMATION <= NUM_BASE_ANIMATIONS) {
     if ((current_time - base_start_time >= BASE_ANIMATION_TIME) && !(transition_out_base_animation || transition_in_base_animation)) {
       transition_out_base_animation = true;
       #ifdef CYCLE_RANDOM
@@ -569,7 +575,7 @@ inline void cycle_through_animations() {
     }
   }
 
-  if(MID_ANIMATION != OFF) {
+  if(MID_ANIMATION <= NUM_MID_ANIMATIONS) {
     if ((current_time - mid_start_time >= MID_ANIMATION_TIME) && !(transition_out_mid_animation || transition_in_mid_animation)) {
       transition_out_mid_animation = true;
 
@@ -587,7 +593,7 @@ inline void cycle_through_animations() {
     }
   }
 
-  if(SPARKLE_ANIMATION != OFF) {
+  if(SPARKLE_ANIMATION <= NUM_SPARKLE_ANIMATIONS) {
     if ((current_time - sparkle_start_time >= SPARKLE_ANIMATION_TIME) && !(transition_out_sparkle_animation || transition_in_sparkle_animation)) {
       transition_out_sparkle_animation = true;
 
@@ -621,6 +627,19 @@ inline void cycle_through_animations() {
         next_edm_animation = EDM_ANIMATION;
       #endif
     }
+  
+    if(current_time - beat_effect_start_time >= BEAT_EFFECT_TIME) {
+      beat_effect_start_time = current_time;
+      #ifdef CYCLE_RANDOM
+        BEAT_EFFECT = 1 + random8(NUM_BEAT_EFFECTS);
+      #elif defined(CYCLE)
+        BEAT_EFFECT = (BEAT_EFFECT+1) % (NUM_BEAT_EFFECTS+1);
+      #endif
+
+      #ifdef DEBUG
+        Serial.println("New beat effect: " + String(BEAT_EFFECT));
+      #endif
+    }
   }
 }
 #endif
@@ -631,6 +650,10 @@ inline void draw_current_base(uint8_t min_ring, uint8_t max_ring) {
   switch(BASE_ANIMATION) {
     case BASE_SCROLLING_DIM:
       base_scrolling_dim(min_ring, max_ring);
+      break;
+
+    case BASE_SCROLLING_HALF_DIM:
+      base_scrolling_half_dim(min_ring, max_ring);
       break;
 
     case BASE_2COLOR_GRADIENT:
@@ -662,40 +685,63 @@ inline void draw_current_base(uint8_t min_ring, uint8_t max_ring) {
 inline void draw_current_mid(uint8_t min_ring, uint8_t max_ring) {
   switch(MID_ANIMATION) {
     case SNAKE:
-      snake(ALL_RINGS, min_ring, max_ring);
+      snake(min_ring, max_ring);
       break;
 
     case FIRE:
-      fire(ALL_RINGS, FIRE_PALETTE_STANDARD, true, min_ring, max_ring);
-      break;
-
-    case DISCO_FIRE:
-      fire(ALL_RINGS, FIRE_PALETTE_DISABLED, true, min_ring, max_ring);
-      break;
-
-    case FIRE_SNAKE:
-      fire(ODD_RINGS, FIRE_PALETTE_STANDARD, true, min_ring, max_ring);
-      snake(EVEN_RINGS, min_ring, max_ring);
+      fire(FIRE_PALETTE_STANDARD, true, min_ring, max_ring);
       break;
 
     case FIRE_ONE_SIDED:
-      fire(ALL_RINGS, FIRE_PALETTE_STANDARD, false, min_ring, max_ring);
+      fire(FIRE_PALETTE_STANDARD, false, min_ring, max_ring);
       break;
 
-    case MID_SCROLLING_DIM:
-      mid_scrolling_dim(COLOR_BY_LOCATION, min_ring, max_ring);
+    case DISCO_FIRE:
+      fire(FIRE_PALETTE_DISABLED, true, min_ring, max_ring);
+      break;
+
+    case DISCO_FIRE_ONE_SIDED:
+      fire(FIRE_PALETTE_DISABLED, false, min_ring, max_ring);
+      break;
+
+    case MID_SCROLLING_DIM1:
+      mid_scrolling_dim1(min_ring, max_ring);
       break;
 
     case MID_SCROLLING_DIM2:
-      mid_scrolling_dim(COLOR_BY_PATTERN, min_ring, max_ring);
+      mid_scrolling_dim2(min_ring, max_ring);
       break;
 
     case MID_SCROLLING_DIM3:
-      mid_scrolling_dim(COLOR_BY_PATTERN_OFFSET, min_ring, max_ring);
+      mid_scrolling_dim3(min_ring, max_ring);
+      break;
+
+    case MID_SCROLLING_DIM4:
+      mid_scrolling_dim4(min_ring, max_ring);
+      break;
+
+    case MID_SCROLLING_DIM5:
+      mid_scrolling_dim5(min_ring, max_ring);
       break;
 
     case ARROW:
       arrow();
+      break;
+
+    case RADIATION:
+      radiation_symbol();
+      break;
+
+    case SQUARE:
+      square_pattern();
+      break;
+
+    case SQUARE2:
+      square_pattern2();
+      break;
+
+    case WAVE:
+      wave();
       break;
 
     default:
@@ -721,6 +767,10 @@ inline void draw_current_sparkle() {
       sparkle_three_circles();
       break;
 
+    case THREE_CIRCLE_TRAILS:
+      sparkle_three_circle_trails();
+      break;
+
     case TWO_COINS:
       sparkle_two_coins();
       break;
@@ -729,6 +779,18 @@ inline void draw_current_sparkle() {
       sparkle_twinkle();
       break;
 
+    case VARIABLE_SPIN:
+      variable_spin();
+      break;
+
+    case TORUS_KNOT:
+      sparkle_torus_knot();
+      break;
+
+    case TORUS_LINK:
+      sparkle_torus_link();
+      break;
+      
     default:
       break;
   }
@@ -779,7 +841,8 @@ inline void init_base_animation() {
   #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
     BASE_COLOR_THICKNESS = random8();
     BASE_BLACK_THICKNESS = random8();
-    show_parameters[BASE_INTRA_RING_MOTION_INDEX] = random8(2) ? CW : CCW;
+    show_parameters[BASE_INTRA_RING_MOTION_INDEX] = random8(3);
+    if(BASE_INTRA_RING_MOTION == 0) { show_parameters[BASE_INTRA_RING_MOTION_INDEX] = -1; }
     BASE_INTRA_RING_SPEED = random8();
     show_parameters[BASE_INTER_RING_MOTION_INDEX] = random8(2) ? CW : CCW;
     BASE_INTER_RING_SPEED = random8();
@@ -811,7 +874,8 @@ inline void init_mid_animation() {
     MID_NUM_COLORS = random8(1, 4);
     MID_COLOR_THICKNESS = random8();
     MID_BLACK_THICKNESS = random8();
-    show_parameters[MID_INTRA_RING_MOTION_INDEX] = random8(2) ? CW : CCW;
+    show_parameters[MID_INTRA_RING_MOTION_INDEX] = random8(3);
+    if(MID_INTRA_RING_MOTION == 0) { show_parameters[MID_INTRA_RING_MOTION_INDEX] = -1; }
     MID_INTRA_RING_SPEED = random8();
     show_parameters[MID_INTER_RING_MOTION_INDEX] = random8(2) ? CW : CCW;
     MID_INTER_RING_SPEED = random8();
@@ -821,9 +885,10 @@ inline void init_mid_animation() {
 
   switch(MID_ANIMATION) {
     case FIRE:
-    case DISCO_FIRE:
     case FIRE_ONE_SIDED:
-    case FIRE_SNAKE:
+      override_default_blending = true;
+    case DISCO_FIRE:
+    case DISCO_FIRE_ONE_SIDED:
       clear_mid_layer(); // Clear old pixels which are now "heat" values
       break;
 
@@ -831,8 +896,16 @@ inline void init_mid_animation() {
       init_arrow();
       break;
 
-    default:
+    case RADIATION:
       clear_mid_layer();
+      init_radiation_symbol();
+      break;
+
+    case NONE:
+      clear_mid_layer();
+      break;
+
+    default:
       break;
   }
 
@@ -855,7 +928,8 @@ inline void init_sparkle_animation() {
   #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
     SPARKLE_COLOR_THICKNESS = random8();
     SPARKLE_PORTION = random8();
-    show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = random8(2) ? CW : CCW;
+    show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = random8(3);
+    if(SPARKLE_INTRA_RING_MOTION == 0) { show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = -1; }
     SPARKLE_INTRA_RING_SPEED = random8();
     show_parameters[SPARKLE_INTER_RING_MOTION_INDEX] = random8(2) ? CW : CCW;
     SPARKLE_INTER_RING_SPEED = random8();
@@ -874,17 +948,27 @@ inline void init_sparkle_animation() {
       break;
 
     case WARP_SPEED:
+      random16_set_seed(0); // Synchronize RNG on different nodes
+      SPARKLE_PORTION = 100;
+      SPARKLE_MIN_DIM = 255; // Start everything at minimum brightness
+      SPARKLE_MAX_DIM = 255;
+      SPARKLE_RANGE = 255;
+
+      sparkle_glitter(); // Generate a set of spots
+      break;
+
     case TWINKLE:
       random16_set_seed(0); // Synchronize RNG on different nodes
       // Always draw full ring and brightness
       SPARKLE_RANGE = 255;
       SPARKLE_MIN_DIM = 0;
-      SPARKLE_MAX_DIM = 2;
+      SPARKLE_MAX_DIM = 255;
 
-      sparkle_glitter(); // Generate a set of spots to rotate
+      sparkle_glitter(); // Generate a set of spots
       break;
 
     case THREE_CIRCLES:
+    case THREE_CIRCLE_TRAILS:
     case TWO_COINS:
       random16_set_seed(0); // Synchronize RNG on different nodes
       current_ring = random8(NUM_RINGS);
@@ -892,8 +976,12 @@ inline void init_sparkle_animation() {
       current_coin = random8(NUM_RINGS);
       break;
 
-    default:
+    case TORUS_KNOT:
+    case TORUS_LINK:
+    case NONE:
       clear_sparkle_layer();
+
+    default:
       break;
   }
 
@@ -911,12 +999,14 @@ inline void init_sparkle_animation() {
 
 inline void init_edm_animation() {
   edm_start_time = current_time;
+  leds_all = CRGB::Black;
 
   #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)
     if(EDM_ANIMATION != NONE) {
       BASE_COLOR_THICKNESS = random8();
       BASE_BLACK_THICKNESS = random8();
-      show_parameters[BASE_INTRA_RING_MOTION_INDEX] = random8(2) ? CW : CCW;
+      show_parameters[BASE_INTRA_RING_MOTION_INDEX] = random8(3);
+      if(BASE_INTRA_RING_MOTION == 0) { show_parameters[BASE_INTRA_RING_MOTION_INDEX] = -1; }
       BASE_INTRA_RING_SPEED = random8();
       show_parameters[BASE_INTER_RING_MOTION_INDEX] = random8(2) ? CW : CCW;
       BASE_INTER_RING_SPEED = random8();
@@ -933,6 +1023,7 @@ inline void init_edm_animation() {
       BASE_ANIMATION = OFF;
       SPARKLE_ANIMATION = OFF;
       MID_ANIMATION = FIRE_ONE_SIDED;
+      clear_sparkle_layer();
       init_mid_animation();
       break;
 
@@ -967,9 +1058,10 @@ inline void cleanup_base_animation(uint8_t animation_index) {
 inline void cleanup_mid_animation(uint8_t animation_index) {
   switch(animation_index) {
     case FIRE:
-    case DISCO_FIRE:
-    case FIRE_SNAKE:
     case FIRE_ONE_SIDED:
+      override_default_blending = false;
+    case DISCO_FIRE:
+    case DISCO_FIRE_ONE_SIDED:
       cleanup_fire();
       break;
 

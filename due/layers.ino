@@ -59,8 +59,10 @@ inline void write_pixel_data() {
       uint8_t color_index = mid_layer[ring_offset+ring][pixel];
       if(color_index != 0) {
         CRGB mid_pixel_color = ColorFromPalette(mid_palette, color_index);
-        uint8_t blending = get_mid_alpha(ring, pixel);
-        nblend(leds[pixel_offset], mid_pixel_color, blending);
+        uint8_t blending;
+        if(override_default_blending) { blending = color_index; }
+        else { blending = get_mid_alpha(ring, pixel); }
+        tjp_nblend(leds[pixel_offset], mid_pixel_color, blending);
       }
 
       // Blend in sparkle layer
@@ -68,7 +70,7 @@ inline void write_pixel_data() {
       if(color_index != 0) {
         CRGB sparkle_pixel_color = ColorFromPalette(sparkle_palette, color_index);
         uint8_t blending = get_sparkle_alpha(ring, pixel);
-        nblend(leds[pixel_offset], sparkle_pixel_color, blending);
+        tjp_nblend(leds[pixel_offset], sparkle_pixel_color, blending);
       }
 
       pixel_offset += increment_amount;
@@ -79,16 +81,7 @@ inline void write_pixel_data() {
 
 // Alpha functions: return an amount to blend each layer based on ring/pixel
 inline uint8_t get_sparkle_alpha(uint8_t ring, uint16_t pixel) {
-  uint8_t alpha = get_sparkle_default_alpha(ring, pixel);
-  uint8_t extra_blending = 0;
-
-  switch(SPARKLE_ALPHA) {
-    case ALPHA_BY_HEIGHT:
-      extra_blending = get_sparkle_alpha_from_height(pixel);
-
-    default:
-      break;
-  }
+  uint8_t alpha = 255 * (MAX_SPARKLE_DIMMING - get_sparkle_dim_value(ring, pixel)) / MAX_SPARKLE_DIMMING;
 
   if(SPARKLE_TRANSITION == TRANSITION_BY_ALPHA) {
     uint8_t max_alpha = 255 - transition_progress_sparkle;
@@ -99,19 +92,7 @@ inline uint8_t get_sparkle_alpha(uint8_t ring, uint16_t pixel) {
 }
 
 inline uint8_t get_mid_alpha(uint8_t ring, uint16_t pixel) {
-  uint8_t alpha = get_mid_default_alpha(ring, pixel);
-  uint8_t extra_blending = 0;
-  
-  switch(MID_ALPHA) {
-    case ALPHA_BY_HEIGHT:
-      extra_blending = get_mid_alpha_from_height(pixel);
-
-    case ALPHA_BY_GRADIENT:
-      extra_blending = get_mid_alpha_from_gradient(ring, pixel);
-
-    default:
-      break;
-  }
+  uint8_t alpha = 255 * (MAX_MID_DIMMING - get_mid_dim_value(ring, pixel)) / MAX_MID_DIMMING;
 
   if(MID_TRANSITION == TRANSITION_BY_ALPHA) {
     uint8_t max_alpha = 255 - transition_progress_mid;
@@ -121,55 +102,6 @@ inline uint8_t get_mid_alpha(uint8_t ring, uint16_t pixel) {
   return alpha;
 }
 
-
-// Height; Top of ring is opaque, bottom is fully transparent
-inline uint8_t get_sparkle_alpha_from_height(uint16_t pixel) {
-  if(pixel >= HALF_RING) { pixel = LEDS_PER_RING - 1 - pixel; }
-  return pixel * 255 / HALF_RING;
-}
-
-inline uint8_t get_sparkle_default_alpha(uint8_t ring, uint16_t pixel) {
-  return 255 * (MAX_DIMMING - get_sparkle_dim_value(ring, pixel)) / MAX_DIMMING;
-
-  /*
-  // Only sparkle layer's brightness is considered
-  CRGB color = sparkle_palette.entries[sparkle_layer[ring][pixel]];
-  uint8_t luma = color.getLuma();
-  if(luma >= 64) { return 255; }
-  else { return 4 * luma; }
-  */
-}
-
-
-inline uint8_t get_mid_alpha_from_height(uint16_t pixel) {
-  if(pixel >= HALF_RING) { pixel = LEDS_PER_RING - 1 - pixel; }
-  return (HALF_RING - 1 - pixel) * 255 / HALF_RING;
-}
-
-inline uint8_t get_mid_default_alpha(uint8_t ring, uint16_t pixel) {
-  return 255 * (MAX_DIMMING - get_mid_dim_value(ring, pixel)) / MAX_DIMMING;
-
-  /*
-  // Ratio of mid to base layer's brightness
-  CRGB color = mid_palette.entries[mid_layer[ring][pixel]];
-  uint8_t col_luma = color.getLuma();
-  uint8_t base_luma = get_led(ring, pixel).getLuma();
-  return 255 * col_luma / (col_luma + base_luma);
-  */
-}
-
-inline uint8_t get_mid_alpha_from_gradient(uint8_t ring, uint16_t pixel) {
-  const uint8_t ring_offset = 4;
-  const uint8_t intra_motion = 0;
-  const uint8_t intra_speed = 16;
-  
-  const uint16_t period = 64;
-  
-  uint16_t idx = (pixel + ring_offset*ring + intra_motion * intra_speed * mid_count / THROTTLE) % period;
-
-  if(idx < period/2) { return idx * 255 / (period/2); }
-  else { return (period - idx) * 255 / (period/2); }
-}
 
 
 // Functions to transition between animations on each layer. Returns true as long as the transition is ongoing. 

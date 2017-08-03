@@ -1,4 +1,38 @@
-Actually no need to read me just yet.
+To install mongod on Pi:
+$ sudo apt-get update
+$ sudo apt-get upgrade
+$ sudo apt-get install mongodb-server
 
-Will do a proper write up regrading how to recreate the workflow soon...
-However some changes the processing are underway - will refrain until those are done.
+$ sudo service mongod start
+
+NEW way of audio preprocessing:
+(credit goes to Antonio for the meat of this code)
+Note: have to use only files that Kienen has 'processed' for the Tsunami. Something todo with the file type, bit rate, etc (not exactly sure but these libaries don't work non-'processed' tjp audio files)
+
+1) run play_new.sh outputting to a file i.e. ./play_new.sh > sample_processing_new
+    Note: need to change the paths in the script towards the tjp audio file directory
+2) (optional) to see what you have run parser_new.py to turn into AudioFileInfo objects i.e. python parser_new.py (will want to uncomment the bottom lines)
+3) run mongo.py to put items into MongoDB i.e. python mongo.py
+    Note: will have to uncomment lines at bottom.
+4) (optional) to double check everything made it as expected type:
+    mongo (to connect to mongodb)
+    use audioInfo (to select the db)
+    db.audioFiles.find().pretty() (to see everything in the audiFiles collection)
+
+    
+OLD way of audio preprocessing:
+(pretty rudimentary but gets Frequency and Amplitude events but current thresholds are too low creating subjectively too many events... could be changed but the new way actually creates normalized events)
+Just for prosperity I'm going to write this down...
+
+1) run spectrum_shield_for_preprocessing.ino on a due with a Spectrum Shield attached
+2) run ComArduino.py appending to a file i.e. python ComArduino.py >> sample_processing
+3) run play.sh outputting to the same file i.e. ./play.sh >> sample_processing
+    Note: that play.sh plays a short mp3 of silence. you can grab a .1 sec silent mp3 from here: http://www.kirkville.com/listen-different-adding-silence-to-your-itunes-and-ipod-playlists/
+    changing the file paths in the scripts will be necessary (point towards the audio file directory).
+4) (optional) to see what you have run parser.py to turn into AudioFileInfo objects i.e. python parser.py (will want to uncomment the bottom lines)
+5) run mongo.py to put items into MongoDB i.e. python mongo.py
+    Note: will have to uncomment lines at bottom.
+6) (optional) to double check everything made it as expected type:
+    mongo (to connect to mongodb)
+    use audioInfo (to select the db)
+    db.audioFiles.find().pretty() (to see everything in the audiFiles collection)
