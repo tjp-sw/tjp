@@ -522,6 +522,44 @@ void arrow() {
 }
 
 
+//-------------------------------- WAVE ---------------------------------
+#include <math.h> //for sin
+const uint8_t nwave = 12; //per half structure: each half is mirrored
+uint16_t start_pixel[nwave] = {20, 30, 40, 50, 60, 80, 100, 110, 120, 130, 140, 180}; 
+uint8_t  start_ring [nwave] = { 0,  9,  0,  4,  0, 36,   0,  12,   0,   4,   0,   0};
+uint8_t  period     [nwave] = {12,  9,  6,  4, 18, 36,  18,  12,   6,   4,   9,  36}; //N = 6, 8, 12, 18, 4, 2, etc
+uint8_t  wspeed     [nwave] = { 5,  4,  3,  2,  6,  8,   6,   5,   3,   2,   4,   8};
+//uint8_t  amplitude  [nwave] = {5, 5, 5, 5}; //can put this back if desired
+
+void wave() {
+
+  //this loop structure means that the higher index waves will overwrite the lower
+  for( uint8_t i=0; i < nwave*2; i++ ) {
+	  //draw wave
+	  //for( uint8_t j=start_ring[i]-1; j < start_ring[i]+period[i]; j++ ) { //1 period
+    for(uint8_t j = 0; j < NUM_RINGS; j++) {
+	    //uint16_t pixel = start_pixel[i%nwave] + amplitude[i%nwave] * sin(TWO_PI * j / period[i%nwave]); //use amplitude array
+      uint16_t pixel = start_pixel[i%nwave] + period[i%nwave]/2 * sin(TWO_PI * j / period[i%nwave]); //amplitude=period/2
+	    if( i < nwave )
+	      pixel = LEDS_PER_RING - pixel; //mirror
+      
+      if( (j+start_ring[i%nwave]) % (period[i%nwave]*2) >= period[i%nwave] ) { //half structure
+        mid_layer[j][pixel] = TRANSPARENT;
+        continue;
+      }
+      uint8_t b = j%(NUM_RINGS/4) * 12 / (NUM_RINGS/4); //blend ranges over every 4th structure
+      mid_layer[j][pixel] = get_mid_color(i%nwave < 2*nwave/3 ? 0 : 1, i%nwave < nwave/3 ? 1 : 2, b, 0);
+      //Serial.print("r " + String(j) + " p " + String(pixel) + "; ");
+	  }
+    //Serial.println();
+	  //move wave for next loop
+	  if( mid_count % wspeed[i%nwave] == 0 )
+	    start_ring[i%nwave] = (start_ring[i%nwave] < NUM_RINGS-1 ? ++start_ring[i%nwave] : 0);
+  }
+  
+}
+
+
 void init_radiation_symbol() {
   for(uint8_t ring = 0; ring < NUM_RINGS; ring++) {
     uint16_t pixel = 0;
