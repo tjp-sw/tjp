@@ -3,6 +3,8 @@ from datetime import datetime, timedelta, time
 import sounds, shows
 import time as epoch_time
 
+DEBUG = 1
+
 # Just random....this signal is coming from the touchpad which is not written yet.
 def panel_touched():
     chance = random.randint(0, 400000)
@@ -29,9 +31,14 @@ def check_meditation(node=0):
 def status_update(message):
     message = message[1:]
     if message[0] == 'E':
-        print "Sound ending: " + message[1:]
-        Music.meditation = True
-        if int(message[1:]) > 4000:
+        this_sound = int(message[1:])
+        if DEBUG:
+            print "Sound ending: ", this_sound
+        if this_sound in sounds.ALL_MIDS:
+            Music.no_mid = datetime.now()
+        if this_sound in sounds.ALL_HIGHS:
+            Music.no_high = datetime.now()
+        if this_sound in sounds.MEDITATIONS_SOUNDS:
             print "Meditation Finished"
             Music.meditation = False
             if datetime.now().time() > time(hour=19):
@@ -40,7 +47,8 @@ def status_update(message):
                 shows.show_mode = shows.DAY
             return True
     elif message[0] == 'N':
-        print "Need Drone"
+        if DEBUG:
+            print "Need Drone"
         return True
     elif message[0] == 'P':
         print "Still Playing: " + message[1:]
@@ -82,34 +90,49 @@ def set_volume(channels, fade_speed=2000, node=0):
     return send_music(node, 2, fade_speed, channels)
 
 
-# Can only return one command per tick
+# Returns one command per tick
 class Music:
     meditation = False
-    #show_mode = 0 
+    no_low = datetime.min
+    no_mid = datetime.min
+    no_high = datetime.min
+    #show_mode = 0
 
     def __init__(self):
         # self.meditation = False
+        self.need_drone = True
         self.played_low = datetime.min
         self.played_mid = datetime.min
         self.checked_high = datetime.min
         self.played_high = datetime.min
-        self.drone = datetime.min
-        self.drone_count = 0  # Todo: change drone?
+        self.check_drone = datetime.min
         self.checked_meditation = datetime.min
+        self.low_wait = random.randint(30,60)
+        self.mid_wait = random.randint(5,30)
+        self.high_wait = random.randint(30, 60)
+
 
     def tick(self, silent=False):
+        if DEBUG > 1:
+            print "tick"
         now_time = datetime.now()
         bm_day = now_time.weekday()
         if Music.meditation:
+            if DEBUG > 1:
+                print "meditation"
             if self.checked_meditation <= (now_time - timedelta(minutes=1)):
                 self.checked_meditation = now_time
                 return check_meditation()
             return None
         if silent:
+            if DEBUG > 1:
+                print "silent"
             return None
 
         this_meditation = sounds.play_meditation(now_time)
         if this_meditation is None:
+            if DEBUG > 1:
+                print "no meditation"
             Music.meditation = False
             if datetime.fromtimestamp(shows.sunrise_time[ bm_day +1 ]) >= now_time >= \
                datetime.fromtimestamp(shows.sunrise_time[ bm_day +1 ]):
@@ -117,6 +140,8 @@ class Music:
             else:
                 shows.show_mode = shows.NIGHT
         else:
+            if DEBUG > 1:
+                print "setting meditation status"
             Music.meditation = True
             if this_meditation % 2: # odd
                 shows.show_mode = shows.SUNRISE
@@ -124,19 +149,30 @@ class Music:
                 shows.show_mode = shows.SUNSET
             return play([0, this_meditation])
 
+        #compiles array of music to send
         msg = [0] * 4
-        if self.played_low != bm_day:  # Todo: change drone after meditation
+        if self.played_low != bm_day or self.need_drone:
+            self.need_drone = False
             low = sounds.find_low()
             self.played_low = bm_day
-
-            self.drone = now_time
+            self.check_drone = now_time
             msg[0] = low
-        if self.drone < now_time - timedelta (minutes= 1):
+        elif self.check_drone < now_time - timedelta (minutes= 1):
             self.drone = now_time
             return check_drone()
-        if self.played_mid <= (now_time - timedelta(seconds=30)):
+
+        if Music.no_mid <= (now_time - timedelta(seconds=self.mid_wait)):
             msg[1] = sounds.find_mid()
-            self.played_mid = now_time
+            self.mid_wait = random.randint(5, 30)
+            Music.no_mid = datetime.max
+
+        if Music.no_high <= (now_time - timedelta(seconds=self.high_wait)):
+                msg[2] = sounds.find_high()
+                self.high_wait = random.randint(30,60)
+                Music.no_high = datetime.max
+        """
+        if self.played_mid <= (now_time - timedelta(seconds=30)):
+            #self.played_mid = now_time
 
         if self.checked_high <= (now_time - timedelta(seconds=30)):
             play_chance = random.randint(0, 4)
@@ -145,9 +181,12 @@ class Music:
                 msg[2] = sounds.find_high()
                 self.played_high = now_time
             self.checked_high = now_time
+        """
 
         if panel_touched():
             msg[3] = sounds.find_high()
 
+        if DEBUG>1:
+            print msg
         return play(msg)
 

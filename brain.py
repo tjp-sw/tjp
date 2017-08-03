@@ -254,7 +254,7 @@ while running:
                             do_send(s, struct.pack('>cB', 'n', node_number))
                     elif message[0:1] == 's':
                         if music.status_update(message):
-                            mega_music.played_low = 0
+                            mega_music.need_drone = True
 
                     else:
                         print 'received', repr(message), 'from', remote_name[s]
@@ -295,6 +295,7 @@ while running:
         audio_msg = mega_music.tick(dummy_art_car_bool)
         if audio_msg is not None:
             do_send(None, audio_msg)	# always send to all nodes
+            print audio_msg
             # meditation = mega.meditation
 
             #pushing animation parameters across nodes

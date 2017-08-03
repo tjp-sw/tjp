@@ -28,6 +28,10 @@ DAY7_HIGH = [20]
 MIDS = [DAY1_MID, DAY2_MID, DAY3_MID, DAY4_MID, DAY5_MID, DAY6_MID, DAY7_MID]
 HIGHS = [DAY1_HIGH, DAY2_HIGH, DAY3_HIGH, DAY4_HIGH, DAY5_HIGH, DAY6_HIGH, DAY7_HIGH]
 LOWS = [DAY1_LOW, DAY2_LOW, DAY3_LOW, DAY4_LOW, DAY5_LOW, DAY6_LOW, DAY7_LOW]
+ALL_LOWS = [song for sublist in LOWS for song in sublist]
+ALL_MIDS = [song for sublist in MIDS for song in sublist]
+ALL_HIGHS = [song for sublist in HIGHS for song in sublist]
+
 MEDITATIONS_SOUNDS = range(4001,4014)
 
 MEDITATIONS_TIMES = ["06:19 28/8/17",  # Monday
@@ -70,8 +74,8 @@ def find_mid(theme=datetime.today().weekday()):
     if SET_THEME >= 0:
         theme = SET_THEME
     elif shows.show_mode == shows.NIGHT:
-        all_mids = [song for sublist in MIDS[0:theme] for song in sublist]
-        return random.choice(all_mids)
+        daily_mids = [song for sublist in MIDS[0:theme] for song in sublist]
+        return random.choice(daily_mids)
     return random.choice(MIDS[theme])
 
 
@@ -79,8 +83,8 @@ def find_high(theme=datetime.today().weekday()):
     if SET_THEME >= 0:
         theme = SET_THEME
     elif shows.show_mode == shows.NIGHT:
-        all_highs = [song for sublist in HIGHS[0:theme] for song in sublist]
-        return random.choice(all_highs)
+        daily_highs = [song for sublist in HIGHS[0:theme] for song in sublist]
+        return random.choice(daily_highs)
     return random.choice(HIGHS[theme])
 
 
