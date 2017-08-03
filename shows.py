@@ -49,6 +49,7 @@ MID_MAIN_ANIMATION_SWITCH_LAG =  10
 MID_PARAMETER_SWTICH_LAG = 1.9
 SPARKLE_MAIN_ANIMATION_SWITCH_LAG = 5
 SPARKLE_PARAMETER_SWTICH_LAG = 0.9
+PALETTE_LAG = 7
 
 BACKGROUND_INDEX = 0
 MIDLAYER_INDEX = 8
@@ -641,7 +642,7 @@ def drive_internal_animations(init):
             for i in range(0, NUM_PARAMETERS):
                 show_parameters[i] = constrained_random_parameter(i)
             constrain_show()
-            choose_new_playa_palette(1)  # start with day 1 color palette
+            choose_new_playa_palette()  # start with day 1 color palette
 
         print "initial show parameters:"
         print "  base parameters", show_parameters[BASE_PARAM_START:BASE_PARAM_END+1]
@@ -707,8 +708,13 @@ def drive_internal_animations(init):
                 except AttributeError:
                     print "event_queue is empty"
 
-        #TODO if within palette time lag
-        #choose_new_playa_palette(1) #TODO time.time() to days of week constants
+        if time.time() - palette_start_time > PALETTE_LAG:
+            bm_day_index = int((time.time() - BURNING_MAN_START) / 86400) % NUM_DAYS
+            get_random_color(bm_day_index, 1) #TODO not sure what this second value should be...
+            # OR should I be using
+            #choose_new_playa_palette()
+            palette_start_time time.time()
+
         constrain_show()
 
 
