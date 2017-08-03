@@ -72,7 +72,15 @@ def do_show(cmd, param):
     for i in range(0, NUM_COLORS_PER_PALETTE):
         show_colors_list += show_colors[i]
     do_send(None, struct.pack('>c%uB' % (len(show_parameters) + len(show_colors_list)), 's', *(show_parameters + show_colors_list)))
-    print 'show:', repr(show_parameters), repr(show_colors)
+    print 'show:'
+    print "  base parameters", show_parameters[BASE_PARAM_START:BASE_PARAM_END + 1]
+    print "  mid parameters", show_parameters[MID_PARAM_START:MID_PARAM_END + 1]
+    print "  sparkle parameters", show_parameters[SPARKLE_PARAM_START:SPARKLE_PARAM_END + 1]
+    print "  7 color, palette change, beat", show_parameters[SEVEN_PAL_BEAT_PARAM_START:SEVEN_PAL_BEAT_PARAM_END + 1]
+    print "  alpha parameters", show_parameters[ALPHA_PARAM_START:ALPHA_PARAM_END + 1]
+    print "  transition parameters", show_parameters[TRANS_PARAM_START:TRANS_PARAM_END + 1]
+    print 'colors:'
+    print repr(show_colors)
 
 #do a dynamically changing show based on internal audio selections. maybe inlcude hand inputs as well.
 def do_dyn_show(audio_msg):
