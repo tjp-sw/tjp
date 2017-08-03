@@ -1,7 +1,11 @@
 import random, struct
-from datetime import datetime, timedelta
-import sounds  # , shows
+from datetime import datetime, timedelta, time
+import sounds, shows
 
+SUNRISE = 0
+DAY = 1
+SUNSET = 2
+NIGHT = 3
 
 # Just random....this signal is coming from the touchpad which is not written yet.
 def panel_touched():
@@ -25,6 +29,10 @@ def status_update(message):
         if int(message[1:]) > 4000:
             print "Meditation Finished"
             Music.meditation = False
+            if datetime.now().time() > time(hour=12):
+                shows.show_mode = shows.NIGHT
+            else:
+                shows.show_mode = shows.DAY
     elif message[0] == 'N':
         print "Need Drone"
         return True
@@ -69,7 +77,7 @@ def play(channels, node=0, looping=0):
 def set_volume(channels, fade_speed=2000, node=0):
     return send_music(node, 2, fade_speed, channels)
 
-#TODO: set shows.show_mode
+
 # Can only return one command per tick
 class Music:
     meditation = False
@@ -95,13 +103,12 @@ class Music:
         if silent:
             return None
 
-        # Todo: Play meditations manually
         this_meditation = sounds.play_meditation()
         if this_meditation is not None:
-            self.meditation = True
+            Music.meditation = True
             return play([0, this_meditation])
 
-        msg = [0] * 4  # Todo: Loop channel 0 on the mega
+        msg = [0] * 4
         if self.played_low != datetime.today().weekday():  # Todo: change drone after meditation
             low = sounds.find_low()
             self.played_low = datetime.today().weekday()

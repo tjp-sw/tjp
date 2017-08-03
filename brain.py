@@ -292,9 +292,10 @@ while running:
             do_send(None, audio_msg)	# always send to all nodes
         meditation = mega.meditation
 
+        (ignored, ctrl_msg) = audio_msg
         #pushing animation parameters across nodes
         if internal_audio_show:
-            do_dyn_show(audio_msg)
+            do_dyn_show(ctrl_msg)
         elif auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
             auto_show()
             last_show_change_sec = time.time()
