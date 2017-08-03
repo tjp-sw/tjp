@@ -666,40 +666,49 @@ def drive_internal_animations(init):
         valid_time = next_audio_event.time <= upper_bounds and next_audio_event.time >= lower_bounds
         #print "valid? " + str(valid_time) + " aiming for event time between " + str(lower_bounds) + " - " + str(upper_bounds) + " current event time " + str(next_audio_event.time)
 
-        if valid_time: #valid 'next' event
+        if valid_time and next_audio_event is not None: #valid 'next' event
             magnitude = next_audio_event.magnitude
 
             #selecting any base, mind, sparkler layer param - very rudimentary.
             # show_param = randint(0, 27)
 
             # Selecting a random animaiton paramter to change (exluding the main animations)
-            # Maybe should include what band the audio event is in while adding to Mongo so that here I can limit param changes to that layer...
+            # if the timing threshold is met to avoid too frequent param changes... TODO see how it looks with varoius 'lags'
+            show_param = -1;
             if next_audio_event.category == "LOW":
-                show_param = random.choice(range(BASE_PARAM_START + 1, BASE_PARAM_END))
+                if time.time() - bg_parameter_start_time > BASE_PARAMETER_SWTICH_LAG:
+                    show_param = random.choice(range(BASE_PARAM_START + 1, BASE_PARAM_END))
+                    bg_parameter_start_time = time.time()
             elif next_audio_event.category == "MID":
-                show_param = random.choice(range(MID_PARAM_START + 1, MID_PARAM_END))
+                if time.time() - mid_parameter_start_time > MID_PARAMETER_SWTICH_LAG:
+                    show_param = random.choice(range(MID_PARAM_START + 1, MID_PARAM_END))
+                    mid_parameter_start_time = time.time()
             elif next_audio_event.category == "HIGH":
-                show_param = random.choice(range(SPARKLE_PARAM_START + 1, SPARKLE_PARAM_END))
+                if time.time() - sparkle_parameter_start_time > SPARKLE_PARAM_START:
+                    show_param = random.choice(range(SPARKLE_PARAM_START + 1, SPARKLE_PARAM_END))
+                    sparkle_parameter_start_time = time.time()
 
-            old_param_value = show_parameters[show_param]
+            if show_param > -1:
+                old_param_value = show_parameters[show_param]
 
-            if next_audio_event.kind == "freqband":
-                new_param_value = constrained_weighted_parameter(show_param, magnitude)
-                print "Frq event [" + str(next_audio_event) +"]: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
+                if next_audio_event.kind == "freqband":
+                    new_param_value = constrained_weighted_parameter(show_param, magnitude)
+                    print "Frq event [" + str(next_audio_event) +"]: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
 
-            elif next_audio_event.kind == "amplitude":
-                #TODO make this actually intelligent
-                new_param_value = constrained_weighted_parameter(show_param, magnitude)
-                print "Amp event: [" + str(next_audio_event) +"]: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
+                elif next_audio_event.kind == "amplitude":
+                    new_param_value = constrained_weighted_parameter(show_param, magnitude)
+                    print "Amp event: [" + str(next_audio_event) +"]: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
 
-            try:
-                if event_queue.size > 0:
-                    event_queue.remove(next_audio_event.time)
-                else:
-                    next_audio_event = None
-            except AttributeError:
-                print "event_queue is empty"
+                try:
+                    if event_queue.size > 0:
+                        event_queue.remove(next_audio_event.time)
+                    else:
+                        next_audio_event = None
+                except AttributeError:
+                    print "event_queue is empty"
 
+        #TODO if within palette time lag
+        #choose_new_playa_palette(1) #TODO time.time() to days of week constants
         constrain_show()
 
 
