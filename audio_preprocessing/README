@@ -5,9 +5,24 @@ $ sudo apt-get install mongodb-server
 
 $ sudo service mongod start
 
+WHAT YOU'RE PROBALBY HERE FOR... how to get values into mongo
+1) run mongo.py to put items into MongoDB i.e. python mongo.py
+    Note: will have to uncomment lines at bottom & point parser_new at your the parsed file. i.e. sample_parsing_new
+2) (optional) to double check everything made it as expected type:
+    mongo (to connect to mongodb)
+    use audioInfo (to select the db)
+    db.audioFiles.find().pretty() (to see everything in the audiFiles collection)
+
+HOW TO DO THE AUDIO PROCESSING FROM SCRATCH
+
 NEW way of audio preprocessing:
 (credit goes to Antonio for the meat of this code)
 Note: have to use only files that Kienen has 'processed' for the Tsunami. Something todo with the file type, bit rate, etc (not exactly sure but these libaries don't work non-'processed' tjp audio files)
+
+PREREQS:
+need to get numpy & scipy best way:
+apt-get install python-numpy python-scipy
+also need to have the audio files downloaded in a dir somewhere
 
 1) run play_new.sh outputting to a file i.e. ./play_new.sh > sample_processing_new
     Note: need to change the paths in the script towards the tjp audio file directory
@@ -19,7 +34,7 @@ Note: have to use only files that Kienen has 'processed' for the Tsunami. Someth
     use audioInfo (to select the db)
     db.audioFiles.find().pretty() (to see everything in the audiFiles collection)
 
-    
+
 OLD way of audio preprocessing:
 (pretty rudimentary but gets Frequency and Amplitude events but current thresholds are too low creating subjectively too many events... could be changed but the new way actually creates normalized events)
 Just for prosperity I'm going to write this down...
