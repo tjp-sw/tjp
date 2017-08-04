@@ -26,7 +26,7 @@
 
   // declare here when not part of due.ino
   unsigned long long epoch_msec;
-  uint8_t node_number;
+  uint8_t node_number = 255;
 
 #elif defined(I_AM_DUE)
   #define  NodeMate  Serial1
@@ -248,6 +248,7 @@ inline void setup_communication() {
 inline void process_commands(String& input) {
   while (input.length() > 0) {
     #ifdef DEBUG
+      Serial.println(input[0]);
       print_status("bytes available: ", (long)input.length());
     #endif
 
@@ -289,8 +290,10 @@ inline void process_commands(String& input) {
 
       case 'd':
       {
-        const uint8_t node_message[2] = { 'n', node_number };
-        NodeMate.write(node_message, 2);
+        if(node_number != 255) {
+          const uint8_t node_message[2] = { 'n', node_number };
+          NodeMate.write(node_message, 2);
+        }
         break;
       }
 
@@ -336,7 +339,7 @@ inline void process_commands(String& input) {
               assign_node(input[1]);
             #endif
 
-            #ifdef I_AM_HAND_MEGA
+            #if defined(I_AM_HAND_MEGA) || defined(I_AM_NODE_MEGA)
               node_number = input[1];
             #endif
 
@@ -532,24 +535,26 @@ inline void do_mate_input() {
 #endif // I_AM_NODE_MEGA || I_AM_DUE
 
 inline void do_heartbeat() {
-  if (node_number == 255 && loop_start_time_msec > last_announcement_msec + 1000) {
+  if ((node_number == 255) && (loop_start_time_msec > last_announcement_msec + 1000)) {
     #ifdef I_AM_NODE_MEGA
       if (remote.connected()) {
         const char mega_message[3] = {'m', (char)mega_number, '\0'};
         remote.print(mega_message);
-    #endif // I_AM_NODE_MEGA
-    #ifdef I_AM_DUE
-      NodeMate.write('d');
-    #endif // I_AM_DUE
-
-    #ifdef DEBUG
-      print_status("announcing");
-    #endif
-
-    #ifdef I_AM_NODE_MEGA
+        #ifdef DEBUG
+          print_status("announcing");
+        #endif
       }
     #endif // I_AM_NODE_MEGA
-      last_announcement_msec = millis();
+    
+    #ifdef I_AM_DUE
+      NodeMate.write('d');
+      #ifdef DEBUG
+          print_status("announcing");
+        #endif
+    #endif // I_AM_DUE
+
+
+    last_announcement_msec = millis();
   }
 }
 
@@ -563,7 +568,7 @@ inline void do_communication() {
   #ifdef I_AM_DUE
     do_mate_input();
     if(node_number < NUM_NODES) {
-      send_audio_out();
+      //send_audio_out();
     }
   #endif
 
