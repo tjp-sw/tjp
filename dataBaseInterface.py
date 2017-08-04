@@ -8,6 +8,8 @@ import mongo
 RETURN_MOCK = False
 RETURN_MOCK_NEW_PROCESSING = True
 
+INTERNAL_ANIMATIONS_DB_INTER_DEBUG = False
+
 # Class for interfacing with the audio database on the pi.
 class DataBaseInterface:
 	'a class for interfacing with the database'
@@ -15,12 +17,15 @@ class DataBaseInterface:
 	def grabAudioInfo(self, file_num):
 		'grab audio file characteristics from db'
 
-		if not RETURN_MOCK:
-			# print "grabbing audioInfo for TRACK: " + file_num
+		if INTERNAL_ANIMATIONS_DB_INTER_DEBUG:
+			print "grabbing audioInfo for TRACK: " + file_num
 
+		if not RETURN_MOCK:
 			files = mongo.get_collection()
 			audioInfo = mongo.grab_audio_info(files, file_num)
-			# print str(audioInfo)
+
+			if INTERNAL_ANIMATIONS_DB_INTER_DEBUG:
+				print "grab result: " + str(audioInfo)
 
 			return audioInfo
 		else:
@@ -49,7 +54,7 @@ class DataBaseInterface:
 					e4 = AudioEvent(2450, 6.0, "amplitude", "mid")
 
 					audioInfo.addEvent(e2)
-					audioInfo.addEvent(e3)
+					audioInfo.addEvent(e4)
 			else:
 				if int(file_num) == 1:
 					audioInfo = AudioFileInfo("rain", 1, "mid")

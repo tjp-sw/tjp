@@ -33,9 +33,8 @@ def decode_custom(document):
     fi = document["file_index"]
     anis = document["animations"]
 
-    #events_json = json.loads(document["events"])
     events_json = document["events"]
-    #print events_json
+    # print events_json
     events = []
     for event in events_json:
         events.append(decode_custom_event(json.loads(event)))

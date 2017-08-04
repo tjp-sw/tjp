@@ -217,6 +217,7 @@ NUM_AUDIO_CHANNELS = 7
 current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
 internal_audio_show = False  # triggers internal audio animations..
 next_audio_event = AudioEvent(-1, -1, "init", "init")
+INTERNAL_ANIMATIONS_DEBUG = False
 
 def constrained_random_parameter(i):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
@@ -611,7 +612,8 @@ def interpret_audio_msg(audio_msg):
         current_internal_track_per_channel[channel] = audioInfo
         queue_audio_events(audioInfo)
 
-        set_appropriate_layer_main_animation(audioInfo)
+        if audioInfo is not None:
+            set_appropriate_layer_main_animation(audioInfo)
 
 
 # RJS I don't like how this hard coded... if the audio contorl message changes this needs to as well.
@@ -619,7 +621,10 @@ def get_audio_file_info(audio_msg):
     # current msg format: a0;1;0;0,50,0,0
     info = audio_msg.split(";")
     tracks = info[3].split(",")
-    # print "tracks: " +  str(tracks)
+
+    if INTERNAL_ANIMATIONS_DEBUG:
+        print "tracks: " +  str(tracks)
+
     output = {}
     i = 0
     if tracks[i] is not "" and tracks[i] != '':
@@ -629,7 +634,7 @@ def get_audio_file_info(audio_msg):
             i += 1
 
     return output
-    
+
 
 # set the appropriate layer's main animation based on audioInfo's predetermined suitiable animations
 def set_appropriate_layer_main_animation(audioInfo):
@@ -682,7 +687,9 @@ def drive_internal_animations(init):
         lower_bounds = timeMs() - 1000
         upper_bounds = timeMs() + 1000
         valid_time = next_audio_event.time <= upper_bounds and next_audio_event.time >= lower_bounds
-        #print "valid? " + str(valid_time) + " aiming for event time between " + str(lower_bounds) + " - " + str(upper_bounds) + " current event time " + str(next_audio_event.time)
+
+        if INTERNAL_ANIMATIONS_DEBUG:
+            print "valid? " + str(valid_time) + " aiming for event time between " + str(lower_bounds) + " - " + str(upper_bounds) + " current event time " + str(next_audio_event.time)
 
         if valid_time and next_audio_event is not None: #valid 'next' event
             magnitude = next_audio_event.magnitude
@@ -717,6 +724,10 @@ def drive_internal_animations(init):
                     new_param_value = constrained_weighted_parameter(show_param, magnitude)
                     print "Amp event: [" + str(next_audio_event) +"]: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
 
+                # setting the param to its new value
+                #show_parameters[show_param] = new_param_value
+                do_set_show_parameter(None, str(show_param) + " " + str(new_param_value))
+
                 try:
                     if event_queue.size > 0:
                         event_queue.remove(next_audio_event.time)
@@ -742,9 +753,11 @@ def progress_audio_queue():
         try:
             next_audio_event_node = event_queue.peek()
             next_audio_event = next_audio_event_node.value
-            # print "next audio event " + str(next_audio_event)
+            if INTERNAL_ANIMATIONS_DEBUG:
+                print "next audio event " + str(next_audio_event)
         except:
-            # print "event_queue is empty"
+            if INTERNAL_ANIMATIONS_DEBUG:
+                print "event_queue is empty"
             break
 
         stale = next_audio_event.time <= timeMs() - 1000

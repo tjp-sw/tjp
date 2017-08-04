@@ -13,7 +13,7 @@ class AudioFileInfo:
 
 
     def __repr__(self):
-        return "%s AudioFileInfo '%s' named_category:%s suitable_animations: [%s] events: [%s]" % (self.file_index, self.name, self.category, self.animations, self.events)
+        return "%s AudioFileInfo '%s' named_category:%s animations: [%s] events: [%s]" % (self.file_index, self.name, self.category, self.animations, self.events)
 
 
     def addAnimation(self, animation):
@@ -21,7 +21,7 @@ class AudioFileInfo:
 
 
     def getRandomSuitableAnimation(self):
-        return animations[randint(0, len(animations))]
+        return self.animations[randint(0, len(animations))]
 
 
     def addEvent(self, event):
