@@ -614,6 +614,23 @@ def interpret_audio_msg(audio_msg):
         set_appropriate_layer_main_animation(audioInfo)
 
 
+# RJS I don't like how this hard coded... if the audio contorl message changes this needs to as well.
+def get_audio_file_info(audio_msg):
+    # current msg format: a0;1;0;0,50,0,0
+    info = audio_msg.split(";")
+    tracks = info[3].split(",")
+    # print "tracks: " +  str(tracks)
+    output = {}
+    i = 0
+    if tracks[i] is not "" and tracks[i] != '':
+        while(i < len(tracks)):
+            if int(tracks[i]) > 0:
+                output[i] = (DataBaseInterface().grabAudioInfo(tracks[i]))
+            i += 1
+
+    return output
+    
+
 # set the appropriate layer's main animation based on audioInfo's predetermined suitiable animations
 def set_appropriate_layer_main_animation(audioInfo):
     global bg_start_time, mid_start_time, sparkle_start_time, palette_start_time
@@ -755,23 +772,6 @@ def constrained_weighted_parameter(i, magnitude):
     if new_parameter < 0:
         new_parameter += 256
     return new_parameter
-
-
-# RJS I don't like how this hard coded... if the audio contorl message changes this needs to as well.
-def get_audio_file_info(audio_msg):
-    # current msg format: a0;1;0;0,50,0,0
-    info = audio_msg.split(";")
-    tracks = info[3].split(",")
-    # print "tracks: " +  str(tracks)
-    output = {}
-    i = 0
-    if tracks[i] is not "" and tracks[i] != '':
-        while(i < len(tracks)):
-            if int(tracks[i]) > 0:
-                output[i] = (DataBaseInterface().grabAudioInfo(tracks[i]))
-            i += 1
-
-    return output
 
 
 def remove_audio_events_from_queue(audioInfo):

@@ -24,13 +24,14 @@ def decode_custom_event(document):
 
 
 def encode_custom(audioInfo):
-    return {"_type": "AudioFileInfo", "name": audioInfo.name, "category": audioInfo.category, "file_index": audioInfo.file_index, "events": encode_events(audioInfo.events)}
+    return {"_type": "AudioFileInfo", "name": audioInfo.name, "category": audioInfo.category, "file_index": audioInfo.file_index, "animations:": audioInfo.animations, "events": encode_events(audioInfo.events)}
 
 
 def decode_custom(document):
     name = document["name"]
     cat = document["category"]
     fi = document["file_index"]
+    anis = document["animations"]
 
     #events_json = json.loads(document["events"])
     events_json = document["events"]
@@ -39,7 +40,7 @@ def decode_custom(document):
     for event in events_json:
         events.append(decode_custom_event(json.loads(event)))
 
-    return AudioFileInfo(name, cat, fi, events)
+    return AudioFileInfo(name, cat, fi, events, anis)
 
 
 def get_collection():

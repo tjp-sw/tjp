@@ -5,7 +5,7 @@ sys.path.insert(0, 'audio_preprocessing/')
 import mongo
 
 
-RETURN_MOCK = True
+RETURN_MOCK = False
 RETURN_MOCK_NEW_PROCESSING = True
 
 # Class for interfacing with the audio database on the pi.
@@ -45,8 +45,8 @@ class DataBaseInterface:
 				else:
 					audioInfo = AudioFileInfo("wind", 9, "mid")
 
-					e2 = AudioEvent(1450, 4.1, "amplitude")
-					e4 = AudioEvent(2450, 6.0, "amplitude")
+					e2 = AudioEvent(1450, 4.1, "amplitude", "mid")
+					e4 = AudioEvent(2450, 6.0, "amplitude", "mid")
 
 					audioInfo.addEvent(e2)
 					audioInfo.addEvent(e3)
@@ -78,10 +78,10 @@ class DataBaseInterface:
 				else:
 					audioInfo = AudioFileInfo("wind", 9, "mid")
 					#    def __init__(self, time, degree, magnitude, kind):
-					e1 = AudioEvent(1, -6, "freqband")
-					e2 = AudioEvent(145, 800, "amplitude")
-					e3 = AudioEvent(240, 3, "freqband")
-					e4 = AudioEvent(245, -1600, "amplitude")
+					e1 = AudioEvent(1, -6, "freqband", "mid")
+					e2 = AudioEvent(145, 800, "amplitude", "mid")
+					e3 = AudioEvent(240, 3, "freqband", "mid")
+					e4 = AudioEvent(245, -1600, "amplitude", "mid")
 
 					audioInfo.addEvent(e1)
 					audioInfo.addEvent(e2)
