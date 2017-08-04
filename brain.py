@@ -138,6 +138,7 @@ control_messages = {
     'quit':		(do_quit, None, None),
     'reconnect':	(do_simple, None, None),
     'send':		(do_send, None, None),
+    'sp':		(do_set_show_parameter, None, None),
     'time':		(do_time, None, None),
     'meditation': (do_meditation, None, None)
     }

@@ -1,5 +1,4 @@
-#!/usr/bin/python
-import numpy,time
+import numpy, string, time
 from random import randint
 from random import sample
 from dataBaseInterface import DataBaseInterface
@@ -727,3 +726,22 @@ def queue_audio_events(audioInfo):
 
 def timeMs():
     return int(round(time.time() * 1000))
+
+def do_set_show_parameter(ignored, parameters):
+    try:
+        param, value = string.split(parameters, None, 1)
+        param = int(param)
+        value = int(value)
+    except (AttributeError, ValueError):		# no whitespace or non-integer
+        print 'Usage: sp parameter_number value'
+        return
+    if param < 0 or NUM_PARAMETERS <= param:
+        print 'parameter number must be from 0 to', NUM_PARAMETERS-1
+        return
+    if value < show_bounds[param][0] or show_bounds[param][1] < value:
+        print 'parameter', param, 'value must be from', show_bounds[param][0], 'to', show_bounds[param][1]
+        return
+    print 'show_parameters[%u] set to %d' % (param, value)
+    if value < 0:
+        value += 256
+    show_parameters[param] = value
