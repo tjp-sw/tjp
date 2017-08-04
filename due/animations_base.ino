@@ -25,7 +25,8 @@ inline void base_scrolling_dim(uint8_t min_ring, uint8_t max_ring) {
 
   if(node_number*RINGS_PER_NODE > min_ring) { min_ring = node_number*RINGS_PER_NODE; }
   if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
-  for(uint8_t ring = min_ring; ring < max_ring; ring++) {
+  for(uint8_t physical_ring = min_ring; physical_ring < max_ring; physical_ring++) {
+    uint8_t ring = physical_ring % RINGS_PER_NODE;
     uint8_t color_index = ring % 2;
     #if STRIPS_PER_NODE == 4
       bool backward_strip = ring < RINGS_PER_NODE/2;
@@ -104,7 +105,8 @@ inline void base_scrolling_2color_gradient(uint8_t min_ring, uint8_t max_ring) {
 
   if(node_number*RINGS_PER_NODE > min_ring) { min_ring = node_number*RINGS_PER_NODE; }
   if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
-  for(uint8_t ring = min_ring; ring < max_ring; ring++) {
+  for(uint8_t physical_ring = min_ring; physical_ring < max_ring; physical_ring++) {
+    uint8_t ring = physical_ring % RINGS_PER_NODE;
     #if STRIPS_PER_NODE == 4
       bool backward_strip = ring < RINGS_PER_NODE/2;
       uint8_t strip = ring % 2 + (backward_strip ? 0 : 2);
@@ -170,7 +172,8 @@ inline void base_scrolling_half_dim(uint8_t min_ring, uint8_t max_ring) {
 
   if(node_number*RINGS_PER_NODE > min_ring) { min_ring = node_number*RINGS_PER_NODE; }
   if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
-  for(uint8_t ring = min_ring; ring < max_ring; ring++) {
+  for(uint8_t physical_ring = min_ring; physical_ring < max_ring; physical_ring++) {
+    uint8_t ring = physical_ring % RINGS_PER_NODE;
     uint8_t color_index = ring % 2;
     #if STRIPS_PER_NODE == 4
       bool backward_strip = ring < RINGS_PER_NODE/2;
