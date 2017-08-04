@@ -70,15 +70,16 @@ def do_show(cmd, param):
     for i in range(0, NUM_COLORS_PER_PALETTE):
         show_colors_list += show_colors[i]
     do_send(None, struct.pack('>c%uB' % (len(show_parameters) + len(show_colors_list)), 's', *(show_parameters + show_colors_list)))
-    print 'show:'
-    print "  base parameters", show_parameters[BASE_PARAM_START:BASE_PARAM_END + 1]
-    print "  mid parameters", show_parameters[MID_PARAM_START:MID_PARAM_END + 1]
-    print "  sparkle parameters", show_parameters[SPARKLE_PARAM_START:SPARKLE_PARAM_END + 1]
-    print "  7 color, palette change, beat", show_parameters[SEVEN_PAL_BEAT_PARAM_START:SEVEN_PAL_BEAT_PARAM_END + 1]
-    print "  alpha parameters", show_parameters[ALPHA_PARAM_START:ALPHA_PARAM_END + 1]
-    print "  transition parameters", show_parameters[TRANS_PARAM_START:TRANS_PARAM_END + 1]
-    print 'colors:'
-    print repr(show_colors)
+    if cmd != 'dyn_show':
+        print 'show:'
+        print "  base parameters", show_parameters[BASE_PARAM_START:BASE_PARAM_END + 1]
+        print "  mid parameters", show_parameters[MID_PARAM_START:MID_PARAM_END + 1]
+        print "  sparkle parameters", show_parameters[SPARKLE_PARAM_START:SPARKLE_PARAM_END + 1]
+        print "  7 color, palette change, beat", show_parameters[SEVEN_PAL_BEAT_PARAM_START:SEVEN_PAL_BEAT_PARAM_END + 1]
+        print "  alpha parameters", show_parameters[ALPHA_PARAM_START:ALPHA_PARAM_END + 1]
+        print "  transition parameters", show_parameters[TRANS_PARAM_START:TRANS_PARAM_END + 1]
+        print 'colors:'
+        print repr(show_colors)
 
 #do a dynamically changing show based on internal audio selections. maybe inlcude hand inputs as well.
 def do_dyn_show(audio_msg):
@@ -88,6 +89,9 @@ def do_dyn_show(audio_msg):
         print 'performing internal audio show for ' + audio_msg
         do_internal_sound_animations(audio_msg, internal_show_init)
         internal_show_init = False
+
+    do_show("dyn_show", None)
+
 
 next_timesync_sec = 0.0
 
@@ -308,7 +312,6 @@ while running:
             #pushing animation parameters across nodes
         if internal_audio_show:
             do_dyn_show(audio_msg)
-            do_show(None, None)
         elif auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
             auto_show()
             last_show_change_sec = time.time()
