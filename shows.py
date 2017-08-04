@@ -218,6 +218,7 @@ current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
 internal_audio_show = False  # triggers internal audio animations..
 next_audio_event = AudioEvent(-1, -1, "init", "init")
 INTERNAL_ANIMATIONS_DEBUG = False
+internal_show_init = True
 
 def constrained_random_parameter(i):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
@@ -613,6 +614,8 @@ def interpret_audio_msg(audio_msg):
         queue_audio_events(audioInfo)
 
         if audioInfo is not None:
+            if INTERNAL_ANIMATIONS_DEBUG:
+                print "setting main animation param due to new audio track's info " + str(audioInfo)
             set_appropriate_layer_main_animation(audioInfo)
 
 
@@ -639,17 +642,22 @@ def get_audio_file_info(audio_msg):
 # set the appropriate layer's main animation based on audioInfo's predetermined suitiable animations
 def set_appropriate_layer_main_animation(audioInfo):
     global bg_start_time, mid_start_time, sparkle_start_time, palette_start_time
+
     suitable_main_animation = audioInfo.getRandomSuitableAnimation()
 
-    if audioInfo.category == "LOW" and time.time() - bg_start_time > BASE_MAIN_ANIMATION_SWITCH_LAG:
-        show_parameters[BASE_PARAM_START] = suitable_main_animation
-        bg_start_time = time.time()
-    elif audioInfo.category == "MID" and time.time() - mid_start_time > MID_MAIN_ANIMATION_SWITCH_LAG:
-        show_parameters[MID_PARAM_START] = suitable_main_animation
-        mid_start_time = time.time()
-    elif audioInfo.category == "HIGH" and time.time() - sparkle_start_time > SPARKLE_MAIN_ANIMATION_SWITCH_LAG:
-        show_parameters[SPARKLE_PARAM_START] = suitable_main_animation
-        sparkle_start_time = time.time()
+    if suitable_main_animation is not None:
+        if INTERNAL_ANIMATIONS_DEBUG:
+            print "random suitable animation is " + str(suitable_main_animation)
+
+        if audioInfo.category == "LOW" and time.time() - bg_start_time > BASE_MAIN_ANIMATION_SWITCH_LAG:
+            show_parameters[BASE_PARAM_START] = suitable_main_animation
+            bg_start_time = time.time()
+        elif audioInfo.category == "MID" and time.time() - mid_start_time > MID_MAIN_ANIMATION_SWITCH_LAG:
+            show_parameters[MID_PARAM_START] = suitable_main_animation
+            mid_start_time = time.time()
+        elif audioInfo.category == "HIGH" and time.time() - sparkle_start_time > SPARKLE_MAIN_ANIMATION_SWITCH_LAG:
+            show_parameters[SPARKLE_PARAM_START] = suitable_main_animation
+            sparkle_start_time = time.time()
 
 
 def drive_internal_animations(init):
@@ -799,7 +807,7 @@ def queue_audio_events(audioInfo):
     cur_time_ms = timeMs()
     if audioInfo is not None:
         for event in audioInfo.events:
-            event.time += cur_time_ms
+            event.time = long(event.time) + cur_time_ms
             node = event_queue.add(event)
     else:
         print "seems like it was a database miss... this will happen while we don't have all the auido files"
@@ -824,7 +832,7 @@ def quantify_magnitude_impact(magnitude):
 
 
 def timeMs():
-    return int(round(time.time() * 1000))
+    return long(round(time.time() * 1000))
 
 
 def do_set_show_parameter(ignored, parameters):

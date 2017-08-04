@@ -82,10 +82,11 @@ def do_show(cmd, param):
 
 #do a dynamically changing show based on internal audio selections. maybe inlcude hand inputs as well.
 def do_dyn_show(audio_msg):
-    global show_colors, show_parameters
+    global show_colors, show_parameters, internal_show_init
 
     print 'performing internal audio show for ' + audio_msg
-    do_internal_sound_animations(audio_msg)
+    do_internal_sound_animations(audio_msg, internal_show_init)
+    internal_show_init = False
 
 next_timesync_sec = 0.0
 
@@ -300,8 +301,8 @@ while running:
             # meditation = mega.meditation
 
             #pushing animation parameters across nodes
-            if internal_audio_show:
-                do_dyn_show(audio_msg)
+        if internal_audio_show:
+            do_dyn_show(audio_msg)
         elif auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
             auto_show()
             last_show_change_sec = time.time()

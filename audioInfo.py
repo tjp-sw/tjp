@@ -21,7 +21,9 @@ class AudioFileInfo:
 
 
     def getRandomSuitableAnimation(self):
-        return self.animations[randint(0, len(animations))]
+        if len(self.animations) > 0:
+            return self.animations[randint(0, len(self.animations))]
+        return None
 
 
     def addEvent(self, event):
