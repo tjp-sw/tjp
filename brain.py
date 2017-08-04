@@ -120,6 +120,9 @@ def do_meditation (ignored, meditation_num):
     if meditation_play:
         do_send(None, meditation_play)
 
+def do_change_palette(ignored, neglected):
+    choose_new_playa_palette()
+
 control_messages = {
 #    'SetAllAudio':	    do_unimplemented,
 #    'SetAudioCh':	    do_unimplemented,
@@ -130,6 +133,7 @@ control_messages = {
 #    'AllLEDoff':	    (do_simple, 'program', '0'),
 #    'CheckHandStat':	do_unimplemented,
 #    'CheckAudioIn':	do_unimplemented,
+    'cp':		(do_change_palette, None, None),
     'disconnect':	(do_disconnect, None, None),
     'edm':		(do_auto, None, edm_program),
     'led':		(do_simple, 'program', None),
