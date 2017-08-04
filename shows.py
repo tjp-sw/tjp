@@ -2,6 +2,7 @@ import numpy, string, time
 from random import randint
 from random import sample
 from random import choice
+import sys
 from dataBaseInterface import DataBaseInterface
 from audioInfo import AudioEvent, AudioFileInfo
 from audio_event_queue import SortedDLL
@@ -742,13 +743,13 @@ def drive_internal_animations(init):
                     else:
                         next_audio_event = None
                 except AttributeError:
-                    print "event_queue is empty"
+                    print "event_queue is empty ", sys.exc_value
 
         if time.time() - palette_start_time > PALETTE_LAG:
             bm_day_index = int((time.time() - BURNING_MAN_START) / 86400) % NUM_DAYS
-            get_random_color(bm_day_index, 1) #TODO not sure what this second value should be...
+            #get_random_color(bm_day_index, 1) #TODO not sure what this second value should be...
             # OR should I be using
-            #choose_new_playa_palette()
+            choose_new_playa_palette()
             palette_start_time = time.time()
 
         constrain_show()
@@ -763,9 +764,9 @@ def progress_audio_queue():
             next_audio_event = next_audio_event_node.value
             if INTERNAL_ANIMATIONS_DEBUG:
                 print "next audio event " + str(next_audio_event)
-        except:
+        except ValueError:
             if INTERNAL_ANIMATIONS_DEBUG:
-                print "event_queue is empty"
+                print "event_queue is empty", sys.exc_value
             break
 
         stale = next_audio_event.time <= timeMs() - 1000
