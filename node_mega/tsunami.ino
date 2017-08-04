@@ -11,7 +11,7 @@
 #ifdef DEBUG
   #define DEBUG_LEVEL 1
 #else
-  #define DEBUG_LEVEL 2
+  #define DEBUG_LEVEL 0
 #endif
 
 Tsunami tsunami;                // Our Tsunami object

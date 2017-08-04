@@ -1,5 +1,4 @@
-#!/usr/bin/python
-import numpy,time
+import numpy, string, time
 from random import randint
 from random import sample
 from random import choice
@@ -499,15 +498,15 @@ TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
 #TEST_CYCLE_MINUTES = 15
 NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
 
-
+""" Unused right now. playa_mode is set in Music.tick()
 # ------------------------ set_playa_mode() -------------------------------
 # returns SUNRISE, DAY, SUNSET, NIGHT
 
 def set_playa_mode(when, mode):
-
+    this_time = datetime.fromtimestamp(when)
     global SUNRISE, DAY, SUNSET, NIGHT, NUM_DAYS, bm_day_index
 
-    bm_day_index = int((when - BURNING_MAN_START) / 86400) % NUM_DAYS
+    bm_day_index = int(when - BURNING_MAN_START) / 86400) % NUM_DAYS
 
     if (mode == NIGHT) and (when >= sunrise_time[bm_day_index]):
         mode = SUNRISE
@@ -538,7 +537,7 @@ def set_playa_mode(when, mode):
         #exit()
 
     return mode
-
+"""
 
 
 # ------------------------------- playa_program() ----------------------------------
@@ -550,7 +549,7 @@ def playa_program(init=False):
     global real_start_time, meditation_sec, time_compression_factor, show_mode
     IDEAL_MEDITATION_MINUTES = 20
 
-    real_time = time.time()
+    real_time = time.clock()
     if init:  # run test program
         if real_start_time < 0:
             time_compression_factor = float(NUM_DAYS * 60 * 24) / TEST_CYCLE_MINUTES	# 60*24 == minutes per day
@@ -574,7 +573,8 @@ def playa_program(init=False):
         else:
             virtual_time = BURNING_MAN_START + (real_time - real_start_time) * time_compression_factor
 
-    show_mode = set_playa_mode(virtual_time, show_mode)
+    # Show mode is set in music.py
+    #show_mode = set_playa_mode(virtual_time, show_mode)
 
     bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
     new_palette = bm_day_index % len(edm_palettes)
@@ -812,3 +812,23 @@ def quantify_magnitude_impact(magnitude):
 
 def timeMs():
     return int(round(time.time() * 1000))
+
+
+def do_set_show_parameter(ignored, parameters):
+    try:
+        param, value = string.split(parameters, None, 1)
+        param = int(param)
+        value = int(value)
+    except (AttributeError, ValueError):		# no whitespace or non-integer
+        print 'Usage: sp parameter_number value'
+        return
+    if param < 0 or NUM_PARAMETERS <= param:
+        print 'parameter number must be from 0 to', NUM_PARAMETERS-1
+        return
+    if value < show_bounds[param][0] or show_bounds[param][1] < value:
+        print 'parameter', param, 'value must be from', show_bounds[param][0], 'to', show_bounds[param][1]
+        return
+    print 'show_parameters[%u] set to %d' % (param, value)
+    if value < 0:
+        value += 256
+    show_parameters[param] = value
