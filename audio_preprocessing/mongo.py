@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
+from pymongo.errors import DuplicateKeyError
 import json
 import parser
 import parser_new
@@ -68,8 +69,10 @@ def to_mongo(audioInfo):
 
     ec = encode_custom(audioInfo)
     # print ec
-    files.insert({"_id": audioInfo.file_index, "AudioFileInfo": ec})
-
+    try:
+        files.insert({"_id": audioInfo.file_index, "AudioFileInfo": ec})
+    except DuplicateKeyError:
+        print "duplicate key... audio files aren't uniquely named: ", sys.exc_value
 
 def grab_audio_info(colleciton, file_num):
     global files

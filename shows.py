@@ -713,7 +713,7 @@ def drive_internal_animations(init):
             get_random_color(bm_day_index, 1) #TODO not sure what this second value should be...
             # OR should I be using
             #choose_new_playa_palette()
-            palette_start_time time.time()
+            palette_start_time = time.time()
 
         constrain_show()
 
