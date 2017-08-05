@@ -300,7 +300,7 @@ while running:
         audio_msg = mega_music.tick(dummy_art_car_bool)
         if audio_msg is not None:
             do_send(None, audio_msg)	# always send to all nodes
-            print audio_msg
+            print repr(audio_msg)
             # meditation = mega.meditation
 
             #pushing animation parameters across nodes
