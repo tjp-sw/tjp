@@ -359,21 +359,27 @@ def choose_new_playa_palette():
 
 # ----------------------------- choose_random_colors_from_edm_palette() -------------------------------------
 
+current_edm_palette = None
 def choose_random_colors_from_edm_palette():
+    global current_edm_palette
+
+    new = randint(0, len(edm_palettes) - 1)
+    print 'edm palette changed from', current_edm_palette, 'to', new
+    current_edm_palette = new
+
     # choose which colors out of the chosen palette to use
     #shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
     bg_order = sample(range(0,2), 2)
     mid_order = sample(range(2,5), 3)
     sp_order = sample(range(5,7), 2)
 
-    current_palette = show_parameters[29]
-    show_colors[0] = edm_palettes[current_palette][bg_order[0]]
-    show_colors[1] = edm_palettes[current_palette][bg_order[1]]
-    show_colors[2] = edm_palettes[current_palette][mid_order[0]]
-    show_colors[3] = edm_palettes[current_palette][mid_order[1]]
-    show_colors[4] = edm_palettes[current_palette][mid_order[2]]
-    show_colors[5] = edm_palettes[current_palette][sp_order[0]]
-    show_colors[6] = edm_palettes[current_palette][sp_order[1]]
+    show_colors[0] = edm_palettes[current_edm_palette][bg_order[0]]
+    show_colors[1] = edm_palettes[current_edm_palette][bg_order[1]]
+    show_colors[2] = edm_palettes[current_edm_palette][mid_order[0]]
+    show_colors[3] = edm_palettes[current_edm_palette][mid_order[1]]
+    show_colors[4] = edm_palettes[current_edm_palette][mid_order[2]]
+    show_colors[5] = edm_palettes[current_edm_palette][sp_order[0]]
+    show_colors[6] = edm_palettes[current_edm_palette][sp_order[1]]
 
 
 # ------------------------------------- edm_program() -----------------------------------------------
@@ -464,7 +470,6 @@ def edm_program(init=False):
     if palette_time - palette_start_time > PALETTE_TIME_LIMIT:
         palette_start_time = palette_time
 
-        show_parameters[29] = constrained_random_parameter(29)
         choose_random_colors_from_edm_palette()
         # For Lee testing: uncomment this to stick with day 1 colors
         #choose_new_playa_palette()
@@ -546,7 +551,6 @@ def playa_program(init=False):
             meditation_sec = int(IDEAL_MEDITATION_MINUTES * 60 * time_compression_factor / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
             real_start_time = real_time
             edm_program(init)	# good enough for now
-            show_parameters[29] = 999	# invalid
             show_mode = SUNRISE
         return
 
@@ -567,11 +571,6 @@ def playa_program(init=False):
     #show_mode = set_playa_mode(virtual_time, show_mode)
 
     bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
-    new_palette = bm_day_index % len(edm_palettes)
-    if show_parameters[29] != new_palette:
-        show_parameters[29] = new_palette
-        choose_new_playa_palette()
-        print 'palette changed', show_colors
 
     print 'playa time advanced to', time.ctime(virtual_time), 'on day', bm_day_index, 'in', show_mode
 
