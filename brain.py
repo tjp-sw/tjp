@@ -324,7 +324,7 @@ while running:
 
 
     except:
-        # raise				# uncomment for debugging
+        raise				# uncomment for debugging
         print sys.exc_value
         do_disconnect(None, None)	# TODO: be more selective
 

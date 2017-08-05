@@ -1,7 +1,5 @@
 #Adapted from sbrichards' doubly_linked_list.py on Githbub
 
-from dataBaseInterface import DataBaseInterface
-
 class Node(object):
 
     def __init__(self, inittime, val):
@@ -101,13 +99,13 @@ class SortedDLL(object):
         return False
 
     def remove(self, item):
-        if self.head.data == item:
+        if self.head is not None and self.head.value == item:
             self.head = self.head.next
         else:
             prev = self.head
             cur = prev.next
             while cur is not None:
-                if cur.data == item:
+                if cur.value == item:
                     if cur.next is None:
                         prev.set_next(None)
                     else:

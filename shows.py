@@ -218,7 +218,7 @@ NUM_AUDIO_CHANNELS = 7
 current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
 internal_audio_show = True  # triggers internal audio animations..
 next_audio_event = AudioEvent(-1, -1, "init", "init")
-INTERNAL_ANIMATIONS_DEBUG = True
+INTERNAL_ANIMATIONS_DEBUG = False
 internal_show_init = True
 
 def constrained_random_parameter(i):
@@ -712,20 +712,20 @@ def drive_internal_animations(init):
             # if the timing threshold is met to avoid too frequent param changes... TODO see how it looks with varoius 'lags'
             show_param = -1;
             if next_audio_event.category == "LOW":
-                print "here 1L diff: " + str(time.time() - bg_parameter_start_time)
+                print "here 1L diff: " + str(int(time.time() - bg_parameter_start_time))
                 if time.time() - bg_parameter_start_time > BASE_PARAMETER_SWTICH_LAG:
                     print "here2L"
                     show_param = get_random_range(BASE_PARAM_START + 1, BASE_PARAM_END)
                     #show_param = randint(BASE_PARAM_START + 1, BASE_PARAM_END)
                     bg_parameter_start_time = time.time()
             elif next_audio_event.category == "MID":
-                print "here1M diff: " + str(time.time() - mid_parameter_start_time)
+                print "here1M diff: " + str(int(time.time() - mid_parameter_start_time))
                 if time.time() - mid_parameter_start_time > MID_PARAMETER_SWTICH_LAG:
                     print "here2M"
                     show_param = get_random_range(MID_PARAM_START + 1, MID_PARAM_END)
                     mid_parameter_start_time = time.time()
             elif next_audio_event.category == "HIGH":
-                print "here1H diff: " + str(time.time() - sparkle_parameter_start_time)
+                print "here1H diff: " + str(int(time.time() - sparkle_parameter_start_time))
                 if time.time() - sparkle_parameter_start_time > SPARKLE_PARAM_START:
                     print "here2H"
                     show_param = get_random_range(SPARKLE_PARAM_START + 1, SPARKLE_PARAM_END)
@@ -746,12 +746,14 @@ def drive_internal_animations(init):
                     print "Amp event: [" + str(next_audio_event) +"]: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
 
                 # setting the param to its new value
-                #show_parameters[show_param] = new_param_value
-                do_set_show_parameter(None, str(show_param) + " " + str(new_param_value))
+                show_parameters[show_param] = new_param_value % 255
+                #do_set_show_parameter(None, str(show_param) + " " + str(new_param_value))
 
                 try:
                     if event_queue.size > 0:
-                        event_queue.remove(next_audio_event.exec_time)
+                        print "removing actioned event: " + str(next_audio_event) + " size: " + str(event_queue.size)
+                        event_queue.remove(next_audio_event)
+                        print "new size: " + str(event_queue.size)
                     else:
                         next_audio_event = None
                 except AttributeError:
@@ -765,7 +767,7 @@ def drive_internal_animations(init):
             choose_new_playa_palette()
             palette_start_time = time.time()
 
-        constrain_show()
+        #constrain_show()
 
 def get_random_range(start, end):
     c = choice(range(start, end))
@@ -791,7 +793,7 @@ def progress_audio_queue():
         # print "diff event - now = " + str(next_audio_event.exec_time - timeMs())
         if stale:
             print "it's " + str(timeMs()) + " stale event " + str(next_audio_event) + " popping!"
-            event_queue.remove(next_audio_event.exec_time)
+            event_queue.remove(next_audio_event)
         else:
             break
 
@@ -817,7 +819,7 @@ def constrained_weighted_parameter(i, magnitude):
 def remove_audio_events_from_queue(audioInfo):
     for event in audioInfo.events:
         try:
-            event_queue.remove(event.exec_time)
+            event_queue.remove(event)
         except ValueError:
             print "event " + str(event) + " already has been removed from queue"
 
@@ -875,10 +877,3 @@ def do_set_show_parameter(ignored, parameters):
     if value < 0:
         value += 256
     show_parameters[param] = value
-
-dataBaseInterface = DataBaseInterface()
-queue_audio_events(dataBaseInterface.grabAudioInfo("5"))
-queue_audio_events(dataBaseInterface.grabAudioInfo("5"))
-queue_audio_events(dataBaseInterface.grabAudioInfo("5"))
-
-queue_audio_events(dataBaseInterface.grabAudioInfo("5"))

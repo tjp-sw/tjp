@@ -36,7 +36,7 @@ class AudioFileInfo:
 
 
     def getNextEvent(self):
-        if event_index < len(events):
+        if self.event_index < len(self.events):
             event = self.events[self.event_index]
             self.event_index += 1
             return event
@@ -57,6 +57,10 @@ class AudioEvent:
 
     def __dict__(self):
         return {"time": self.time, "magnitude": self.magnitude, "kind": self.kind, "category": self.category}
+
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
 
     def __str__(self):
