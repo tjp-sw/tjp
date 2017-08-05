@@ -342,7 +342,7 @@ def choose_new_playa_palette():
         # use all previous colors
         # background must always be chosen from day's chakara color
 
-        bg_order = sample(range(NUM_MID_COLORS_PER_FAMILY * bm_day_index, NUM_BASE_COLORS_PER_FAMILY * (bm_day_index + 1) -1), 2)
+        bg_order = sample(range(NUM_BASE_COLORS_PER_FAMILY * bm_day_index, NUM_BASE_COLORS_PER_FAMILY * (bm_day_index + 1) -1), 2)
         mid_order = sample(range(0, NUM_MID_COLORS_PER_FAMILY * (bm_day_index + 1)-1), 3)
         sp_order = sample(range(0, NUM_SPARKLE_COLORS_PER_FAMILY * (bm_day_index + 1)-1), 2)
 
