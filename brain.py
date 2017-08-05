@@ -271,6 +271,8 @@ while running:
                 next_msg = message_queues[s].get_nowait()
             except Queue.Empty:
                 writing.remove(s)
+            except KeyError:	# this happens occasionally
+                pass
             else:
                 # print 'sending', repr(next_msg), 'to', remote_name[s]
                 try:
