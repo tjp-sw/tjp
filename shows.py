@@ -43,13 +43,13 @@ PALETTE_TIME_LIMIT = 7
 # PALETTE_TIME_LIMIT = 5
 
 # constants to protect against too frequent param changes during dynamic show
-BASE_MAIN_ANIMATION_SWITCH_LAG = 15
-BASE_PARAMETER_SWTICH_LAG = 2.9
-MID_MAIN_ANIMATION_SWITCH_LAG =  10
-MID_PARAMETER_SWTICH_LAG = 1.9
-SPARKLE_MAIN_ANIMATION_SWITCH_LAG = 5
-SPARKLE_PARAMETER_SWTICH_LAG = 0.9
-PALETTE_LAG = 7
+BASE_MAIN_ANIMATION_SWITCH_LAG = 0#15
+BASE_PARAMETER_SWTICH_LAG = 0#2.9
+MID_MAIN_ANIMATION_SWITCH_LAG = 0#10
+MID_PARAMETER_SWTICH_LAG = 0#1.9
+SPARKLE_MAIN_ANIMATION_SWITCH_LAG = 0#5
+SPARKLE_PARAMETER_SWTICH_LAG = 0#0.9
+PALETTE_LAG = 10
 
 BACKGROUND_INDEX = 0
 MIDLAYER_INDEX = 8
@@ -216,9 +216,9 @@ bm_day_index = 0
 event_queue = SortedDLL()  # create sorted dll to act as the audio event queue (with super duper special powers)
 NUM_AUDIO_CHANNELS = 7
 current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
-internal_audio_show = False  # triggers internal audio animations..
+internal_audio_show = True  # triggers internal audio animations..
 next_audio_event = AudioEvent(-1, -1, "init", "init")
-INTERNAL_ANIMATIONS_DEBUG = False
+INTERNAL_ANIMATIONS_DEBUG = True
 internal_show_init = True
 
 def constrained_random_parameter(i):
@@ -597,7 +597,8 @@ def playa_program(init=False):
 # still very much under development.... fine tuning audio_events processing and
 # handling here to avoid too frequent or not frequent enough animation parameter changes
 def do_internal_sound_animations(audio_msg, init = False):
-    interpret_audio_msg(audio_msg)
+    if audio_msg is not None:
+        interpret_audio_msg(audio_msg)
 
     #pulls from event_queue
     drive_internal_animations(init)
@@ -695,35 +696,46 @@ def drive_internal_animations(init):
         # MAYBE: seperate thread handling polling event_queue and sending animations
         lower_bounds = timeMs() - 1000
         upper_bounds = timeMs() + 1000
-        valid_time = next_audio_event.time <= upper_bounds and next_audio_event.time >= lower_bounds
+        valid_time = next_audio_event.exec_time <= upper_bounds and next_audio_event.exec_time >= lower_bounds
 
-        if INTERNAL_ANIMATIONS_DEBUG:
-            print "valid? " + str(valid_time) + " aiming for event time between " + str(lower_bounds) + " - " + str(upper_bounds) + " current event time " + str(next_audio_event.time)
+        if INTERNAL_ANIMATIONS_DEBUG and valid_time:
+            print "valid? " + str(valid_time) + " aiming for event time between " + str(lower_bounds) + " - " + str(upper_bounds) + " current event time " + str(next_audio_event.exec_time)
+            print "Event: " + str(next_audio_event)
 
         if valid_time and next_audio_event is not None: #valid 'next' event
             magnitude = next_audio_event.magnitude
 
             #selecting any base, mind, sparkler layer param - very rudimentary.
             # show_param = randint(0, 27)
-
+            print "here!"
             # Selecting a random animaiton paramter to change (exluding the main animations)
             # if the timing threshold is met to avoid too frequent param changes... TODO see how it looks with varoius 'lags'
             show_param = -1;
             if next_audio_event.category == "LOW":
+                print "here 1L diff: " + str(time.time() - bg_parameter_start_time)
                 if time.time() - bg_parameter_start_time > BASE_PARAMETER_SWTICH_LAG:
-                    show_param = random.choice(range(BASE_PARAM_START + 1, BASE_PARAM_END))
+                    print "here2L"
+                    show_param = get_random_range(BASE_PARAM_START + 1, BASE_PARAM_END)
+                    #show_param = randint(BASE_PARAM_START + 1, BASE_PARAM_END)
                     bg_parameter_start_time = time.time()
             elif next_audio_event.category == "MID":
+                print "here1M diff: " + str(time.time() - mid_parameter_start_time)
                 if time.time() - mid_parameter_start_time > MID_PARAMETER_SWTICH_LAG:
-                    show_param = random.choice(range(MID_PARAM_START + 1, MID_PARAM_END))
+                    print "here2M"
+                    show_param = get_random_range(MID_PARAM_START + 1, MID_PARAM_END)
                     mid_parameter_start_time = time.time()
             elif next_audio_event.category == "HIGH":
+                print "here1H diff: " + str(time.time() - sparkle_parameter_start_time)
                 if time.time() - sparkle_parameter_start_time > SPARKLE_PARAM_START:
-                    show_param = random.choice(range(SPARKLE_PARAM_START + 1, SPARKLE_PARAM_END))
+                    print "here2H"
+                    show_param = get_random_range(SPARKLE_PARAM_START + 1, SPARKLE_PARAM_END)
                     sparkle_parameter_start_time = time.time()
 
             if show_param > -1:
                 old_param_value = show_parameters[show_param]
+
+                if INTERNAL_ANIMATIONS_DEBUG:
+                    print "doing animations for event: " + str(next_audio_event)
 
                 if next_audio_event.kind == "freqband":
                     new_param_value = constrained_weighted_parameter(show_param, magnitude)
@@ -739,11 +751,12 @@ def drive_internal_animations(init):
 
                 try:
                     if event_queue.size > 0:
-                        event_queue.remove(next_audio_event.time)
+                        event_queue.remove(next_audio_event.exec_time)
                     else:
                         next_audio_event = None
                 except AttributeError:
-                    print "event_queue is empty ", sys.exc_value
+                    #print "event_queue is empty ", sys.exc_value
+                    hi = 0
 
         if time.time() - palette_start_time > PALETTE_LAG:
             bm_day_index = int((time.time() - BURNING_MAN_START) / 86400) % NUM_DAYS
@@ -754,6 +767,10 @@ def drive_internal_animations(init):
 
         constrain_show()
 
+def get_random_range(start, end):
+    c = choice(range(start, end))
+    print "random param num choice: " + str(c)
+    return c
 
 def progress_audio_queue():
     global event_queue, next_audio_event
@@ -761,19 +778,20 @@ def progress_audio_queue():
     while True:
         try:
             next_audio_event_node = event_queue.peek()
+            old_event = next_audio_event
             next_audio_event = next_audio_event_node.value
-            if INTERNAL_ANIMATIONS_DEBUG:
+            if INTERNAL_ANIMATIONS_DEBUG and str(old_event) != str(next_audio_event):
                 print "next audio event " + str(next_audio_event)
         except ValueError:
             if INTERNAL_ANIMATIONS_DEBUG:
                 print "event_queue is empty", sys.exc_value
             break
 
-        stale = next_audio_event.time <= timeMs() - 1000
-        # print "diff event - now = " + str(next_audio_event.time - timeMs())
+        stale = next_audio_event.exec_time <= timeMs() - 1000
+        # print "diff event - now = " + str(next_audio_event.exec_time - timeMs())
         if stale:
             print "it's " + str(timeMs()) + " stale event " + str(next_audio_event) + " popping!"
-            event_queue.remove(next_audio_event.time)
+            event_queue.remove(next_audio_event.exec_time)
         else:
             break
 
@@ -799,16 +817,19 @@ def constrained_weighted_parameter(i, magnitude):
 def remove_audio_events_from_queue(audioInfo):
     for event in audioInfo.events:
         try:
-            event_queue.remove(event.time)
+            event_queue.remove(event.exec_time)
         except ValueError:
             print "event " + str(event) + " already has been removed from queue"
 
 
 def queue_audio_events(audioInfo):
     cur_time_ms = timeMs()
+    print "queueing events for audioInfo: " + str(audioInfo)
     if audioInfo is not None:
         for event in audioInfo.events:
-            event.time = long(event.time) + cur_time_ms
+            #print "event: " + str(event)
+            event.exec_time = int(event.time) + cur_time_ms
+            print "NEW e TIME = " + str(event.exec_time) + "\nCURNT TIME = " + str(cur_time_ms)
             node = event_queue.add(event)
     else:
         print "seems like it was a database miss... this will happen while we don't have all the auido files"
@@ -833,7 +854,7 @@ def quantify_magnitude_impact(magnitude):
 
 
 def timeMs():
-    return long(round(time.time() * 1000))
+    return int(round(time.time() * 1000))
 
 
 def do_set_show_parameter(ignored, parameters):
@@ -854,3 +875,10 @@ def do_set_show_parameter(ignored, parameters):
     if value < 0:
         value += 256
     show_parameters[param] = value
+
+dataBaseInterface = DataBaseInterface()
+queue_audio_events(dataBaseInterface.grabAudioInfo("5"))
+queue_audio_events(dataBaseInterface.grabAudioInfo("5"))
+queue_audio_events(dataBaseInterface.grabAudioInfo("5"))
+
+queue_audio_events(dataBaseInterface.grabAudioInfo("5"))

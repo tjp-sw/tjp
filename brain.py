@@ -85,10 +85,12 @@ def do_show(cmd, param):
 def do_dyn_show(audio_msg):
     global show_colors, show_parameters, internal_show_init
 
-    if audio_msg is not None:
-        print 'performing internal audio show for ' + audio_msg
-        do_internal_sound_animations(audio_msg, internal_show_init)
-        internal_show_init = False
+    if INTERNAL_ANIMATIONS_DEBUG:
+        if audio_msg is not None:
+            print 'performing internal audio show for ' + audio_msg
+
+    do_internal_sound_animations(audio_msg, internal_show_init)
+    internal_show_init = False
 
     do_show("dyn_show", None)
 

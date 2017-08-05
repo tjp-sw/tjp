@@ -5,7 +5,7 @@ sys.path.insert(0, 'audio_preprocessing/')
 import mongo
 
 
-RETURN_MOCK = False
+RETURN_MOCK = True
 RETURN_MOCK_NEW_PROCESSING = True
 
 INTERNAL_ANIMATIONS_DB_INTER_DEBUG = False
@@ -32,6 +32,7 @@ class DataBaseInterface:
 			# MOCKED return vals
 			if RETURN_MOCK_NEW_PROCESSING:
 				if int(file_num) == 1:
+					audioInfo = None
 					audioInfo = AudioFileInfo("rain", 1, "mid")
 
 					e2 = AudioEvent(407, 3.9, "amplitude", "mid")
@@ -40,6 +41,7 @@ class DataBaseInterface:
 					audioInfo.addEvent(e2)
 					audioInfo.addEvent(e4)
 				elif int(file_num) == 2:
+					audioInfo = None
 					audioInfo = AudioFileInfo("thunder", 2, "low")
 
 					e2 = AudioEvent(450, 3.2, "amplitude", "low")
@@ -48,12 +50,17 @@ class DataBaseInterface:
 					audioInfo.addEvent(e2)
 					audioInfo.addEvent(e4)
 				else:
+					audioInfo = None
 					audioInfo = AudioFileInfo("wind", 9, "mid")
 
 					e2 = AudioEvent(1450, 4.1, "amplitude", "mid")
 					e4 = AudioEvent(2450, 6.0, "amplitude", "mid")
+					e1 = AudioEvent(8450, 4.1, "amplitude", "mid")
+					e3 = AudioEvent(17450, 6.0, "amplitude", "mid")
 
+					audioInfo.addEvent(e1)
 					audioInfo.addEvent(e2)
+					audioInfo.addEvent(e3)
 					audioInfo.addEvent(e4)
 			else:
 				if int(file_num) == 1:

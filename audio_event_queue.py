@@ -39,7 +39,7 @@ class Node(object):
 
 
 class SortedDLL(object):
-    'sorted by AudioEvent.time property doubly linked list'
+    'sorted by AudioEvent.exec_time property doubly linked list'
     def __init__(self):
         self.head = None
 
@@ -58,7 +58,7 @@ class SortedDLL(object):
         return self.head is None
 
     def add(self, item):
-        new = Node(item.time, item)
+        new = Node(item.exec_time, item)
         if self.head is None:
             self.head = new
         elif self.head.data > new.data:
