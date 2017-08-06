@@ -1,6 +1,9 @@
 from pymongo import MongoClient
-from pymongo.errors import ServerSelectionTimeoutError
-from pymongo.errors import DuplicateKeyError
+try:
+    from pymongo.errors import ServerSelectionTimeoutError
+    from pymongo.errors import DuplicateKeyError
+except:
+    pass
 import json
 import parser
 import parser_new
