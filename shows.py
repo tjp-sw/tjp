@@ -551,6 +551,7 @@ def playa_program(init=False):
             meditation_sec = int(IDEAL_MEDITATION_MINUTES * 60 * time_compression_factor / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
             real_start_time = real_time
             edm_program(init)	# good enough for now
+            show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0	# no EDM animations
             show_mode = SUNRISE
         return
 
