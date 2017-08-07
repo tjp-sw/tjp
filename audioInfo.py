@@ -33,12 +33,12 @@ class AudioFileInfo:
 
         #HACK UNTIL CAN GET REAL VALUES POPULATED
         if self.category == "LOW":
-            return randint(1,3)
+            return randint(1,3) # number of base animations
         if self.category == "MID":
-            return randint(1,13)
+            return randint(1,13) # number of mid animations
 
         #high
-        return randint(1,10)
+        return randint(1,10) # number of sparkle animations
 
 
     def addEvent(self, event):
