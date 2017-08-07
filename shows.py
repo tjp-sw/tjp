@@ -600,7 +600,7 @@ def do_internal_sound_animations(audio_msg, init = False):
 
     #pulls from event_queue
     drive_internal_animations(init)
-
+    print_parameters()
 
 def interpret_audio_msg(audio_msg):
     channel_map = get_audio_file_info(audio_msg)
@@ -704,20 +704,20 @@ def drive_internal_animations(init):
             show_param = -1;
             if next_audio_event.category == "LOW":
                 print "here 1L diff: " + str(int(time.time() - bg_parameter_start_time))
-                if time.time() - bg_parameter_start_time > BASE_PARAMETER_SWTICH_LAG:
+                if int(time.time() - bg_parameter_start_time) > BASE_PARAMETER_SWTICH_LAG:
                     print "here2L"
                     show_param = get_random_range(BASE_PARAM_START + 1, BASE_PARAM_END)
                     #show_param = randint(BASE_PARAM_START + 1, BASE_PARAM_END)
                     bg_parameter_start_time = time.time()
             elif next_audio_event.category == "MID":
                 print "here1M diff: " + str(int(time.time() - mid_parameter_start_time))
-                if time.time() - mid_parameter_start_time > MID_PARAMETER_SWTICH_LAG:
+                if int(time.time() - mid_parameter_start_time) > MID_PARAMETER_SWTICH_LAG:
                     print "here2M"
                     show_param = get_random_range(MID_PARAM_START + 1, MID_PARAM_END)
                     mid_parameter_start_time = time.time()
             elif next_audio_event.category == "HIGH":
                 print "here1H diff: " + str(int(time.time() - sparkle_parameter_start_time))
-                if time.time() - sparkle_parameter_start_time > SPARKLE_PARAM_START:
+                if int(time.time() - sparkle_parameter_start_time) > SPARKLE_PARAMETER_SWTICH_LAG:
                     print "here2H"
                     show_param = get_random_range(SPARKLE_PARAM_START + 1, SPARKLE_PARAM_END)
                     sparkle_parameter_start_time = time.time()
@@ -758,7 +758,7 @@ def drive_internal_animations(init):
             choose_new_playa_palette()
             palette_start_time = time.time()
 
-        #constrain_show()
+        constrain_show()
 
 def get_random_range(start, end):
     c = choice(range(start, end))
@@ -813,6 +813,8 @@ def remove_audio_events_from_queue(audioInfo):
             event_queue.remove(event)
         except ValueError:
             print "event " + str(event) + " already has been removed from queue"
+        except AttributeError:
+            print "error removing event from queue"
 
 
 def queue_audio_events(audioInfo):
@@ -820,9 +822,9 @@ def queue_audio_events(audioInfo):
     print "queueing events for audioInfo: " + str(audioInfo)
     if audioInfo is not None:
         for event in audioInfo.events:
-            #print "event: " + str(event)
+            # print "event: " + str(event)
             event.exec_time = int(event.time) + cur_time_ms
-            print "NEW e TIME = " + str(event.exec_time) + "\nCURNT TIME = " + str(cur_time_ms)
+            # print "NEW e TIME = " + str(event.exec_time) + "\nCURNT TIME = " + str(cur_time_ms)
             node = event_queue.add(event)
     else:
         print "seems like it was a database miss... this will happen while we don't have all the auido files"

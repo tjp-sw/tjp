@@ -5,7 +5,7 @@ import shows
 
 # Stores Music library and returns appropriate songs
 DAY1_LOW = range(1,7)
-DAY1_MID = range(7, 56)
+DAY1_MID = range(7, 15)
 DAY1_HIGH = range(1000,1019)
 DAY2_LOW = range(2100,2105)
 DAY2_MID = range(100, 159)
@@ -86,5 +86,3 @@ def find_high(theme=datetime.today().weekday()):
         daily_highs = [song for sublist in HIGHS[0:theme] for song in sublist]
         return random.choice(daily_highs)
     return random.choice(HIGHS[theme])
-
-
