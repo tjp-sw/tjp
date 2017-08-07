@@ -403,9 +403,7 @@ def edm_program(init=False):
             for i in range(0, NUM_PARAMETERS):
                 show_parameters[i] = constrained_random_parameter(i)
             constrain_show()
-            choose_random_colors_from_edm_palette()
-            # For Lee testing: uncomment this to use playa palette instead
-            #choose_new_playa_palette()
+            choose_new_playa_palette()  # start with day 1 color palette
 
         print_parameters()
         return
@@ -587,7 +585,6 @@ def playa_program(init=False):
     print 'playa time advanced to', time.ctime(virtual_time), 'on day', bm_day_index, 'at', mode_string
 
 
-
 # ------------------------------ internal_sound_animations_program() -----------------------------------------------
 # show for when the journey playing its internal audio and the external audio
 # is not past threshold amount aka art car not detected
@@ -595,6 +592,21 @@ def playa_program(init=False):
 # still very much under development.... fine tuning audio_events processing and
 # handling here to avoid too frequent or not frequent enough animation parameter changes
 def do_internal_sound_animations(audio_msg, init = False):
+    global bg_start_time, mid_start_time, sparkle_start_time, palette_start_time
+
+    if init:
+        if show_colors[0] == [33,33,33]:	# invalid values before initialization
+            bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
+
+            # choose random starting values for each of the parameters
+            for i in range(0, NUM_PARAMETERS):
+                show_parameters[i] = constrained_random_parameter(i)
+            constrain_show()
+            choose_new_playa_palette()  # start with day 1 color palette
+
+        print_parameters()
+
+
     if audio_msg is not None:
         interpret_audio_msg(audio_msg)
 
@@ -647,16 +659,25 @@ def set_appropriate_layer_main_animation(audioInfo):
 
     if suitable_main_animation is not None:
         if INTERNAL_ANIMATIONS_DEBUG:
-            print "random suitable animation is " + str(suitable_main_animation)
+            print "random suitable animation is " + str(suitable_main_animation) + " " + str(audioInfo.category)
+        if str(audioInfo.category) == "LOW": # and time.time() - bg_start_time >= BASE_MAIN_ANIMATION_SWITCH_LAG:
+            #show_parameters[BASE_PARAM_START] = suitable_main_animation
+            if INTERNAL_ANIMATIONS_DEBUG:
+                print "setting base main animiation to " + str(suitable_main_animation)
 
-        if audioInfo.category == "LOW" and time.time() - bg_start_time >= BASE_MAIN_ANIMATION_SWITCH_LAG:
-            show_parameters[BASE_PARAM_START] = suitable_main_animation
+            do_set_show_parameter(None, str(BASE_PARAM_START) + " " + str(suitable_main_animation))
             bg_start_time = time.time()
-        elif audioInfo.category == "MID" and time.time() - mid_start_time >= MID_MAIN_ANIMATION_SWITCH_LAG:
-            show_parameters[MID_PARAM_START] = suitable_main_animation
+        elif str(audioInfo.category) == "MID": # and time.time() - mid_start_time >= MID_MAIN_ANIMATION_SWITCH_LAG:
+            #show_parameters[MID_PARAM_START] = suitable_main_animation
+            if INTERNAL_ANIMATIONS_DEBUG:
+                print "setting mid main animiation to " + str(suitable_main_animation)
+            do_set_show_parameter(None, str(MID_PARAM_START) + " " + str(suitable_main_animation))
             mid_start_time = time.time()
-        elif audioInfo.category == "HIGH" and time.time() - sparkle_start_time >= SPARKLE_MAIN_ANIMATION_SWITCH_LAG:
-            show_parameters[SPARKLE_PARAM_START] = suitable_main_animation
+        elif str(audioInfo.category) == "HIGH": # and time.time() - sparkle_start_time >= SPARKLE_MAIN_ANIMATION_SWITCH_LAG:
+            #show_parameters[SPARKLE_PARAM_START] = suitable_main_animation
+            if INTERNAL_ANIMATIONS_DEBUG:
+                print "setting sparkle main animiation to " + str(suitable_main_animation)
+            do_set_show_parameter(None, str(SPARKLE_PARAM_START) + " " + str(suitable_main_animation))
             sparkle_start_time = time.time()
 
 
@@ -665,17 +686,7 @@ def drive_internal_animations(init):
     global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
 
     if init:
-        if show_colors[0] == [33,33,33]:	# invalid values before initialization
-            bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
-
-            # choose random starting values for each of the parameters
-            for i in range(0, NUM_PARAMETERS):
-                show_parameters[i] = constrained_random_parameter(i)
-            constrain_show()
-            choose_new_playa_palette()  # start with day 1 color palette
-
-        print_parameters()
-        return
+        bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
 
     progress_audio_queue()
 
@@ -776,8 +787,8 @@ def progress_audio_queue():
             if INTERNAL_ANIMATIONS_DEBUG and str(old_event) != str(next_audio_event):
                 print "next audio event " + str(next_audio_event)
         except ValueError:
-            if INTERNAL_ANIMATIONS_DEBUG:
-                print "event_queue is empty", sys.exc_value
+            #if INTERNAL_ANIMATIONS_DEBUG:
+                #print "event_queue is empty", sys.exc_value
             break
 
         stale = next_audio_event.exec_time <= timeMs() - 1000

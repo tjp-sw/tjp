@@ -44,7 +44,7 @@ def decode_custom(document):
         events.append(decode_custom_event(json.loads(event)))
 
     #return AudioFileInfo(name, cat, fi, events, anis)
-    return AudioFileInfo(name, cat, fi, events)
+    return AudioFileInfo(name, fi, cat, events)
 
 
 def get_collection():
@@ -71,6 +71,8 @@ def insert_audio_data(audioInfoList):
 
 def to_mongo(audioInfo):
     global files
+
+    # hack
 
     ec = encode_custom(audioInfo)
     # print ec

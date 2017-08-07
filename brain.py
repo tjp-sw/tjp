@@ -307,9 +307,9 @@ while running:
             print repr(audio_msg)
             # meditation = mega.meditation
 
-            #pushing animation parameters across nodes
-            if internal_audio_show:
-                do_dyn_show(audio_msg)
+        #pushing animation parameters across nodes
+        if internal_audio_show:
+            do_dyn_show(audio_msg)
         elif auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
             auto_show()
             last_show_change_sec = time.time()
