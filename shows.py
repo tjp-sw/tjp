@@ -15,9 +15,9 @@ from audio_event_queue import SortedDLL
 # array holding that type of parameter value
 
 NUM_7_COLOR_ANIMATIONS = 7
-NUM_BASE_ANIMATIONS = 2
-NUM_MID_ANIMATIONS = 7
-NUM_SPARKLE_ANIMATIONS = 6
+NUM_BASE_ANIMATIONS = 3
+NUM_MID_ANIMATIONS = 13
+NUM_SPARKLE_ANIMATIONS = 10
 
 NUM_BEAT_EFFECTS = 8
 NUM_PARAMETERS = 41
@@ -600,7 +600,7 @@ def do_internal_sound_animations(audio_msg, init = False):
 
     #pulls from event_queue
     drive_internal_animations(init)
-    print_parameters()
+
 
 def interpret_audio_msg(audio_msg):
     channel_map = get_audio_file_info(audio_msg)
@@ -649,13 +649,13 @@ def set_appropriate_layer_main_animation(audioInfo):
         if INTERNAL_ANIMATIONS_DEBUG:
             print "random suitable animation is " + str(suitable_main_animation)
 
-        if audioInfo.category == "LOW" and time.time() - bg_start_time > BASE_MAIN_ANIMATION_SWITCH_LAG:
+        if audioInfo.category == "LOW" and time.time() - bg_start_time >= BASE_MAIN_ANIMATION_SWITCH_LAG:
             show_parameters[BASE_PARAM_START] = suitable_main_animation
             bg_start_time = time.time()
-        elif audioInfo.category == "MID" and time.time() - mid_start_time > MID_MAIN_ANIMATION_SWITCH_LAG:
+        elif audioInfo.category == "MID" and time.time() - mid_start_time >= MID_MAIN_ANIMATION_SWITCH_LAG:
             show_parameters[MID_PARAM_START] = suitable_main_animation
             mid_start_time = time.time()
-        elif audioInfo.category == "HIGH" and time.time() - sparkle_start_time > SPARKLE_MAIN_ANIMATION_SWITCH_LAG:
+        elif audioInfo.category == "HIGH" and time.time() - sparkle_start_time >= SPARKLE_MAIN_ANIMATION_SWITCH_LAG:
             show_parameters[SPARKLE_PARAM_START] = suitable_main_animation
             sparkle_start_time = time.time()
 
@@ -698,27 +698,27 @@ def drive_internal_animations(init):
 
             #selecting any base, mind, sparkler layer param - very rudimentary.
             # show_param = randint(0, 27)
-            print "here!"
+
             # Selecting a random animaiton paramter to change (exluding the main animations)
             # if the timing threshold is met to avoid too frequent param changes... TODO see how it looks with varoius 'lags'
             show_param = -1;
             if next_audio_event.category == "LOW":
-                print "here 1L diff: " + str(int(time.time() - bg_parameter_start_time))
-                if int(time.time() - bg_parameter_start_time) > BASE_PARAMETER_SWTICH_LAG:
-                    print "here2L"
+                # print "here 1L diff: " + str(int(time.time() - bg_parameter_start_time))
+                if int(time.time() - bg_parameter_start_time) >= BASE_PARAMETER_SWTICH_LAG:
+                    # print "here2L"
                     show_param = get_random_range(BASE_PARAM_START + 1, BASE_PARAM_END)
                     #show_param = randint(BASE_PARAM_START + 1, BASE_PARAM_END)
                     bg_parameter_start_time = time.time()
             elif next_audio_event.category == "MID":
-                print "here1M diff: " + str(int(time.time() - mid_parameter_start_time))
-                if int(time.time() - mid_parameter_start_time) > MID_PARAMETER_SWTICH_LAG:
-                    print "here2M"
+                # print "here1M diff: " + str(int(time.time() - mid_parameter_start_time))
+                if int(time.time() - mid_parameter_start_time) >= MID_PARAMETER_SWTICH_LAG:
+                    # print "here2M"
                     show_param = get_random_range(MID_PARAM_START + 1, MID_PARAM_END)
                     mid_parameter_start_time = time.time()
             elif next_audio_event.category == "HIGH":
-                print "here1H diff: " + str(int(time.time() - sparkle_parameter_start_time))
-                if int(time.time() - sparkle_parameter_start_time) > SPARKLE_PARAMETER_SWTICH_LAG:
-                    print "here2H"
+                # print "here1H diff: " + str(int(time.time() - sparkle_parameter_start_time))
+                if int(time.time() - sparkle_parameter_start_time) >= SPARKLE_PARAMETER_SWTICH_LAG:
+                    # print "here2H"
                     show_param = get_random_range(SPARKLE_PARAM_START + 1, SPARKLE_PARAM_END)
                     sparkle_parameter_start_time = time.time()
 
@@ -740,6 +740,7 @@ def drive_internal_animations(init):
                 show_parameters[show_param] = new_param_value % 255
                 #do_set_show_parameter(None, str(show_param) + " " + str(new_param_value))
 
+                print_parameters()
                 try:
                     if event_queue.size > 0:
                         print "removing actioned event: " + str(next_audio_event) + " size: " + str(event_queue.size)

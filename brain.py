@@ -115,6 +115,15 @@ def do_simple(cmd, param):
     else:
         do_send(None, cmd[0:1])
 
+#play mediation manually
+def do_meditation (ignored, meditation_num):
+    meditation_play = music.manual_meditation(meditation_num)
+    if meditation_play:
+        do_send(None, meditation_play)
+
+def do_change_palette(ignored, neglected):
+    choose_new_playa_palette()
+
 control_messages = {
 #    'SetAllAudio':	    do_unimplemented,
 #    'SetAudioCh':	    do_unimplemented,
@@ -125,6 +134,7 @@ control_messages = {
 #    'AllLEDoff':	    (do_simple, 'program', '0'),
 #    'CheckHandStat':	do_unimplemented,
 #    'CheckAudioIn':	do_unimplemented,
+    'cp':		(do_change_palette, None, None),
     'disconnect':	(do_disconnect, None, None),
     'edm':		(do_auto, None, edm_program),
     'led':		(do_simple, 'program', None),
@@ -136,6 +146,7 @@ control_messages = {
     'reconnect':	(do_simple, None, None),
     'send':		(do_send, None, None),
     'time':		(do_time, None, None),
+    'meditation': (do_meditation, None, None)
     }
 
 # listen for TCP connections on the specified port
@@ -290,6 +301,7 @@ while running:
         dummy_art_car_bool = False
         audio_msg = mega.tick(dummy_art_car_bool)
         if audio_msg is not None:
+            print repr(audio_msg)
             do_send(None, audio_msg)	# always send to all nodes
         meditation = mega.meditation
 

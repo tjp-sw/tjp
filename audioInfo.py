@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #from audioEvent import AudioEvent
 from sys import maxint
+from random import randint
 
 
 class AudioFileInfo:
@@ -28,7 +29,16 @@ class AudioFileInfo:
     def getRandomSuitableAnimation(self):
         if len(self.animations) > 0:
             return self.animations[randint(0, len(self.animations))]
-        return None
+        #return None
+
+        #HACK UNTIL CAN GET REAL VALUES POPULATED
+        if self.category == "LOW":
+            return randint(1,3)
+        if self.category == "MID":
+            return randint(1,13)
+
+        #high
+        return randint(1,10)
 
 
     def addEvent(self, event):
