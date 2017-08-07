@@ -15,8 +15,6 @@ mega_to_node_map = {
     7: 3,
     }
 
-meditation = False # Will be True during meditations, and False otherwise
-
 # close all TCP connections and continue to run
 def do_disconnect(ignored, neglected):
     global listener, sources  # , writable, oops
@@ -145,6 +143,7 @@ control_messages = {
     'quit':		(do_quit, None, None),
     'reconnect':	(do_simple, None, None),
     'send':		(do_send, None, None),
+    'sp':		(do_set_show_parameter, None, None),
     'time':		(do_time, None, None),
     'meditation': (do_meditation, None, None)
     }
@@ -180,7 +179,7 @@ def disconnect(socket, msg):
 
 do_list(None, None)
 print sorted(control_messages.keys())
-mega = music.Music()
+mega_music = music.Music()
 running = True
 while running:
     try:
@@ -261,7 +260,7 @@ while running:
                             do_send(s, struct.pack('>cB', 'n', node_number))
                     elif message[0:1] == 's':
                         if music.status_update(message):
-                            mega.played_low = 0
+                            mega_music.need_drone = True
 
                     else:
                         print 'received', repr(message), 'from', remote_name[s]
@@ -273,6 +272,8 @@ while running:
                 next_msg = message_queues[s].get_nowait()
             except Queue.Empty:
                 writing.remove(s)
+            except KeyError:	# this happens occasionally
+                pass
             else:
                 # print 'sending', repr(next_msg), 'to', remote_name[s]
                 try:
@@ -299,15 +300,16 @@ while running:
 
         #audio commands
         dummy_art_car_bool = False
-        audio_msg = mega.tick(dummy_art_car_bool)
+        audio_msg = mega_music.tick(dummy_art_car_bool)
         if audio_msg is not None:
             print repr(audio_msg)
             do_send(None, audio_msg)	# always send to all nodes
-        meditation = mega.meditation
+            print repr(audio_msg)
+            # meditation = mega.meditation
 
-        #pushing animation parameters across nodes
-        if internal_audio_show:
-            do_dyn_show(audio_msg)
+            #pushing animation parameters across nodes
+            if internal_audio_show:
+                do_dyn_show(audio_msg)
         elif auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
             auto_show()
             last_show_change_sec = time.time()

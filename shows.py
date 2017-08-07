@@ -1,5 +1,4 @@
-#!/usr/bin/python
-import numpy,time
+import numpy, string, time
 from random import randint
 from random import sample
 from random import choice
@@ -41,7 +40,7 @@ SPARKLE_TIME_LIMIT = 37
 SPARKLE_PARAMETER_TIME_LIMIT =  13
 PALETTE_TIME_LIMIT = 7
 # For Lee testing
-#PALETTE_TIME_LIMIT = 5
+# PALETTE_TIME_LIMIT = 5
 
 # constants to protect against too frequent param changes during dynamic show
 BASE_MAIN_ANIMATION_SWITCH_LAG = 0#15
@@ -77,7 +76,7 @@ show_bounds = [  # order must match show_parameters
         [0, 255], # base color thickness
         [0, 255], # base black thickness
         [-128,127], # base ring offset
-        [-1, 1], # base intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
+        [-1, 2], # base intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
         [0, 255], # base intra ring speed
         [-1,1], # base inter ring motion: -1 = CCW, 0 = none, 1 = CW
         [0,255], # base inter ring speed
@@ -87,7 +86,7 @@ show_bounds = [  # order must match show_parameters
         [0, 255],  # mid color thickness
         [0, 255],  # mid black thickness
         [-128,127],  # mid ring offset
-        [-1, 1],  # mid intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
+        [-1, 2],  # mid intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
         [0, 255],  # mid intra ring speed
         [-1, 1],  # mid inter ring motion: -1 = CCW, 0 = none, 1 = CW
         [0, 255],  # mid inter ring speed
@@ -95,14 +94,14 @@ show_bounds = [  # order must match show_parameters
         [0, NUM_SPARKLE_ANIMATIONS],  # SPARKLE_INDEX, which sparkle animation to use
         [2, 200],  # sparkle portion
         [0, 255],  # sparkle color thickness
-        [-1, 1],  # sparkle intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
+        [-1, 2],  # sparkle intra ring motion: -1 CCW, 0 none, 1 CW, 2 alternate, 3 split (down from top)
         [0, 255],  # sparkle intra ring speed
         [-1, 1],  # sparkle inter ring motion: -1 = CCW, 0 = none, 1 = CW
         [0, 255],  # sparkle inter ring speed
         [0, 255], # sparkle min dim
         [0, 255], # sparkle max dim
         [0, 255], # sparkle range
-        [0, 50], # sparkle spawn frequency, 0 == off entirely (Functions as a boolean when 0|1)
+        [0, 255], # sparkle spawn frequency, 0 == off entirely (Functions as a boolean when 0|1)
         # show bounds 28 through 28 concern 7-color edm animations
         [0, NUM_7_COLOR_ANIMATIONS],  # which 7 color animation to play, show bound 28
         #show bounds 29 through 32 recently added (maybe need to be renumbered)
@@ -364,7 +363,14 @@ def choose_new_playa_palette():
 
 # ----------------------------- choose_random_colors_from_edm_palette() -------------------------------------
 
+current_edm_palette = None
 def choose_random_colors_from_edm_palette():
+    global current_edm_palette
+
+    new = randint(0, len(edm_palettes) - 1)
+    print 'edm palette changed from', current_edm_palette, 'to', new
+    current_edm_palette = new
+
     # choose which colors out of the chosen palette to use
     # shuffle the lower 2 colors, mid 3 colors, and upper 2 colors of chosen palette
 
@@ -372,14 +378,13 @@ def choose_random_colors_from_edm_palette():
     mid_order = sample(range(2,5), 3)
     sp_order = sample(range(5,7), 2)
 
-    current_palette = show_parameters[29]
-    show_colors[0] = edm_palettes[current_palette][bg_order[0]]
-    show_colors[1] = edm_palettes[current_palette][bg_order[1]]
-    show_colors[2] = edm_palettes[current_palette][mid_order[0]]
-    show_colors[3] = edm_palettes[current_palette][mid_order[1]]
-    show_colors[4] = edm_palettes[current_palette][mid_order[2]]
-    show_colors[5] = edm_palettes[current_palette][sp_order[0]]
-    show_colors[6] = edm_palettes[current_palette][sp_order[1]]
+    show_colors[0] = edm_palettes[current_edm_palette][bg_order[0]]
+    show_colors[1] = edm_palettes[current_edm_palette][bg_order[1]]
+    show_colors[2] = edm_palettes[current_edm_palette][mid_order[0]]
+    show_colors[3] = edm_palettes[current_edm_palette][mid_order[1]]
+    show_colors[4] = edm_palettes[current_edm_palette][mid_order[2]]
+    show_colors[5] = edm_palettes[current_edm_palette][sp_order[0]]
+    show_colors[6] = edm_palettes[current_edm_palette][sp_order[1]]
 
 
 # ------------------------------------- edm_program() -----------------------------------------------
@@ -462,7 +467,6 @@ def edm_program(init=False):
     if palette_time - palette_start_time > PALETTE_TIME_LIMIT:
         palette_start_time = palette_time
 
-        show_parameters[29] = constrained_random_parameter(29)
         choose_random_colors_from_edm_palette()
         # For Lee testing: uncomment this to stick with day 1 colors
         #choose_new_playa_palette()
@@ -483,15 +487,15 @@ TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
 #TEST_CYCLE_MINUTES = 15
 NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
 
-
+""" Unused right now. playa_mode is set in Music.tick()
 # ------------------------ set_playa_mode() -------------------------------
 # returns SUNRISE, DAY, SUNSET, NIGHT
 
 def set_playa_mode(when, mode):
-
+    this_time = datetime.fromtimestamp(when)
     global SUNRISE, DAY, SUNSET, NIGHT, NUM_DAYS, bm_day_index, testing_meditation_seconds
 
-    bm_day_index = int((when - BURNING_MAN_START) / 86400) % NUM_DAYS
+    bm_day_index = int(when - BURNING_MAN_START) / 86400) % NUM_DAYS
 
     if (mode == NIGHT) and (when >= sunrise_time[bm_day_index]):
         mode = SUNRISE
@@ -529,7 +533,7 @@ def set_playa_mode(when, mode):
 
     # print '  new colors at day', bm_day_index, "mode ", mode, show_colors
     return mode
-
+"""
 
 
 # ------------------------------- playa_program() ----------------------------------
@@ -541,14 +545,14 @@ def playa_program(init=False):
     global real_start_time, testing_meditation_seconds, time_compression_factor, show_mode
     IDEAL_MEDITATION_SECONDS = 20 * 60
 
-    real_time = time.time()
+    real_time = time.clock()
     if init:  # run test program
         if real_start_time < 0:
             time_compression_factor = float(NUM_DAYS * 60 * 24) / TEST_CYCLE_MINUTES	# 60*24 == minutes per day
             testing_meditation_seconds = int(IDEAL_MEDITATION_SECONDS * time_compression_factor / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
             real_start_time = real_time
             edm_program(init)	# good enough for now
-            show_parameters[29] = 999	# invalid
+            show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0	# no EDM animations
             show_mode = SUNRISE
         return
 
@@ -564,14 +568,10 @@ def playa_program(init=False):
         else:
             virtual_time = BURNING_MAN_START + (real_time - real_start_time) * time_compression_factor
 
-    show_mode = set_playa_mode(virtual_time, show_mode)
+    # Show mode is set in music.py
+    #show_mode = set_playa_mode(virtual_time, show_mode)
 
     bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
-    new_palette = bm_day_index % len(edm_palettes)
-    if show_parameters[29] != new_palette:
-        show_parameters[29] = new_palette
-        choose_new_playa_palette()
-        print 'palette changed', show_colors
 
     if show_mode == SUNRISE:
         mode_string = "sunrise"
@@ -658,7 +658,6 @@ def set_appropriate_layer_main_animation(audioInfo):
         elif audioInfo.category == "HIGH" and time.time() - sparkle_start_time >= SPARKLE_MAIN_ANIMATION_SWITCH_LAG:
             show_parameters[SPARKLE_PARAM_START] = suitable_main_animation
             sparkle_start_time = time.time()
-
 
 
 def drive_internal_animations(init):
@@ -851,3 +850,22 @@ def quantify_magnitude_impact(magnitude):
 
 def timeMs():
     return int(round(time.time() * 1000))
+
+def do_set_show_parameter(ignored, parameters):
+    try:
+        param, value = string.split(parameters, None, 1)
+        param = int(param)
+        value = int(value)
+    except (AttributeError, ValueError):		# no whitespace or non-integer
+        print 'Usage: sp parameter_number value'
+        return
+    if param < 0 or NUM_PARAMETERS <= param:
+        print 'parameter number must be from 0 to', NUM_PARAMETERS-1
+        return
+    if value < show_bounds[param][0] or show_bounds[param][1] < value:
+        print 'parameter', param, 'value must be from', show_bounds[param][0], 'to', show_bounds[param][1]
+        return
+    print 'show_parameters[%u] set to %d' % (param, value)
+    if value < 0:
+        value += 256
+    show_parameters[param] = value
