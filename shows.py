@@ -599,6 +599,8 @@ def do_internal_sound_animations(audio_msg, init = False):
 
             # choose random starting values for each of the parameters
             for i in range(0, NUM_PARAMETERS):
+                if i == 28:
+                    show_parameters[28] = 0 # 28 is edm animations... no need for here
                 show_parameters[i] = constrained_random_parameter(i)
             constrain_show()
             choose_new_playa_palette()  # start with day 1 color palette
