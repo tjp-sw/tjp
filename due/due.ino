@@ -40,8 +40,8 @@ inline void manually_set_animation_params() {             //
   // Set to OFF to disable a layer during CYCLE'ing.      //
   // Use NONE to signify a layer that is off temporarily  //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   BASE_ANIMATION = NONE;                                  //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK, LEE_PICK_HSV
-  MID_ANIMATION = WAVE;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  SPARKLE_ANIMATION = STATIC;                               //
+  MID_ANIMATION = NONE;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  SPARKLE_ANIMATION = PANIC;                               //
   EDM_ANIMATION = OFF;                                    //
                                                           //
   BASE_COLOR_THICKNESS = 255;                             //
@@ -790,6 +790,10 @@ inline void draw_current_sparkle() {
       sparkle_torus_knot();
       break;
 
+    case PANIC:
+      sparkle_panic();
+      break;
+
     case TORUS_LINK:
       sparkle_torus_link();
       break;
@@ -986,6 +990,7 @@ inline void init_sparkle_animation() {
 
     case TORUS_KNOT:
     case TORUS_LINK:
+    case PANIC:
     case NONE:
       clear_sparkle_layer();
 

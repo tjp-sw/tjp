@@ -436,9 +436,47 @@ inline void sparkle_torus_knot() {
   if (sparkle_count % intra_throttle == 0) {
     current_pixel = (current_pixel + SPARKLE_INTRA_RING_MOTION) % LEDS_PER_RING;
   }
-  
-
 }
+
+
+//---------------------------------- SPARKLE PANIC ---------------------------
+// This is an accident / bug from torus knot and can be thrown out if it's too whack
+
+inline void sparkle_panic() {
+  int num_extended_pixels = 72 * 7;
+  uint8_t knot_width = scale_param(SPARKLE_COLOR_THICKNESS, 1, 10);
+  uint8_t num_stripes_index = scale_param(SPARKLE_PORTION, 0, 9);
+  uint8_t intra_throttle = scale_param(SPARKLE_INTRA_RING_SPEED, 2, 15);
+  uint8_t inter_throttle = scale_param(SPARKLE_INTER_RING_SPEED, 5, 30);
+  int pixel;
+
+  uint8_t num_stripes_options[] = {2, 3, 4, 6, 8, 9, 12, 18, 24, 36};  // # stripes of the knot passing through any one ring must be divisor of 72
+  uint8_t num_stripes = num_stripes_options[num_stripes_index];  
+  int segment_length = num_extended_pixels / num_stripes;  // split one ring's pixels into num_stripes separate segments
+
+  uint8_t max_n = 9 * segment_length;
+  uint8_t num_segments_to_rotate = random16(max_n) + 1;
+  float pixels_rotated_in_decimal = num_segments_to_rotate * 7.0 / segment_length;
+
+  for (uint8_t ring = 0; ring < NUM_RINGS; ring++) {
+    uint8_t inter_rotation = (uint8_t) (((float) ring) * pixels_rotated_in_decimal);
+    for (uint8_t stripe = 0; stripe < num_stripes; stripe++) {
+      for (pixel = 0; pixel < knot_width; pixel++) {
+          sparkle_layer[(ring + sparkle_count) % NUM_RINGS][(stripe * segment_length + pixel + inter_rotation) % LEDS_PER_RING] = get_sparkle_color(0,6);
+      }
+      for (pixel = knot_width; pixel < segment_length; pixel++) {
+          sparkle_layer[(ring + sparkle_count) % NUM_RINGS][(stripe * segment_length + pixel + inter_rotation) % LEDS_PER_RING] = TRANSPARENT;
+      }
+    }
+  }
+  if (sparkle_count % inter_throttle == 0) {
+    current_ring = (current_ring + SPARKLE_INTER_RING_MOTION) % NUM_RINGS;
+  }
+  if (sparkle_count % intra_throttle == 0) {
+    current_pixel = (current_pixel + SPARKLE_INTRA_RING_MOTION) % LEDS_PER_RING;
+  }
+}
+
 
 //---------------------------------- SPARKLE TORUS_LINK ---------------------------
 // This code assumes there would be 504 = 72 * 7 pixels all the way around one ring, if pixels went under the floor
