@@ -64,7 +64,7 @@ def status_update(message):
 def send_music(node=0, command=1, field2=0, channels=None):
     empty_msg = True
     if command == 3:
-        return struct.pack('>cB', 'a', 4) + "0;3;" 
+        return 'a' + "0;3;"
     if channels is not None:
         for ch in channels:
             if ch > 0:
@@ -74,8 +74,7 @@ def send_music(node=0, command=1, field2=0, channels=None):
         ctrl_msg = 'a' + ';'.join([str(node), str(command), str(field2),
                                   ','.join(str(ch) for ch in channels)]) + ';'
         # print 'audio command:', ctrl_msg
-        # hope the length is less than 256
-        return struct.pack('>cB', ctrl_msg[0:1], len(ctrl_msg[1:])) + ctrl_msg[1:]
+        return ctrl_msg
     return None
 
 

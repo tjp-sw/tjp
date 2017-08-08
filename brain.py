@@ -178,6 +178,11 @@ def disconnect(socket, msg):
     del message_queues[socket]
     del remote_name[socket]
 
+# insert a length byte into an audio message
+def encapsulated_audio_msg(audio_msg):
+    size = len(audio_msg) - 1	# don't count the 'a' at the beginning
+    msg = struct.pack('>cB', audio_msg[0], size) + audio_msg[1:]
+    return msg
 
 do_list(None, None)
 print sorted(control_messages.keys())
@@ -304,8 +309,7 @@ while running:
         dummy_art_car_bool = False
         audio_msg = mega_music.tick(dummy_art_car_bool)
         if audio_msg is not None:
-            print repr(audio_msg)
-            do_send(None, audio_msg)	# always send to all nodes
+            do_send(None, encapsulated_audio_msg(audio_msg))	# always send to all nodes
             #print repr(audio_msg)
             # meditation = mega.meditation
 
@@ -327,8 +331,9 @@ while running:
         do_disconnect(None, None)	# TODO: be more selective
 
 
+mute_msg = encapsulated_audio_msg(music.mute())
 for s in remote_name:
-    s.send(music.mute())
+    s.send(mute_msg)
 
 for s in sources:
     s.close()
