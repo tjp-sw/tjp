@@ -40,8 +40,8 @@ inline void manually_set_animation_params() {             //
   // Set to OFF to disable a layer during CYCLE'ing.      //
   // Use NONE to signify a layer that is off temporarily  //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   BASE_ANIMATION = NONE;                                  //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK, LEE_PICK_HSV
-  MID_ANIMATION = SQUARE2;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  SPARKLE_ANIMATION = NONE;                               //
+  MID_ANIMATION = WAVE;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  SPARKLE_ANIMATION = STATIC;                               //
   EDM_ANIMATION = OFF;                                    //
                                                           //
   BASE_COLOR_THICKNESS = 255;                             //
@@ -61,8 +61,8 @@ inline void manually_set_animation_params() {             //
   MID_INTER_RING_SPEED = 0;                               //
   show_parameters[MID_RING_OFFSET_INDEX] = 32;            //
                                                           //
-  SPARKLE_PORTION = 32;                                   //
-  SPARKLE_COLOR_THICKNESS = 0;                            //
+  SPARKLE_PORTION = 100;                                   //
+  SPARKLE_COLOR_THICKNESS = 100;                            //
   show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = UP;  //
   SPARKLE_INTRA_RING_SPEED = 128;                         //
   show_parameters[SPARKLE_INTER_RING_MOTION_INDEX] = DOWN;//
@@ -751,8 +751,11 @@ inline void draw_current_mid(uint8_t min_ring, uint8_t max_ring) {
 
 inline void draw_current_sparkle() {
   switch(SPARKLE_ANIMATION) {
+    case STATIC:
+      sparkle_glitter(1);
+      
     case GLITTER:
-      sparkle_glitter();
+      sparkle_glitter(2);
       break;
 
     case RAIN:
@@ -767,8 +770,8 @@ inline void draw_current_sparkle() {
       sparkle_three_circles();
       break;
 
-    case THREE_CIRCLE_TRAILS:
-      sparkle_three_circle_trails();
+    case CIRCLE_TRAILS:
+      sparkle_circle_trails();
       break;
 
     case TWO_COINS:
@@ -947,6 +950,11 @@ inline void init_sparkle_animation() {
       // Don't clear sparkles when starting these animations
       break;
 
+    case STATIC:
+      SPARKLE_PORTION = 255;
+      SPARKLE_MIN_DIM = 255; // Start everything at minimum brightness
+      SPARKLE_MAX_DIM = 255;
+
     case WARP_SPEED:
       random16_set_seed(0); // Synchronize RNG on different nodes
       SPARKLE_PORTION = 100;
@@ -954,7 +962,7 @@ inline void init_sparkle_animation() {
       SPARKLE_MAX_DIM = 255;
       SPARKLE_RANGE = 255;
 
-      sparkle_glitter(); // Generate a set of spots
+      sparkle_glitter(2); // Generate a set of spots
       break;
 
     case TWINKLE:
@@ -964,11 +972,11 @@ inline void init_sparkle_animation() {
       SPARKLE_MIN_DIM = 0;
       SPARKLE_MAX_DIM = 255;
 
-      sparkle_glitter(); // Generate a set of spots
+      sparkle_glitter(1); // Generate a set of spots
       break;
 
     case THREE_CIRCLES:
-    case THREE_CIRCLE_TRAILS:
+    case CIRCLE_TRAILS:
     case TWO_COINS:
       random16_set_seed(0); // Synchronize RNG on different nodes
       current_ring = random8(NUM_RINGS);

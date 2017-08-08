@@ -106,11 +106,12 @@ uint8_t art_car = NO_ART_CAR;                                           //
 #define TWINKLE 4                                             //
 #define VARIABLE_SPIN 5                                       //
 #define THREE_CIRCLES 6                                       //
-#define THREE_CIRCLE_TRAILS 7                                 //
+#define CIRCLE_TRAILS 7                                       //
 #define TWO_COINS 8                                           //
 #define TORUS_KNOT 9                                          //
 #define TORUS_LINK 10                                         //
 #define NUM_SPARKLE_ANIMATIONS 10  // Equal to last animation //
+#define STATIC 255  // only used on Sunday before BM start    //
                                                               //
 // EDM animations (in the base layer, starting at 128)        //
 #define FREQ_PULSE 1                                          //
@@ -297,7 +298,7 @@ int8_t blacken_node_number = 0;                               //
 //------------------- Physical structure ---------------------------------//
 #define NUM_NODES 6                                                       //
 #define RINGS_PER_NODE 12                                                 //
-#define STRIPS_PER_NODE 4 // Everyone should update this to 6! Leaving it at 4 to not impose, since it may require re-wiring your LED strips. //
+#define STRIPS_PER_NODE 6 // Everyone should update this to 6! Leaving it at 4 to not impose, since it may require re-wiring your LED strips. //
 #define PHYSICAL_LEDS_PER_RING 420                                        //
 #define LEDS_PER_RING 408                                                 //
                                                                           //
