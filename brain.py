@@ -203,27 +203,16 @@ def get_external_amplitude_sum(channel_data):
 
 
 def check_art_car_status(ring_num, amplitude):
-    global internal_audio_show, rings_to_hello_animation, auto_show
+    global internal_audio_show, rings_to_hello_animation, auto_show, art_car
+    global rings_to_stop_hello_animation
 
     ring_ac_newly_detected = handle_amplitude_info(ring_num, amplitude)
 
     if ring_ac_newly_detected is None:
-        # artcar total structure animation stop
+        # artcar total structure animation was running now stop
         internal_audio_show = True
         do_show(None, None)
-    elif ring_ac_newly_detected >= 0:
-
-        # send the hello animation to the ring
-        # HELP: HOW TO SEND TO PARTICULAR NODE TARGETTING A RING?
-        # do_send(?, ?)
-
-        # send hello animation stop message to target ring
-        for ring_num in rings_to_stop_hello_animation:
-            # HELP: HOW TO SEND TO PARTICULAR NODE TARGETTING A RING?
-            # do_send()
-            pass
-
-    else:
+    elif ring_ac_newly_detected == art_car:
         # return value signaling ART_CAR_HELLO_DURATION exceeded - trigger edm animations
         internal_audio_show = False
         # trigger edm animations on whole structure
@@ -231,6 +220,18 @@ def check_art_car_status(ring_num, amplitude):
                                 # show_parameters[SEVEN_PAL_BEAT_PARAM_START]
                                 # to postive int works (in handle_amplitude_info)?
 
+    elif ring_ac_newly_detected >= 0:
+
+        # send the hello animation to the ring
+        # HELP: HOW TO SEND TO PARTICULAR NODE TARGETTING A RING?
+        # TODO do_send(?, ?)
+        pass
+
+    # send hello animation stop message to target ring
+    for ring_num in rings_to_stop_hello_animation:
+        # HELP: HOW TO SEND TO PARTICULAR NODE TARGETTING A RING?
+        # do_send()
+        pass
 
 do_list(None, None)
 print sorted(control_messages.keys())

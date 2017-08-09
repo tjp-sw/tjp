@@ -504,44 +504,56 @@ rings_to_stop_hello_animation = []
 # Also mutates a dictionary of rings as keys and value containing the hellow animation being shown
 # Return -400 if something goes wrong
 def handle_amplitude_info(ring_num, amplitude):
-    global internal_audio_show, art_car
+    global internal_audio_show, art_car, rings_to_stop_hello_animation
+    global ring_to_animation_start_time, show_parameters
 
     if amplitude > ART_CAR_AMPLITUDE_THRESHOLD:
         # check if new detection
         if ring_num in ring_to_hello_animation:
             # already detected... check time threshold
             art_car_detected_seconds = time.time() - ring_to_animation_start_time[ring_num]
-            if art_car_detected_seconds > ART_CAR_HELLO_DURATION and not art_car < 0:
+            if art_car_detected_seconds > ART_CAR_HELLO_DURATION and art_car == NO_ART_CAR:
+
                 art_car = ring_num
                 # HELP set edm animation here or further up in brain's check_art_car_status?
                 show_parameters[SEVEN_PAL_BEAT_PARAM_START] = randint(0, NUM_BEAT_EFFECTS)
-                return -1
+
         else:
             # give hello animation & update dictionaries
             give_suitable_hello_animation(ring_num)
             ring_to_animation_start_time[ring_num] = time.time()
+
+        return ring_num
     else:
         # check if was tracking
         if ring_num in ring_to_animation_start_time:
             # check if that ring was triggering edm animations
-            if time.time() - ring_to_animation_start_time[ring_num] > ART_CAR_HELLO_DURATION:
+            if art_car == ring_num:
+
+                # turn off edm animations for art car
                 internal_audio_show = True
+                art_car = NO_ART_CAR
+
                 print "turning off art car edm animation"
                 show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0
+
+                return None
+
+            else:
+                # mark ring running hello animation to stop hello animation
+                rings_to_stop_hello_animation.append(ring_num)
 
             # remove from tracking
             ring_to_animation_start_time.pop(ring_num)
             hello_animation_to_ring.pop(ring_to_hello_animation[ring_num])
             ring_to_hello_animation.pop(ring_num)
 
-            return None
-
-    return ring_num
+    return -1
 
 
-#TODO add random element for now return the first avaliabe one
+# MAYBE add random element for now return the first avaliabe hello animation
 def give_suitable_hello_animation(ring_num):
-
+    global show_parameters
     # check if neighbor
     for i in ring_to_hello_animation.keys():
         if abs(ring_num - i) == 1: # direct next door nieghbor
