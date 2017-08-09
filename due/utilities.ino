@@ -10,6 +10,10 @@ inline int8_t scale_param(int8_t param, int8_t minVal, int8_t maxVal) {
   //Serial.println("signed " + String(param) + " from " + String(minVal) + ":" + String(maxVal) + " = " + String(minVal + param * range / 256 + range/2));
   return minVal + param * range / 256 + range/2;
 }
+inline uint16_t scale_param_16(uint8_t param, uint16_t minVal, uint16_t maxVal) {
+  //int16_t range = maxVal - minVal + 1;
+  return minVal + param * (maxVal - minVal + 1) / 256;
+}
 inline int16_t scale_param_16(int8_t param, int16_t minVal, int16_t maxVal) {
   int16_t range = maxVal - minVal + 1;
   return minVal + param * range / 256 + range/2;

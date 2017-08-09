@@ -4,6 +4,7 @@
 // Sends alternating bands of colors rotating around the rings
 // Creates repeated snakes with MID_NUM_COLORS colors, with each color repeated COLOR_THICKNESS times, separated by BLACK_THICKNESS black LEDs.
 // MID_NUM_COLORS(1:3), MID_COLOR_THICKNESS(2:5), MID_BLACK_THICKNESS(6:50), MID_INTRA_RING_MOTION(-1:1), MID_RING_OFFSET(-period/2:period/2), MID_INTRA_RING_SPEED(8-32)
+// missing: INTER_RING_MOTION, INTER_RING_SPEED
 inline void snake(uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(MID_COLOR_THICKNESS, 2, 5);
   uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 6, 50);
@@ -78,15 +79,15 @@ inline void snake(uint8_t min_ring, uint8_t max_ring) {
 // Adapted from: Fire2012 by Mark Kriegsman, July 2012, part of "Five Elements" shown here: http://youtu.be/knWiGsmgycY
 // Changes palette to a heat scale, and values in mid_layer represent the amount of heat in each pixel
 // The palette_type parameter changes how the heat scale is constructed. Setting to 0 will skip this step and just use the actual palette.
-// MID_INTRA_RING_MOTION: UP or DOWN; DOWN will spawn fire at the top and heat travels downward
-// MID_BLACK_THICKNESS(15) == cooling, MID_COLOR_THICKNESS(130) == sparking chance, MID_NUM_COLORS(150) == minimum spark size
-// A cooling wind rolls around the structure: MID_INTER_RING_SPEED(8) == wind speed, MID_RING_OFFSET(96) == wind decay amount in neighboring rings
-
+// MID_INTRA_RING_MOTION: UP or DOWN; DOWN will spawn fire at the top and heat travels downwardl; ALTERNATE will do both directions
+// MID_INTER_RING_SPEED(8) == wind speed, MID_RING_OFFSET(96) == wind decay amount in neighboring rings
+// not using: everything else
 #define SPARKING_RANGE 10   // How far from bottom sparks will form
 #define MAX_WIND_COOLING 70 // Largest extra cooling, at center of the wind
 #define MAX_WIND_RANGE 6    // Wind cooling reaches 6 rings in either direction from center
 inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, uint8_t max_ring) {
-  uint8_t cooling = palette_type == FIRE_PALETTE_DISABLED ? 12 : 8;//scale_param(MID_BLACK_THICKNESS, 15, 15);
+  uint8_t cooling = palette_type == FIRE_PALETTE_DISABLED ? 18 : 12;//scale_param(MID_BLACK_THICKNESS, 15, 15);
+  if(MID_INTRA_RING_MOTION == ALTERNATE) { cooling += 6; }
   uint8_t sparking_chance = 180;//scale_param(MID_COLOR_THICKNESS, 130, 130);
   uint8_t min_spark_size = 150;//scale_param(MID_NUM_COLORS, 150, 150);
   uint8_t wind_speed = 8;//scale_param(MID_INTER_RING_SPEED, 8, 8);
@@ -129,11 +130,12 @@ inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, u
     }
 
     // Cool down cells that otherwise are never cooled and don't inherit heat from below
-    if(MID_INTRA_RING_MOTION == UP) {
+    if(MID_INTRA_RING_MOTION != DOWN) {
       mid_layer[ring][LEDS_PER_RING - 2] = qsub8(mid_layer[ring][LEDS_PER_RING-2], random8(0, cooling+wind_cooling));
       mid_layer[ring][1] = qsub8(mid_layer[ring][1], random8(0, cooling+wind_cooling));
     }
-    else {
+    
+    if(MID_INTRA_RING_MOTION != UP) {
       mid_layer[ring][HALF_RING - 1] = qsub8(mid_layer[ring][HALF_RING - 1], random8(0, cooling+wind_cooling));
       mid_layer[ring][HALF_RING - 2] = qsub8(mid_layer[ring][HALF_RING - 2], random8(0, cooling+wind_cooling));
       mid_layer[ring][HALF_RING] = qsub8(mid_layer[ring][HALF_RING], random8(0, cooling+wind_cooling));
@@ -141,11 +143,15 @@ inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, u
     }
   }
 
-  if(MID_INTRA_RING_MOTION == UP) {
-    for(uint8_t ring = min_ring; ring < max_ring; ring++) {
-      
-      // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-      for(uint16_t pixel = 1; pixel < HALF_RING - 1; pixel++) {
+
+
+  for(uint8_t ring = min_ring; ring < max_ring; ring++) {
+    
+    // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+    if(MID_INTRA_RING_MOTION != DOWN) {
+      uint16_t lower_limit = (MID_INTRA_RING_MOTION == ALTERNATE  || MID_INTRA_RING_MOTION == NONE) ? HALF_RING/2 : 1;
+    
+      for(uint16_t pixel = lower_limit; pixel < HALF_RING - 1; pixel++) {
         // Outer half
         mid_layer[ring][HALF_RING - pixel] = (mid_layer[ring][HALF_RING - pixel - 1] + mid_layer[ring][HALF_RING - pixel - 2]) / 2;
         
@@ -154,26 +160,27 @@ inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, u
           mid_layer[ring][HALF_RING + pixel - 1] = (mid_layer[ring][HALF_RING + pixel] + mid_layer[ring][HALF_RING + pixel + 1]) / 2;
         }
       }
-  
-    
+
       // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
-      if(random8() < sparking_chance) {
-        uint8_t pixel = random8(SPARKING_RANGE);
-        mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random8(min_spark_size, 255));
-      }
-  
-      if(draw_inner_half && random8() < sparking_chance) {
-        uint16_t pixel = LEDS_PER_RING - 1 - random8(SPARKING_RANGE);
-        mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random8(min_spark_size, 255));
+      if(MID_INTRA_RING_MOTION == UP || MID_INTRA_RING_MOTION == ALTERNATE) {
+        
+        if(random8() < sparking_chance) {
+          uint8_t pixel = random8(SPARKING_RANGE);
+          mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random8(min_spark_size, 255));
+        }
+    
+        if(draw_inner_half && random8() < sparking_chance) {
+          uint16_t pixel = LEDS_PER_RING - 1 - random8(SPARKING_RANGE);
+          mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random8(min_spark_size, 255));
+        }
       }
     }
-  }
-  else {
-    // Spawn fire at top and heat travels down; heavily repeated code
-    for(uint8_t ring = min_ring; ring < max_ring; ring++) {
-      
+
+    if(MID_INTRA_RING_MOTION != UP) {
       // Step 2.  Heat from each cell drifts 'down' and diffuses a little
-      for(int16_t pixel = 1; pixel < HALF_RING - 1; pixel++) {
+      uint16_t lower_limit = (MID_INTRA_RING_MOTION == ALTERNATE  || MID_INTRA_RING_MOTION == NONE) ? HALF_RING/2 : 1;
+      
+      for(uint16_t pixel = lower_limit; pixel < HALF_RING - 1; pixel++) {
         // Outer half
         mid_layer[ring][pixel - 1] = (mid_layer[ring][pixel] + mid_layer[ring][pixel + 1]) / 2;
         
@@ -182,17 +189,19 @@ inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, u
           mid_layer[ring][LEDS_PER_RING - pixel] = (mid_layer[ring][LEDS_PER_RING - pixel - 1] + mid_layer[ring][LEDS_PER_RING - pixel - 2]) / 2;
         }
       }
-
-
+      
+      
       // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
-      if(random8() < sparking_chance) {
-        uint16_t pixel = HALF_RING - 1 - random8(SPARKING_RANGE);
-        mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random8(min_spark_size, 255));
-      }
-
-      if(draw_inner_half && random8() < sparking_chance) {
-        uint8_t pixel = HALF_RING + random8(SPARKING_RANGE);
-        mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random8(min_spark_size, 255));
+      if(MID_INTRA_RING_MOTION == DOWN || MID_INTRA_RING_MOTION == ALTERNATE) {
+        if(random8() < sparking_chance) {
+          uint16_t pixel = HALF_RING - 1 - random8(SPARKING_RANGE);
+          mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random8(min_spark_size, 255));
+        }
+        
+        if(draw_inner_half && random8() < sparking_chance) {
+          uint8_t pixel = HALF_RING + random8(SPARKING_RANGE);
+          mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random8(min_spark_size, 255));
+        }
       }
     }
   }
@@ -261,10 +270,11 @@ inline void cleanup_fire() {
 //-------------------------------- SCROLLING DIM ---------------------------------
 // Draws single-colored bands that fade in and out and scroll around rings
 // Breaking these into separate functions with mostly duplicated code because these functions already run pretty slowly (due to heavy blending with background)
-// MID_NUM_COLORS(1:3), MID_COLOR_THICKNESS(1:6), MID_BLACK_THICKNESS(6:18), MID_INTRA_RING_MOTION(-1:1), MID_RING_OFFSET(-period/2:period/2), MID_INTRA_RING_SPEED(8:64)
+// MID_NUM_COLORS(1:3), MID_COLOR_THICKNESS(1:6), MID_BLACK_THICKNESS(6:24), MID_INTRA_RING_MOTION(-1:1), MID_RING_OFFSET(-period/2:period/2), MID_INTRA_RING_SPEED(8:64)
+// missing: INTER_RING_MOTION, INTER_RING_SPEED
 inline void mid_scrolling_dim1(uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(MID_COLOR_THICKNESS, 1, 6);
-  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 6, 18);
+  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 6, 24);
   uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 6);
   uint8_t dim_period = color_thickness + black_thickness + 2*MAX_MID_DIMMING;
   uint8_t full_period = dim_period * MID_NUM_COLORS;
@@ -308,7 +318,7 @@ inline void mid_scrolling_dim1(uint8_t min_ring, uint8_t max_ring) {
 
 inline void mid_scrolling_dim2(uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(MID_COLOR_THICKNESS, 1, 6);
-  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 6, 18);
+  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 6, 24);
   uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 6);
   uint8_t dim_period = color_thickness + black_thickness + 2*MAX_MID_DIMMING;
   uint8_t full_period = dim_period * MID_NUM_COLORS;
@@ -354,7 +364,7 @@ inline void mid_scrolling_dim2(uint8_t min_ring, uint8_t max_ring) {
 
 inline void mid_scrolling_dim3(uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(MID_COLOR_THICKNESS, 1, 6);
-  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 6, 18);
+  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 6, 24);
   uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 6);
   uint8_t dim_period = color_thickness + black_thickness + 2*MAX_MID_DIMMING;
   uint8_t full_period = dim_period * MID_NUM_COLORS;
@@ -442,7 +452,7 @@ inline void mid_scrolling_dim4(uint8_t min_ring, uint8_t max_ring) {
 
 inline void mid_scrolling_dim5(uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(MID_COLOR_THICKNESS, 1, 6);
-  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 6, 18);
+  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 6, 24);
   uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 6);
   uint8_t dim_period = color_thickness + black_thickness + 2*MAX_MID_DIMMING;
   uint8_t full_period = dim_period * MID_NUM_COLORS;
@@ -458,7 +468,8 @@ inline void mid_scrolling_dim5(uint8_t min_ring, uint8_t max_ring) {
     int16_t motion_offset = ring*ring_offset + alternating_multiplier * intra_speed * mid_count / THROTTLE;
     while(motion_offset < 0) { motion_offset += extended_led_count; }
 
-    int16_t color_motion_offset = ring*ring_offset + 2 * alternating_multiplier * intra_speed * mid_count / THROTTLE;
+    int16_t color_motion_offset = -3 * alternating_multiplier * intra_speed * mid_count / THROTTLE;
+    while(color_motion_offset < 0) { color_motion_offset += extended_led_count; }
     for(uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
       uint16_t idx = (pixel + motion_offset) % extended_led_count;
       if(idx >= LEDS_PER_RING) { continue; }
@@ -492,37 +503,97 @@ inline void mid_scrolling_dim5(uint8_t min_ring, uint8_t max_ring) {
 
 
 //-------------------------------- ARROW ---------------------------------
+// MID_NUM_COLORS(1:3), MID_COLOR_THICKNESS(1:6), MID_BLACK_THICKNESS(6:18), INTER_RING_MOTION, INTER_RING_SPEED
+// missing: MID_RING_OFFSET
+// not using: MID_INTRA_RING_SPEED, MID_INTRA_RING_MOTION
 void init_arrow() {
   //number of transparent pixels between arrow start-end: choose such that integer number of arrows fit in structure
-  //ie, (7+5)*6 = 72 = number of rings
-  //uint8_t arrow_length = 7;
-  uint8_t ring_spacing = 5;
-  uint8_t pixel_spacing = 3; //transparent pixels between arrows
-  uint16_t narrow = LEDS_PER_RING / pixel_spacing; //408 / 3 = 136
-  uint8_t maxbrite = NUM_MID_DIMMING_LEVELS; //7; //max value of last argument to get_mid_color: brightness == maxbrite 
-  uint8_t maxdim = MID_GRADIENT_SIZE; //12;
-  for(uint8_t ring = 0; ring < RINGS_PER_NODE; ring++) {
-    for(uint8_t a = 0; a < narrow; a++) {
-      uint16_t pixel = a * pixel_spacing;
-      uint8_t arg = (ring+a*ring_spacing)%(maxbrite+ring_spacing);
-      uint8_t c1 = pixel < 2*RINGS_PER_NODE/3 ? 0 : 1;
-      uint8_t c2 = pixel <   RINGS_PER_NODE/3 ? 1 : 2;
-      uint8_t b  = (pixel%narrow)*maxdim/narrow;
-      mid_layer[ring][pixel] = (arg < maxbrite ? get_mid_color(c1, c2, b, arg) : TRANSPARENT);
+  //ie, (arrow_length + horizontal_spacing) should be a multiple of number of rings
+  uint8_t horizontal_spacing = 6;//scale_param(MID_COLOR_THICKNESS, 4, 6);
+  uint8_t vertical_spacing = scale_param(MID_BLACK_THICKNESS, 2, 6); //transparent pixels between arrows
+  
+  clear_mid_layer();
+  
+  for(uint8_t ring = 0; ring < NUM_RINGS; ring++) {
+    for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel += vertical_spacing) {
+      uint8_t comet_num = pixel / vertical_spacing;
+      uint8_t dimming = (ring + comet_num*horizontal_spacing) % (NUM_MID_DIMMING_LEVELS+horizontal_spacing);
+
+      if(dimming < NUM_MID_DIMMING_LEVELS) {
+        uint8_t arrow_color;
+        if(pixel < LEDS_PER_RING/3) {
+          uint8_t blend_amount = MID_GRADIENT_SIZE * pixel / (LEDS_PER_RING/3);
+          arrow_color = MID_NUM_COLORS == 1 ? get_mid_color(0, dimming) : get_mid_color(0, 1, blend_amount, dimming);
+        }
+        else if(pixel < LEDS_PER_RING*2/3) {
+          if(MID_NUM_COLORS == 1) { arrow_color = get_mid_color(0, dimming); }
+          else {
+            uint8_t second_color = MID_NUM_COLORS == 2 ? 0 : 2;
+            uint8_t blend_amount = MID_GRADIENT_SIZE * (pixel - LEDS_PER_RING/3) / (LEDS_PER_RING/3);
+            arrow_color = get_mid_color(1, second_color, blend_amount, dimming);
+          }
+        }
+        else {
+          if(MID_NUM_COLORS == 1) { arrow_color = get_mid_color(0, dimming); }
+          else if(MID_NUM_COLORS == 2) { arrow_color = mid_layer[ring][pixel - LEDS_PER_RING*2/3]; }
+          else {
+            uint8_t blend_amount = MID_GRADIENT_SIZE * (pixel - LEDS_PER_RING*2/3) / (LEDS_PER_RING/3);
+            arrow_color = get_mid_color(2, 0, blend_amount, dimming);
+          }
+        }
+
+        mid_layer[ring][pixel] = arrow_color;
+      }
     }
   }
 }
 
+void arrow_old() {
+  uint8_t throttle = 5 - scale_param(MID_INTER_RING_SPEED, 0, 5); //only rotate every this mid_count
+  if(throttle == 0) {
+    move_mid_layer_inter_ring(MID_INTER_RING_MOTION == CW ? CW : CCW);
+    move_mid_layer_inter_ring(MID_INTER_RING_MOTION == CW ? CW : CCW);
+  }
+  else if( mid_count % throttle == 0 ) {
+    move_mid_layer_inter_ring(MID_INTER_RING_MOTION == CW ? CW : CCW);
+  }
+}
+
+
+void dim_mid_layer(uint8_t amount) {
+  for(uint8_t ring = 0; ring < NUM_RINGS; ring++) {
+    for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+      if(get_mid_dim_value(ring, pixel) > MAX_MID_DIMMING - amount) { mid_layer[ring][pixel] = TRANSPARENT; }
+      else { mid_layer[ring][pixel] += amount;}
+    }
+  }
+}
+
+// NUM_COLORS, COLOR_THICKNESS, BLACK_THICKNESS, RING_OFFSET, INTER_RING_MOTION, INTER_RING_SPEED, INTRA_RING_MOTION, INTRA_RING_SPEED, RING_OFFSET
 void arrow() {
-  uint8_t speed = 5; //only rotate every this mid_count
-  //for(uint8_t i = 0; i < 5; i++) {
-  if( mid_count % speed == 0 ) {
-    move_mid_layer_inter_ring(CW);
+  uint8_t color_thickness = scale_param(MID_COLOR_THICKNESS, 1, 5);
+  uint8_t horizontal_spacing = scale_param(MID_BLACK_THICKNESS, 3, 8);
+  uint8_t vertical_spacing = scale_param(MID_BLACK_THICKNESS, 2, 7) + color_thickness;
+  uint8_t inter_speed = 1 << scale_param(MID_INTER_RING_SPEED, 3, 6);
+  uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 6);
+  uint8_t ring_offset = scale_param(MID_RING_OFFSET, 1, 10);
+  
+  dim_mid_layer(1);
+
+  for(uint8_t ring = node_number * RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+    uint8_t first_pixel = ring*ring_offset + inter_speed*mid_count/THROTTLE;
+    for(uint16_t raw_pixel = first_pixel; raw_pixel < LEDS_PER_RING; raw_pixel += vertical_spacing) {
+      for(uint8_t pixel_offset = 0; pixel_offset < color_thickness; pixel_offset++) {
+        uint16_t pixel = raw_pixel + pixel_offset;
+        mid_layer[ring][pixel] = WHITE;
+      }
+    }
   }
 }
 
 
 //-------------------------------- WAVE ---------------------------------
+// needs love
 #include <math.h> //for sin
 const uint8_t nwave = 12; //per half structure: each half is mirrored
 uint16_t start_pixel[nwave] = {20, 30, 40, 50, 60, 80, 100, 110, 120, 130, 140, 180}; 
@@ -561,29 +632,283 @@ void wave() {
 
 
 //-------------------------------- RADIATION SYMBOL ---------------------------------
-void init_radiation_symbol() {
-  for(uint8_t ring = 0; ring < NUM_RINGS; ring++) {
+// MID_NUM_COLORS(1:3), MID_COLOR_THICKNESS(1:6), MID_BLACK_THICKNESS(6:18), INTER_RING_MOTION, INTER_RING_SPEED
+// not using: MID_INTRA_RING_SPEED, MID_INTRA_RING_MOTION, MID_RING_OFFSET
+void radiation_symbol() {
+  uint16_t rotating_height = scale_param_16(MID_COLOR_THICKNESS, 200, 300);
+  uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 0, 54);
+  uint8_t inter_speed = 1 << scale_param(MID_INTER_RING_SPEED, 3, 6);
+  int8_t alternating_multiplier = MID_INTER_RING_MOTION <= 0 ? CW : CCW;
+
+  int16_t motion_offset = alternating_multiplier * inter_speed * mid_count / THROTTLE;
+  while(motion_offset < 0) { motion_offset += NUM_RINGS; }
+  
+  for(uint8_t orig_ring = 0; orig_ring < NUM_RINGS; orig_ring++) {
+    uint8_t ring = (orig_ring + motion_offset) % NUM_RINGS;
+
+    uint8_t color_index = get_mid_color((orig_ring / (NUM_RINGS/3)) % MID_NUM_COLORS);
     uint16_t pixel = 0;
-    if((ring / 6) % 2 == 0) {
-      for(; pixel < 250; pixel++) {
-        mid_layer[ring][pixel] = current_palette[2];
+    if((orig_ring / 12) % 2 == 0) {
+      for(; pixel < rotating_height; pixel++) {
+        mid_layer[ring][pixel] = color_index;
+      }
+    }
+    else {
+      for(; pixel < rotating_height; pixel++) {
+        mid_layer[ring][pixel] = TRANSPARENT;
       }
     }
 
-    for(pixel = 250; pixel < LEDS_PER_RING-50; pixel++) {
-      mid_layer[ring][pixel] = current_palette[2];
+    for(; pixel < rotating_height + black_thickness; pixel++) {
+      mid_layer[ring][pixel] = TRANSPARENT;
+    }
+    
+    for(; pixel < LEDS_PER_RING-black_thickness; pixel++) {
+      mid_layer[ring][pixel] = color_index;
+    }
+
+    for(; pixel < LEDS_PER_RING; pixel++) {
+      mid_layer[ring][pixel] = TRANSPARENT;
     }
   }
 }
 
-void radiation_symbol() {
-  if(mid_count % 4 == 0) {
-    move_mid_layer_inter_ring(CW);
+
+//-------------------------------- SQUARE PATTERN ---------------------------------
+// MID_NUM_COLORS(1:3), MID_COLOR_THICKNESS, MID_BLACK_THICKNESS, INTER_RING_SPEED(1/4:1), MID_INTRA_RING_SPEED(1/4:1), MID_RING_OFFSET(-height/2:height/2)
+// not using: INTER_RING_MOTION, MID_INTRA_RING_MOTION
+void square_pattern() {
+  static uint8_t current_height1 = 0;
+  static uint8_t current_width1 = 0;
+  static uint8_t current_height2 = 0;
+  static uint8_t current_width2 = 0;
+
+  uint8_t height = scale_param(MID_BLACK_THICKNESS, 18, 36);
+  if(height % 2 == 1) { height--; }
+  uint8_t width = scale_param(MID_BLACK_THICKNESS, 9, 18);
+  if(width % 2 == 1) { width--; }
+  
+  uint8_t vert_color_thickness = scale_param(MID_COLOR_THICKNESS, 1, 2);
+  uint8_t hor_color_thickness = scale_param(MID_COLOR_THICKNESS, 1, height/4);
+  
+  uint8_t horizontal_throttle = 4 - scale_param(MID_INTRA_RING_SPEED, 1, 3);
+  uint8_t vertical_throttle = 4 - scale_param(MID_INTER_RING_SPEED, 1, 3);
+  
+  int8_t ring_offset = scale_param(MID_RING_OFFSET, -1 * height/8, height/8);
+  
+  uint8_t vertical_color = get_mid_color(0);
+  uint8_t horizontal_color = get_mid_color(MID_NUM_COLORS-1);
+  
+  clear_mid_layer();
+
+  // Draw vertical lines
+  for(uint8_t ring = current_width1; ring < NUM_RINGS; ring += width) {
+    if(ring >= node_number*RINGS_PER_NODE && ring < (node_number+1)*RINGS_PER_NODE) {
+      for(uint8_t i = 0; i < vert_color_thickness; i++) {
+        uint8_t actual_ring = (ring+i) % NUM_RINGS;
+        for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+          mid_layer[actual_ring][pixel] = vertical_color;
+        }
+      }
+    }
+  }
+
+  for(uint8_t ring = current_width2; ring < NUM_RINGS; ring += width) {
+    if(ring >= node_number*RINGS_PER_NODE && ring < (node_number+1)*RINGS_PER_NODE) {
+      for(uint8_t i = 0; i < vert_color_thickness; i++) {
+        uint8_t actual_ring = (ring+i) % NUM_RINGS;
+        for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+          mid_layer[actual_ring][pixel] = vertical_color;
+        }
+      }
+    }
+  }
+
+
+  // Draw horizontal lines at 0, 24, 48, 72, ... <408
+  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+    int16_t this_ring_current_height1 = current_height1 + ring*ring_offset;
+    while(this_ring_current_height1 < 0) { this_ring_current_height1 += height; }
+    this_ring_current_height1 %= height;
+    
+    int16_t this_ring_current_height2 = current_height2 + ring*ring_offset;
+    while(this_ring_current_height2 < 0) { this_ring_current_height2 += height; }
+    this_ring_current_height2 %= height;
+
+
+    for(uint8_t pixel_offset = 0; pixel_offset < hor_color_thickness; pixel_offset++) {
+      for(uint16_t pixel = this_ring_current_height1; pixel < LEDS_PER_RING; pixel += height) {
+        uint16_t actual_pixel = (pixel + pixel_offset) % LEDS_PER_RING;
+        
+        uint8_t phase = ring % width;
+        uint8_t col = horizontal_color;
+        for(uint8_t ring_offset = 0; ring_offset < vert_color_thickness; ring_offset++) {
+          uint8_t actual_cur_width1 = (current_width1 + ring_offset) % NUM_RINGS;
+          uint8_t actual_cur_width2 = (current_width2 + ring_offset) % NUM_RINGS;
+          if(phase == actual_cur_width1 || phase == actual_cur_width2) { col = WHITE; }
+        }
+        mid_layer[ring][actual_pixel] = col;
+      }
+      
+      for(uint16_t pixel = this_ring_current_height2; pixel < LEDS_PER_RING; pixel += height) {
+        uint16_t actual_pixel = (pixel + pixel_offset) % LEDS_PER_RING;
+        
+        uint8_t phase = ring % width;
+        uint8_t col = horizontal_color;
+        for(uint8_t ring_offset = 0; ring_offset < vert_color_thickness; ring_offset++) {
+          uint8_t actual_cur_width1 = (current_width1 + ring_offset) % NUM_RINGS;
+          uint8_t actual_cur_width2 = (current_width2 + ring_offset) % NUM_RINGS;
+          if(phase == actual_cur_width1 || phase == actual_cur_width2) { col = WHITE; }
+        }
+        mid_layer[ring][actual_pixel] = col;
+      }
+    }
+  }
+
+  if(mid_count % horizontal_throttle == 0) {
+    if(++current_height1 == height) { current_height1 = 0; }
+    if(--current_height2 == 255) { current_height2 = height - 1; }
+  }
+
+  if(mid_count % vertical_throttle == 0) {
+    if((mid_count/vertical_throttle) % (height/width) == 0) {
+      if(++current_width1 == width) { current_width1 = 0; }
+      if(--current_width2 == 255) { current_width2 = width-1; }
+    }
+  }
+}
+
+void square_pattern2() {
+  static bool moving_height = true;
+  static uint8_t vert_col_index1 = 0;
+  static uint8_t vert_col_index2 = 1 % MID_NUM_COLORS;
+  static uint8_t hor_col_index1 = 2 % MID_NUM_COLORS;
+  static uint8_t hor_col_index2 = 0;
+  
+  uint8_t vertical_color1 = vert_col_index1 == MID_NUM_COLORS ? BLACK : get_mid_color(vert_col_index1);
+  uint8_t vertical_color2 = vert_col_index2 == MID_NUM_COLORS ? BLACK : get_mid_color(vert_col_index2);
+  uint8_t horizontal_color1 = hor_col_index1 == MID_NUM_COLORS ? BLACK : get_mid_color(hor_col_index1);
+  uint8_t horizontal_color2 = hor_col_index2 == MID_NUM_COLORS ? BLACK : get_mid_color(hor_col_index2);
+  
+  static uint8_t current_height1 = 0;
+  static uint8_t current_width1 = 0;
+  static uint8_t current_height2 = 0;
+  static uint8_t current_width2 = 0;
+
+  uint8_t height = scale_param(MID_BLACK_THICKNESS, 18, 36);
+  if(height % 2 == 1) { height--; }
+  uint8_t width = scale_param(MID_BLACK_THICKNESS, 9, 18);
+  if(width % 2 == 1) { width--; }
+  
+  uint8_t vert_color_thickness = scale_param(MID_COLOR_THICKNESS, 1, 2);
+  uint8_t hor_color_thickness = scale_param(MID_COLOR_THICKNESS, 1, height/4);
+  
+  uint8_t horizontal_throttle = 3 - scale_param(MID_INTRA_RING_SPEED, 1, 2);
+  uint8_t vertical_throttle = 3 - scale_param(MID_INTER_RING_SPEED, 1, 2);
+  
+  int8_t ring_offset = scale_param(MID_RING_OFFSET, -1 * height/8, height/8);
+  
+  clear_mid_layer();
+
+  // Draw vertical lines
+  for(uint8_t ring = current_width1; ring < NUM_RINGS; ring += width) {
+    if(ring >= node_number*RINGS_PER_NODE && ring < (node_number+1)*RINGS_PER_NODE) {
+      for(uint8_t i = 0; i < vert_color_thickness; i++) {
+        uint8_t actual_ring = (ring+i) % NUM_RINGS;
+        for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+          mid_layer[actual_ring][pixel] = vertical_color1;
+        }
+      }
+    }
+  }
+
+  for(uint8_t ring = current_width2; ring < NUM_RINGS; ring += width) {
+    if(ring >= node_number*RINGS_PER_NODE && ring < (node_number+1)*RINGS_PER_NODE) {
+      for(uint8_t i = 0; i < vert_color_thickness; i++) {
+        uint8_t actual_ring = (ring+i) % NUM_RINGS;
+        for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+          mid_layer[actual_ring][pixel] = vertical_color2;
+        }
+      }
+    }
+  }
+
+
+  // Draw horizontal lines at 0, 24, 48, 72, ... <408
+  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+    int16_t this_ring_current_height1 = current_height1 + ring*ring_offset;
+    while(this_ring_current_height1 < 0) { this_ring_current_height1 += height; }
+    this_ring_current_height1 %= height;
+    
+    int16_t this_ring_current_height2 = current_height2 + ring*ring_offset;
+    while(this_ring_current_height2 < 0) { this_ring_current_height2 += height; }
+    this_ring_current_height2 %= height;
+
+
+    for(uint8_t pixel_offset = 0; pixel_offset < hor_color_thickness; pixel_offset++) {
+      for(uint16_t pixel = this_ring_current_height1; pixel < LEDS_PER_RING; pixel += height) {
+        uint16_t actual_pixel = (pixel + pixel_offset) % LEDS_PER_RING;
+        
+        uint8_t phase = ring % width;
+        uint8_t col = horizontal_color1;
+        for(uint8_t ring_offset = 0; ring_offset < vert_color_thickness; ring_offset++) {
+          uint8_t actual_cur_width1 = (current_width1 + ring_offset) % NUM_RINGS;
+          uint8_t actual_cur_width2 = (current_width2 + ring_offset) % NUM_RINGS;
+          if(phase == actual_cur_width1 || phase == actual_cur_width2) { col = WHITE; }
+        }
+        mid_layer[ring][actual_pixel] = col;
+      }
+      
+      for(uint16_t pixel = this_ring_current_height2; pixel < LEDS_PER_RING; pixel += height) {
+        uint16_t actual_pixel = (pixel + pixel_offset) % LEDS_PER_RING;
+        
+        uint8_t phase = ring % width;
+        uint8_t col = horizontal_color2;
+        for(uint8_t ring_offset = 0; ring_offset < vert_color_thickness; ring_offset++) {
+          uint8_t actual_cur_width1 = (current_width1 + ring_offset) % NUM_RINGS;
+          uint8_t actual_cur_width2 = (current_width2 + ring_offset) % NUM_RINGS;
+          if(phase == actual_cur_width1 || phase == actual_cur_width2) { col = WHITE; }
+        }
+        mid_layer[ring][actual_pixel] = col;
+      }
+    }
+  }
+
+  if(moving_height) {
+    if(mid_count % horizontal_throttle == 0) {
+      if(++current_height1 == height) { current_height1 = 0; }
+      if(--current_height2 == 255) { current_height2 = height - 1; }
+      if(current_height1 == current_height2) {
+        moving_height = false;
+        hor_col_index1 = random8(MID_NUM_COLORS + 1);
+        vert_col_index2 = random8(MID_NUM_COLORS + 1);
+        if(hor_col_index2 == MID_NUM_COLORS && vert_col_index2 == MID_NUM_COLORS) {
+          hor_col_index1 = random8(MID_NUM_COLORS);
+        }
+      }
+    }
+  }
+  else {
+    if(mid_count % vertical_throttle == 0) {
+      if((mid_count/vertical_throttle) % (height/width) == 0) {
+        if(++current_width1 == width) { current_width1 = 0; }
+        if(--current_width2 == 255) { current_width2 = width-1; }
+        if(current_width1 == current_width2) {
+          moving_height = true;
+          vert_col_index1 = random8(MID_NUM_COLORS + 1);
+          hor_col_index2 = random8(MID_NUM_COLORS + 1);
+          if(hor_col_index2 == MID_NUM_COLORS && vert_col_index2 == MID_NUM_COLORS) {
+            hor_col_index2 = random8(MID_NUM_COLORS);
+          }
+        }
+      }
+    }
   }
 }
 
 
 //-------------------------------- ROTATING RINGS ---------------------------------
+// needs love
 void ring_intersecting_periods() {
   static uint8_t ring[6];
   if(mid_count == 0) {
@@ -641,140 +966,4 @@ void ring_intersecting_periods() {
   }
 }
 
-
-//-------------------------------- SQUARE PATTERN ---------------------------------
-void square_pattern() {
-  const uint8_t height = 24;
-  const uint8_t width = 12;
-
-  static uint8_t current_height1 = 0;
-  static uint8_t current_width1 = 0;
-  static uint8_t current_height2 = 0;
-  static uint8_t current_width2 = 0;
-
-  uint8_t vertical_color = get_mid_color(0);
-  uint8_t horizontal_color = get_mid_color(MID_NUM_COLORS-1);
-  
-  clear_mid_layer();
-
-  // Draw vertical lines
-  for(uint8_t ring = current_width1; ring < NUM_RINGS; ring += width) {
-    if(ring >= node_number*RINGS_PER_NODE && ring < (node_number+1)*RINGS_PER_NODE) {
-      for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
-        mid_layer[ring][pixel] = vertical_color;
-      }
-    }
-  }
-
-  for(uint8_t ring = current_width2; ring < NUM_RINGS; ring += width) {
-    if(ring >= node_number*RINGS_PER_NODE && ring < (node_number+1)*RINGS_PER_NODE) {
-      for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
-        mid_layer[ring][pixel] = vertical_color;
-      }
-    }
-  }
-
-  // Draw horizontal lines at 0, 24, 48, 72, ... <408
-  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
-    for(uint16_t pixel = current_height1; pixel < LEDS_PER_RING; pixel += height) {
-      uint8_t phase = ring % width;
-      if(phase == current_width1 || phase == current_width2) { mid_layer[ring][pixel] = BLACK; }
-      else { mid_layer[ring][pixel] = horizontal_color; }
-    }
-    for(uint16_t pixel = current_height2; pixel < LEDS_PER_RING; pixel += height) {
-      uint8_t phase = ring % width;
-      if(phase == current_width1 || phase == current_width2) { mid_layer[ring][pixel] = BLACK; }
-      else { mid_layer[ring][pixel] = horizontal_color; }
-    }
-  }
-
-  if(++current_height1 == height) { current_height1 = 0; }
-  if(--current_height2 == 255) { current_height2 = height - 1; }
-  if(mid_count % (height/width) == 0) {
-    if(++current_width1 == width) { current_width1 = 0; }
-    if(--current_width2 == 255) { current_width2 = width-1; }
-  }
-}
-
-void square_pattern2() {
-  const uint8_t height = 34;
-  const uint8_t width = 12;
-
-  static bool moving_height = true;
-
-  static uint8_t current_height1 = 0;
-  static uint8_t current_width1 = 0;
-  static uint8_t current_height2 = 0;
-  static uint8_t current_width2 = 0;
-
-  static uint8_t vert_col_index1 = 0;
-  static uint8_t vert_col_index2 = 1 % MID_NUM_COLORS;
-  static uint8_t hor_col_index1 = 2 % MID_NUM_COLORS;
-  static uint8_t hor_col_index2 = 0;
-  
-  uint8_t vertical_color1 = vert_col_index1 == MID_NUM_COLORS ? BLACK : get_mid_color(vert_col_index1);
-  uint8_t vertical_color2 = vert_col_index2 == MID_NUM_COLORS ? BLACK : get_mid_color(vert_col_index2);
-  uint8_t horizontal_color1 = hor_col_index1 == MID_NUM_COLORS ? BLACK : get_mid_color(hor_col_index1);
-  uint8_t horizontal_color2 = hor_col_index2 == MID_NUM_COLORS ? BLACK : get_mid_color(hor_col_index2);
-  
-  clear_mid_layer();
-
-  // Draw vertical lines
-  for(uint8_t ring = current_width1; ring < NUM_RINGS; ring += width) {
-    if(ring >= node_number*RINGS_PER_NODE && ring < (node_number+1)*RINGS_PER_NODE) {
-      for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
-        mid_layer[ring][pixel] = vertical_color1;
-      }
-    }
-  }
-
-  for(uint8_t ring = current_width2; ring < NUM_RINGS; ring += width) {
-    if(ring >= node_number*RINGS_PER_NODE && ring < (node_number+1)*RINGS_PER_NODE) {
-      for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
-        mid_layer[ring][pixel] = vertical_color2;
-      }
-    }
-  }
-
-  // Draw horizontal lines at 0, 24, 48, 72, ... <408
-  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
-    for(uint16_t pixel = current_height1; pixel < LEDS_PER_RING; pixel += height) {
-      uint8_t phase = ring % width;
-      if(phase == current_width1 || phase == current_width2) { mid_layer[ring][pixel] = BLACK; }
-      else { mid_layer[ring][pixel] = horizontal_color1; }
-    }
-    for(uint16_t pixel = current_height2; pixel < LEDS_PER_RING; pixel += height) {
-      uint8_t phase = ring % width;
-      if(phase == current_width1 || phase == current_width2) { mid_layer[ring][pixel] = BLACK; }
-      else { mid_layer[ring][pixel] = horizontal_color2; }
-    }
-  }
-
-  if(moving_height) {
-    if(++current_height1 == height) { current_height1 = 0; }
-    if(--current_height2 == 255) { current_height2 = height - 1; }
-    if(current_height1 == current_height2) {
-      moving_height = false;
-      hor_col_index1 = random8(MID_NUM_COLORS + 1);
-      vert_col_index2 = random8(MID_NUM_COLORS + 1);
-      if(hor_col_index2 == MID_NUM_COLORS && vert_col_index2 == MID_NUM_COLORS) {
-        hor_col_index1 = random8(MID_NUM_COLORS);
-      }
-    }
-  }
-  else {
-    if(mid_count % (height/width) == 0) {
-      if(++current_width1 == width) { current_width1 = 0; }
-      if(--current_width2 == 255) { current_width2 = width-1; }
-      if(current_width1 == current_width2) {
-        moving_height = true;
-        vert_col_index1 = random8(MID_NUM_COLORS + 1);
-        hor_col_index2 = random8(MID_NUM_COLORS + 1);
-        if(hor_col_index2 == MID_NUM_COLORS && vert_col_index2 == MID_NUM_COLORS) {
-          hor_col_index2 = random8(MID_NUM_COLORS);
-      }
-      }
-    }
-  }
-}
 

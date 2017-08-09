@@ -26,24 +26,33 @@ inline uint8_t get_mid_color(uint8_t color0, uint8_t color1, uint8_t blending) {
     if(color1 == 1) {
       return 4 + NUM_MID_DIMMING_LEVELS*blending;
     }
-    else {
+    else if(color1 == 2) {
       return 4 + NUM_MID_DIMMING_LEVELS*(MID_GRADIENT_SIZE + blending);
+    }
+    else {
+      return get_mid_color(0);
     }
   }
   else if(color0 == 1) {
     if(color1 == 0) {
       return 4 + NUM_MID_DIMMING_LEVELS*(MID_GRADIENT_SIZE - 1 - blending);
     }
-    else {
+    else if(color1 == 2) {
       return 4 + NUM_MID_DIMMING_LEVELS*(2*MID_GRADIENT_SIZE + blending);
+    }
+    else {
+      return get_mid_color(1);
     }
   }
   else {
     if(color1 == 0) {
       return 4 + NUM_MID_DIMMING_LEVELS*(2*MID_GRADIENT_SIZE - 1 - blending);
     }
-    else {
+    else if(color1 == 1) {
       return 4 + NUM_MID_DIMMING_LEVELS*(3*MID_GRADIENT_SIZE - 1 - blending);
+    }
+    else {
+      return get_mid_color(2);
     }
   }
 }
@@ -55,7 +64,7 @@ inline uint8_t get_mid_color(uint8_t color0, uint8_t dimming) {
   return dimming + get_mid_color(color0);
 }
 inline uint8_t get_mid_color(uint8_t color0) {
-  return color0 == 0 ? 4 : color0 == 1 ? 4 + MID_GRADIENT_SIZE*NUM_MID_DIMMING_LEVELS : 4 + (2*MID_GRADIENT_SIZE-1)*NUM_MID_DIMMING_LEVELS;
+  return color0 == 0 ? 4 : color0 == 1 ? 4 + (MID_GRADIENT_SIZE-1)*NUM_MID_DIMMING_LEVELS : 4 + (2*MID_GRADIENT_SIZE-1)*NUM_MID_DIMMING_LEVELS;
 }
 
 inline uint8_t get_sparkle_color(uint8_t color, uint8_t dimming) {

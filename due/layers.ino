@@ -61,7 +61,7 @@ inline void write_pixel_data() {
         CRGB mid_pixel_color = ColorFromPalette(mid_palette, color_index);
         uint8_t blending;
         if(override_default_blending) { blending = color_index; }
-        else { blending = get_mid_alpha(ring, pixel); }
+        else { blending = get_mid_alpha(ring_offset+ring, pixel); }
         tjp_nblend(leds[pixel_offset], mid_pixel_color, blending);
       }
 
@@ -69,7 +69,7 @@ inline void write_pixel_data() {
       color_index = sparkle_layer[ring_offset+ring][pixel];
       if(color_index != 0) {
         CRGB sparkle_pixel_color = ColorFromPalette(sparkle_palette, color_index);
-        uint8_t blending = get_sparkle_alpha(ring, pixel);
+        uint8_t blending = get_sparkle_alpha(ring_offset+ring, pixel);
         tjp_nblend(leds[pixel_offset], sparkle_pixel_color, blending);
       }
 
@@ -81,7 +81,9 @@ inline void write_pixel_data() {
 
 // Alpha functions: return an amount to blend each layer based on ring/pixel
 inline uint8_t get_sparkle_alpha(uint8_t ring, uint16_t pixel) {
-  uint8_t alpha = 255 * (MAX_SPARKLE_DIMMING - get_sparkle_dim_value(ring, pixel)) / MAX_SPARKLE_DIMMING;
+  if(sparkle_layer[ring][pixel] < 2) { return 255; }
+  uint8_t dim_value = get_sparkle_dim_value(ring, pixel);
+  uint8_t alpha = 255 * (MAX_SPARKLE_DIMMING - dim_value) / MAX_SPARKLE_DIMMING;
 
   if(SPARKLE_TRANSITION == TRANSITION_BY_ALPHA) {
     uint8_t max_alpha = 255 - transition_progress_sparkle;
@@ -92,7 +94,9 @@ inline uint8_t get_sparkle_alpha(uint8_t ring, uint16_t pixel) {
 }
 
 inline uint8_t get_mid_alpha(uint8_t ring, uint16_t pixel) {
-  uint8_t alpha = 255 * (MAX_MID_DIMMING - get_mid_dim_value(ring, pixel)) / MAX_MID_DIMMING;
+  if(mid_layer[ring][pixel] < 4) { return 255; }
+  uint8_t dim_value = get_mid_dim_value(ring, pixel);
+  uint8_t alpha = 255 * (MAX_MID_DIMMING - dim_value) / MAX_MID_DIMMING;
 
   if(MID_TRANSITION == TRANSITION_BY_ALPHA) {
     uint8_t max_alpha = 255 - transition_progress_mid;

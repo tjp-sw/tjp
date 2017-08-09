@@ -15,7 +15,7 @@ inline void draw_debug_mode() {
   else {
     // Node number has NOT been assigned
     ringOffset = 0;
-    unlitPixels = 8;
+    unlitPixels = 12;
     throttle = 16;
   }
 
@@ -86,5 +86,29 @@ inline void test_strands() {
   
   LEDS.show();
   delay(TEST_STRANDS_DELAY_INC * delay_factor);
+}
+
+inline void test_strands_2strands_only() {
+  static uint16_t delay_factor = 0;
+  if(loop_count % 2 == 0) {
+    if(delay_factor == 0 || delay_factor >= 60) { delay_factor = 1; }
+    else { delay_factor*=2; }
+    #ifdef DEBUG
+      Serial.println("delay(" + String(TEST_STRANDS_DELAY_INC * delay_factor) + ")");
+    #endif
+    for(uint16_t pixel = 0; pixel < PHYSICAL_LEDS_PER_RING; pixel++) {
+      set_led(6, pixel, CRGB::White);//CRGB(128,128,128);
+      set_led(7, pixel, CRGB::Black);//CRGB(128,128,128);
+    }
+  }
+  else {
+    for(uint16_t pixel = 0; pixel < PHYSICAL_LEDS_PER_RING; pixel++) {
+      set_led(6, pixel, CRGB::Black);
+      set_led(7, pixel, CRGB::White);
+    }
+  }
+  
+  LEDS.show();
+  delay(1000 * delay_factor);
 }
 

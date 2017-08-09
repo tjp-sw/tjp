@@ -162,7 +162,7 @@ void handle_command(const char command[]) {
       Serial.println("New Message");
       do_command ();
   } else {
-    ctrl_msg = {0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},0,0};
+    ctrl_msg = EMPTY_CTRL_MSG;
   }
 }
 

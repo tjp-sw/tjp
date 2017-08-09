@@ -4,11 +4,12 @@
 //---------------------------------------- SPARKLE GLITTER ---------------------------------------
 //  Creates sparkles of glitter randomly all over the structure
 // SPARKLE_COLOR_THICKNESS(1:2), SPARKLE_PORTION(16:127), SPARKLE_MIN_DIM(0:2), SPARKLE_MAX_DIM(1:4), SPARKLE_RANGE(40:204)
-inline void sparkle_glitter(uint8_t num_colors) {
+// not using: SPAWN_FREQUENCY, SPARKLE_INTRA_RING_MOTION, SPARKLE_INTRA_RING_SPEED, SPARKLE_INTER_RING_MOTION, SPARKLE_INTER_RING_SPEED
+inline void sparkle_glitter(uint8_t num_colors, bool generate_all_nodes) {
   uint8_t color_thickness = scale_param(SPARKLE_COLOR_THICKNESS, 1, 2);
   uint8_t portion = scale_param(SPARKLE_PORTION, 16, 127);
-  uint8_t min_dim = scale_param(SPARKLE_MIN_DIM, 0, 2);
-  uint8_t max_dim = scale_param(SPARKLE_MAX_DIM, 10, 126);
+  uint8_t min_dim = scale_param(SPARKLE_MIN_DIM, 0, 64);
+  uint8_t max_dim = scale_param(SPARKLE_MAX_DIM, 32, 126);
   uint8_t sparkle_color;
 
   if(max_dim < min_dim) { min_dim = max_dim; }
@@ -18,9 +19,11 @@ inline void sparkle_glitter(uint8_t num_colors) {
   
   uint8_t lower_limit = HALF_RING-range;
   uint16_t upper_limit = HALF_RING + range - color_thickness;
+
+  uint8_t min_ring = generate_all_nodes ? 0 : node_number*RINGS_PER_NODE;
+  uint8_t max_ring = generate_all_nodes ? NUM_RINGS : (node_number+1)*RINGS_PER_NODE;
   
-  //for (uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
-  for (uint8_t ring = 0; ring < NUM_RINGS; ring++) {
+  for (uint8_t ring = min_ring; ring < max_ring; ring++) {
     for (uint16_t pixel = lower_limit; pixel < upper_limit; pixel++) {
       if (random8(portion * color_thickness) == 0) {
         uint8_t dim = random8(min_dim, max_dim + 1);
@@ -43,6 +46,7 @@ inline void sparkle_glitter(uint8_t num_colors) {
 //--------------------------------------- SPARKLE RAIN -------------------------------------------
 //  Puts raindrops randomly at the top of the structure and runs them down both sides of each ring.  
 // SPARKLE_COLOR_THICKNESS(1:2), SPARKLE_PORTION(15:80), SPARKLE_MAX_DIM(1:4), SPARKLE_MIN_DIM(0:2), SPARKLE_RANGE(20), SPARKLE_SPAWN_FREQUENCY(20), SPARKLE_INTRA_RING_MOTION(-1:1), SPARKLE_INTRA_RING_SPEED(16:64)
+// missing: SPARKLE_INTER_RING_MOTION, SPARKLE_INTER_RING_SPEED
 inline void sparkle_rain() {
   uint8_t color_thickness = scale_param(SPARKLE_COLOR_THICKNESS, 1, 2);
   uint8_t portion = scale_param(SPARKLE_PORTION, 15, 80);
@@ -50,7 +54,7 @@ inline void sparkle_rain() {
   uint8_t max_dim = scale_param(SPARKLE_MAX_DIM, 1, 4);
   if(max_dim < min_dim) { min_dim = max_dim; }
   uint8_t range = 20;//scale_param(SPARKLE_RANGE, 20, 20);
-  uint8_t spawn_frequency = SPARKLE_SPAWN_FREQUENCY <= 1 ? SPARKLE_SPAWN_FREQUENCY : 20;//scale_param(SPARKLE_SPAWN_FREQUENCY, 20, 20);
+  uint8_t spawn_frequency = SPARKLE_SPAWN_FREQUENCY <= 1 ? SPARKLE_SPAWN_FREQUENCY : scale_param(SPARKLE_SPAWN_FREQUENCY, 5, 55);
   uint8_t intra_speed = 1 << scale_param(SPARKLE_INTRA_RING_SPEED, 4, 6);
   
   uint8_t throttle = 1;
@@ -65,7 +69,7 @@ inline void sparkle_rain() {
   if(sparkle_count % throttle == 0) {
     // move existing raindrops
     for (uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
-      if(SPARKLE_INTRA_RING_MOTION == DOWN) {
+      if(SPARKLE_INTRA_RING_MOTION == DOWN || ((SPARKLE_INTRA_RING_MOTION == ALTERNATE) && (ring % 2 == 0))) {
         // inner half
         for (uint16_t pixel = LEDS_PER_RING - 1; pixel > HALF_RING + distance_per_cycle; pixel--)  { sparkle_layer[ring][pixel] = sparkle_layer[ring][pixel-distance_per_cycle]; }
         for (uint8_t pixel = HALF_RING + distance_per_cycle; pixel >= HALF_RING; pixel--)          { sparkle_layer[ring][pixel] = TRANSPARENT; }
@@ -74,7 +78,7 @@ inline void sparkle_rain() {
         for (uint8_t pixel = 0; pixel < HALF_RING-1 - distance_per_cycle; pixel++)             { sparkle_layer[ring][pixel] = sparkle_layer[ring][pixel+distance_per_cycle]; }
         for (uint16_t pixel = HALF_RING-1 - distance_per_cycle; pixel <= HALF_RING-1; pixel++) { sparkle_layer[ring][pixel] = TRANSPARENT; }
       }
-      else if(SPARKLE_INTRA_RING_MOTION == UP) {
+      else if(SPARKLE_INTRA_RING_MOTION == UP || ((SPARKLE_INTRA_RING_MOTION == ALTERNATE) && (ring % 2 == 1))) {
         // inner half
         for (uint16_t pixel = HALF_RING; pixel < LEDS_PER_RING-1 - distance_per_cycle; pixel++)        { sparkle_layer[ring][pixel] = sparkle_layer[ring][pixel+distance_per_cycle]; }
         for (uint16_t pixel = LEDS_PER_RING-1 - distance_per_cycle; pixel <= LEDS_PER_RING-1; pixel++) { sparkle_layer[ring][pixel] = TRANSPARENT; }
@@ -91,14 +95,14 @@ inline void sparkle_rain() {
   if(SPARKLE_SPAWN_FREQUENCY == 0) { return; }
   if (sparkle_count % spawn_frequency == 0) {
     for (uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
-      if(SPARKLE_INTRA_RING_MOTION == DOWN) {
+      if(SPARKLE_INTRA_RING_MOTION == DOWN || ((SPARKLE_INTRA_RING_MOTION == ALTERNATE) && (ring % 2 == 0))) {
         for (uint16_t pixel = HALF_RING - range; pixel < HALF_RING + range; pixel++) {
           if (random16(color_thickness * portion) == 0) {
             spawn_raindrop(ring, pixel, color_thickness, random8(min_dim, max_dim + 1));
           }
         }
       }
-      else if(SPARKLE_INTRA_RING_MOTION == UP) {
+      else if(SPARKLE_INTRA_RING_MOTION == UP || ((SPARKLE_INTRA_RING_MOTION == ALTERNATE) && (ring % 2 == 1))) {
         for(uint16_t pixel = 0; pixel < range; pixel++) {
           if (random16(color_thickness * portion) == 0) {
             spawn_raindrop(ring, pixel, color_thickness, random8(min_dim, max_dim + 1));
@@ -127,13 +131,14 @@ inline void spawn_raindrop(uint8_t ring, uint16_t pixel, uint8_t color_thickness
 
 
 //--------------------------------------- SPARKLE WARP SPEED -------------------------------------------
+// needs love
 //  Sends sparkles racing around horizontally from ring to ring
 //  When someone is inside it is intended to look like flying through space or that old cheesy 
 //  animation when star trek goes to "warp speed"
 //
 //  To do: not yet plugged into parameters
-// SPARKLE_COLOR_THICKNESS(1-6), SPARKLE_PORTION(1-100), SPARKLE_MAX_DIM(0-6), SPARKLE_RANGE(10-100), SPARKLE_SPAWN_FREQUENCY(1-127), SPARKLE_INTRA_RING_MOTION(-1, 1), SPARKLE_INTRA_RING_SPEED(4-64)
-
+// SPARKLE_COLOR_THICKNESS(1-6), 
+// missing: PORTION, MIN_DIM, MAX_DIM, RANGE, SPAWN_FREQUENCY, INTER_RING_MOTION, INTER_RING_SPEED, SPAWN_FREQUENCY, INTRA_RING_MOTION, INTRA_RING_SPEED
 #define WARP_SPEED_STEP1 40
 #define WARP_SPEED_STEP2 70
 #define WARP_SPEED_STEP3 95
@@ -277,39 +282,36 @@ inline void sparkle_two_coins() {
 //
 // Chooses random location for stars, with random starting intensities, 
 // and then randomly and continuously increases or decreases their intensity over time
+// SPAWN_FREQUENCY, SPARKLE_MAX_DIM, SPARKLE_MIN_DIM, PORTION, RANGE, COLOR_THICKNESS, 
+// missing: INTRA_RING_MOTION, INTRA_RING_SPEED, INTER_RING_MOTION, INTER_RING_SPEED
 #define TWINKLE_STEP_SIZE 8 // This value must be even
 inline void sparkle_twinkle() {
-  uint8_t dim, raw_color;
+  uint8_t throttle = 5 - scale_param(SPARKLE_SPAWN_FREQUENCY, 1, 4); // Affects how many sparkles are walked each cycle
+  uint8_t min_dim = scale_param(SPARKLE_MIN_DIM, 0, 64);
+  if(min_dim % 2 == 1) { min_dim += 1; } // min dim is even
+  uint8_t max_dim = scale_param(SPARKLE_MAX_DIM, 81, 125);
+  if(max_dim % 2 == 0) { max_dim += 1; } // max dim is odd
 
-  // fixme: could/should this be tied to parameter?
-  if ((sparkle_count % 1) == 0) {
-    for (int ring = 0; ring < RINGS_PER_NODE; ring++) {
-      for (int pixel = 0; pixel < LEDS_PER_RING; pixel++) {
-          
-        // only change intensity if pixel is chosen as star
-        if (sparkle_layer[ring][pixel] != TRANSPARENT) {
+  for (uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+    for (uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+      // only change intensity if pixel is chosen as star
+      if (sparkle_layer[ring][pixel] != TRANSPARENT) {
+        if (random8(throttle) == 0) {
+          uint8_t dim = get_sparkle_dim_value(ring, pixel);
+          uint8_t raw_color = get_sparkle_raw_color(ring, pixel);
 
-          dim = get_sparkle_dim_value(ring, pixel);
-          raw_color = get_sparkle_raw_color(ring, pixel);
-
-          // cycle about 1/4 the brightness values each pass
-          // fixme: could this be tied to one of the parameters, rather than just using 4?
-          if (random16(4) == 0) {
-
-            // increase intensity if brightness is even, decrease if odd
-            if (dim % 2 == 0) {
-              // Increasing dim
-              if(dim > 126 - TWINKLE_STEP_SIZE) { dim = 126-1; }
-              else { dim += TWINKLE_STEP_SIZE; }
-            }
-            else {
-              // Decreasing dim
-              if (dim <= TWINKLE_STEP_SIZE) { dim = 0; }
-              else { dim -= TWINKLE_STEP_SIZE; }
-            }
-
-            sparkle_layer[ring][pixel] = get_sparkle_color(raw_color, dim);
+          // increase dim if current dimming is even, decrease if odd
+          if (dim % 2 == 0) {
+            // Increasing dim
+            if(dim >= max_dim - TWINKLE_STEP_SIZE) { dim = max_dim; }
+            else { dim += TWINKLE_STEP_SIZE; }
           }
+          else {
+            // Decreasing dim
+            if (dim <= min_dim + TWINKLE_STEP_SIZE) { dim = min_dim; }
+            else { dim -= TWINKLE_STEP_SIZE; }
+          }
+          sparkle_layer[ring][pixel] = get_sparkle_color(raw_color, dim);
         }
       }
     }

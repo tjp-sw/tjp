@@ -2,7 +2,7 @@
 
 //------------------------ Config -----------------------------------//
 // Due controlled versus pi controlled animation choices             //
-//#define PI_CONTROLLED                                              //
+#define PI_CONTROLLED                                              //
 #ifndef PI_CONTROLLED                                                //
   #define TESTING_NODE_NUMBER 0   // To test diff nodes              //
   //#define CYCLE           // Cycles through shows in order         //
@@ -752,10 +752,10 @@ inline void draw_current_mid(uint8_t min_ring, uint8_t max_ring) {
 inline void draw_current_sparkle() {
   switch(SPARKLE_ANIMATION) {
     case STATIC:
-      sparkle_glitter(1);
+      sparkle_glitter(1, false);
       
     case GLITTER:
-      sparkle_glitter(2);
+      sparkle_glitter(2, false);
       break;
 
     case RAIN:
@@ -903,11 +903,6 @@ inline void init_mid_animation() {
       init_arrow();
       break;
 
-    case RADIATION:
-      clear_mid_layer();
-      init_radiation_symbol();
-      break;
-
     case NONE:
       clear_mid_layer();
       break;
@@ -966,17 +961,12 @@ inline void init_sparkle_animation() {
       SPARKLE_MAX_DIM = 255;
       SPARKLE_RANGE = 255;
 
-      sparkle_glitter(2); // Generate a set of spots
+      sparkle_glitter(2, true); // Generate a set of spots
       break;
 
     case TWINKLE:
       random16_set_seed(0); // Synchronize RNG on different nodes
-      // Always draw full ring and brightness
-      SPARKLE_RANGE = 255;
-      SPARKLE_MIN_DIM = 0;
-      SPARKLE_MAX_DIM = 255;
-
-      sparkle_glitter(1); // Generate a set of spots
+      sparkle_glitter(2, true); // Generate a set of spots
       break;
 
     case THREE_CIRCLES:
