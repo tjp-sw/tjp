@@ -256,6 +256,11 @@ while running:
                                 print 'beat from unnumbered node at', remote_name[s]
                             else:
                                 analyze_beat(node, intensity, timestamp)
+                    elif message[0:1] == 'c':
+                        if len(message) == 24:
+                            node, timestamp, channel_data = struct.unpack_from('>BQ14s', message, 1)
+                            timestamp /= 1000.0		# convert from milliseconds
+                            print 'node', node, 'channel data', repr(channel_data), 'at', timestamp
                     elif message[0:1] == 'm':
                         mega_number = ord(message[1:2])
                         try:

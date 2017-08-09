@@ -18,7 +18,7 @@ def millis():
     return long(time.time() * 1000.0 - unix_epoch_msec)
 
 def process_commands():
-    global network_data
+    global network_data, node_number
 
     while len(network_data) > 0:
         print 'mega', mega_number, 'looking at', repr(network_data)
@@ -35,7 +35,7 @@ def process_commands():
             size += 1	# unsigned 8-bit integer
 
             if len(network_data) >= size:
-                parameter = struct.unpack_from('>B', network_data, 1)
+                parameter = struct.unpack_from('>B', network_data, 1)[0]
                 if command == 'n':
                     node_number = parameter
                     print 'mega', mega_number, 'is node %u' % node_number
@@ -148,10 +148,16 @@ def loop():
                     remote = None
                     network_data = None
                     time.sleep(10)
-            else:
+            elif node_number != None:
                 intensity = mega_number + random.randint(-5, 5)
                 last_beat_msec = int(time.time() * 1000.0)
                 remote.sendall(struct.pack('>cBQ', 'B', intensity, last_beat_msec))	# send a beat message
+                channel_data = [ 10, 30, 50, 70, 60, 40, 20,
+                                 20, 40, 60, 80, 70, 50, 30 ]
+                for channel in range(0, len(channel_data)):
+                    channel_data[channel] += random.randint(0, 9)
+                time.sleep(0.1)
+                remote.sendall(struct.pack('>cBQ14B', 'c', node_number, last_beat_msec, *channel_data))	# send channel data
         else:
             try:
                 time.sleep(random.random())

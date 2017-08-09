@@ -30,6 +30,7 @@
 
 #elif defined(I_AM_DUE)
   #define  NodeMate  Serial1
+  unsigned long next_audio_msec;
 
 #endif // I_AM_MEGA / I_AM_DUE
 
@@ -153,13 +154,24 @@ void do_network_input() {
 
 #ifdef I_AM_DUE
 inline void send_audio_out() {
-  uint8_t audio_out[1 + 2*NUM_CHANNELS];
-  audio_out[0] = 'c';
-  for(uint8_t i = 0; i < NUM_CHANNELS; i++) {
-    audio_out[1 + i] = freq_internal[i];
-    audio_out[1 + NUM_CHANNELS + i] = freq_external[i];
+  unsigned long long timestamp_msec = epoch_msec + loop_start_time_msec;
+  uint8_t audio_out[2 + 2*NUM_CHANNELS + sizeof timestamp_msec];
+  uint8_t *ptr = audio_out;
+
+  *ptr++ = 'c';
+  *ptr++ = node_number;
+  ptr += sizeof timestamp_msec;
+  // go backward to ensure network byte order (big endian)
+  for (int i = 0; i < sizeof timestamp_msec; i++) {
+    *--ptr = (uint8_t)(timestamp_msec && 0xFF);
+    timestamp_msec /= 256;
   }
-  NodeMate.write(audio_out, 2*NUM_CHANNELS);
+  ptr += sizeof timestamp_msec;
+  memcpy(ptr, freq_internal, NUM_CHANNELS);
+  ptr += NUM_CHANNELS;
+  memcpy(ptr, freq_external, NUM_CHANNELS);
+
+  NodeMate.write(audio_out, sizeof (audio_out));
 }
 
 // Sets up LED array after being assigned a node by the Pi.
@@ -203,11 +215,13 @@ inline void setup_communication() {
   mate_data = "";
 #endif // !I_AM_HAND_MEGA
 
-#ifndef I_AM_DUE
+#ifdef I_AM_DUE
+  next_audio_msec = 0;
+#else
   HandMate.begin(115200);
   hand_last_input_msec = 0;
   hand_data = "";
-#endif // !I_AM_DUE
+#endif // I_AM_DUE
 
   epoch_msec = 0;
 
@@ -277,7 +291,7 @@ inline void process_commands(String& input) {
         break;
 
       case 'c': // Channel audio out data, 14 channels/bytes total
-        size += 2 * NUM_CHANNELS;
+        size += 2 + 2 * NUM_CHANNELS + sizeof (unsigned long long);
         if (input.length() >= size) {
           remote.write((uint8_t *)input.c_str(), size);
         }
@@ -567,8 +581,9 @@ inline void do_communication() {
 
   #ifdef I_AM_DUE
     do_mate_input();
-    if(node_number < NUM_NODES) {
-      //send_audio_out();
+    if (node_number < NUM_NODES && loop_start_time_msec > next_audio_msec) {
+      next_audio_msec = loop_start_time_msec + 100;	// 10 times per second
+      send_audio_out();
     }
   #endif
 
