@@ -476,18 +476,9 @@ def edm_program(init=False):
     if palette_time - palette_start_time > PALETTE_TIME_LIMIT:
         palette_start_time = palette_time
 
-        #choose_random_colors_from_edm_palette()
+        choose_random_colors_from_edm_palette()
         # For Lee testing: uncomment this to stick with day 1 colors
-        choose_new_playa_palette()
-
-# fixme: ART_CAR mode will be set by Jeff's code
-#    if art_car_detected for first ART_CAR_HELLO_DURATION seconds:
-#        art_car_hello = true
-#        art_car = ring number closest to art car, 0 to 72
-#    else if art car sticks around past ART_CAR_HELLO_DURATION seconds:
-#        art_car_hello = false
-#    else if art car has departed
-#        art_car = NO_ART_CAR
+        # choose_new_playa_palette()
 
 
 # a dictionary with key of ring_num and value of the current hello animation playing
@@ -504,8 +495,8 @@ rings_to_stop_hello_animation = []
 # Also mutates a dictionary of rings as keys and value containing the hellow animation being shown
 # Return -400 if something goes wrong
 def handle_amplitude_info(ring_num, amplitude):
-    global internal_audio_show, art_car, rings_to_stop_hello_animation
-    global ring_to_animation_start_time, show_parameters
+    global internal_audio_show, art_car, show_parameters
+    global ring_to_animation_start_time, rings_to_stop_hello_animation, hello_animation_to_ring
 
     if amplitude > ART_CAR_AMPLITUDE_THRESHOLD:
         # check if new detection
@@ -529,13 +520,18 @@ def handle_amplitude_info(ring_num, amplitude):
         if ring_num in ring_to_animation_start_time:
             # check if that ring was triggering edm animations
             if art_car == ring_num:
-
                 # turn off edm animations for art car
                 internal_audio_show = True
                 art_car = NO_ART_CAR
 
-                print "turning off art car edm animation"
+                print "turning off art car edm animation triggered by ring %i \
+                        for %i seconds and clearing art car tracking caches" % ring_num, int(time.time() - ring_to_animation_start_time[ring_num])
                 show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0
+
+                # clearing art car tracking cache to start from scratch again
+                ring_to_animation_start_time.clear()
+                hello_animation_to_ring.clear()
+                ring_to_hello_animation.clear()
 
                 return None
 
@@ -550,10 +546,10 @@ def handle_amplitude_info(ring_num, amplitude):
 
     return -1
 
-
-# MAYBE add random element for now return the first avaliabe hello animation
+# TODO add random element for now return the first avaliabe hello animation
 def give_suitable_hello_animation(ring_num):
     global show_parameters
+    global ring_to_animation_start_time, rings_to_stop_hello_animation, hello_animation_to_ring
     # check if neighbor
     for i in ring_to_hello_animation.keys():
         if abs(ring_num - i) == 1: # direct next door nieghbor
