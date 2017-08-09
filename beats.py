@@ -15,10 +15,14 @@ microphone_coordinates = [
 
 # 1. detect presence and direction of a loud beat
 # 2. send beat predictions to the nodes
+# 3. return estimated ring number and it's mean intensity
 beat_history = []
 intensity_sum = 0
+
+TOTAL_RINGS = 72 # could import conductor.py but refraining... seems like a pretty constant number
+
 def analyze_beat(node, intensity, timestamp):
-    global beat_history, intensity_sum
+    global beat_history, intensity_sum, ring_to_mean_intensity
     NODE = 0
     INTENSITY = 1
     TIMESTAMP = 2
@@ -90,6 +94,10 @@ def analyze_beat(node, intensity, timestamp):
                 direction_radians -= FULL_CIRCLE	# normalize
 
         print 'art car direction = %.2f degrees' % math.degrees(direction_radians)
+        esitmated_ring_number = int(math.degrees(direction_radians) / (360 / TOTAL_RINGS))
+        print 'estimated ring number = %i' % esitmated_ring_number
+
+        return esitmated_ring_number, mean_intensity
 
 if False:	# debug art car direction computation
     fake_time = int(time.time()) - 5

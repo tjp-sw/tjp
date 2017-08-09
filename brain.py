@@ -255,7 +255,8 @@ while running:
                             except:
                                 print 'beat from unnumbered node at', remote_name[s]
                             else:
-                                analyze_beat(node, intensity, timestamp)
+                                esitmated_ring_number, mean_intensity = analyze_beat(node, intensity, timestamp)
+                                ring_to_mean_intensity[esitmated_ring_number] = mean_intensity
                     elif message[0:1] == 'c':
                         if len(message) == 24:
                             node, timestamp, channel_data = struct.unpack_from('>BQ14s', message, 1)

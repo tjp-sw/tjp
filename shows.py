@@ -223,6 +223,7 @@ current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
 internal_audio_show = True  # triggers internal audio animations..
 next_audio_event = AudioEvent(-1, -1, "init", "init")
 INTERNAL_ANIMATIONS_DEBUG = True
+ring_to_mean_intensity = {}
 
 def constrained_random_parameter(i):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
