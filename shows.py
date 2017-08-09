@@ -657,10 +657,11 @@ def get_audio_file_info(audio_msg):
 def set_appropriate_layer_main_animation(audioInfo):
     global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
 
-    # set_random_layer_params = True # can flip to flase if it looks bad...
+    set_random_layer_params = True # can flip to false if it looks bad...
 
     suitable_main_animation = audioInfo.getRandomSuitableAnimation()
-    #TODO grab the param suggests from the audioInfo
+    #TODO grab the param value suggests from the audioInfo
+
     if suitable_main_animation is not None:
         if INTERNAL_ANIMATIONS_DEBUG:
             print "random suitable animation is " + str(suitable_main_animation) + " " + str(audioInfo.category)
@@ -673,7 +674,12 @@ def set_appropriate_layer_main_animation(audioInfo):
             bg_start_time = time.time()
 
             if set_random_layer_params:
+                # change bg show parameters
+                for i in range (BACKGROUND_INDEX+1, MIDLAYER_INDEX - 1):
+                    show_parameters[i] = constrained_random_parameter(i)
+                    print "background parameter ", i, "changed to ", show_parameters[i]
 
+                bg_parameter_start_time = bg_start_time
 
         elif str(audioInfo.category) == "MID": # and time.time() - mid_start_time >= MID_MAIN_ANIMATION_SWITCH_LAG:
             if INTERNAL_ANIMATIONS_DEBUG:
@@ -682,12 +688,28 @@ def set_appropriate_layer_main_animation(audioInfo):
             show_parameters[MID_PARAM_START] = suitable_main_animation
             mid_start_time = time.time()
 
+            if set_random_layer_params:
+                # change mid show parameters
+                for i in range (MIDLAYER_INDEX + 1, SPARKLE_PARAM_START - 1):
+                    show_parameters[i] = constrained_random_parameter(i)
+                    print "mid parameter ", i, "changed to ", show_parameters[i]
+
+                mid_parameter_start_time = mid_start_time
+
         elif str(audioInfo.category) == "HIGH": # and time.time() - sparkle_start_time >= SPARKLE_MAIN_ANIMATION_SWITCH_LAG:
             if INTERNAL_ANIMATIONS_DEBUG:
                 print "setting sparkle main animiation to " + str(suitable_main_animation)
 
             show_parameters[SPARKLE_PARAM_START] = suitable_main_animation
             sparkle_start_time = time.time()
+
+            if set_random_layer_params:
+                # choose which parameter to change
+                change_sparkle = randint(SPARKLE_INDEX + 1,SPARKLE_INDEX + 10)
+                show_parameters[change_sparkle] = constrained_random_parameter(change_sparkle)
+                print "sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
+
+                sparkle_parameter_start_time = sparkle_start_time
 
 
 # structure very similar to edm show but instead of simply timing, allow for the
