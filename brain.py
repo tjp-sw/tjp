@@ -121,8 +121,11 @@ def do_meditation (ignored, meditation_num):
     if meditation_play:
         do_send(None, meditation_play)
 
-def do_change_palette(ignored, neglected):
-    choose_new_playa_palette()
+def do_change_palette(ignored, style):
+    if style == None:
+        choose_new_playa_palette()
+    else:
+        use_test_palette()
 
 control_messages = {
 #    'SetAllAudio':	    do_unimplemented,
@@ -147,6 +150,7 @@ control_messages = {
     'send':		(do_send, None, None),
     'sp':		(do_set_show_parameter, None, None),
     'time':		(do_time, None, None),
+    'tp':		(do_change_palette, None, 'test'),
     'meditation': (do_meditation, None, None)
     }
 

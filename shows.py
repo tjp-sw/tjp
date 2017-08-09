@@ -359,6 +359,15 @@ def choose_new_playa_palette():
 
     #print "show colors", show_colors
 
+def use_test_palette():
+    show_colors[0] = [255,0,0]
+    show_colors[1] = [0,255,0]
+    show_colors[2] = [0,0,255]
+    show_colors[3] = [128,128,0]
+    show_colors[4] = [0,128,128]
+    show_colors[5] = [128,0,128]
+    show_colors[6] = [85,85,85]
+
 
 # ----------------------------- choose_random_colors_from_edm_palette() -------------------------------------
 
