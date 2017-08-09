@@ -200,7 +200,7 @@ show_mode = SUNRISE
 #  Art car values
 NO_ART_CAR = -1
 ART_CAR_HELLO_DURATION = 30
-art_car_hello = False
+#art_car_hello = False # not used
 art_car = NO_ART_CAR  # if art car is detected, set to ring number nearest art car
 HELLO_ANIMTIONS_NUM = 5 # TODO the actual number.... 5 is totally made up for now
 ART_CAR_AMPLITUDE_THRESHOLD = 1000 # TODO calibrate appropriately... keep track of variation over time would be best but can get messy
@@ -504,14 +504,17 @@ rings_to_stop_hello_animation = []
 # Also mutates a dictionary of rings as keys and value containing the hellow animation being shown
 # Return -400 if something goes wrong
 def handle_amplitude_info(ring_num, amplitude):
-    global internal_audio_show
+    global internal_audio_show, art_car
 
     if amplitude > ART_CAR_AMPLITUDE_THRESHOLD:
         # check if new detection
         if ring_num in ring_to_hello_animation:
             # already detected... check time threshold
             art_car_detected_seconds = time.time() - ring_to_animation_start_time[ring_num]
-            if art_car_detected_seconds > ART_CAR_HELLO_DURATION:
+            if art_car_detected_seconds > ART_CAR_HELLO_DURATION and not art_car < 0:
+                art_car = ring_num
+                # HELP set edm animation here or further up in brain's check_art_car_status?
+                show_parameters[SEVEN_PAL_BEAT_PARAM_START] = randint(0, NUM_BEAT_EFFECTS)
                 return -1
         else:
             # give hello animation & update dictionaries

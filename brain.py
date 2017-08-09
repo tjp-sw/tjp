@@ -203,7 +203,7 @@ def get_external_amplitude_sum(channel_data):
 
 
 def check_art_car_status(ring_num, amplitude):
-    global internal_audio_show, rings_to_hello_animation
+    global internal_audio_show, rings_to_hello_animation, auto_show
 
     ring_ac_newly_detected = handle_amplitude_info(ring_num, amplitude)
 
@@ -226,10 +226,11 @@ def check_art_car_status(ring_num, amplitude):
     else:
         # return value signaling ART_CAR_HELLO_DURATION exceeded - trigger edm animations
         internal_audio_show = False
-        # TODO trigger edm animations on whole structure
-        # edm_program() YES?
-        # trigger normal send animaiton data
-        do_send(None, None)
+        # trigger edm animations on whole structure
+        auto_show = edm_program # HELP: trigger like this? or setting
+                                # show_parameters[SEVEN_PAL_BEAT_PARAM_START]
+                                # to postive int works (in handle_amplitude_info)?
+
 
 do_list(None, None)
 print sorted(control_messages.keys())
