@@ -219,7 +219,7 @@ bm_day_index = 0
 event_queue = SortedDLL()  # create sorted dll to act as the audio event queue (with super duper special powers)
 NUM_AUDIO_CHANNELS = 7
 current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
-internal_audio_show = False  # triggers internal audio animations..
+internal_audio_show = True  # triggers internal audio animations..
 next_audio_event = AudioEvent(-1, -1, "init", "init")
 INTERNAL_ANIMATIONS_DEBUG = True
 
@@ -655,10 +655,12 @@ def get_audio_file_info(audio_msg):
 
 # set the appropriate layer's main animation based on audioInfo's predetermined suitiable animations
 def set_appropriate_layer_main_animation(audioInfo):
-    global bg_start_time, mid_start_time, sparkle_start_time, palette_start_time
+    global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
+
+    # set_random_layer_params = True # can flip to flase if it looks bad...
 
     suitable_main_animation = audioInfo.getRandomSuitableAnimation()
-
+    #TODO grab the param suggests from the audioInfo
     if suitable_main_animation is not None:
         if INTERNAL_ANIMATIONS_DEBUG:
             print "random suitable animation is " + str(suitable_main_animation) + " " + str(audioInfo.category)
@@ -669,6 +671,9 @@ def set_appropriate_layer_main_animation(audioInfo):
 
             show_parameters[BASE_PARAM_START] = suitable_main_animation
             bg_start_time = time.time()
+
+            if set_random_layer_params:
+
 
         elif str(audioInfo.category) == "MID": # and time.time() - mid_start_time >= MID_MAIN_ANIMATION_SWITCH_LAG:
             if INTERNAL_ANIMATIONS_DEBUG:
@@ -692,20 +697,9 @@ def drive_internal_animations_v2(init):
     global show_parameters, show_colors
     global next_audio_event, event_queue
 
-    '''
-    if init:
-        if show_colors[0] == [33,33,33]:	# invalid values before initialization
-            bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
-
-            # choose random starting values for each of the parameters
-            for i in range(0, NUM_PARAMETERS):
-                show_parameters[i] = constrained_random_parameter(i)
-            constrain_show()
-            choose_new_playa_palette()  # start with day 1 color palette
-    '''
     bg_time = bg_parameter_time = mid_time = mid_parameter_time = sparkle_time = sparkle_parameter_time = palette_time = time.time()
 
-    progress_audio_queue()
+    next_audio_event = progress_audio_queue() # next_audio_event is a global but just to be more clear...
 
     if next_audio_event is not None:
         # MAYBE: seperate thread handling polling event_queue and sending animations
@@ -725,7 +719,7 @@ def drive_internal_animations_v2(init):
                 bg_start_time = bg_time
 
                 # change bg show parameters
-                for i in range (BACKGROUND_INDEX, BACKGROUND_INDEX + 4):
+                for i in range (BACKGROUND_INDEX + 1, BACKGROUND_INDEX + 4):
                     show_parameters[i] = constrained_weighted_parameter(i, magnitude)
                     print "background parameter ", i, "changed to ", show_parameters[i]
 
@@ -742,7 +736,7 @@ def drive_internal_animations_v2(init):
                 mid_start_time = mid_time
 
                 # change mid show parameters
-                for i in range (MIDLAYER_INDEX, MIDLAYER_INDEX + 5):
+                for i in range (MIDLAYER_INDEX + 1, MIDLAYER_INDEX + 5):
                     show_parameters[i] = constrained_weighted_parameter(i, magnitude)
                     print "mid parameter ", i, "changed to ", show_parameters[i]
 
@@ -753,14 +747,14 @@ def drive_internal_animations_v2(init):
                 change_mid = randint(MIDLAYER_INDEX + 5, SPARKLE_INDEX - 1)
                 show_parameters[change_mid] = constrained_weighted_parameter(change_mid, magnitude)
                 print "mid parameter ", change_mid, "changed to ", show_parameters[change_mid]
-
+            '''
             if sparkle_time - sparkle_start_time > SPARKLE_MAIN_ANIMATION_SWITCH_LAG:
                 sparkle_start_time = sparkle_time
 
                 # change sparkle animation
                 show_parameters[SPARKLE_INDEX] = constrained_weighted_parameter(SPARKLE_INDEX, magnitude)
                 print "sparkle choice changed to ", show_parameters[SPARKLE_INDEX]
-
+            '''
             # can change sparkle parameters independently of changing sparkle animation, without having hard transitions
             if sparkle_parameter_time - sparkle_parameter_start_time > SPARKLE_PARAMETER_SWTICH_LAG:
                 sparkle_parameter_start_time = sparkle_parameter_time
@@ -793,7 +787,84 @@ def drive_internal_animations_v2(init):
                 # print "event_queue is empty ", sys.exc_value
                 pass
 
+    # necessary backup trigger now that new track selections are less frequent
+    # to keep animations changing
+    check_time_triggered_animations()
+
     constrain_show()	# keep the lights on
+
+# check if time limits have been reached to trigger an animation param change
+# this is necessary now that new track selections are less frequent.
+# will only change params, never main layer animations.
+# another adaptation from edm_program as it works fairly well
+# changing params by an order magnitude of 1 so won't be nearly as drastic as edm_program
+def check_time_triggered_animations():
+    global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
+    global show_parameters, show_colors
+
+    bg_time = bg_parameter_time = mid_time = mid_parameter_time = sparkle_time = sparkle_parameter_time = palette_time = time.time()
+
+    magnitude = 1 # only changing params as if was an audio event of magnitude 1
+    # to avoid hard transitions, change disruptive base animation parameters only when you change background choice
+    if bg_time - bg_start_time > BASE_TIME_LIMIT:
+        bg_start_time = bg_time
+
+        # change bg show parameters
+        for i in range (BACKGROUND_INDEX+1, BACKGROUND_INDEX + 4):
+            show_parameters[i] = constrained_weighted_parameter(i, magnitude)
+            print "TIMEOUT: background parameter ", i, "changed to ", show_parameters[i]
+
+    if bg_parameter_time - bg_parameter_start_time > BASE_PARAMETER_TIME_LIMIT:
+        bg_parameter_start_time = bg_parameter_time
+
+        # choose which parameter to change
+        change_bg = randint(BACKGROUND_INDEX + 4, MIDLAYER_INDEX - 1)
+        show_parameters[change_bg] = constrained_weighted_parameter(change_bg, magnitude)
+        print "TIMEOUT: background parameter ", change_bg, "changed to ", show_parameters[change_bg]
+
+    # to avoid hard transitions, change disruptive mid animation parameters only when you change mid layer choice
+    if mid_time - mid_start_time > MID_TIME_LIMIT:
+        mid_start_time = mid_time
+
+        # change mid show parameters
+        for i in range (MIDLAYER_INDEX+1, MIDLAYER_INDEX + 5):
+            show_parameters[i] = constrained_weighted_parameter(i, magnitude)
+            print "TIMEOUT: mid parameter ", i, "changed to ", show_parameters[i]
+
+    if mid_parameter_time - mid_parameter_start_time > MID_PARAMETER_TIME_LIMIT:
+        mid_parameter_start_time = mid_parameter_time
+
+        # choose which parameter to change
+        change_mid = randint(MIDLAYER_INDEX + 5, SPARKLE_INDEX - magnitude)
+        show_parameters[change_mid] = constrained_random_parameter(change_mid)
+        print "TIMEOUT: mid parameter ", change_mid, "changed to ", show_parameters[change_mid]
+
+    '''
+    if sparkle_time - sparkle_start_time > SPARKLE_TIME_LIMIT:
+        sparkle_start_time = sparkle_time
+
+        # change sparkle animation
+        show_parameters[SPARKLE_INDEX] = constrained_weighted_parameter(SPARKLE_INDEX, magnitude)
+        print "sparkle choice changed to ", show_parameters[SPARKLE_INDEX]
+    '''
+    # can change sparkle parameters independently of changing sparkle animation, without having hard transitions
+    if sparkle_parameter_time - sparkle_parameter_start_time > SPARKLE_PARAMETER_TIME_LIMIT:
+        sparkle_parameter_start_time = sparkle_parameter_time
+
+        # choose which parameter to change
+        change_sparkle = randint(SPARKLE_INDEX + 1,SPARKLE_INDEX + 10)
+        show_parameters[change_sparkle] = constrained_weighted_parameter(change_sparkle, magnitude)
+        print "TIMEOUT: sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
+
+    constrain_show()	# keep the lights on
+
+    if palette_time - palette_start_time > PALETTE_TIME_LIMIT:
+        palette_start_time = palette_time
+
+        # not sure if want palette changes for this time based stuff...
+        choose_new_playa_palette()
+
+
 
 def drive_internal_animations(init):
     global next_audio_event, event_queue
@@ -802,7 +873,7 @@ def drive_internal_animations(init):
     if init:
         bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
 
-    progress_audio_queue()
+    next_audio_event = progress_audio_queue() # next_audio_event is a global but just to be more clear...
 
     if next_audio_event is not None:
         # MAYBE: seperate thread handling polling event_queue and sending animations
@@ -909,6 +980,8 @@ def progress_audio_queue():
             event_queue.remove(next_audio_event)
         else:
             break
+
+    return next_audio_event
 
 
 # similar to constrained_random_parameter but changed dependent on magnitude
