@@ -507,9 +507,9 @@ def check_art_car_status(amplitude_msg):
         # do_hellos_send()
         pass
     elif ring_newly_detected == -1:
-        # ART_CAR_HELLO_DURATION exceed
-        # TODO trigger edm animations on whole structure
+        # ART_CAR_HELLO_DURATION exceeded
         internal_audio_show = False
+        # TODO trigger edm animations on whole structure
         # edm_program() YES?
         # TODO trigger normal do_send
     elif ring_newly_detected == -400:
@@ -570,6 +570,14 @@ def give_suitable_hello_animation(ring_num):
             # will send -1 to trigger a stop to hello animation then
             # will remove from dictionary
             rings_to_hello_animation[i] = -1
+
+            # retain original start hello time
+            ring_to_animation_start_time[ring_num] = ring_to_animation_start_time[i]
+            ring_to_animation_start_time.pop(i)
+
+            # transfer animation to ring info
+            hello_animation_to_ring[ring_num] = hello_animation_to_ring[i]
+            hello_animation_to_ring.pop(i)
             return
 
     # currently grabbing first avaliable hello animaiton
