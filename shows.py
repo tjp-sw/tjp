@@ -223,7 +223,7 @@ current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
 internal_audio_show = True  # triggers internal audio animations..
 next_audio_event = AudioEvent(-1, -1, "init", "init")
 INTERNAL_ANIMATIONS_DEBUG = True
-ring_to_mean_intensity = {}
+
 
 def constrained_random_parameter(i):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
@@ -498,38 +498,30 @@ hello_animation_to_ring = {}
 ring_to_animation_start_time = {}
 
 
-def check_art_car_status(amplitude_msg):
+def check_art_car_status(ring_num, amplitude):
     global internal_audio_show
 
-    ring_newly_detected = handle_amplitude_info(amplitude_msg)
+    ring_ac_newly_detected = handle_amplitude_info(ring_num, amplitude)
 
-    if ring_newly_detected > -1:
+    if ring_ac_newly_detected > -1:
         # trigger TODO brain.py method that hadnles sending animations BUT also cleaning up rings_to_hello_animation
         # do_hellos_send()
         pass
-    elif ring_newly_detected == -1:
+    elif ring_ac_newly_detected == -1:
         # ART_CAR_HELLO_DURATION exceeded
         internal_audio_show = False
         # TODO trigger edm animations on whole structure
         # edm_program() YES?
         # TODO trigger normal do_send
-    elif ring_newly_detected == -400:
+    elif ring_ac_newly_detected == -400:
         print "error handling amplitude_msg: " + str(amplitude_msg)
 
 
 # Returns ring number of newly detected art car
 # Also mutates a dictionary of rings as keys and value containing the hellow animation being shown
 # Return -400 if something goes wrong
-def handle_amplitude_info(amplitude_msg):
+def handle_amplitude_info(ring_num, amplitude):
     global internal_audio_show
-
-    # TODO parse the amplitude_msg from the due -> mega -> here.
-    # ring_num = ?, amplitude = ?
-
-    # MOCK
-    ring_num = 3
-    amplitude = 1100
-    # END MOCK
 
     if amplitude > ART_CAR_AMPLITUDE_THRESHOLD:
         # check if new detection

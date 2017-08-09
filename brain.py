@@ -188,6 +188,20 @@ def encapsulated_audio_msg(audio_msg):
     msg = struct.pack('>cB', audio_msg[0], size) + audio_msg[1:]
     return msg
 
+
+def get_external_amplitude_sum(channel_data):
+    amplitude = 0
+    # 7 channels of audio data
+    for i in range(0, 6):
+        try:
+            amplitude += abs(channel_data[i] - channel_data[i+7])
+        except:
+            print "channel data format does not have 2 * 7 channels of information " + str(len(channel_data))
+            return -1
+
+    return amplitude
+
+
 do_list(None, None)
 print sorted(control_messages.keys())
 mega_music = music.Music()
@@ -256,12 +270,18 @@ while running:
                                 print 'beat from unnumbered node at', remote_name[s]
                             else:
                                 esitmated_ring_number, mean_intensity = analyze_beat(node, intensity, timestamp)
-                                ring_to_mean_intensity[esitmated_ring_number] = mean_intensity
+                                
+                                check_art_car_status(esitmated_ring_number, mean_intensity)
                     elif message[0:1] == 'c':
                         if len(message) == 24:
                             node, timestamp, channel_data = struct.unpack_from('>BQ14s', message, 1)
                             timestamp /= 1000.0		# convert from milliseconds
                             print 'node', node, 'channel data', repr(channel_data), 'at', timestamp
+
+                            amplitude_sum = get_external_amplitude_sum(channel_data)
+                            esitmated_ring_number, mean_intensity = analyze_beat(node, amplitude_sum, timestamp)
+
+                            check_art_car_status(esitmated_ring_number, mean_intensity)
                     elif message[0:1] == 'm':
                         mega_number = ord(message[1:2])
                         try:
