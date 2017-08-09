@@ -202,6 +202,35 @@ def get_external_amplitude_sum(channel_data):
     return amplitude
 
 
+def check_art_car_status(ring_num, amplitude):
+    global internal_audio_show, rings_to_hello_animation
+
+    ring_ac_newly_detected = handle_amplitude_info(ring_num, amplitude)
+
+    if ring_ac_newly_detected is None:
+        # artcar total structure animation stop
+        internal_audio_show = True
+        do_show(None, None)
+    elif ring_ac_newly_detected >= 0:
+
+        # send the hello animation to the ring
+        # HELP: HOW TO SEND TO PARTICULAR NODE TARGETTING A RING?
+        # do_send(?, ?)
+
+        # send hello animation stop message to target ring
+        for ring_num in rings_to_stop_hello_animation:
+            # HELP: HOW TO SEND TO PARTICULAR NODE TARGETTING A RING?
+            # do_send()
+            pass
+
+    else:
+        # return value signaling ART_CAR_HELLO_DURATION exceeded - trigger edm animations
+        internal_audio_show = False
+        # TODO trigger edm animations on whole structure
+        # edm_program() YES?
+        # trigger normal send animaiton data
+        do_send(None, None)
+
 do_list(None, None)
 print sorted(control_messages.keys())
 mega_music = music.Music()
@@ -270,7 +299,7 @@ while running:
                                 print 'beat from unnumbered node at', remote_name[s]
                             else:
                                 esitmated_ring_number, mean_intensity = analyze_beat(node, intensity, timestamp)
-                                
+
                                 check_art_car_status(esitmated_ring_number, mean_intensity)
                     elif message[0:1] == 'c':
                         if len(message) == 24:

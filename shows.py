@@ -496,25 +496,8 @@ ring_to_hello_animation = {}
 hello_animation_to_ring = {}
 # a dictionary holding duration of artcar presence per ring
 ring_to_animation_start_time = {}
-
-
-def check_art_car_status(ring_num, amplitude):
-    global internal_audio_show
-
-    ring_ac_newly_detected = handle_amplitude_info(ring_num, amplitude)
-
-    if ring_ac_newly_detected > -1:
-        # trigger TODO brain.py method that hadnles sending animations BUT also cleaning up rings_to_hello_animation
-        # do_hellos_send()
-        pass
-    elif ring_ac_newly_detected == -1:
-        # ART_CAR_HELLO_DURATION exceeded
-        internal_audio_show = False
-        # TODO trigger edm animations on whole structure
-        # edm_program() YES?
-        # TODO trigger normal do_send
-    elif ring_ac_newly_detected == -400:
-        print "error handling amplitude_msg: " + str(amplitude_msg)
+# list of rings to stop hello animations on
+rings_to_stop_hello_animation = []
 
 
 # Returns ring number of newly detected art car
@@ -540,11 +523,15 @@ def handle_amplitude_info(ring_num, amplitude):
             # check if that ring was triggering edm animations
             if time.time() - ring_to_animation_start_time[ring_num] > ART_CAR_HELLO_DURATION:
                 internal_audio_show = True
+                print "turning off art car edm animation"
+                show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0
 
             # remove from tracking
             ring_to_animation_start_time.pop(ring_num)
             hello_animation_to_ring.pop(ring_to_hello_animation[ring_num])
             ring_to_hello_animation.pop(ring_num)
+
+            return None
 
     return ring_num
 
@@ -559,10 +546,11 @@ def give_suitable_hello_animation(ring_num):
             # copy animation to new ring
             ring_to_hello_animation[ring_num] = ring_to_hello_animation[i]
 
-            # stop hello animation on old 'closest art car ring'
-            # will send -1 to trigger a stop to hello animation then
             # will remove from dictionary
-            rings_to_hello_animation[i] = -1
+            ring_to_hello_animation.pop(i)
+
+            # mark old 'closest art car ring' to stop hello animation
+            rings_to_stop_hello_animation.append(i)
 
             # retain original start hello time
             ring_to_animation_start_time[ring_num] = ring_to_animation_start_time[i]
@@ -571,6 +559,9 @@ def give_suitable_hello_animation(ring_num):
             # transfer animation to ring info
             hello_animation_to_ring[ring_num] = hello_animation_to_ring[i]
             hello_animation_to_ring.pop(i)
+
+            # TODO set hello_animation show parameter
+            # HELP: which param is that??
             return
 
     # currently grabbing first avaliable hello animaiton
@@ -579,6 +570,9 @@ def give_suitable_hello_animation(ring_num):
             # add to dictionary to keep track / ensure uniqueness {animation:ring_num}
             hello_animation_to_ring[hello_animation] = ring_num
             ring_to_hello_animation[ring_num] = hello_animation
+
+            # TODO set hello_animation show parameter
+            # HELP: which param is that??
             return
 
     # if here all hello animations are used.
@@ -708,8 +702,8 @@ def do_internal_sound_animations(audio_msg, init = False):
 
             # choose random starting values for each of the parameters
             for i in range(0, NUM_PARAMETERS):
-                if i == 28:
-                    show_parameters[28] = 0 # 28 is edm animations... no need for here
+                if i == SEVEN_PAL_BEAT_PARAM_START:
+                    show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0 # 28 is edm animations... no need for here
                 show_parameters[i] = constrained_random_parameter(i)
             constrain_show()
             choose_new_playa_palette()  # start with day 1 color palette
