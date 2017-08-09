@@ -359,6 +359,15 @@ def choose_new_playa_palette():
 
     #print "show colors", show_colors
 
+def use_test_palette():
+    show_colors[0] = [255,0,0]
+    show_colors[1] = [0,255,0]
+    show_colors[2] = [0,0,255]
+    show_colors[3] = [128,128,0]
+    show_colors[4] = [0,128,128]
+    show_colors[5] = [128,0,128]
+    show_colors[6] = [85,85,85]
+
 
 # ----------------------------- choose_random_colors_from_edm_palette() -------------------------------------
 
@@ -672,7 +681,7 @@ def set_appropriate_layer_main_animation(audioInfo):
             show_parameters[BASE_PARAM_START] = suitable_main_animation
             bg_start_time = time.time()
 
-            if set_random_layer_params:
+#            if set_random_layer_params:
 
 
         elif str(audioInfo.category) == "MID": # and time.time() - mid_start_time >= MID_MAIN_ANIMATION_SWITCH_LAG:
