@@ -498,21 +498,29 @@ ring_to_animation_start_time = {}
 
 
 def check_art_car_status(amplitude_msg):
-    # a hash of rings as keys and value containing the hellow animation being shown
+    global internal_audio_show
+
     ring_newly_detected = handle_amplitude_info(amplitude_msg)
 
     if ring_newly_detected > -1:
         # trigger TODO brain.py method that hadnles sending animations BUT also cleaning up rings_to_hello_animation
         # do_hellos_send()
         pass
-    if ring_newly_detected == -1:
-        # TODO trigger normal do_send but flip internal animations boolen to false
-        pass
+    elif ring_newly_detected == -1:
+        # ART_CAR_HELLO_DURATION exceed
+        # TODO trigger edm animations on whole structure
+        internal_audio_show = False
+        # edm_program() YES?
+        # TODO trigger normal do_send
+    elif ring_newly_detected == -400:
+        print "error handling amplitude_msg: " + str(amplitude_msg)
 
 
 # Returns ring number of newly detected art car
 # Also mutates a dictionary of rings as keys and value containing the hellow animation being shown
+# Return -400 if something goes wrong
 def handle_amplitude_info(amplitude_msg):
+    global internal_audio_show
 
     # TODO parse the amplitude_msg from the due -> mega -> here.
     # ring_num = ?, amplitude = ?
@@ -528,14 +536,22 @@ def handle_amplitude_info(amplitude_msg):
             # already detected... check time threshold
             art_car_detected_seconds = time.time() - ring_to_animation_start_time[ring_num]
             if art_car_detected_seconds > ART_CAR_HELLO_DURATION:
-                # TODO trigger edm animations on whole structure
-                internal_audio_show = False
-                # edm_program() YES?
-                pass
+                return -1
         else:
             # give hello animation & update dictionaries
             give_suitable_hello_animation(ring_num)
             ring_to_animation_start_time[ring_num] = time.time()
+    else:
+        # check if was tracking
+        if ring_num in ring_to_animation_start_time:
+            # check if that ring was triggering edm animations
+            if time.time() - ring_to_animation_start_time[ring_num] > ART_CAR_HELLO_DURATION:
+                internal_audio_show = True
+
+            # remove from tracking
+            ring_to_animation_start_time.pop(ring_num)
+            hello_animation_to_ring.pop(ring_to_hello_animation[ring_num])
+            ring_to_hello_animation.pop(ring_num)
 
     return ring_num
 
