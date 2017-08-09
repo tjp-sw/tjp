@@ -6,7 +6,6 @@ import sys
 from dataBaseInterface import DataBaseInterface
 from audioInfo import AudioEvent, AudioFileInfo
 from audio_event_queue import SortedDLL
-
 # Non-Color Animation Parameter Constants
 #
 # All (most of) the parameters for a show are stored in an array called show_parameters, so that they
@@ -482,57 +481,86 @@ def edm_program(init=False):
 
 
 # a dictionary with key of ring_num and value of the current hello animation playing
-rings_to_hello_animations = {}
+ring_to_hello_animation = {}
 # a dictionary with flipped key value pairs from above
-hello_animations_to_rings = {}
+hello_animation_to_ring = {}
+# a dictionary holding duration of artcar presence per ring
+ring_to_animation_start_time = {}
 
 
 def check_art_car_status(amplitude_msg):
     # a hash of rings as keys and value containing the hellow animation being shown
-    art_car_detection_info = interpret_amplitude_info(amplitude_msg)
+    ring_newly_detected = handle_amplitude_info(amplitude_msg)
 
-    if art_car_detected:
-        # triggers art car hello animations
-        art_car_hello = true
-    elif art_car_detected_seconds > ART_CAR_HELLO_DURATION:
-        #do somethign else!!
+    if ring_newly_detected > -1:
+        # trigger TODO brain.py method that hadnles sending animations BUT also cleaning up rings_to_hello_animation
+        # do_hellos_send()
+        pass
+    if ring_newly_detected == -1:
+        # TODO trigger normal do_send but flip internal animations boolen to false
+        pass
 
 
 # Returns ring number of newly detected art car
 # Also mutates a dictionary of rings as keys and value containing the hellow animation being shown
-def interpret_amplitude_info(amplitude_msg):
+def handle_amplitude_info(amplitude_msg):
 
     # TODO parse the amplitude_msg from the due -> mega -> here.
     # ring_num = ?, amplitude = ?
-    #MOCK
+
+    # MOCK
     ring_num = 3
     amplitude = 1100
+    # END MOCK
 
     if amplitude > ART_CAR_AMPLITUDE_THRESHOLD:
-        hello_animation = get_unique_hello_animation(ring_num)
+        # check if new detection
+        if ring_num in ring_to_hello_animation:
+            # already detected... check time threshold
+            art_car_detected_seconds = time.time() - ring_to_animation_start_time[ring_num]
+            if art_car_detected_seconds > ART_CAR_HELLO_DURATION:
+                # TODO trigger edm animations on whole structure
+                internal_audio_show = False
+                # edm_program() YES?
+                pass
+        else:
+            # give hello animation & update dictionaries
+            give_suitable_hello_animation(ring_num)
+            ring_to_animation_start_time[ring_num] = time.time()
 
-    # if ring set -1 then remove ring key & value from rings_to_hello_animations
-        # rings_to_hello_animations.pop(ring_num)
-    # else add to rings_to_hello_animations dictionary
-        # rings_to_hello_animations[ring_num] = hello_animation
-
-    # return ring_num
-
-    # MOCKED VALUES
-    rings_to_hello_animations[ring_num] = hello_animation
     return ring_num
 
 
 #TODO add random element for now return the first avaliabe one
-def get_unique_hello_animation(ring_num):
+def give_suitable_hello_animation(ring_num):
+
+    # check if neighbor
+    for i in ring_to_hello_animation.keys():
+        if abs(ring_num - i) == 1: # direct next door nieghbor
+
+            # copy animation to new ring
+            ring_to_hello_animation[ring_num] = ring_to_hello_animation[i]
+
+            # stop hello animation on old 'closest art car ring'
+            # will send -1 to trigger a stop to hello animation then
+            # will remove from dictionary
+            rings_to_hello_animation[i] = -1
+            return
+
+    # currently grabbing first avaliable hello animaiton
     for i in range(0, HELLO_ANIMTIONS_NUM):
-        if not hello_animations_to_rings.has_key(i):
+        if i not in hello_animation_to_ring:
             # add to dictionary to keep track / ensure uniqueness {animation:ring_num}
-            hello_animations_to_rings[hello_animation] = ring_num
-            return i
+            hello_animation_to_ring[hello_animation] = ring_num
+            ring_to_hello_animation[ring_num] = hello_animation
+            return
 
     # if here all hello animations are used.
-    # pick on that isn't being used next door.
+    # I have a feeling this should never really happen... just printing for now
+    print "RAN OUT OF UNIQUE HELLO ART CAR ANIMAITONS... this should be pretty \
+    rare or a sign of incorreclty calibrated thresholding for artcar detection"
+
+
 
 TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
 # For Lee testing: uncomment this
