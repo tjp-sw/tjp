@@ -6,7 +6,6 @@ import sys
 from dataBaseInterface import DataBaseInterface
 from audioInfo import AudioEvent, AudioFileInfo
 from audio_event_queue import SortedDLL
-
 # Non-Color Animation Parameter Constants
 #
 # All (most of) the parameters for a show are stored in an array called show_parameters, so that they
@@ -203,6 +202,8 @@ NO_ART_CAR = -1
 ART_CAR_HELLO_DURATION = 30
 art_car_hello = False
 art_car = NO_ART_CAR  # if art car is detected, set to ring number nearest art car
+HELLO_ANIMTIONS_NUM = 5 # TODO the actual number.... 5 is totally made up for now
+ART_CAR_AMPLITUDE_THRESHOLD = 1000 # TODO calibrate appropriately... keep track of variation over time would be best but can get messy
 
 testing_meditation_seconds = 20
 color_evolution_timer = time.time()
@@ -486,7 +487,88 @@ def edm_program(init=False):
 #        art_car_hello = false
 #    else if art car has departed
 #        art_car = NO_ART_CAR
-#
+
+
+# a dictionary with key of ring_num and value of the current hello animation playing
+ring_to_hello_animation = {}
+# a dictionary with flipped key value pairs from above
+hello_animation_to_ring = {}
+# a dictionary holding duration of artcar presence per ring
+ring_to_animation_start_time = {}
+
+
+def check_art_car_status(amplitude_msg):
+    # a hash of rings as keys and value containing the hellow animation being shown
+    ring_newly_detected = handle_amplitude_info(amplitude_msg)
+
+    if ring_newly_detected > -1:
+        # trigger TODO brain.py method that hadnles sending animations BUT also cleaning up rings_to_hello_animation
+        # do_hellos_send()
+        pass
+    if ring_newly_detected == -1:
+        # TODO trigger normal do_send but flip internal animations boolen to false
+        pass
+
+
+# Returns ring number of newly detected art car
+# Also mutates a dictionary of rings as keys and value containing the hellow animation being shown
+def handle_amplitude_info(amplitude_msg):
+
+    # TODO parse the amplitude_msg from the due -> mega -> here.
+    # ring_num = ?, amplitude = ?
+
+    # MOCK
+    ring_num = 3
+    amplitude = 1100
+    # END MOCK
+
+    if amplitude > ART_CAR_AMPLITUDE_THRESHOLD:
+        # check if new detection
+        if ring_num in ring_to_hello_animation:
+            # already detected... check time threshold
+            art_car_detected_seconds = time.time() - ring_to_animation_start_time[ring_num]
+            if art_car_detected_seconds > ART_CAR_HELLO_DURATION:
+                # TODO trigger edm animations on whole structure
+                internal_audio_show = False
+                # edm_program() YES?
+                pass
+        else:
+            # give hello animation & update dictionaries
+            give_suitable_hello_animation(ring_num)
+            ring_to_animation_start_time[ring_num] = time.time()
+
+    return ring_num
+
+
+#TODO add random element for now return the first avaliabe one
+def give_suitable_hello_animation(ring_num):
+
+    # check if neighbor
+    for i in ring_to_hello_animation.keys():
+        if abs(ring_num - i) == 1: # direct next door nieghbor
+
+            # copy animation to new ring
+            ring_to_hello_animation[ring_num] = ring_to_hello_animation[i]
+
+            # stop hello animation on old 'closest art car ring'
+            # will send -1 to trigger a stop to hello animation then
+            # will remove from dictionary
+            rings_to_hello_animation[i] = -1
+            return
+
+    # currently grabbing first avaliable hello animaiton
+    for i in range(0, HELLO_ANIMTIONS_NUM):
+        if i not in hello_animation_to_ring:
+            # add to dictionary to keep track / ensure uniqueness {animation:ring_num}
+            hello_animation_to_ring[hello_animation] = ring_num
+            ring_to_hello_animation[ring_num] = hello_animation
+            return
+
+    # if here all hello animations are used.
+    # I have a feeling this should never really happen... just printing for now
+    print "RAN OUT OF UNIQUE HELLO ART CAR ANIMAITONS... this should be pretty \
+    rare or a sign of incorreclty calibrated thresholding for artcar detection"
+
 
 
 TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
