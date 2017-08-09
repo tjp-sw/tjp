@@ -203,6 +203,8 @@ NO_ART_CAR = -1
 ART_CAR_HELLO_DURATION = 30
 art_car_hello = False
 art_car = NO_ART_CAR  # if art car is detected, set to ring number nearest art car
+HELLO_ANIMTIONS_NUM = 5 # TODO the actual number.... 5 is totally made up for now
+ART_CAR_AMPLITUDE_THRESHOLD = 1000 # TODO calibrate appropriately... keep track of variation over time would be best but can get messy
 
 testing_meditation_seconds = 20
 color_evolution_timer = time.time()
@@ -477,8 +479,60 @@ def edm_program(init=False):
 #        art_car_hello = false
 #    else if art car has departed
 #        art_car = NO_ART_CAR
-#
 
+
+# a dictionary with key of ring_num and value of the current hello animation playing
+rings_to_hello_animations = {}
+# a dictionary with flipped key value pairs from above
+hello_animations_to_rings = {}
+
+
+def check_art_car_status(amplitude_msg):
+    # a hash of rings as keys and value containing the hellow animation being shown
+    art_car_detection_info = interpret_amplitude_info(amplitude_msg)
+
+    if art_car_detected:
+        # triggers art car hello animations
+        art_car_hello = true
+    elif art_car_detected_seconds > ART_CAR_HELLO_DURATION:
+        #do somethign else!!
+
+
+# Returns ring number of newly detected art car
+# Also mutates a dictionary of rings as keys and value containing the hellow animation being shown
+def interpret_amplitude_info(amplitude_msg):
+
+    # TODO parse the amplitude_msg from the due -> mega -> here.
+    # ring_num = ?, amplitude = ?
+    #MOCK
+    ring_num = 3
+    amplitude = 1100
+
+    if amplitude > ART_CAR_AMPLITUDE_THRESHOLD:
+        hello_animation = get_unique_hello_animation(ring_num)
+
+    # if ring set -1 then remove ring key & value from rings_to_hello_animations
+        # rings_to_hello_animations.pop(ring_num)
+    # else add to rings_to_hello_animations dictionary
+        # rings_to_hello_animations[ring_num] = hello_animation
+
+    # return ring_num
+
+    # MOCKED VALUES
+    rings_to_hello_animations[ring_num] = hello_animation
+    return ring_num
+
+
+#TODO add random element for now return the first avaliabe one
+def get_unique_hello_animation(ring_num):
+    for i in range(0, HELLO_ANIMTIONS_NUM):
+        if not hello_animations_to_rings.has_key(i):
+            # add to dictionary to keep track / ensure uniqueness {animation:ring_num}
+            hello_animations_to_rings[hello_animation] = ring_num
+            return i
+
+    # if here all hello animations are used.
+    # pick on that isn't being used next door.
 
 TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
 # For Lee testing: uncomment this
