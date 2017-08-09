@@ -314,7 +314,8 @@ while running:
             # meditation = mega.meditation
 
         #pushing animation parameters across nodes
-        if internal_audio_show:
+        if internal_audio_show and time.time() > last_show_change_sec + TIME_LIMIT:
+            last_show_change_sec = time.time()
             do_dyn_show(audio_msg)
         elif auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
             auto_show()
