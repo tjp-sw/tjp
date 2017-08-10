@@ -1,7 +1,0 @@
-[   1000 AudioFileInfo '1000_DAY1_LOW_distant-thunder-#1.wav' named_category:LOW events: [[kind: amplitude, time: 5510, magnitude: 4.50, kind: amplitude, time: 6510, magnitude: 5.24, kind: amplitude, time: 12101, magnitude: 4.51]],
-    10 AudioFileInfo '10_DAY1_MID_loud-lower-tone-waterfall.wav' named_category:MID events: [[kind: amplitude, time: 4134, magnitude: 5.29, kind: amplitude, time: 5708, magnitude: 5.39]],
-    38 AudioFileInfo '38_DAY1_MID_rain-on-window-sill-#2.wav' named_category:MID events: [[kind: amplitude, time: 3018, magnitude: 5.04, kind: amplitude, time: 7144, magnitude: 5.97]],
-    45 AudioFileInfo '45_DAY1_MID_single-clap-of-thunderstorm.wav' named_category:MID events: [[]],
-    60 AudioFileInfo '60_DAY1_MID_wind-in-trees.wav' named_category:MID events: [[]],
-    68 AudioFileInfo '68_DAY1_HIGH_SINGLE-lightning-strike-#1.wav' named_category:HIGH events: [[]],
-    8 AudioFileInfo '8_DAY1_MID_loud-high-tone-waterfall.wav' named_category:MID events: [[kind: amplitude, time: 9508, magnitude: 4.69]]]
