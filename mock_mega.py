@@ -149,9 +149,7 @@ def loop():
                     network_data = None
                     time.sleep(10)
             elif node_number != None:
-                intensity = mega_number + random.randint(-5, 5)
                 last_beat_msec = int(time.time() * 1000.0)
-                remote.sendall(struct.pack('>cBQ', 'B', intensity, last_beat_msec))	# send a beat message
                 channel_data = [ 10, 30, 50, 70, 60, 40, 20,
                                  20, 40, 60, 80, 70, 50, 30 ]
                 for channel in range(0, len(channel_data)):

@@ -294,19 +294,6 @@ while running:
                         if len(message) == 55:
                             do_send(None, message)	# relay to all nodes
                             print 'beat', repr(message), 'from', remote_name[s]
-                    elif message[0:1] == 'B':
-                        if len(message) == 10:
-                            intensity, timestamp = struct.unpack_from('>BQ', message, 1)
-                            timestamp /= 1000.0		# convert from milliseconds
-                            tokens = string.split(remote_name[s], None, 2)
-                            try:
-                                node = int(tokens[1])
-                            except:
-                                print 'beat from unnumbered node at', remote_name[s]
-                            else:
-                                esitmated_ring_number, mean_intensity = analyze_beat(node, intensity, timestamp)
-
-                                check_art_car_status(esitmated_ring_number, mean_intensity)
                     elif message[0:1] == 'c':
                         if len(message) == 24:
                             node, timestamp, channel_data = struct.unpack_from('>BQ14s', message, 1)
