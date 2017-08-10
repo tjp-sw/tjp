@@ -229,3 +229,11 @@ inline void base_scrolling_half_dim(uint8_t min_ring, uint8_t max_ring) {
 }
 
 
+
+//------------------------------------------- UNDER DEVELOPMENT --------------------------------------------
+//--------------------- Only move above this line when code has been thoroughly tested ---------------------
+//--------------------- Only include in allowable animations when moved above this line --------------------
+//----------------------------------------------------------------------------------------------------------
+
+
+

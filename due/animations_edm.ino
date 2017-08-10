@@ -1,6 +1,13 @@
 // EDM animations don't use layers. They are overlayed on top of old layers, which will usually be disabled while the EDM animation plays.
 // They directly access the leds array, which means they can use CRGBs, but don't know store all 30k LEDs. They only store the current node's data.
 
+
+//------------------------------------------- UNDER DEVELOPMENT --------------------------------------------
+//--------------------- Only move above this line when code has been thoroughly tested ---------------------
+//--------------------- Only include in allowable animations when moved above this line --------------------
+//----------------------------------------------------------------------------------------------------------
+
+
 //---------------------------- EQUALIZER_FULL ---------------------------
 // This isn't actually done yet :o
 // to do: does heights[] need to be uint16_t? or can be uint8_t?
@@ -146,7 +153,7 @@ inline void equalizer_pulse() {
 
 //---------------------------- FREQUENCY_PULSE ---------------------------
 // Equally sized bands for each channel, brightness goes up and down with channel volume
-#define MIN_FREQ_PULSE_BRIGHTNESS 8
+#define MIN_FREQ_PULSE_BRIGHTNESS 30
 // BASE_COLOR_THICKNESS(50:57), BASE_INTRA_RING_MOTION(-1:1), BASE_RING_OFFSET(-6:6), BASE_INTRA_RING_SPEED(4:32)
 inline void frequency_pulse() {
   uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 48, 55);

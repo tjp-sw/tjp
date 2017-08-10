@@ -162,7 +162,7 @@ inline void send_audio_out() {
   *ptr++ = node_number;
   ptr += sizeof timestamp_msec;
   // go backward to ensure network byte order (big endian)
-  for (int i = 0; i < sizeof timestamp_msec; i++) {
+  for (uint16_t i = 0; i < sizeof timestamp_msec; i++) {
     *--ptr = (uint8_t)(timestamp_msec && 0xFF);
     timestamp_msec /= 256;
   }
@@ -176,6 +176,13 @@ inline void send_audio_out() {
 
 // Sets up LED array after being assigned a node by the Pi.
 inline void assign_node(uint8_t node_num) {
+  #ifdef DEBUG
+    if(node_num >= NUM_NODES) {
+      Serial.println("ERROR! Trying to assign node number " + String(node_num));
+      return;
+    }
+  #endif
+
   node_number = node_num;
 
   #ifdef DEBUG
@@ -428,28 +435,31 @@ inline void process_commands(String& input) {
               blend_mid_layer = current_palette[2] != target_palette[2] || current_palette[3] != target_palette[3] || current_palette[4] != target_palette[4];
               blend_sparkle_layer = current_palette[5] != target_palette[5] || current_palette[6] != target_palette[6];
 
-              if(BASE_ANIMATION != last_base_animation) {
-                transition_out_base_animation = true;
-                next_base_animation = BASE_ANIMATION;
-                BASE_ANIMATION = last_base_animation;
-              }
-
-              if(MID_ANIMATION != last_mid_animation) {
-                transition_out_mid_animation = true;
-                next_mid_animation = MID_ANIMATION;
-                MID_ANIMATION = last_mid_animation;
-              }
-
-              if(SPARKLE_ANIMATION != last_sparkle_animation) {
-                transition_out_sparkle_animation = true;
-                next_sparkle_animation = SPARKLE_ANIMATION;
-                SPARKLE_ANIMATION = last_sparkle_animation;
-              }
-
-              if(EDM_ANIMATION != last_edm_animation) {
-                transition_out_edm_animation = true;
-                next_edm_animation = EDM_ANIMATION;
-                EDM_ANIMATION = last_edm_animation;
+              if(last_edm_animation != DEBUG_MODE) {
+                // When coming out of debug mode, skip this transition logic
+                if(BASE_ANIMATION != last_base_animation) {
+                  transition_out_base_animation = true;
+                  next_base_animation = BASE_ANIMATION;
+                  BASE_ANIMATION = last_base_animation;
+                }
+  
+                if(MID_ANIMATION != last_mid_animation) {
+                  transition_out_mid_animation = true;
+                  next_mid_animation = MID_ANIMATION;
+                  MID_ANIMATION = last_mid_animation;
+                }
+  
+                if(SPARKLE_ANIMATION != last_sparkle_animation) {
+                  transition_out_sparkle_animation = true;
+                  next_sparkle_animation = SPARKLE_ANIMATION;
+                  SPARKLE_ANIMATION = last_sparkle_animation;
+                }
+  
+                if(EDM_ANIMATION != last_edm_animation) {
+                  transition_out_edm_animation = true;
+                  next_edm_animation = EDM_ANIMATION;
+                  EDM_ANIMATION = last_edm_animation;
+                }
               }
 
               #ifdef DEBUG

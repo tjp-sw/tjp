@@ -97,7 +97,7 @@ uint8_t art_car = NO_ART_CAR;                                           //
 #define SQUARE 11                                             //
 #define SQUARE2 12                                            //
 #define WAVE 13                                               //
-#define NUM_MID_ANIMATIONS 13  // Equal to last animation     //
+#define NUM_MID_ANIMATIONS 12  // Equal to last animation     //
                                                               //
 // Sparkle layer                                              //
 #define GLITTER 1                                             //
@@ -111,7 +111,7 @@ uint8_t art_car = NO_ART_CAR;                                           //
 #define TORUS_KNOT 9                                          //
 #define TORUS_LINK 10                                         //
 #define PANIC 11                                              //
-#define NUM_SPARKLE_ANIMATIONS 11  // Equal to last animation //
+#define NUM_SPARKLE_ANIMATIONS 8  // Equal to last animation //
 #define STATIC 254  // only used on Sunday before BM start    //
                                                               //
 // EDM animations (in the base layer, starting at 128)        //
@@ -436,6 +436,6 @@ uint8_t band_distribution[NUM_BANDS]; // bass=0, mid=1, treble=2; sums to 255 //
 #define FIRE_PALETTE_STANDARD 1
 
 // Diane's sparkle globals - if this gets to be too much I'll try to figure out a way to be more space efficient
-uint8_t current_ring;
-uint8_t current_pixel;
-uint8_t current_coin;
+uint8_t sparkle_current_ring;
+uint8_t sparkle_current_pixel;
+uint8_t sparkle_current_coin;

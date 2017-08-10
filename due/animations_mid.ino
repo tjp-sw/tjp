@@ -504,8 +504,7 @@ inline void mid_scrolling_dim5(uint8_t min_ring, uint8_t max_ring) {
 
 //-------------------------------- ARROW ---------------------------------
 // MID_NUM_COLORS(1:3), MID_COLOR_THICKNESS(1:6), MID_BLACK_THICKNESS(6:18), INTER_RING_MOTION, INTER_RING_SPEED
-// missing: MID_RING_OFFSET
-// not using: MID_INTRA_RING_SPEED, MID_INTRA_RING_MOTION
+// missing: MID_RING_OFFSET, MID_INTRA_RING_SPEED, MID_INTRA_RING_MOTION
 void init_arrow() {
   //number of transparent pixels between arrow start-end: choose such that integer number of arrows fit in structure
   //ie, (arrow_length + horizontal_spacing) should be a multiple of number of rings
@@ -548,7 +547,7 @@ void init_arrow() {
   }
 }
 
-void arrow_old() {
+void arrow() {
   uint8_t throttle = 5 - scale_param(MID_INTER_RING_SPEED, 0, 5); //only rotate every this mid_count
   if(throttle == 0) {
     move_mid_layer_inter_ring(MID_INTER_RING_MOTION == CW ? CW : CCW);
@@ -559,76 +558,6 @@ void arrow_old() {
   }
 }
 
-
-void dim_mid_layer(uint8_t amount) {
-  for(uint8_t ring = 0; ring < NUM_RINGS; ring++) {
-    for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
-      if(get_mid_dim_value(ring, pixel) > MAX_MID_DIMMING - amount) { mid_layer[ring][pixel] = TRANSPARENT; }
-      else { mid_layer[ring][pixel] += amount;}
-    }
-  }
-}
-
-// NUM_COLORS, COLOR_THICKNESS, BLACK_THICKNESS, RING_OFFSET, INTER_RING_MOTION, INTER_RING_SPEED, INTRA_RING_MOTION, INTRA_RING_SPEED, RING_OFFSET
-void arrow() {
-  uint8_t color_thickness = scale_param(MID_COLOR_THICKNESS, 1, 5);
-  uint8_t horizontal_spacing = scale_param(MID_BLACK_THICKNESS, 3, 8);
-  uint8_t vertical_spacing = scale_param(MID_BLACK_THICKNESS, 2, 7) + color_thickness;
-  uint8_t inter_speed = 1 << scale_param(MID_INTER_RING_SPEED, 3, 6);
-  uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 6);
-  uint8_t ring_offset = scale_param(MID_RING_OFFSET, 1, 10);
-  
-  dim_mid_layer(1);
-
-  for(uint8_t ring = node_number * RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
-    uint8_t first_pixel = ring*ring_offset + inter_speed*mid_count/THROTTLE;
-    for(uint16_t raw_pixel = first_pixel; raw_pixel < LEDS_PER_RING; raw_pixel += vertical_spacing) {
-      for(uint8_t pixel_offset = 0; pixel_offset < color_thickness; pixel_offset++) {
-        uint16_t pixel = raw_pixel + pixel_offset;
-        mid_layer[ring][pixel] = WHITE;
-      }
-    }
-  }
-}
-
-
-//-------------------------------- WAVE ---------------------------------
-// needs love
-#include <math.h> //for sin
-const uint8_t nwave = 12; //per half structure: each half is mirrored
-uint16_t start_pixel[nwave] = {20, 30, 40, 50, 60, 80, 100, 110, 120, 130, 140, 180}; 
-uint8_t  start_ring [nwave] = { 0,  9,  0,  4,  0, 36,   0,  12,   0,   4,   0,   0};
-uint8_t  period     [nwave] = {12,  9,  6,  4, 18, 36,  18,  12,   6,   4,   9,  36}; //N = 6, 8, 12, 18, 4, 2, etc
-uint8_t  wspeed     [nwave] = { 5,  4,  3,  2,  6,  8,   6,   5,   3,   2,   4,   8};
-//uint8_t  amplitude  [nwave] = {5, 5, 5, 5}; //can put this back if desired
-
-void wave() {
-
-  //this loop structure means that the higher index waves will overwrite the lower
-  for( uint8_t i=0; i < nwave*2; i++ ) {
-	  //draw wave
-	  //for( uint8_t j=start_ring[i]-1; j < start_ring[i]+period[i]; j++ ) { //1 period
-    for(uint8_t j = 0; j < NUM_RINGS; j++) {
-	    //uint16_t pixel = start_pixel[i%nwave] + amplitude[i%nwave] * sin(TWO_PI * j / period[i%nwave]); //use amplitude array
-      uint16_t pixel = start_pixel[i%nwave] + period[i%nwave]/2 * sin(TWO_PI * j / period[i%nwave]); //amplitude=period/2
-	    if( i < nwave )
-	      pixel = LEDS_PER_RING - pixel; //mirror
-      
-      if( (j+start_ring[i%nwave]) % (period[i%nwave]*2) >= period[i%nwave] ) { //half structure
-        mid_layer[j][pixel] = TRANSPARENT;
-        continue;
-      }
-      uint8_t b = j%(NUM_RINGS/4) * 12 / (NUM_RINGS/4); //blend ranges over every 4th structure
-      mid_layer[j][pixel] = get_mid_color(i%nwave < 2*nwave/3 ? 0 : 1, i%nwave < nwave/3 ? 1 : 2, b, 0);
-      //Serial.print("r " + String(j) + " p " + String(pixel) + "; ");
-	  }
-    //Serial.println();
-	  //move wave for next loop
-	  if( mid_count % wspeed[i%nwave] == 0 )
-	    start_ring[i%nwave] = (start_ring[i%nwave] < NUM_RINGS-1 ? start_ring[i%nwave]+1 : 0);
-  }
-  
-}
 
 
 //-------------------------------- RADIATION SYMBOL ---------------------------------
@@ -907,6 +836,53 @@ void square_pattern2() {
 }
 
 
+
+//------------------------------------------- UNDER DEVELOPMENT --------------------------------------------
+//--------------------- Only move above this line when code has been thoroughly tested ---------------------
+//--------------------- Only include in allowable animations when moved above this line --------------------
+//----------------------------------------------------------------------------------------------------------
+
+
+
+//-------------------------------- WAVE ---------------------------------
+#include <math.h> //for sin
+const uint8_t nwave = 12; //per half structure: each half is mirrored
+uint16_t start_pixel[nwave] = {20, 30, 40, 50, 60, 80, 100, 110, 120, 130, 140, 180}; 
+uint8_t  start_ring [nwave] = { 0,  9,  0,  4,  0, 36,   0,  12,   0,   4,   0,   0};
+uint8_t  period     [nwave] = {12,  9,  6,  4, 18, 36,  18,  12,   6,   4,   9,  36}; //N = 6, 8, 12, 18, 4, 2, etc
+uint8_t  wspeed     [nwave] = { 5,  4,  3,  2,  6,  8,   6,   5,   3,   2,   4,   8};
+//uint8_t  amplitude  [nwave] = {5, 5, 5, 5}; //can put this back if desired
+
+void wave() {
+
+  //this loop structure means that the higher index waves will overwrite the lower
+  for( uint8_t i=0; i < nwave*2; i++ ) {
+    //draw wave
+    //for( uint8_t j=start_ring[i]-1; j < start_ring[i]+period[i]; j++ ) { //1 period
+    for(uint8_t j = 0; j < NUM_RINGS; j++) {
+      //uint16_t pixel = start_pixel[i%nwave] + amplitude[i%nwave] * sin(TWO_PI * j / period[i%nwave]); //use amplitude array
+      uint16_t pixel = start_pixel[i%nwave] + period[i%nwave]/2 * sin(TWO_PI * j / period[i%nwave]); //amplitude=period/2
+      if( i < nwave )
+        pixel = LEDS_PER_RING - pixel; //mirror
+      
+      if( (j+start_ring[i%nwave]) % (period[i%nwave]*2) >= period[i%nwave] ) { //half structure
+        mid_layer[j][pixel] = TRANSPARENT;
+        continue;
+      }
+      uint8_t b = j%(NUM_RINGS/4) * 12 / (NUM_RINGS/4); //blend ranges over every 4th structure
+      mid_layer[j][pixel] = get_mid_color(i%nwave < 2*nwave/3 ? 0 : 1, i%nwave < nwave/3 ? 1 : 2, b, 0);
+      //Serial.print("r " + String(j) + " p " + String(pixel) + "; ");
+    }
+    //Serial.println();
+    //move wave for next loop
+    if( mid_count % wspeed[i%nwave] == 0 )
+      start_ring[i%nwave] = (start_ring[i%nwave] < NUM_RINGS-1 ? start_ring[i%nwave]+1 : 0);
+  }
+  
+}
+
+
+
 //-------------------------------- ROTATING RINGS ---------------------------------
 // needs love
 void ring_intersecting_periods() {
@@ -967,3 +943,34 @@ void ring_intersecting_periods() {
 }
 
 
+// -------------------- A dynamic arrow-like animation --------------------------
+void dim_mid_layer(uint8_t amount) {
+  for(uint8_t ring = 0; ring < NUM_RINGS; ring++) {
+    for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+      if(get_mid_dim_value(ring, pixel) > MAX_MID_DIMMING - amount) { mid_layer[ring][pixel] = TRANSPARENT; }
+      else { mid_layer[ring][pixel] += amount;}
+    }
+  }
+}
+
+// NUM_COLORS, COLOR_THICKNESS, BLACK_THICKNESS, RING_OFFSET, INTER_RING_MOTION, INTER_RING_SPEED, INTRA_RING_MOTION, INTRA_RING_SPEED, RING_OFFSET
+void arrow_new() {
+  uint8_t color_thickness = 1;//scale_param(MID_COLOR_THICKNESS, 1, 5);
+  //uint8_t horizontal_spacing = 5;//scale_param(MID_BLACK_THICKNESS, 3, 8);
+  uint8_t vertical_spacing = 3;//scale_param(MID_BLACK_THICKNESS, 2, 7) + color_thickness;
+  uint8_t inter_speed = 1 << scale_param(MID_INTER_RING_SPEED, 3, 6);
+  //uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 6);
+  uint8_t ring_offset = 0;//scale_param(MID_RING_OFFSET, 1, 10);
+  
+  dim_mid_layer(1);
+
+  for(uint8_t ring = node_number * RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+    uint8_t first_pixel = ring*ring_offset + inter_speed*mid_count/THROTTLE;
+    for(uint16_t raw_pixel = first_pixel; raw_pixel < LEDS_PER_RING; raw_pixel += vertical_spacing) {
+      for(uint8_t pixel_offset = 0; pixel_offset < color_thickness; pixel_offset++) {
+        uint16_t pixel = raw_pixel + pixel_offset;
+        mid_layer[ring][pixel] = WHITE;
+      }
+    }
+  }
+}

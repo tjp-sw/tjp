@@ -181,15 +181,16 @@ void loop() {
   // Update time and counters
   current_time = epoch_msec + millis();
   #ifdef DEBUG_TIMING
-    serial_val[0] = current_time - last_debug_time; // This also captures any time lost in between loops
-    last_debug_time = current_time;
+    unsigned long now = millis();
+    serial_val[0] = now - last_debug_time; // This also captures any time lost in between loops
+    last_debug_time = now;
   #endif
 
 
   // Read spectrum shield before communicating with Pi
   read_frequencies();
   #ifdef DEBUG_TIMING
-    unsigned long now = millis();
+    now = millis();
     serial_val[1] = now - last_debug_time;
     last_debug_time = now;
   #endif
@@ -767,6 +768,7 @@ inline void draw_current_sparkle() {
       break;
 
     case THREE_CIRCLES:
+      clear_sparkle_layer();
       sparkle_three_circles();
       break;
 
@@ -973,9 +975,9 @@ inline void init_sparkle_animation() {
     case CIRCLE_TRAILS:
     case TWO_COINS:
       random16_set_seed(0); // Synchronize RNG on different nodes
-      current_ring = random8(NUM_RINGS);
-      current_pixel = random16(LEDS_PER_RING);
-      current_coin = random8(NUM_RINGS);
+      sparkle_current_ring = random8(NUM_RINGS);
+      sparkle_current_pixel = random16(LEDS_PER_RING);
+      sparkle_current_coin = random8(NUM_RINGS);
       break;
 
     case TORUS_KNOT:
