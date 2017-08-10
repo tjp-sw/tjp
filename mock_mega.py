@@ -150,8 +150,8 @@ def loop():
                     time.sleep(10)
             elif node_number != None:
                 last_beat_msec = int(time.time() * 1000.0)
-                channel_data = [ 10, 30, 50, 70, 60, 40, 20,
-                                 20, 40, 60, 80, 70, 50, 30 ]
+                channel_data = [ random.randint(10,80), random.randint(100,200), random.randint(100,200), random.randint(100,200), random.randint(100,200), random.randint(100,200), random.randint(100,200),
+                                 random.randint(100,200), random.randint(100,200), random.randint(100,200), random.randint(100,200), random.randint(100,200), random.randint(100,200), random.randint(100,200) ]
                 for channel in range(0, len(channel_data)):
                     channel_data[channel] += random.randint(0, 9)
                 time.sleep(0.1)

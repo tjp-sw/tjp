@@ -203,7 +203,7 @@ ART_CAR_HELLO_DURATION = 30
 #art_car_hello = False # not used
 art_car = NO_ART_CAR  # if art car is detected, set to ring number nearest art car
 HELLO_ANIMTIONS_NUM = 5 # TODO the actual number.... 5 is totally made up for now
-ART_CAR_AMPLITUDE_THRESHOLD = 1000 # TODO calibrate appropriately... keep track of variation over time would be best but can get messy
+ART_CAR_AMPLITUDE_THRESHOLD = 100 # TODO calibrate appropriately... keep track of variation over time would be best but can get messy
 ART_CAR_DETECTION_DEBUG = True
 
 testing_meditation_seconds = 20
@@ -582,11 +582,11 @@ def give_suitable_hello_animation(ring_num):
             return
 
     # currently grabbing first avaliable hello animaiton
-    for i in range(0, HELLO_ANIMTIONS_NUM):
+    for i in range(0, NUM_7_COLOR_ANIMATIONS): # using edm animations for hello animations
         if i not in hello_animation_to_ring:
             # add to dictionary to keep track / ensure uniqueness {animation:ring_num}
-            hello_animation_to_ring[hello_animation] = ring_num
-            ring_to_hello_animation[ring_num] = hello_animation
+            hello_animation_to_ring[i] = ring_num
+            ring_to_hello_animation[ring_num] = i
 
             # TODO set hello_animation show parameter
             # HELP: which param is that??
