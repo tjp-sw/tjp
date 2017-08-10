@@ -64,7 +64,7 @@ def analyze_beat(node, intensity, timestamp):
         fit = (A.T * A).I * A.T * b
     except:
         # print sys.exc_value	# usually "Singular matrix" when the data doesn't define a plane
-        pass
+        return None, None
     else:
         # print 'solution:', 'z = %f x + %f y + %f' % (fit[0], fit[1], fit[2])
         # errors = b - A * fit

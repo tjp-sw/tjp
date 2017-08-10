@@ -491,9 +491,8 @@ ring_to_animation_start_time = {}
 rings_to_stop_hello_animation = []
 
 
-# Returns ring number of newly detected art car
-# Also mutates a dictionary of rings as keys and value containing the hellow animation being shown
-# Return -400 if something goes wrong
+# Returns ring number of detected art car
+# Also mutates a dictionary of rings as keys and value containing the hello animation being shown
 def handle_amplitude_info(ring_num, amplitude):
     global internal_audio_show, art_car, show_parameters
     global ring_to_animation_start_time, rings_to_stop_hello_animation, hello_animation_to_ring
