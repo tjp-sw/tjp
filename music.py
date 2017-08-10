@@ -4,6 +4,8 @@ import sounds, shows
 import time as epoch_time
 
 DEBUG = 1
+SET_TIME = None 
+#SET_TIME = datetime(year=2017,month=8,day=31,hour=12,minute=00)
 
 # Just random....this signal is coming from the touchpad which is not written yet.
 def panel_touched():
@@ -117,7 +119,10 @@ class Music:
 
 
     def tick(self, silent=False):
-        now_time = datetime.now()
+        if type(SET_TIME) is datetime:
+            now_time = SET_TIME
+        else:
+            now_time = datetime.now()
         if DEBUG > 1:
             print now_time
         bm_day = now_time.weekday()
@@ -138,11 +143,14 @@ class Music:
             if DEBUG > 1:
                 print "no meditation"
             Music.meditation = False
-            if datetime.fromtimestamp(shows.sunrise_time[ bm_day +1 ]) >= now_time >= \
-               datetime.fromtimestamp(shows.sunrise_time[ bm_day +1 ]):
+            if time(6, 25) <= now_time.time() <= time(19, 25):
+                if DEBUG > 1:
+                    print "setting day"
                 shows.show_mode = shows.DAY
             else:
                 shows.show_mode = shows.NIGHT
+                if DEBUG > 1:
+                    print "setting night"
         else:
             if DEBUG > 1:
                 print "setting meditation status"
@@ -158,7 +166,7 @@ class Music:
         
         if self.played_low != bm_day or self.need_drone:
             self.need_drone = False
-            low = sounds.find_low()
+            low = sounds.find_low(now_time.weekday(),now_time.time())
             self.played_low = bm_day
             self.check_drone = now_time
             msg[0] = low
@@ -178,15 +186,17 @@ class Music:
                 self.high_wait = random.randint(30,60)
                 Music.no_high = datetime.max
         """
-        if self.played_mid <= (now_time - timedelta(seconds=15)):
+        if self.played_mid <= (now_time - timedelta(seconds=5)):
             self.played_mid = now_time
-            msg[1] = sounds.find_mid()
+            msg[1] = sounds.find_mid(now_time.weekday(),now_time.time())
+            #print "Got the mid, boss" + str(msg[1])
 
         if self.checked_high <= (now_time - timedelta(seconds=25)):
             play_chance = random.randint(0, 4)
             if play_chance == 0 or \
                self.played_high <= (now_time - timedelta(minutes=2)):
-                msg[2] = sounds.find_high()
+                msg[2] = sounds.find_high(now_time.weekday(),now_time.time())
+                #print "Got the high, boss" + str(msg[2])
                 self.played_high = now_time
             self.checked_high = now_time
         

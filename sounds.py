@@ -64,25 +64,29 @@ def play_meditation(this_time=datetime.now()):
             return MEDITATIONS[meditation]
     return None
 
-def find_low(theme=datetime.today().weekday()):
+def find_low(theme=datetime.today().weekday(), now_time=datetime.now().time()):
     if SET_THEME >= 0:
         theme = SET_THEME
     return random.choice(LOWS[theme])
 
 
-def find_mid(theme=datetime.today().weekday()):
+def find_mid(theme=datetime.today().weekday(), now_time=datetime.now().time()):
     if SET_THEME >= 0:
         theme = SET_THEME
-    elif shows.show_mode == shows.NIGHT:
+    elif time(6, 25) > now_time > time(19, 25):
+        
         daily_mids = [song for sublist in MIDS[0:(theme+1)] for song in sublist]
         return random.choice(daily_mids)
+    
     return random.choice(MIDS[theme])
 
 
-def find_high(theme=datetime.today().weekday()):
+def find_high(theme=datetime.today().weekday(), now_time=datetime.now().time()):
     if SET_THEME >= 0:
         theme = SET_THEME
-    elif shows.show_mode == shows.NIGHT:
+    elif time(6, 25) > now_time > time(19, 25):
+        
         daily_highs = [song for sublist in HIGHS[0:(theme+1)] for song in sublist]
         return random.choice(daily_highs)
+    
     return random.choice(HIGHS[theme])
