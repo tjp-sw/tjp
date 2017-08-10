@@ -194,7 +194,7 @@ def get_external_amplitude_sum(channel_data):
     # 7 channels of audio data
     for i in range(0, 6):
         try:
-            amplitude += abs(channel_data[i] - channel_data[i+7])
+            amplitude += abs(ord(channel_data[i]) - ord(channel_data[i+7]))
         except:
             print "channel data format does not have 2 * 7 channels of information " + str(len(channel_data))
             return -1
