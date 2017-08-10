@@ -207,7 +207,7 @@ def check_art_car_status(ring_num, amplitude):
     global rings_to_stop_hello_animation
 
     if ring_num is None or amplitude is None:
-        print "seems as those the data did not make a plane, ring -> art car detection  not possible"
+        print "seems as those the data did not make a plane, ring -> art car detection not possible"
         return
 
     ring_ac_newly_detected = handle_amplitude_info(ring_num, amplitude)

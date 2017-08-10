@@ -204,6 +204,7 @@ ART_CAR_HELLO_DURATION = 30
 art_car = NO_ART_CAR  # if art car is detected, set to ring number nearest art car
 HELLO_ANIMTIONS_NUM = 5 # TODO the actual number.... 5 is totally made up for now
 ART_CAR_AMPLITUDE_THRESHOLD = 1000 # TODO calibrate appropriately... keep track of variation over time would be best but can get messy
+ART_CAR_DETECTION_DEBUG = True
 
 testing_meditation_seconds = 20
 color_evolution_timer = time.time()
@@ -508,10 +509,16 @@ def handle_amplitude_info(ring_num, amplitude):
                 # HELP set edm animation here or further up in brain's check_art_car_status?
                 show_parameters[SEVEN_PAL_BEAT_PARAM_START] = randint(0, NUM_BEAT_EFFECTS)
 
+                if ART_CAR_DETECTION_DEBUG:
+                    print "art car pass ART_CAR_HELLO_DURATION triggering edm animations on structure"
         else:
             # give hello animation & update dictionaries
             give_suitable_hello_animation(ring_num)
             ring_to_animation_start_time[ring_num] = time.time()
+
+            if ART_CAR_DETECTION_DEBUG:
+                print "ring_num %i has met art car hello threshold level. given \
+                hello %i" % ring_num, ring_to_hello_animation[ring_num]
 
         return ring_num
     else:
@@ -538,10 +545,10 @@ def handle_amplitude_info(ring_num, amplitude):
                 # mark ring running hello animation to stop hello animation
                 rings_to_stop_hello_animation.append(ring_num)
 
-            # remove from tracking
-            ring_to_animation_start_time.pop(ring_num)
-            hello_animation_to_ring.pop(ring_to_hello_animation[ring_num])
-            ring_to_hello_animation.pop(ring_num)
+                # remove from tracking
+                ring_to_animation_start_time.pop(ring_num)
+                hello_animation_to_ring.pop(ring_to_hello_animation[ring_num])
+                ring_to_hello_animation.pop(ring_num)
 
     return -1
 
