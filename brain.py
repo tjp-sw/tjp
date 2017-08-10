@@ -314,9 +314,10 @@ while running:
                             print 'node', node, 'channel data', repr(channel_data), 'at', timestamp
 
                             amplitude_sum = get_external_amplitude_sum(channel_data)
-                            esitmated_ring_number, mean_intensity = analyze_beat(node, amplitude_sum, timestamp)
+                            if amplitude_sum > 0: # otherwise error reading channel_data
+                                esitmated_ring_number, mean_intensity = analyze_beat(node, amplitude_sum, timestamp)
 
-                            check_art_car_status(esitmated_ring_number, mean_intensity)
+                                check_art_car_status(esitmated_ring_number, mean_intensity)
                     elif message[0:1] == 'm':
                         mega_number = ord(message[1:2])
                         try:
