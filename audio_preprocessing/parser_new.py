@@ -15,7 +15,7 @@ def parseProcessedAudioData():
     name = ""
     file_index = ""
     category = ""
-    for line in open("sample_processing_new_std_3", 'r'):
+    for line in open("audio_preprocessing_output", 'r'):
         info = line.split()
         if(len(info) > 1):
             if(info[0] == "analyzing"):

@@ -741,7 +741,7 @@ def interpret_audio_msg(audio_msg):
 
         if audioInfo is not None:
             if INTERNAL_ANIMATIONS_DEBUG:
-                print "setting main animation param due to new audio track's info " + str(audioInfo)
+                print "setting main animation param due to new audio track's info " + str(audioInfo.file_index)
             set_appropriate_layer_main_animation(audioInfo)
 
 
@@ -1148,7 +1148,7 @@ def remove_audio_events_from_queue(audioInfo):
 
 def queue_audio_events(audioInfo):
     cur_time_ms = timeMs()
-    print "queueing events for audioInfo: " + str(audioInfo)
+    print "queueing events for audioInfo: " + str(audioInfo.file_index)
     if audioInfo is not None:
         for event in audioInfo.events:
             # print "event: " + str(event)

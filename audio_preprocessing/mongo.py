@@ -63,8 +63,8 @@ def insert_audio_data(audioInfoList):
     global files
     files = get_collection()
 
-    #res = files.delete_many({})
-    #print res.deleted_count
+    res = files.delete_many({})
+    print res.deleted_count
     for audioInfo in audioInfoList:
         to_mongo(audioInfo)
 
@@ -93,8 +93,7 @@ def grab_audio_info(colleciton, file_num):
 
 
 #infoList = parser.parseProcessedAudioData()
-#infoList = parser_new.parseProcessedAudioData()
-#insert_audio_data(infoList)
-#ai = grab_audio_info(get_collection(), "8098")
-#print ai
-#print ai.getNextEvent()
+populate_mongo = False
+if populate_mongo:
+    infoList = parser_new.parseProcessedAudioData()
+    insert_audio_data(infoList)
