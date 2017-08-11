@@ -266,8 +266,10 @@ inline void setup_communication() {
 inline void process_commands(String& input) {
   while (input.length() > 0) {
     #ifdef DEBUG
-      Serial.println(input[0]);
-      print_status("bytes available: ", (long)input.length());
+      if(input[0] != 'c') {
+        Serial.println(input[0]);
+        print_status("bytes available: ", (long)input.length());
+      }
     #endif
 
     size_t size = 1;
@@ -295,13 +297,15 @@ inline void process_commands(String& input) {
         break;
 
       case 'c': // Channel audio out data, 14 channels/bytes total
-        size += 2 + 2 * NUM_CHANNELS + sizeof (unsigned long long);
+        size += 1 + 2 * NUM_CHANNELS + sizeof (unsigned long long);
         if (input.length() >= size) {
           store_audio_packet((uint8_t *)input.c_str());
           remote.write((uint8_t *)input.c_str(), size);
         }
         else {
           #ifdef DEBUG
+            Serial.println(input[0]);
+            print_status("bytes available: ", (long)input.length());
             print_status("insufficient channel data");
           #endif
         }
@@ -433,6 +437,10 @@ inline void process_commands(String& input) {
               if(last_edm_animation == DEBUG_MODE) {
                 // When coming out of debug mode, skip the transition logic
                 memcpy(current_palette, target_palette, 3*NUM_COLORS_PER_PALETTE);
+                init_base_animation();
+                init_mid_animation();
+                init_sparkle_animation(0, NUM_RINGS);
+                init_edm_animation();
               }
               else {
                 blend_base_layer = current_palette[0] != target_palette[0] || current_palette[1] != target_palette[1];
