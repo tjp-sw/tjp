@@ -41,8 +41,8 @@ inline void manually_set_animation_params() {             //
   // Use NONE to signify a layer that is off temporarily  //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   BASE_ANIMATION = NONE;                                  //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK, LEE_PICK_HSV
   MID_ANIMATION = NONE;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  SPARKLE_ANIMATION = PANIC;                               //
-  EDM_ANIMATION = OFF;                                    //
+  SPARKLE_ANIMATION = NONE;                               //
+  EDM_ANIMATION = EQ_PULSE;                            //
                                                           //
   BASE_COLOR_THICKNESS = 255;                             //
   BASE_BLACK_THICKNESS = 255;                             //
@@ -74,8 +74,7 @@ inline void manually_set_animation_params() {             //
                                                           //
   PALETTE_CHANGE = PALETTE_CHANGE_IMMEDIATE;              //
   BEAT_EFFECT = NONE;                                     //
-  MID_ALPHA = NONE;                                       //
-  SPARKLE_ALPHA = NONE;                                   //
+  ART_CAR_RING = NO_ART_CAR;                              //
                                                           //
   BASE_TRANSITION = TRANSITION_BY_ALPHA;                  //
   BASE_TRANSITION_SPEED = FAST_TRANSITION;                //
@@ -152,7 +151,7 @@ void setup() {
   // Init layers
   init_base_animation();
   init_mid_animation();
-  init_sparkle_animation();
+  init_sparkle_animation(0, NUM_RINGS);
   init_edm_animation();
 
 
@@ -246,41 +245,43 @@ void loop() {
   #endif
 
 
-  // Draw layers
-  draw_current_base(0, NUM_RINGS-1);
-  #ifdef DEBUG_TIMING
-    now = millis();
-    serial_val[6] = now - last_debug_time;
-    last_debug_time = now;
-  #endif
-
-  draw_current_mid(0, NUM_RINGS-1);
-  #ifdef DEBUG_TIMING
-    now = millis();
-    serial_val[7] = now - last_debug_time;
-    last_debug_time = now;
-  #endif
-
-
-  draw_current_sparkle();
-  #ifdef DEBUG_TIMING
-    now = millis();
-    serial_val[8] = now - last_debug_time;
-    last_debug_time = now;
-  #endif
-
-
-  // Overlay layers
-  write_pixel_data();
-  #ifdef DEBUG_TIMING
-    now = millis();
-    serial_val[9] = now - last_debug_time;
-    last_debug_time = now;
-  #endif
+  if(EDM_ANIMATION == 0 || EDM_ANIMATION >= 128) {
+    // Draw layers
+    draw_current_base(0, NUM_RINGS);
+    #ifdef DEBUG_TIMING
+      now = millis();
+      serial_val[6] = now - last_debug_time;
+      last_debug_time = now;
+    #endif
+  
+    draw_current_mid(0, NUM_RINGS);
+    #ifdef DEBUG_TIMING
+      now = millis();
+      serial_val[7] = now - last_debug_time;
+      last_debug_time = now;
+    #endif
+  
+  
+    draw_current_sparkle(0, NUM_RINGS);
+    #ifdef DEBUG_TIMING
+      now = millis();
+      serial_val[8] = now - last_debug_time;
+      last_debug_time = now;
+    #endif
+  
+  
+    // Overlay layers
+    write_pixel_data();
+    #ifdef DEBUG_TIMING
+      now = millis();
+      serial_val[9] = now - last_debug_time;
+      last_debug_time = now;
+    #endif
+  }
 
 
   // Overlay EDM layer
-  draw_current_edm();
+  draw_current_edm(0, NUM_RINGS);
   #ifdef DEBUG_TIMING
     now = millis();
     serial_val[10] = now - last_debug_time;
@@ -376,7 +377,7 @@ inline void transition_animations() {
       cleanup_sparkle_animation(SPARKLE_ANIMATION);
       SPARKLE_ANIMATION = next_sparkle_animation;
       next_sparkle_animation = NONE;
-      init_sparkle_animation();
+      init_sparkle_animation(0, NUM_RINGS);
       transition_in_sparkle_animation = true;
     }
   }
@@ -750,17 +751,17 @@ inline void draw_current_mid(uint8_t min_ring, uint8_t max_ring) {
   }
 }
 
-inline void draw_current_sparkle() {
+inline void draw_current_sparkle(uint8_t min_ring, uint8_t max_ring) {
   switch(SPARKLE_ANIMATION) {
     case STATIC:
-      sparkle_glitter(1, false);
+      sparkle_glitter(1, false, min_ring, max_ring);
       
     case GLITTER:
-      sparkle_glitter(2, false);
+      sparkle_glitter(2, false, min_ring, max_ring);
       break;
 
     case RAIN:
-      sparkle_rain();
+      sparkle_rain(min_ring, max_ring);
       break;
 
     case WARP_SPEED:
@@ -781,11 +782,11 @@ inline void draw_current_sparkle() {
       break;
 
     case TWINKLE:
-      sparkle_twinkle();
+      sparkle_twinkle(min_ring, max_ring);
       break;
 
     case VARIABLE_SPIN:
-      variable_spin();
+      variable_spin(min_ring, max_ring);
       break;
 
     case TORUS_KNOT:
@@ -805,7 +806,7 @@ inline void draw_current_sparkle() {
   }
 }
 
-inline void draw_current_edm() {
+inline void draw_current_edm(uint8_t min_ring, uint8_t max_ring) {
   switch(EDM_ANIMATION) {
     case TEST_STRANDS:
       test_strands();
@@ -816,24 +817,52 @@ inline void draw_current_edm() {
       break;
 
     case FREQ_PULSE:
-      frequency_pulse();
+      frequency_pulse(min_ring, max_ring);
       break;
 
     case EQ_FULL:
-      equalizer_full(DISPLAY_FULL);
+      equalizer_full(DISPLAY_FULL, min_ring, max_ring);
       break;
 
     case EQ_FULL_SPLIT:
-      equalizer_full(DISPLAY_SPLIT);
+      equalizer_full(DISPLAY_SPLIT, min_ring, max_ring);
       break;
 
-    case EQ_VARIABLE:
     case EQ_VARIABLE_FIRE:
-      equalizer_variable(DISPLAY_FULL);
+      MID_ANIMATION = FIRE_ONE_SIDED;
+      show_parameters[MID_INTRA_RING_MOTION_INDEX] = UP;
+      draw_current_mid(min_ring, max_ring);
+      write_pixel_data();
+    case EQ_VARIABLE:
+      equalizer_variable(DISPLAY_FULL, min_ring, max_ring);
       break;
 
     case EQ_VARIABLE_SPLIT:
-      equalizer_variable(DISPLAY_SPLIT);
+      equalizer_variable(DISPLAY_SPLIT, min_ring, max_ring);
+      break;
+
+    case EQ_PULSE:
+      equalizer_pulse(min_ring, max_ring);
+      break;
+
+    case KILL_ANIMATION:
+      kill_animation();
+      break;
+
+    case CHAKRA_PULSE:
+      chakra_pulse();
+      break;
+
+    case ANIMATION_PULSE:
+      animation_pulse();
+      break;
+
+    case LIGHTNING:
+      lightning();
+      break;
+      
+    case FIRE_HELLO:
+      fire_hello();
       break;
 
     default:
@@ -925,7 +954,7 @@ inline void init_mid_animation() {
   #endif
 }
 
-inline void init_sparkle_animation() {
+inline void init_sparkle_animation(uint8_t min_ring, uint8_t max_ring) {
   sparkle_start_time = current_time;
   sparkle_count = 0;
 
@@ -963,12 +992,12 @@ inline void init_sparkle_animation() {
       SPARKLE_MAX_DIM = 255;
       SPARKLE_RANGE = 255;
 
-      sparkle_glitter(2, true); // Generate a set of spots
+      sparkle_glitter(2, true, min_ring, max_ring); // Generate a set of spots
       break;
 
     case TWINKLE:
       random16_set_seed(0); // Synchronize RNG on different nodes
-      sparkle_glitter(2, true); // Generate a set of spots
+      sparkle_glitter(2, true, min_ring, max_ring); // Generate a set of spots
       break;
 
     case THREE_CIRCLES:
@@ -1025,17 +1054,16 @@ inline void init_edm_animation() {
       break; // Don't disable layers
 
     case EQ_VARIABLE_FIRE:
-      BASE_ANIMATION = OFF;
-      SPARKLE_ANIMATION = OFF;
       MID_ANIMATION = FIRE_ONE_SIDED;
-      clear_sparkle_layer();
       init_mid_animation();
+      clear_sparkle_layer();
+      break;
+
+    case FIRE_HELLO:
+      if(node_number == ART_CAR_RING/RINGS_PER_NODE) { clear_mid_layer(); }
       break;
 
     default:
-      BASE_ANIMATION = OFF;
-      SPARKLE_ANIMATION = OFF;
-      MID_ANIMATION = OFF;
       break;
   }
 

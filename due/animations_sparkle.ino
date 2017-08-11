@@ -5,7 +5,7 @@
 //  Creates sparkles of glitter randomly all over the structure
 // SPARKLE_COLOR_THICKNESS(1:2), SPARKLE_PORTION(16:127), SPARKLE_MIN_DIM(0:2), SPARKLE_MAX_DIM(1:4), SPARKLE_RANGE(40:204)
 // not using: SPAWN_FREQUENCY, SPARKLE_INTRA_RING_MOTION, SPARKLE_INTRA_RING_SPEED, SPARKLE_INTER_RING_MOTION, SPARKLE_INTER_RING_SPEED
-inline void sparkle_glitter(uint8_t num_colors, bool generate_all_nodes) {
+inline void sparkle_glitter(uint8_t num_colors, bool generate_all_nodes, uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(SPARKLE_COLOR_THICKNESS, 1, 2);
   uint8_t portion = scale_param(SPARKLE_PORTION, 16, 127);
   uint8_t min_dim = scale_param(SPARKLE_MIN_DIM, 0, 64);
@@ -20,8 +20,11 @@ inline void sparkle_glitter(uint8_t num_colors, bool generate_all_nodes) {
   uint8_t lower_limit = HALF_RING-range;
   uint16_t upper_limit = HALF_RING + range - color_thickness;
 
-  uint8_t min_ring = generate_all_nodes ? 0 : node_number*RINGS_PER_NODE;
-  uint8_t max_ring = generate_all_nodes ? NUM_RINGS : (node_number+1)*RINGS_PER_NODE;
+  uint8_t min_ring1 = generate_all_nodes ? 0 : node_number*RINGS_PER_NODE;
+  uint8_t max_ring1 = generate_all_nodes ? NUM_RINGS : (node_number+1)*RINGS_PER_NODE;
+
+  if(min_ring1 > min_ring) { min_ring = min_ring1; }
+  if(max_ring1 < max_ring) { max_ring = max_ring1; }
   
   for (uint8_t ring = min_ring; ring < max_ring; ring++) {
     for (uint16_t pixel = lower_limit; pixel < upper_limit; pixel++) {
@@ -47,7 +50,7 @@ inline void sparkle_glitter(uint8_t num_colors, bool generate_all_nodes) {
 //  Puts raindrops randomly at the top of the structure and runs them down both sides of each ring.  
 // SPARKLE_COLOR_THICKNESS(1:2), SPARKLE_PORTION(15:80), SPARKLE_MAX_DIM(1:4), SPARKLE_MIN_DIM(0:2), SPARKLE_RANGE(20), SPARKLE_SPAWN_FREQUENCY(20), SPARKLE_INTRA_RING_MOTION(-1:1), SPARKLE_INTRA_RING_SPEED(16:64)
 // missing: SPARKLE_INTER_RING_MOTION, SPARKLE_INTER_RING_SPEED
-inline void sparkle_rain() {
+inline void sparkle_rain(uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(SPARKLE_COLOR_THICKNESS, 1, 2);
   uint8_t portion = scale_param(SPARKLE_PORTION, 15, 80);
   uint8_t min_dim = scale_param(SPARKLE_MIN_DIM, 0, 2);
@@ -67,8 +70,11 @@ inline void sparkle_rain() {
   }
 
   if(sparkle_count % throttle == 0) {
+    if(node_number*RINGS_PER_NODE > min_ring) { min_ring = node_number*RINGS_PER_NODE; }
+    if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
+    
     // move existing raindrops
-    for (uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+    for (uint8_t ring = min_ring; ring < max_ring; ring++) {
       if(SPARKLE_INTRA_RING_MOTION == DOWN || ((SPARKLE_INTRA_RING_MOTION == ALTERNATE) && (ring % 2 == 0))) {
         // inner half
         for (uint16_t pixel = LEDS_PER_RING - 1; pixel > HALF_RING + distance_per_cycle; pixel--)  { sparkle_layer[ring][pixel] = sparkle_layer[ring][pixel-distance_per_cycle]; }
@@ -94,7 +100,10 @@ inline void sparkle_rain() {
   // create new raindrops every "frequency" cycles
   if(SPARKLE_SPAWN_FREQUENCY == 0) { return; }
   if (sparkle_count % spawn_frequency == 0) {
-    for (uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+    if(node_number*RINGS_PER_NODE > min_ring) { min_ring = node_number*RINGS_PER_NODE; }
+    if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
+    
+    for (uint8_t ring = min_ring; ring < max_ring; ring++) {
       if(SPARKLE_INTRA_RING_MOTION == DOWN || ((SPARKLE_INTRA_RING_MOTION == ALTERNATE) && (ring % 2 == 0))) {
         for (uint16_t pixel = HALF_RING - range; pixel < HALF_RING + range; pixel++) {
           if (random16(color_thickness * portion) == 0) {
@@ -197,14 +206,17 @@ inline void sparkle_warp_speed() {
 // SPAWN_FREQUENCY, SPARKLE_MAX_DIM, SPARKLE_MIN_DIM, PORTION, RANGE, COLOR_THICKNESS, 
 // missing: INTRA_RING_MOTION, INTRA_RING_SPEED, INTER_RING_MOTION, INTER_RING_SPEED
 #define TWINKLE_STEP_SIZE 8 // This value must be even
-inline void sparkle_twinkle() {
+inline void sparkle_twinkle(uint8_t min_ring, uint8_t max_ring) {
   uint8_t throttle = 5 - scale_param(SPARKLE_SPAWN_FREQUENCY, 1, 4); // Affects how many sparkles are walked each cycle
   uint8_t min_dim = scale_param(SPARKLE_MIN_DIM, 0, 64);
   if(min_dim % 2 == 1) { min_dim += 1; } // min dim is even
   uint8_t max_dim = scale_param(SPARKLE_MAX_DIM, 81, 125);
   if(max_dim % 2 == 0) { max_dim += 1; } // max dim is odd
 
-  for (uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+  if(node_number*RINGS_PER_NODE > min_ring) { min_ring = node_number*RINGS_PER_NODE; }
+  if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
+    
+  for (uint8_t ring = min_ring; ring < max_ring; ring++) {
     for (uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
       // only change intensity if pixel is chosen as star
       if (sparkle_layer[ring][pixel] != TRANSPARENT) {
@@ -236,7 +248,7 @@ inline void sparkle_twinkle() {
 // missing: COLOR_THICKNESS, RING_OFFSET, INTRA_RING_MOTION, INTRA_RING_SPEED, INTER_RING_MOTION, INTER_RING_SPEED, MAX_DIM, MIN_DIM
 // not using: PORTION, RANGE, SPAWN_FREQUENCY
 #define VARIABLE_SPIN_STEP_SIZE 5
-void variable_spin() {
+void variable_spin(uint8_t min_ring, uint8_t max_ring) {
   // 6 spin rates, centered at the middle of each node, so node edges line up with each other.
   // First half of node spins one way, second half the other way. Reverse direction on odd numbered nodes so node edges line up.
   const uint8_t spinRates[12] = { 2, 3, 4, 5, 6, 7 };
@@ -252,7 +264,10 @@ void variable_spin() {
 
   clear_sparkle_layer();
 
-  for(uint8_t ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++) {
+  if(node_number*RINGS_PER_NODE > min_ring) { min_ring = node_number*RINGS_PER_NODE; }
+  if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
+    
+  for(uint8_t ring = min_ring; ring < max_ring; ring++) {
     uint8_t cur_color = get_sparkle_color(ring % 2, 70);
     uint16_t centerPoint = centerPoints[ring % RINGS_PER_NODE];
 

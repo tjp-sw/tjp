@@ -21,9 +21,17 @@ inline int16_t scale_param_16(int8_t param, int16_t minVal, int16_t maxVal) {
 
 // Use these functions to directly access leds[]. This can be used for EDM and meditation animations.
 inline CRGB get_led(uint8_t ring, uint16_t pixel) {
+  #ifdef DEBUG
+    if(ring >= RINGS_PER_NODE) { Serial.println("Error in get_led(): ring is " + String(ring)); }
+    if(pixel >= LEDS_PER_RING) { Serial.println("Error in get_led(): pixel is " + String(pixel)); }
+  #endif
   return leds[get_1d_index(ring, pixel)];
 }
 inline void set_led(uint8_t ring, uint16_t pixel, CRGB color) {
+  #ifdef DEBUG
+    if(ring >= RINGS_PER_NODE) { Serial.println("Error in set_led(): ring is " + String(ring)); }
+    if(pixel >= LEDS_PER_RING) { Serial.println("Error in set_led(): pixel is " + String(pixel)); }
+  #endif
   leds[get_1d_index(ring, pixel)] = color;
 }
 // Takes a ring 0:11, pixel 0:407, returns 1d offset into leds[]. Not to be used when drawing layers.

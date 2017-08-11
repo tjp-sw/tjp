@@ -124,6 +124,13 @@ uint8_t art_car = NO_ART_CAR;                                           //
 #define EQ_PULSE 7                                            //
 #define NUM_EDM_ANIMATIONS 7  // Equal to last animation      //
                                                               //
+// Hello animations                                           //
+#define KILL_ANIMATION 128                                    //
+#define CHAKRA_PULSE 129                                      //
+#define ANIMATION_PULSE 130                                   //
+#define LIGHTNING 131                                         //
+#define FIRE_HELLO 132                                        //
+                                                              //
 // Debug animations (drawn on EDM layer)                      //
 #define DEBUG_MODE 254        // Startup animation            //
 #define TEST_STRANDS 253      // Test for burnt out LEDs      //
@@ -166,22 +173,21 @@ uint8_t art_car = NO_ART_CAR;                                           //
 #define SPARKLE_SPAWN_FREQUENCY_INDEX 27    // How often new bursts of sparkles are created       //
                                                                                                   //
 #define EDM_ANIMATION_INDEX 28              // Which EDM animation to play                        //
-#define PALETTE_CHANGE_INDEX 29             // How to switch into next palette                    //
+#define ART_CAR_RING_INDEX 29               // Closest ring to the art car                        //
 #define BEAT_EFFECT_INDEX 30                // How the beat should affect animations              //
                                                                                                   //
-#define MID_ALPHA_INDEX 31                  // How to blend mid into base layer                   //
-#define SPARKLE_ALPHA_INDEX 32              // How to blend sparkle into mid+base layer           //
+#define PALETTE_CHANGE_INDEX 31             // How to switch into next palette                    //
                                                                                                   //
-#define BASE_TRANSITION_INDEX 33             // How to transition base animations                 //
-#define BASE_TRANSITION_SPEED_INDEX 34       // How fast to transition base animations            //
-#define MID_TRANSITION_INDEX 35              // How to transition mid animations                  //
-#define MID_TRANSITION_SPEED_INDEX 36        // How fast to transition mid animations             //
-#define SPARKLE_TRANSITION_INDEX 37          // How to transition sparkle animations              //
-#define SPARKLE_TRANSITION_SPEED_INDEX 38    // How fast to transition sparkle animations         //
-#define EDM_TRANSITION_INDEX 39              // How to transition edm animations                  //
-#define EDM_TRANSITION_SPEED_INDEX 40        // How fast to transition edm animations             //
+#define BASE_TRANSITION_INDEX 32             // How to transition base animations                 //
+#define BASE_TRANSITION_SPEED_INDEX 33       // How fast to transition base animations            //
+#define MID_TRANSITION_INDEX 34              // How to transition mid animations                  //
+#define MID_TRANSITION_SPEED_INDEX 35        // How fast to transition mid animations             //
+#define SPARKLE_TRANSITION_INDEX 36          // How to transition sparkle animations              //
+#define SPARKLE_TRANSITION_SPEED_INDEX 37    // How fast to transition sparkle animations         //
+#define EDM_TRANSITION_INDEX 38              // How to transition edm animations                  //
+#define EDM_TRANSITION_SPEED_INDEX 39        // How fast to transition edm animations             //
                                                                                                   //
-//#define NUM_SHOW_PARAMETERS 41             // Set this in tjp.h                                 //
+//#define NUM_SHOW_PARAMETERS 40             // Set this in tjp.h                                 //
                                                                                                   //
 //  Evolving parameters defining the show, also automatically converts from unsigned/signed       //
 uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                                     //
@@ -194,6 +200,7 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
                                                                                                   //
 #define PALETTE_CHANGE            (show_parameters[PALETTE_CHANGE_INDEX])                         //
 #define BEAT_EFFECT               (show_parameters[BEAT_EFFECT_INDEX])                            //
+#define ART_CAR_RING              (show_parameters[ART_CAR_RING_INDEX])                           //
                                                                                                   //
 #define BASE_COLOR_THICKNESS      (show_parameters[BASE_COLOR_THICKNESS_INDEX])                   //
 #define BASE_BLACK_THICKNESS      (show_parameters[BASE_BLACK_THICKNESS_INDEX])                   //
@@ -222,9 +229,6 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
 #define SPARKLE_MAX_DIM           (show_parameters[SPARKLE_MAX_DIMMING_INDEX])                    //
 #define SPARKLE_RANGE             (show_parameters[SPARKLE_RANGE_INDEX])                          //
 #define SPARKLE_SPAWN_FREQUENCY   (show_parameters[SPARKLE_SPAWN_FREQUENCY_INDEX])                //
-                                                                                                  //
-#define MID_ALPHA                 (show_parameters[MID_ALPHA_INDEX])                              //
-#define SPARKLE_ALPHA             (show_parameters[SPARKLE_ALPHA_INDEX])                          //
                                                                                                   //
 #define BASE_TRANSITION           (show_parameters[BASE_TRANSITION_INDEX])                        //
 #define BASE_TRANSITION_SPEED     (show_parameters[BASE_TRANSITION_SPEED_INDEX])                  //

@@ -57,10 +57,12 @@ inline void read_frequencies() {
       freq_internal[i] = freq_internal[i] <= NOISE_REDUCTION ? 0 : freq_internal[i] - NOISE_REDUCTION;
       freq_external[i] = freq_external[i] <= NOISE_REDUCTION ? 0 : freq_external[i] - NOISE_REDUCTION;
       if(i == 3) {
-        freq_external[i] = freq_external[i] <= NOISE_REDUCTION ? 0 : freq_external[i] - NOISE_REDUCTION;
+        //freq_external[i] = freq_external[i] <= NOISE_REDUCTION ? 0 : freq_external[i] - NOISE_REDUCTION;
       }
     #endif
 
+freq_internal[i] = (loop_count*16) % 256;
+freq_external[i] = (loop_count*16) % 256;
     
     //freq_internal[i] >>= 2;
     //freq_external[i] >>= 2;
