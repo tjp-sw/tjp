@@ -24,9 +24,6 @@
 
   #define HandMate  Serial2
 
-  // declare here when not part of due.ino
-  unsigned long long epoch_msec;
-  uint8_t node_number = 255;
 
 #elif defined(I_AM_DUE)
   #define  NodeMate  Serial1
@@ -300,6 +297,7 @@ inline void process_commands(String& input) {
       case 'c': // Channel audio out data, 14 channels/bytes total
         size += 2 + 2 * NUM_CHANNELS + sizeof (unsigned long long);
         if (input.length() >= size) {
+          store_audio_packet((uint8_t *)input.c_str());
           remote.write((uint8_t *)input.c_str(), size);
         }
         else {
@@ -431,12 +429,16 @@ inline void process_commands(String& input) {
 
               memcpy(show_parameters, params, NUM_SHOW_PARAMETERS);
               memcpy(target_palette, colors, 3*NUM_COLORS_PER_PALETTE);
-              blend_base_layer = current_palette[0] != target_palette[0] || current_palette[1] != target_palette[1];
-              blend_mid_layer = current_palette[2] != target_palette[2] || current_palette[3] != target_palette[3] || current_palette[4] != target_palette[4];
-              blend_sparkle_layer = current_palette[5] != target_palette[5] || current_palette[6] != target_palette[6];
 
-              if(last_edm_animation != DEBUG_MODE) {
-                // When coming out of debug mode, skip this transition logic
+              if(last_edm_animation == DEBUG_MODE) {
+                // When coming out of debug mode, skip the transition logic
+                memcpy(current_palette, target_palette, 3*NUM_COLORS_PER_PALETTE);
+              }
+              else {
+                blend_base_layer = current_palette[0] != target_palette[0] || current_palette[1] != target_palette[1];
+                blend_mid_layer = current_palette[2] != target_palette[2] || current_palette[3] != target_palette[3] || current_palette[4] != target_palette[4];
+                blend_sparkle_layer = current_palette[5] != target_palette[5] || current_palette[6] != target_palette[6];
+
                 if(BASE_ANIMATION != last_base_animation) {
                   transition_out_base_animation = true;
                   next_base_animation = BASE_ANIMATION;
