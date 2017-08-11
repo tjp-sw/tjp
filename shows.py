@@ -12,13 +12,13 @@ from audio_event_queue import SortedDLL
 # can be passed around in one go. These constants are the indices into this show_parameters
 # array holding that type of parameter value
 
-NUM_7_COLOR_ANIMATIONS = 7
+NUM_7_COLOR_ANIMATIONS = 255
 NUM_BASE_ANIMATIONS = 3
-NUM_MID_ANIMATIONS = 8
+NUM_MID_ANIMATIONS = 12
 NUM_SPARKLE_ANIMATIONS = 6
 
 NUM_BEAT_EFFECTS = 8
-NUM_PARAMETERS = 41
+NUM_PARAMETERS = 40
 NUM_COLORS_PER_PALETTE = 7
 
 NUM_BASE_TRANSITIONS = 1
@@ -28,8 +28,6 @@ NUM_EDM_TRANSITIONS = 1
 NUM_TRANSITION_SPEEDS = 6
 NUM_PALETTE_CHANGE_STYLES = 5
 
-NUM_MID_ALPHA_MODES = 3
-NUM_SPARKLE_ALPHA_MODES = 2
 
 BASE_TIME_LIMIT = 31
 BASE_PARAMETER_TIME_LIMIT = 19
@@ -62,11 +60,9 @@ MID_PARAM_END = 16
 SPARKLE_PARAM_START = 17
 SPARKLE_PARAM_END = 27
 SEVEN_PAL_BEAT_PARAM_START = 28
-SEVEN_PAL_BEAT_PARAM_END = 30
-ALPHA_PARAM_START = 31
-ALPHA_PARAM_END = 32
-TRANS_PARAM_START = 33
-TRANS_PARAM_END = 40
+SEVEN_PAL_BEAT_PARAM_END = 31
+TRANS_PARAM_START = 32
+TRANS_PARAM_END = 39
 
 show_bounds = [  # order must match show_parameters
         # [min, max]
@@ -101,14 +97,14 @@ show_bounds = [  # order must match show_parameters
         [0, 255], # sparkle max dim
         [0, 255], # sparkle range
         [0, 255], # sparkle spawn frequency, 0 == off entirely (Functions as a boolean when 0|1)
-        # show bounds 28 through 28 concern 7-color edm animations
+        # show bounds 28 through 30 concern 7-color edm animations
         [0, NUM_7_COLOR_ANIMATIONS],  # which 7 color animation to play, show bound 28
-        #show bounds 29 through 32 recently added (maybe need to be renumbered)
-        [1, NUM_PALETTE_CHANGE_STYLES], # Palette change style (0 is immediate)
+        [-1, 72], # Ring number of art car (-1 is no car detected)
         [0, NUM_BEAT_EFFECTS],  # which beat effect to use to respond to beat with LEDs, show bound 30
-        [0, NUM_MID_ALPHA_MODES], # how to blend mid layer with background layer
-        [0, NUM_SPARKLE_ALPHA_MODES], # how to blend sparkle layer with mid and background layers
-        #show bounds 33 through 40 concern animation transitions
+ 
+        [1, NUM_PALETTE_CHANGE_STYLES], # Palette change style (0 is immediate)
+    
+        #show bounds 32 through 39 concern animation transitions
         [1, NUM_BASE_TRANSITIONS], # how to transition the background animation (0 is immediate)
         [1, NUM_TRANSITION_SPEEDS], # how fast to transition the background animation
         [1, NUM_MID_TRANSITIONS], # how to transition the mid animation (0 is immediate)
@@ -227,7 +223,7 @@ INTERNAL_ANIMATIONS_DEBUG = True
 
 
 def constrained_random_parameter(i):
-    if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
+    if show_bounds[i][0] == -1 and show_bounds[i][1] == 2:
         new_parameter = show_bounds[i][randint(0,1)]	# no zero value
     else:
         new_parameter = randint(show_bounds[i][0], show_bounds[i][1])
@@ -259,8 +255,7 @@ def print_parameters():
     print "  base parameters", show_parameters[BASE_PARAM_START:BASE_PARAM_END + 1]
     print "  mid parameters", show_parameters[MID_PARAM_START:MID_PARAM_END + 1]
     print "  sparkle parameters", show_parameters[SPARKLE_PARAM_START:SPARKLE_PARAM_END + 1]
-    print "  7 color, palette change, beat", show_parameters[SEVEN_PAL_BEAT_PARAM_START:SEVEN_PAL_BEAT_PARAM_END + 1]
-    print "  alpha parameters", show_parameters[ALPHA_PARAM_START:ALPHA_PARAM_END + 1]
+    print "  7 color, ring, beat, palette change", show_parameters[SEVEN_PAL_BEAT_PARAM_START:SEVEN_PAL_BEAT_PARAM_END + 1]
     print "  transition parameters", show_parameters[TRANS_PARAM_START:TRANS_PARAM_END + 1]
     print "show colors:"
     print "  ", show_colors
