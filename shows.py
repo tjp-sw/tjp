@@ -101,9 +101,9 @@ show_bounds = [  # order must match show_parameters
         [0, NUM_7_COLOR_ANIMATIONS],  # which 7 color animation to play, show bound 28
         [-1, 72], # Ring number of art car (-1 is no car detected)
         [0, NUM_BEAT_EFFECTS],  # which beat effect to use to respond to beat with LEDs, show bound 30
- 
+
         [1, NUM_PALETTE_CHANGE_STYLES], # Palette change style (0 is immediate)
-    
+
         #show bounds 32 through 39 concern animation transitions
         [1, NUM_BASE_TRANSITIONS], # how to transition the background animation (0 is immediate)
         [1, NUM_TRANSITION_SPEEDS], # how fast to transition the background animation
@@ -1150,8 +1150,9 @@ def remove_audio_events_from_queue(audioInfo):
 
 def queue_audio_events(audioInfo):
     cur_time_ms = timeMs()
-    print "queueing events for audioInfo: " + str(audioInfo.file_index)
     if audioInfo is not None:
+        if INTERNAL_ANIMATIONS_DEBUG:
+            print "queueing events for audioInfo: " + str(audioInfo.file_index)
         for event in audioInfo.events:
             # print "event: " + str(event)
             event.exec_time = int(event.time) + cur_time_ms
