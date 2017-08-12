@@ -217,7 +217,6 @@ bm_day_index = 0
 event_queue = SortedDLL()  # create sorted dll to act as the audio event queue (with super duper special powers)
 NUM_AUDIO_CHANNELS = 7
 current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
-internal_audio_show = True  # triggers internal audio animations..
 next_audio_event = AudioEvent(-1, -1, "init", "init")
 INTERNAL_ANIMATIONS_DEBUG = True
 
@@ -514,6 +513,7 @@ def handle_amplitude_info(ring_num, amplitude):
             if ART_CAR_DETECTION_DEBUG:
                 print "ring_num %i has met art car hello threshold level. given \
                 hello %i" % ring_num, ring_to_hello_animation[ring_num]
+                #print "rn " + str(ring_num) + "a " + str(ring_to_hello_animation[ring_num])
 
         return ring_num
     else:
@@ -706,7 +706,11 @@ def playa_program(init=False):
 # still very much under development.... fine tuning audio_events processing and
 # handling here to avoid too frequent or not frequent enough animation parameter changes
 def do_internal_sound_animations(audio_msg, init = False):
-    global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
+    global internal_show_init, bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
+
+    if INTERNAL_ANIMATIONS_DEBUG:
+        if audio_msg is not None:
+            print 'performing internal audio show for ' + audio_msg
 
     if init:
         if show_colors[0] == [33,33,33]:	# invalid values before initialization
@@ -722,6 +726,7 @@ def do_internal_sound_animations(audio_msg, init = False):
 
         print_parameters()
 
+    internal_show_init = False
 
     if audio_msg is not None:
         interpret_audio_msg(audio_msg)
@@ -750,8 +755,12 @@ def interpret_audio_msg(audio_msg):
 # RJS I don't like how this hard coded... if the audio contorl message changes this needs to as well.
 def get_audio_file_info(audio_msg):
     # current msg format: a0;1;0;0,50,0,0
-    info = audio_msg.split(";")
-    tracks = info[3].split(",")
+    try:
+        info = audio_msg.split(";")
+        tracks = info[3].split(",")
+    except:
+        print "audio msg format is wrong or has changed", sys.exc_value
+        return {}
 
     if INTERNAL_ANIMATIONS_DEBUG:
         print "tracks: " +  str(tracks)

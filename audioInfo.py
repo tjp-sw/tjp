@@ -57,7 +57,7 @@ class AudioEvent:
     'a class to hold an audio event info'
 
 
-    def __init__(self, time, magnitude, kind, category, exec_time=maxint):
+    def __init__(self, time, magnitude, kind, category, exec_time=0):
         self.time = time
         self.magnitude = magnitude
         self.kind = kind

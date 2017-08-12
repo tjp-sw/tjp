@@ -6,6 +6,7 @@ from beats import *
 import music
 
 internal_show_init = True
+internal_audio_show = True  # triggers internal audio animations..
 
 mega_to_node_map = {
     1: 4,
@@ -55,8 +56,9 @@ def do_send(socket, message):
             writing.append(s)
 
 def do_auto(ignored, show_name):
-    global auto_show, last_show_change_sec
+    global auto_show, last_show_change_sec, internal_audio_show
     auto_show = show_name
+    internal_audio_show = False
     if auto_show:
         auto_show(True)
         last_show_change_sec = time.time()
@@ -87,7 +89,8 @@ def do_dyn_show(audio_msg):
     do_internal_sound_animations(audio_msg, internal_show_init)
     internal_show_init = False
 
-    do_show("dyn_show", None)
+    do_show(None, None)
+    #do_show("dyn_show", None)
 
 
 next_timesync_sec = 0.0
@@ -127,6 +130,12 @@ def do_change_palette(ignored, style):
     else:
         use_test_palette()
 
+
+def stop_auto(ignore, neglect):
+    global auto_show, internal_audio_show
+    auto_show = None
+    internal_audio_show = True
+
 control_messages = {
 #    'SetAllAudio':	    do_unimplemented,
 #    'SetAudioCh':	    do_unimplemented,
@@ -151,7 +160,8 @@ control_messages = {
     'sp':		(do_set_show_parameter, None, None),
     'time':		(do_time, None, None),
     'tp':		(do_change_palette, None, 'test'),
-    'meditation': (do_meditation, None, None)
+    'meditation': (do_meditation, None, None),
+    'stopAuto': (stop_auto, None, None)
     }
 
 # listen for TCP connections on the specified port
@@ -209,6 +219,10 @@ def check_art_car_status(ring_num, amplitude):
     if ring_num is None or amplitude is None:
         print "seems as those the data did not make a plane, ring -> art car detection not possible"
         return
+
+    # MOCK
+    # ring_num = 56
+    # amplitude = 230
 
     ring_ac_newly_detected = handle_amplitude_info(ring_num, amplitude)
 

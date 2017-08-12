@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import select, socket, random, struct, sys, time
+from shows import *
 
 # declare global variables with bogus values
 remote = None
@@ -69,8 +70,6 @@ def process_commands():
             time.sleep(10)
             break
         elif command == 's':
-            NUM_PARAMETERS = 41
-            NUM_COLORS_PER_PALETTE = 7
             number_of_colors = 3 * NUM_COLORS_PER_PALETTE
             size += NUM_PARAMETERS + number_of_colors
             if len(network_data) >= size:
@@ -125,6 +124,7 @@ def loop():
     loop_start_time_msec = None
     try:
         if remote:
+            # print node_number
             timeout_sec = 5.0 + (last_beat_msec / 1000.0) - time.time()
             if timeout_sec <= 0:
                 timeout_sec = 0.01
