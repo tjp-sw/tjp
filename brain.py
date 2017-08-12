@@ -60,9 +60,10 @@ def do_send(socket, message):
 
 def do_auto(ignored, show_name):
     global auto_show, last_show_change_sec, internal_audio_show
+
     auto_show = show_name
-    internal_audio_show = False
     if auto_show:
+        internal_audio_show = False
         auto_show(True)
         last_show_change_sec = time.time()
 
@@ -227,10 +228,10 @@ def check_art_car_status(ring_num, amplitude):
     print "art car ring " + str(artCarHandler.art_car)
     if ring_ac_newly_detected is None:
         # artcar total structure animation was running now stop
-        internal_audio_show = True
         do_auto(None, None)
+        internal_audio_show = True
         do_show(None, None)
-    elif ring_ac_newly_detected == artCarHandler.art_car:
+    elif ring_ac_newly_detected == artCarHandler.art_car and ring_ac_newly_detected != -1:
         # return value signaling ART_CAR_HELLO_DURATION exceeded - trigger edm animations
         internal_audio_show = False
 
@@ -365,11 +366,6 @@ while running:
         #syncing time across nodes
         if time.time() > next_timesync_sec:
             do_time('time', None)
-
-        if auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
-            auto_show()
-            last_show_change_sec = time.time()
-            do_show(None, None)
 
         #audio commands
         dummy_art_car_bool = False

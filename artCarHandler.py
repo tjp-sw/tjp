@@ -23,19 +23,15 @@ class ArtCarHandler:
         self.flip_mock = False
     # Returns ring number of detected art car
     # Also mutates a dictionary of rings as keys and value containing the hello animation being shown
-    def handle_amplitude_info(self, ring_nu, amplitud):
-        ring_num = 0
-        amplitude = 0
-        if ring_nu is None or amplitud is None:
+    def handle_amplitude_info(self, ring_num, amplitude):
+        if ring_num is None or amplitude is None:
             if self.flip_mock:
                 ring_num = 56
                 amplitude = 30
             else:
                 ring_num = 56
                 amplitude = 230
-        else:
-            ring_num = ring_nu
-            amplitude = amplitud
+
         if ART_CAR_DETECTION_DEBUG:
             print "ring num %i reporting amplitue %i" % (ring_num, amplitude)
 
