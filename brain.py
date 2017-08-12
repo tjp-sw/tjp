@@ -4,6 +4,9 @@ import numpy, select, socket, string, struct
 from shows import *
 from beats import *
 import music
+from artCarHandler import ArtCarHandler
+
+artCarHandler = ArtCarHandler(ART_CAR_HELLO_DURATION, ART_CAR_AMPLITUDE_THRESHOLD)
 
 internal_show_init = True
 internal_audio_show = True  # triggers internal audio animations..
@@ -75,8 +78,7 @@ def do_show(cmd, param):
         show_colors_list += show_colors[i]
     do_send(None, struct.pack('>c%uB' % (len(show_parameters) + len(show_colors_list)), 's', *(show_parameters + show_colors_list)))
 
-    if cmd != 'dyn_show':
-        print_parameters()
+    print_parameters()
 
 #do a dynamically changing show based on internal audio selections. maybe inlcude hand inputs as well.
 def do_dyn_show(audio_msg):
@@ -218,25 +220,22 @@ def check_art_car_status(ring_num, amplitude):
 
     if ring_num is None or amplitude is None:
         print "seems as those the data did not make a plane, ring -> art car detection not possible"
-        return
+        # return
 
-    # MOCK
-    # ring_num = 56
-    # amplitude = 230
-
-    ring_ac_newly_detected = handle_amplitude_info(ring_num, amplitude)
-
+    ring_ac_newly_detected = artCarHandler.handle_amplitude_info(ring_num, amplitude)
+    print "ring detected " + str(ring_ac_newly_detected)
+    print "art car ring " + str(artCarHandler.art_car)
     if ring_ac_newly_detected is None:
         # artcar total structure animation was running now stop
         internal_audio_show = True
+        do_auto(None, None)
         do_show(None, None)
-    elif ring_ac_newly_detected == art_car:
+    elif ring_ac_newly_detected == artCarHandler.art_car:
         # return value signaling ART_CAR_HELLO_DURATION exceeded - trigger edm animations
         internal_audio_show = False
+
         # trigger edm animations on whole structure
-        auto_show = edm_program # HELP: trigger like this? or setting
-                                # show_parameters[SEVEN_PAL_BEAT_PARAM_START]
-                                # to postive int works (in handle_amplitude_info)?
+        do_auto(None, art_car_edm)
 
     elif ring_ac_newly_detected >= 0:
 
@@ -246,7 +245,7 @@ def check_art_car_status(ring_num, amplitude):
         pass
 
     # send hello animation stop message to target ring
-    for ring_num in rings_to_stop_hello_animation:
+    for ring_num in artCarHandler.rings_to_stop_hello_animation:
         # HELP: HOW TO SEND TO PARTICULAR NODE TARGETTING A RING?
         # do_send()
         pass
@@ -307,7 +306,7 @@ while running:
                     if message[0:1] == 'b':
                         if len(message) == 55:
                             do_send(None, message)	# relay to all nodes
-                            print 'beat', repr(message), 'from', remote_name[s]
+                            print 'beat message', repr(message), 'from', remote_name[s]
                     elif message[0:1] == 'c':
                         if len(message) == 24:
                             node, timestamp, channel_data = struct.unpack_from('>BQ14s', message, 1)

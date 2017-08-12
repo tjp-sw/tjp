@@ -21,6 +21,13 @@ NUM_BEAT_EFFECTS = 8
 NUM_PARAMETERS = 40
 NUM_COLORS_PER_PALETTE = 7
 
+# splitting 7 color animations into two categories
+# 1) hello animaitons 2) full sctructure art car edm animations
+NUM_7_COLOR_ANIMATIONS_HELLO_START = 0
+NUM_7_COLOR_ANIMATIONS_HELLO_END = 55
+NUM_7_COLOR_ANIMATIONS_AC_EDM_START = 56
+NUM_7_COLOR_ANIMATIONS_AC_EDM_END = NUM_7_COLOR_ANIMATIONS - 1
+
 NUM_BASE_TRANSITIONS = 1
 NUM_MID_TRANSITIONS = 1
 NUM_SPARKLE_TRANSITIONS = 1
@@ -195,12 +202,10 @@ show_mode = SUNRISE
 
 #  Art car values
 NO_ART_CAR = -1
-ART_CAR_HELLO_DURATION = 30
+ART_CAR_HELLO_DURATION = 5
 #art_car_hello = False # not used
-art_car = NO_ART_CAR  # if art car is detected, set to ring number nearest art car
 HELLO_ANIMTIONS_NUM = 5 # TODO the actual number.... 5 is totally made up for now
 ART_CAR_AMPLITUDE_THRESHOLD = 100 # TODO calibrate appropriately... keep track of variation over time would be best but can get messy
-ART_CAR_DETECTION_DEBUG = True
 
 testing_meditation_seconds = 20
 color_evolution_timer = time.time()
@@ -218,7 +223,7 @@ event_queue = SortedDLL()  # create sorted dll to act as the audio event queue (
 NUM_AUDIO_CHANNELS = 7
 current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
 next_audio_event = AudioEvent(-1, -1, "init", "init")
-INTERNAL_ANIMATIONS_DEBUG = True
+INTERNAL_ANIMATIONS_DEBUG = False
 
 
 def constrained_random_parameter(i):
@@ -410,7 +415,6 @@ def edm_program(init=False):
             constrain_show()
             choose_new_playa_palette()  # start with day 1 color palette
 
-
         print_parameters()
         return
 
@@ -475,124 +479,14 @@ def edm_program(init=False):
         # For Lee testing: uncomment this to stick with day 1 colors
         # choose_new_playa_palette()
 
-
-# a dictionary with key of ring_num and value of the current hello animation playing
-ring_to_hello_animation = {}
-# a dictionary with flipped key value pairs from above
-hello_animation_to_ring = {}
-# a dictionary holding duration of artcar presence per ring
-ring_to_animation_start_time = {}
-# list of rings to stop hello animations on
-rings_to_stop_hello_animation = []
-
-
-# Returns ring number of detected art car
-# Also mutates a dictionary of rings as keys and value containing the hello animation being shown
-def handle_amplitude_info(ring_num, amplitude):
-    global internal_audio_show, art_car, show_parameters
-    global ring_to_animation_start_time, rings_to_stop_hello_animation, hello_animation_to_ring
-
-    if amplitude > ART_CAR_AMPLITUDE_THRESHOLD:
-        # check if new detection
-        if ring_num in ring_to_hello_animation:
-            # already detected... check time threshold
-            art_car_detected_seconds = time.time() - ring_to_animation_start_time[ring_num]
-            if art_car_detected_seconds > ART_CAR_HELLO_DURATION and art_car == NO_ART_CAR:
-
-                art_car = ring_num
-                # HELP set edm animation here or further up in brain's check_art_car_status?
-                show_parameters[SEVEN_PAL_BEAT_PARAM_START] = randint(0, NUM_BEAT_EFFECTS)
-
-                if ART_CAR_DETECTION_DEBUG:
-                    print "art car pass ART_CAR_HELLO_DURATION triggering edm animations on structure"
-        else:
-            # give hello animation & update dictionaries
-            give_suitable_hello_animation(ring_num)
-            ring_to_animation_start_time[ring_num] = time.time()
-
-            if ART_CAR_DETECTION_DEBUG:
-                print "ring_num %i has met art car hello threshold level. given \
-                hello %i" % ring_num, ring_to_hello_animation[ring_num]
-                #print "rn " + str(ring_num) + "a " + str(ring_to_hello_animation[ring_num])
-
-        return ring_num
-    else:
-        # check if was tracking
-        if ring_num in ring_to_animation_start_time:
-            # check if that ring was triggering edm animations
-            if art_car == ring_num:
-                # turn off edm animations for art car
-                internal_audio_show = True
-                art_car = NO_ART_CAR
-
-                print "turning off art car edm animation triggered by ring %i \
-                        for %i seconds and clearing art car tracking caches" % ring_num, int(time.time() - ring_to_animation_start_time[ring_num])
-                show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0
-
-                # clearing art car tracking cache to start from scratch again
-                ring_to_animation_start_time.clear()
-                hello_animation_to_ring.clear()
-                ring_to_hello_animation.clear()
-
-                return None
-
-            else:
-                # mark ring running hello animation to stop hello animation
-                rings_to_stop_hello_animation.append(ring_num)
-
-                # remove from tracking
-                ring_to_animation_start_time.pop(ring_num)
-                hello_animation_to_ring.pop(ring_to_hello_animation[ring_num])
-                ring_to_hello_animation.pop(ring_num)
-
-    return -1
-
-# TODO add random element for now return the first avaliabe hello animation
-def give_suitable_hello_animation(ring_num):
-    global show_parameters
-    global ring_to_animation_start_time, rings_to_stop_hello_animation, hello_animation_to_ring
-    # check if neighbor
-    for i in ring_to_hello_animation.keys():
-        if abs(ring_num - i) == 1: # direct next door nieghbor
-
-            # copy animation to new ring
-            ring_to_hello_animation[ring_num] = ring_to_hello_animation[i]
-
-            # will remove from dictionary
-            ring_to_hello_animation.pop(i)
-
-            # mark old 'closest art car ring' to stop hello animation
-            rings_to_stop_hello_animation.append(i)
-
-            # retain original start hello time
-            ring_to_animation_start_time[ring_num] = ring_to_animation_start_time[i]
-            ring_to_animation_start_time.pop(i)
-
-            # transfer animation to ring info
-            hello_animation_to_ring[ring_num] = hello_animation_to_ring[i]
-            hello_animation_to_ring.pop(i)
-
-            # TODO set hello_animation show parameter
-            # HELP: which param is that??
-            return
-
-    # currently grabbing first avaliable hello animaiton
-    for i in range(0, NUM_7_COLOR_ANIMATIONS): # using edm animations for hello animations
-        if i not in hello_animation_to_ring:
-            # add to dictionary to keep track / ensure uniqueness {animation:ring_num}
-            hello_animation_to_ring[i] = ring_num
-            ring_to_hello_animation[ring_num] = i
-
-            # TODO set hello_animation show parameter
-            # HELP: which param is that??
-            return
-
-    # if here all hello animations are used.
-    # I have a feeling this should never really happen... just printing for now
-    print "RAN OUT OF UNIQUE HELLO ART CAR ANIMAITONS... this should be pretty \
-    rare or a sign of incorreclty calibrated thresholding for artcar detection"
-
-
+# choose random 7 color animation values for full structure animations
+def art_car_edm(ignored=True):
+    print "DOING ART CAR ANIMTONAS!"
+    # TODO use the split 7 color animations... but this totally works for now
+    for i in range(SEVEN_PAL_BEAT_PARAM_START, SEVEN_PAL_BEAT_PARAM_END):
+        show_parameters[i] = constrained_random_parameter(i)
+    constrain_show()
+    choose_random_colors_from_edm_palette()
 
 TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
 # For Lee testing: uncomment this
@@ -718,13 +612,12 @@ def do_internal_sound_animations(audio_msg, init = False):
 
             # choose random starting values for each of the parameters
             for i in range(0, NUM_PARAMETERS):
-                if i == SEVEN_PAL_BEAT_PARAM_START:
-                    show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0 # 28 is edm animations... no need for here
                 show_parameters[i] = constrained_random_parameter(i)
+                if i in range(SEVEN_PAL_BEAT_PARAM_START, SEVEN_PAL_BEAT_PARAM_END + 1):
+                    show_parameters[i] = 0 # edm animations... no need for here
+
             constrain_show()
             choose_new_playa_palette()  # start with day 1 color palette
-
-        print_parameters()
 
     internal_show_init = False
 
@@ -914,8 +807,6 @@ def drive_internal_animations_v2(init):
 
                 choose_new_playa_palette()
 
-            print_parameters()
-
             # remove the 'actioned on' event from the queue
             try:
                 if event_queue.size > 0:
@@ -1077,7 +968,6 @@ def drive_internal_animations(init):
                 show_parameters[show_param] = new_param_value % 255
                 #do_set_show_parameter(None, str(show_param) + " " + str(new_param_value))
 
-                print_parameters()
                 try:
                     if event_queue.size > 0:
                         print "removing actioned event: " + str(next_audio_event) + " size: " + str(event_queue.size)
