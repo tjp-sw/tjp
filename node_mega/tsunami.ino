@@ -7,12 +7,24 @@
 #define MUTEALLAUDIO 3
 #define CHECKMEDITATION 4
 #define CHECKDRONE 5
+#define SETDAY 6
 
 #ifdef DEBUG
   #define DEBUG_LEVEL 1
 #else
   #define DEBUG_LEVEL 0
 #endif
+
+//drone constants
+int DAY1[2] = {3000, 3001};
+int DAY2[2] = {3002, 3003};
+int DAY3[2] = {3004, 3005};
+int DAY4[2] = {3006, 3007};
+int DAY5[2] = {3008, 3009};
+int DAY6[2] = {3010, 3011};
+int DAY7[2] = {3012, 3013};
+int DRONES[7][2] = {{3000, 3001}, {3002, 3003}, {3004, 3005}, {3006, 3007}, {3008, 3009}, {3010, 3011}, {3012, 3013}};
+int this_day[2] = {3000, 3001};
 
 Tsunami tsunami;                // Our Tsunami object
 //variables tracking currently playing song data
@@ -25,7 +37,6 @@ bool meditation = false;
 
 //variables for control message input
 unsigned int msg_position = 0;
-
 int which_field = 0;
 String ch_string = "";
 String input_string = "";
@@ -42,6 +53,7 @@ struct control_message {
 
 control_message ctrl_msg = EMPTY_CTRL_MSG;
 
+//---------------------RUNS FIRST FOR SETUP--------------------
 void setup_tsunami () {
   // We should wait for the Tsunami to finish reset before trying to send
   // commands.
@@ -67,7 +79,7 @@ void setup_tsunami () {
     Serial.println("Tsunami Ready");
 }
 
-
+//------------------PARSES COMMANDS FROM THE PI--------------------
 void handle_command(const char command[]) {
     String cmd_str (command);
     //remote.write(cmd_str.c_str());
@@ -105,8 +117,10 @@ void handle_command(const char command[]) {
                     ctrl_msg.bool_loop = (input_string.charAt(0) != '0');
                     break;
                   case SETVOL :
+                  case SETDAY :
                     ctrl_msg.fade_speed = atoi(input_string.c_str());
                     break;
+
                 }
                 break;
 
@@ -166,6 +180,7 @@ void handle_command(const char command[]) {
   }
 }
 
+//-----------------FADES ALL AUDIO---------------------------
 void fade_out(unsigned int fade_speed=5) {
   for (int ch = 0; ch < 18; ch++) {
     if (channels[ch]) {
@@ -177,6 +192,7 @@ void fade_out(unsigned int fade_speed=5) {
   memset(ch_gain,0,sizeof(ch_gain));
 }
 
+//--------------EXECUTES A CONTROL MESSAGE------------------
 void do_command () {
   if (DEBUG_LEVEL) {
       Serial.println("---Control Message---");
@@ -288,20 +304,34 @@ void do_command () {
             remote.write(msg.c_str());
             meditation = false;
         }
+      break;
 
       case CHECKDRONE :
         tsunami.update();
-        if (channels[0] > 0 && tsunami.isTrackPlaying(channels[0])) {
-            String msg = "sP" + String (channels[1]);
+        if (channels[7] > 0 && tsunami.isTrackPlaying(channels[7])) {
+            String msg = "sP" + String (channels[7]);
             remote.write(msg.c_str());
         } else {
             remote.write("sN");
         }
+      break;
 
+      case SETDAY:
+        if (DEBUG_LEVEL)
+          Serial.println("SetDay");
+
+        this_day[0] = DRONES[ctrl_msg.fade_speed][0];
+        this_day[1] = DRONES[ctrl_msg.fade_speed][1];
+        channels[7] = this_day[0];
+        tsunami.samplerateOffset(0, 0);        // Reset sample rate offset to 0
+        tsunami.masterGain(0, 0);              // Reset the master gain to 0dB
+        tsunami.trackGain(channels[7], ch_gain[7]);
+        tsunami.trackPlayPoly(channels[7], 0, true);
   }
   ctrl_msg = EMPTY_CTRL_MSG;
 }
 
+//--------UPDATES CHANNEL LISTING/COMMUNICATES WITH PI-----------------------
 void do_tsunami() {
   delay(10);
   tsunami.update();
@@ -312,6 +342,23 @@ void do_tsunami() {
         if (DEBUG_LEVEL){
             Serial.print("Replaying ");
             Serial.println(channels[ch]);
+        }
+        tsunami.trackGain(channels[ch], ch_gain[ch]);
+        tsunami.trackLoad(channels[ch], 0, true);
+        String msg = "sR" + String (channels[ch]);
+        remote.write(msg.c_str());
+      } else if (ch == 7 && channels[ch] > 0) {
+        if (DEBUG_LEVEL){
+            Serial.print("Changing Drone ");
+            Serial.println(channels[ch]);
+        }
+        if (channels[ch] == this_day[0]){
+            channels[ch] = this_day[1];
+        } else if (channels[ch] == this_day[1]) {
+            channels[ch] = this_day[0];
+        } else {
+            channels[ch] = 3000;
+            remote.write("sN");
         }
         tsunami.trackGain(channels[ch], ch_gain[ch]);
         tsunami.trackLoad(channels[ch], 0, true);
@@ -342,6 +389,8 @@ void do_tsunami() {
   tsunami.resumeAllInSync();
 }
 
+
+//------------PARSES COMMANDS FROM SERIAL IN------------------
 void serialEvent() {
   while (Serial.available()) {
       // get the new byte:
@@ -437,4 +486,3 @@ void serialEvent() {
      }
   }
 }
-

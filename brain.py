@@ -125,7 +125,7 @@ def do_simple(cmd, param):
 def do_meditation (ignored, meditation_num):
     meditation_play = music.manual_meditation(meditation_num)
     if meditation_play:
-        do_send(None, meditation_play)
+        do_send(None, encapsulated_audio_msg(meditation_play))
 
 def do_change_palette(ignored, style):
     if style == None:

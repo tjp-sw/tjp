@@ -4,7 +4,7 @@ import sounds, shows
 import time as epoch_time
 
 DEBUG = 1
-SET_TIME = None 
+SET_TIME = None
 #SET_TIME = datetime(year=2017,month=8,day=31,hour=12,minute=00)
 
 # Just random....this signal is coming from the touchpad which is not written yet.
@@ -59,6 +59,11 @@ def status_update(message):
         return True
     elif message[0] == 'P':
         print "Still Playing: " + message[1:]
+        try:
+            if int(message[1:]) == 3000 and datetime.now().weekday() != 0:
+                return True
+        except:
+            pass
     return False
 
 
@@ -111,7 +116,7 @@ class Music:
         self.played_mid = datetime.min
         self.checked_high = datetime.min
         self.played_high = datetime.min
-        self.check_drone = datetime.min
+        self.check_drone = datetime.max
         self.checked_meditation = datetime.min
         self.low_wait = random.randint(30,60)
         self.mid_wait = random.randint(5,30)
@@ -126,6 +131,11 @@ class Music:
         if DEBUG > 1:
             print now_time
         bm_day = now_time.weekday()
+        
+
+
+
+        #Check if mediation has ended
         if Music.meditation:
             if DEBUG > 1:
                 print "meditation"
@@ -138,6 +148,7 @@ class Music:
                 print "silent"
             return None
 
+        # Meditation Logic
         this_meditation = sounds.play_meditation(now_time)
         if this_meditation is None:
             if DEBUG > 1:
@@ -161,21 +172,45 @@ class Music:
                 shows.show_mode = shows.SUNSET
             return play([0, this_meditation])
 
+        #Drone Logic
+        if self.check_drone < now_time - timedelta(minutes=1):
+            self.check_drone = now_time
+            if DEBUG > 1:
+                print "check_drone"
+            return check_drone()
+        elif self.need_drone:
+            self.need_drone=False
+            return "a0;6;" + str(bm_day) + ";"
+
         #compiles array of music to send
         msg = [0] * 4
-        
+
         if self.played_low != bm_day or self.need_drone:
             self.need_drone = False
             low = sounds.find_low(now_time.weekday(),now_time.time())
             self.played_low = bm_day
             self.check_drone = now_time
             msg[0] = low
+
+        if self.played_mid <= (now_time - timedelta(seconds=15)):
+            self.played_mid = now_time
+            msg[1] = sounds.find_mid()
+
+        if self.checked_high <= (now_time - timedelta(seconds=25)):
+            play_chance = random.randint(0, 4)
+            if play_chance == 0 or \
+               self.played_high <= (now_time - timedelta(minutes=2)):
+                msg[2] = sounds.find_high()
+                self.played_high = now_time
+            self.checked_high = now_time
+
+        """
         elif self.check_drone < now_time - timedelta (minutes= 1):
             self.check_drone = now_time
             if DEBUG > 1:
                 print "check_drone"
             return check_drone()
-        """
+
         if Music.no_mid <= (now_time - timedelta(seconds=self.mid_wait)):
             msg[1] = sounds.find_mid()
             self.mid_wait = random.randint(5, 30)
@@ -186,20 +221,6 @@ class Music:
                 self.high_wait = random.randint(30,60)
                 Music.no_high = datetime.max
         """
-        if self.played_mid <= (now_time - timedelta(seconds=5)):
-            self.played_mid = now_time
-            msg[1] = sounds.find_mid(now_time.weekday(),now_time.time())
-            #print "Got the mid, boss" + str(msg[1])
-
-        if self.checked_high <= (now_time - timedelta(seconds=25)):
-            play_chance = random.randint(0, 4)
-            if play_chance == 0 or \
-               self.played_high <= (now_time - timedelta(minutes=2)):
-                msg[2] = sounds.find_high(now_time.weekday(),now_time.time())
-                #print "Got the high, boss" + str(msg[2])
-                self.played_high = now_time
-            self.checked_high = now_time
-        
 
         if panel_touched():
             msg[3] = sounds.find_high()
