@@ -330,6 +330,7 @@ void loop() {
   base_count++;
   mid_count++;
   sparkle_count++;
+  edm_count++;
 }
 
 
@@ -809,7 +810,7 @@ inline void draw_current_sparkle(uint8_t min_ring, uint8_t max_ring) {
 inline void draw_current_edm(uint8_t min_ring, uint8_t max_ring) {
   switch(EDM_ANIMATION) {
     case TEST_STRANDS:
-      test_strands();
+      test_strands_2strands_only();
       break;
 
     case DEBUG_MODE:
@@ -863,6 +864,10 @@ inline void draw_current_edm(uint8_t min_ring, uint8_t max_ring) {
       
     case FIRE_HELLO:
       fire_hello();
+      break;
+
+    case BLACK_HOLE:
+      black_hole();
       break;
 
     default:
@@ -1033,6 +1038,7 @@ inline void init_sparkle_animation(uint8_t min_ring, uint8_t max_ring) {
 
 inline void init_edm_animation() {
   edm_start_time = current_time;
+  edm_count = 0;
   leds_all = CRGB::Black;
 
   #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS)

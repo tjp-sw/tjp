@@ -130,6 +130,7 @@ uint8_t art_car = NO_ART_CAR;                                           //
 #define ANIMATION_PULSE 130                                   //
 #define LIGHTNING 131                                         //
 #define FIRE_HELLO 132                                        //
+#define BLACK_HOLE 133                                        //
                                                               //
 // Debug animations (drawn on EDM layer)                      //
 #define DEBUG_MODE 254        // Startup animation            //
@@ -322,7 +323,7 @@ int8_t blacken_node_number = 0;                               //
 //------------------------------------------------------------------------//
 
 //----------------------------- Loop counters/timers -----------------------------//
-uint32_t base_count = 0, mid_count = 0, sparkle_count = 0, loop_count = 0;        //
+uint32_t base_count = 0, mid_count = 0, sparkle_count = 0, edm_count = 0, loop_count = 0;//
 unsigned long current_time = 0;                                                   //
 unsigned long long epoch_msec = 0;                                                //
 unsigned long base_start_time = 0, mid_start_time = 0, sparkle_start_time = 0;    //

@@ -133,6 +133,7 @@ void do_network_input() {
     else if (loop_start_time_msec >= next_connect_msec) {
       if (remote.connect(brain, 3528)) {
         network_data = "";
+	remote.write("SN");
         #ifdef DEBUG
           print_status("connected to brain");
         #endif

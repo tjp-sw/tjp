@@ -47,7 +47,6 @@ def status_update(message):
 
                 else:
                     shows.set_show_mode(shows.DAY)
-
                 return True
         except ValueError:
             print"Ending sound ValueError " + str(len(message))
@@ -111,16 +110,16 @@ class Music:
 
     def __init__(self):
         # self.meditation = False
-        self.need_drone = True
+        self.need_drone = False
         self.played_low = datetime.min
         self.played_mid = datetime.min
         self.checked_high = datetime.min
         self.played_high = datetime.min
         self.check_drone = datetime.max
         self.checked_meditation = datetime.min
-        self.low_wait = random.randint(30,60)
-        self.mid_wait = random.randint(5,30)
-        self.high_wait = random.randint(30, 60)
+        self.low_wait = random.randint(3,6)
+        self.mid_wait = random.randint(5,25)
+        self.high_wait = random.randint(20,35)
 
 
     def tick(self, silent=False):
@@ -128,10 +127,7 @@ class Music:
         if DEBUG > 1:
             print now_time
         bm_day = now_time.weekday()
-        
-
-
-
+ 
         #Check if mediation has ended
         if Music.meditation:
             if DEBUG > 1:
@@ -140,11 +136,14 @@ class Music:
                 self.checked_meditation = now_time
                 return check_meditation()
             return None
-        if silent:
-            if DEBUG > 1:
+
+        #Uncomment to silence sound for art cars
+        """
+        if shows.show_parameters[29] != shows.NO_ART_CAR:
+            if DEBUG:
                 print "silent"
             return None
-
+        """
         # Meditation Logic
         this_meditation = sounds.play_meditation(now_time)
         if this_meditation is None:
@@ -154,9 +153,9 @@ class Music:
             if time(6, 25) <= now_time.time() <= time(19, 25):
                 if DEBUG > 1:
                     print "setting day"
-                shows.show_mode = shows.DAY
+                #shows.set_show_mode(shows.DAY)
             else:
-                shows.show_mode = shows.NIGHT
+                #shows.set_show_mode(shows.NIGHT)
                 if DEBUG > 1:
                     print "setting night"
         else:
@@ -164,23 +163,18 @@ class Music:
                 print "setting meditation status"
             Music.meditation = True
             if this_meditation % 2: # odd
-                shows.show_mode = shows.SUNRISE
+                shows.set_show_mode(shows.SUNRISE)
             else:  # even
-                shows.show_mode = shows.SUNSET
+                shows.set_show_mode(shows.SUNSET)
             return play([0, this_meditation])
 
         #Drone Logic
-        if self.check_drone < now_time - timedelta(minutes=1):
-            self.check_drone = now_time
-            if DEBUG > 1:
-                print "check_drone"
-            return check_drone()
-        elif self.need_drone:
+        if self.need_drone:
             print "Setting Drone" 
             self.need_drone=False
             return "a0;6;" + str(bm_day) + ";"
 
-        #compiles array of music to send
+        #Soundscape Compilation Logic
         msg = [0] * 4
 
         if self.played_low < now_time - timedelta (minutes= self.low_wait):
@@ -190,17 +184,17 @@ class Music:
             self.check_drone = now_time
             msg[0] = low
 
-        if self.played_mid <= (now_time - timedelta(seconds=20)):
+
+        if self.played_mid <= (now_time - timedelta(seconds=self.mid_wait)):
             self.played_mid = now_time
+            self.mid_wait = random.randint(5,25)
             msg[1] = sounds.find_mid()
 
-        if self.checked_high <= (now_time - timedelta(seconds=25)):
-            play_chance = random.randint(0, 4)
-            if play_chance == 0 or \
-               self.played_high <= (now_time - timedelta(minutes=2)):
-                msg[2] = sounds.find_high()
-                self.played_high = now_time
-            self.checked_high = now_time
+        if self.played_high <= (now_time - timedelta(seconds=self.high_wait)):
+            self.high_wait = random.randint(20,35)
+            self.played_high = now_time
+            msg[2] = sounds.find_high()
+
 
         """
         elif self.check_drone < now_time - timedelta (minutes= 1):
