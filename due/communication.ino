@@ -506,7 +506,9 @@ inline void process_commands(String& input) {
       case 't':
         size += 8;  // unsigned 64-bit integer
         if (input.length() >= size) {
-          const unsigned long long old_epoch_msec = epoch_msec;
+          #ifdef DEBUG
+            const unsigned long long old_epoch_msec = epoch_msec;
+          #endif
           unsigned int i = 1;
           epoch_msec = (uint8_t)input[i++];
           while (i < size) {

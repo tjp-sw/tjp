@@ -16,6 +16,9 @@
 #include <Wire.h>
 #include <FastLED.h>
 
+unsigned long long epoch_msec;
+uint8_t node_number = 255;
+
 #define I_AM_HAND_MEGA
 
 //system constants
@@ -180,7 +183,7 @@ void startUpColorSequence(){
   colorSet(defaultStartColor); 
 }
 
-uint8_t proximityDetected(void) {
+void proximityDetected(void) {
   uint8_t proximitySensorReading = getRegister(CS4);
   Serial.println(proximitySensorReading);
   if (proximitySensorReading <= 127 && proximitySensorReading >= 32) {
@@ -380,7 +383,7 @@ void drawThumb(CRGB c){
 }
 
 void drawArea(CRGB c, int start, int end){
-  for(uint16_t i = start; i <= end; i++) {
+  for(int i = start; i <= end; i++) {
     leds[i] = c;
   } 
 }
