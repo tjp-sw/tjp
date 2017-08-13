@@ -8,7 +8,10 @@ from audioInfo import AudioEvent, AudioFileInfo
 from audio_event_queue import SortedDLL
 
 DEBUG = True
+<<<<<<< Updated upstream
 INTERNAL_ANIMATIONS_DEBUG = False
+=======
+>>>>>>> Stashed changes
 
 # Non-Color Animation Parameter Constants
 #
@@ -132,27 +135,27 @@ NUM_BASE_COLORS_PER_FAMILY = 7
 NUM_MID_COLORS_PER_FAMILY = 15
 NUM_SPARKLE_COLORS_PER_FAMILY = 7
 
-red_dim_colors = [[20, 0, 0], [13, 3, 5], [17, 2, 0], [13, 6, 4], [14, 4, 5], [15, 6, 6], [13, 7, 5]]
+blue_dim_colors = [[20, 0, 0], [13, 3, 5], [17, 2, 0], [13, 6, 4], [14, 4, 5], [15, 6, 6], [13, 7, 5]]
 orange_dim_colors = [[14, 6, 5], [14, 3, 1], [13, 7, 4], [11, 7, 2], [11, 8, 4], [20, 0, 0], [13, 4, 0]]
 yellow_dim_colors = [[11, 7, 3], [13, 8, 0], [12, 9, 0], [15, 14, 0], [15, 13, 4], [18, 15, 0], [19, 17, 0]]
 green_dim_colors = [[5, 13, 0], [5, 10, 3], [3, 15, 1], [3, 19, 05, 14, 6], [3, 10, 4], [10, 15, 0], [7, 17, 0]]
-blue_dim_colors = [[0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240], [0, 0, 255], [0, 0, 250], [0, 0, 245]]
+red_dim_colors = [[0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240], [0, 0, 255], [0, 0, 250], [0, 0, 245]]
 purple_dim_colors = [[75, 0, 130], [70, 0, 125], [65, 0, 120], [60, 0, 115], [75, 0, 130], [70, 0, 125], [65, 0, 120]]
 white_dim_colors = [[37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45], [37, 28, 60], [32, 23, 55], [27, 18, 50]]
 
-red_mid_colors = [[248, 8, 0], [248, 0, 8], [240, 16, 0], [240, 8, 8], [240, 0, 16], [232, 24, 0], [232, 16, 8], [232, 8, 16], [232, 0, 32], [224, 32, 0], [224, 24, 8], [224, 16, 16], [224, 8, 24], [224, 0, 32], [128, 4, 9], [253, 0, 2], [217, 1, 23], [253, 0, 2], [142, 0, 5], [132, 6, 6],  [254, 253, 253]]
+blue_mid_colors = [[248, 8, 0], [248, 0, 8], [240, 16, 0], [240, 8, 8], [240, 0, 16], [232, 24, 0], [232, 16, 8], [232, 8, 16], [232, 0, 32], [224, 32, 0], [224, 24, 8], [224, 16, 16], [224, 8, 24], [224, 0, 32], [128, 4, 9], [253, 0, 2], [217, 1, 23], [253, 0, 2], [142, 0, 5], [132, 6, 6],  [254, 253, 253]]
 orange_mid_colors = [[242, 9, 0], [208, 16, 8], [232, 20, 0], [02, 19, 12], [214, 20, 1], [199, 26, 9], [189, 32, 17], [223, 32, 0], [204, 30, 1], [191, 34, 8], [211, 42, 0], [184, 42, 7], [202, 53, 0], [173, 52, 9], [73, 52, 9]]
 yellow_mid_colors = [[170, 148, 0], [171, 128, 0], [150, 114, 6], [150, 141, 6], [132, 99, 0], [124, 108, 0], [70, 43, 2], [80, 40, 0], [76, 42, 0], [73, 46, 0], [76, 52, 0], [80, 55, 0], [79, 64, 0], [70, 84, 0], [171, 160, 0]]
 green_mid_colors = [[129, 191, 0], [105, 199, 0], [79, 195, 1], [1, 210, 1], [42, 233, 0], [21, 226, 1], [0, 189, 0], [0, 244, 9], [7, 201, 24], [0, 152, 22], [19, 132, 35], [35, 143, 11], [47, 136, 10], [58, 140, 2], [29, 155, 2]]
-blue_mid_colors = [[0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240], [0, 0, 235], [0, 0, 230], [0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240], [0, 0, 235], [0, 0, 230], [0, 0, 255], [0, 0, 250], [0, 0, 250]]
+red_mid_colors = [[0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240], [0, 0, 235], [0, 0, 230], [0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240], [0, 0, 235], [0, 0, 230], [0, 0, 255], [0, 0, 250], [0, 0, 250]]
 purple_mid_colors = [[75, 0, 130], [70, 0, 125], [65, 0, 120], [60, 0, 115], [55, 0, 110], [50, 0, 105], [75, 0, 130], [70, 0, 125], [65, 0, 120], [60, 0, 115], [55, 0, 110], [50, 0, 105], [75, 0, 130], [70, 0, 125], [70, 0, 125]]
 white_mid_colors = [[37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45], [27, 18, 50], [22, 13, 45], [37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45], [27, 18, 50], [22, 13, 45], [37, 28, 60], [32, 23, 55], [32, 23, 55]]
 
-red_bright_colors = [[168, 39, 64], [174, 54, 71], [180, 52, 63], [189, 35, 41], [194, 41, 41], [186, 65, 60], [183, 91, 82]]
+blue_bright_colors = [[168, 39, 64], [174, 54, 71], [180, 52, 63], [189, 35, 41], [194, 41, 41], [186, 65, 60], [183, 91, 82]]
 orange_bright_colors = [[155, 73, 32], [150, 71, 15], [170, 52, 10], [175, 46, 14], [174, 48, 17], [164, 57, 19], [168, 55, 15]]
 yellow_bright_colors = [[142, 115, 33], [144, 103, 14], [142, 104, 22], [142, 89, 22], [144, 112, 14], [144, 119, 15], [141, 141, 25]]
 green_bright_colors = [[50, 192, 50], [41, 192, 27], [52, 186, 22], [67, 179, 22], [82, 173, 21], [96, 164, 19], [13, 156, 25]]
-blue_bright_colors = [[0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240], [0, 0, 255], [0, 0, 250], [0, 0, 245]]
+red_bright_colors = [[0, 0, 255], [0, 0, 250], [0, 0, 245], [0, 0, 240], [0, 0, 255], [0, 0, 250], [0, 0, 245]]
 purple_bright_colors = [[75, 0, 130], [70, 0, 125], [65, 0, 120], [65, 0, 120], [75, 0, 130], [70, 0, 125], [65, 0, 120]]
 white_bright_colors = [[37, 28, 60], [32, 23, 55], [27, 18, 50], [22, 13, 45], [37, 28, 60], [32, 23, 55], [27, 18, 50]]
 
@@ -305,7 +308,8 @@ def sp_lower_bound(sparkle_step):
     for n in range(1, num_steps) :
         if time_elapsed > n * sparkle_step:  # at least n periods have passed
             low -= sparkle_step
-            # print "new low ", low
+            if DEBUG:
+                print "new low ", low
     return low
 
 
@@ -377,13 +381,13 @@ def choose_new_playa_palette():
         print "show colors", show_colors
 
 def use_test_palette():
-    show_colors[0] = [255,0,0]
-    show_colors[1] = [0,255,0]
-    show_colors[2] = [0,0,255]
-    show_colors[3] = [128,128,0]
+    show_colors[0] = [0,0,25]
+    show_colors[1] = [0,10,10]
+    show_colors[2] = [0,0,175]
+    show_colors[3] = [128,0,160]
     show_colors[4] = [0,128,128]
-    show_colors[5] = [128,0,128]
-    show_colors[6] = [85,85,85]
+    show_colors[5] = [128,128,255]
+    show_colors[6] = [64,124,245]
 
 
 # ----------------------------- choose_random_colors_from_edm_palette() -------------------------------------
@@ -452,7 +456,11 @@ def edm_program(init=False):
         # choose which parameter to change
         change_bg = randint(BACKGROUND_INDEX + 4, MIDLAYER_INDEX - 1)
         show_parameters[change_bg] = constrained_random_parameter(change_bg)
+<<<<<<< Updated upstream
         if DEBUG:
+=======
+        if DEBUG:   
+>>>>>>> Stashed changes
             print "background parameter ", change_bg, "changed to ", show_parameters[change_bg]
 
     # to avoid hard transitions, change disruptive mid animation parameters only when you change mid layer choice
@@ -855,7 +863,12 @@ def drive_internal_animations_v2(init):
             if palette_time - palette_start_time > PALETTE_TIME_LIMIT:
                 palette_start_time = palette_time
 
+<<<<<<< Updated upstream
                 choose_new_playa_palette()
+=======
+                choose_new_playa_palette() #TEMP CHENIGN TO EDM FOR 8/13 DEMO
+                #choose_random_colors_from_edm_palette()
+>>>>>>> Stashed changes
 
             if magnitude > 5:
                 show_parameters[SPARKLE_INDEX] = constrained_random_parameter(SPARKLE_INDEX)
@@ -1072,7 +1085,12 @@ def progress_audio_queue():
             break
 
         stale = next_audio_event.exec_time <= timeMs() - 1000
+<<<<<<< Updated upstream
 
+=======
+        if DEBUG:
+            print "diff event - now = " + str(next_audio_event.exec_time - timeMs())
+>>>>>>> Stashed changes
         if stale:
             if DEBUG:
                 print "it's " + str(timeMs()) + " stale event " + str(next_audio_event) + " popping!"

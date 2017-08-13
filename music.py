@@ -44,9 +44,9 @@ def status_update(message):
                 Music.meditation = False
                 if datetime.now().time() > time(hour=19):
                     shows.set_show_mode(shows.NIGHT)
-
                 else:
                     shows.set_show_mode(shows.DAY)
+
                 return True
         except ValueError:
             print"Ending sound ValueError " + str(len(message))
@@ -184,7 +184,10 @@ class Music:
             self.check_drone = now_time
             msg[0] = low
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         if self.played_mid <= (now_time - timedelta(seconds=self.mid_wait)):
             self.played_mid = now_time
             self.mid_wait = random.randint(5,25)

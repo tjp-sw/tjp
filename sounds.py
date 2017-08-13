@@ -79,7 +79,6 @@ def find_mid(theme=datetime.today().weekday(), now_time=datetime.now().time()):
         return random.choice(MIDS[theme])
     daily_mids = [song for sublist in MIDS[0:(theme+1)] for song in sublist]
     return random.choice(daily_mids)
-    
 
 
 def find_high(theme=datetime.today().weekday(), now_time=datetime.now().time()):
@@ -92,4 +91,3 @@ def find_high(theme=datetime.today().weekday(), now_time=datetime.now().time()):
     daily_highs = [song for sublist in HIGHS[0:(theme+1)] for song in sublist]
     return random.choice(daily_highs)
     
-
