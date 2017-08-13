@@ -2,9 +2,9 @@ from shows import *
 from plyru import lrucache
 from sys import maxint
 
-ART_CAR_DETECTION_DEBUG = True
+ART_CAR_DETECTION_DEBUG = False
 
-# TODO utilize a LRU to handle evictions from the ring_to_hello_animation's
+# Utilize a LRU to handle evictions from the ring_to_hello_animation's
 # cache for me. With six nodes sending info should have a max size of 6.
 # Will be assuming nodes send channel information in the same intervals.
 
@@ -148,10 +148,11 @@ class ArtCarHandler:
                 return self.ring_to_hello_animation[ring_num]
 
         # currently grabbing first avaliable hello animaiton
-        # TODO give only designated hello animations
-        for i in range(0, NUM_7_COLOR_ANIMATIONS): # using edm animations for hello animations
+        # TODO randomize a bit
+        for i in range(0, HELLO_ANIMTIONS_NUM): # using edm animations for hello animations
             if i not in self.hello_animation_to_ring:
-                # add to dictionary to keep track / ensure uniqueness {animation:ring_num}
+                # add to dictionary to keep track / ensure uniqueness
+                # will be fetched and put into show_params in brain.py
                 self.hello_animation_to_ring[i] = ring_num
                 self.ring_to_hello_animation[ring_num] = i
 

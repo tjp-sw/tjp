@@ -202,9 +202,9 @@ show_mode = SUNRISE
 
 #  Art car values
 NO_ART_CAR = -1
-ART_CAR_HELLO_DURATION = 5
+ART_CAR_HELLO_DURATION = 30
 #art_car_hello = False # not used
-HELLO_ANIMTIONS_NUM = 5 # TODO the actual number.... 5 is totally made up for now
+HELLO_ANIMTIONS_NUM = 10 # TODO figure out the actual number.... Brian send just use 7 color animations stuff...
 ART_CAR_AMPLITUDE_THRESHOLD = 100 # TODO calibrate appropriately... keep track of variation over time would be best but can get messy
 
 testing_meditation_seconds = 20
