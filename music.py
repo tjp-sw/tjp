@@ -4,8 +4,6 @@ import sounds, shows
 import time as epoch_time
 
 DEBUG = 1
-SET_TIME = None
-#SET_TIME = datetime(year=2017,month=8,day=31,hour=12,minute=00)
 
 # Just random....this signal is coming from the touchpad which is not written yet.
 def panel_touched():
@@ -19,9 +17,9 @@ def manual_meditation(med):
     if meditation_num in range(1,14):
         Music.meditation = True
         if (meditation_num % 2):  # odd
-            shows.show_mode = shows.SUNRISE
+            shows.set_show_mode(shows.SUNRISE)
         else:
-            shows.show_mode = shows.SUNSET
+            shows.set_show_mode(shows.SUNSET)
         return play([0, 4000+meditation_num])
     return None
 
@@ -45,9 +43,11 @@ def status_update(message):
                 print "Meditation Finished"
                 Music.meditation = False
                 if datetime.now().time() > time(hour=19):
-                    shows.show_mode = shows.NIGHT
+                    shows.set_show_mode(shows.NIGHT)
+
                 else:
-                    shows.show_mode = shows.DAY
+                    shows.set_show_mode(shows.DAY)
+
                 return True
         except ValueError:
             print"Ending sound ValueError " + str(len(message))
@@ -124,10 +124,7 @@ class Music:
 
 
     def tick(self, silent=False):
-        if type(SET_TIME) is datetime:
-            now_time = SET_TIME
-        else:
-            now_time = datetime.now()
+        now_time = datetime.now()
         if DEBUG > 1:
             print now_time
         bm_day = now_time.weekday()
@@ -179,16 +176,17 @@ class Music:
                 print "check_drone"
             return check_drone()
         elif self.need_drone:
+            print "Setting Drone" 
             self.need_drone=False
             return "a0;6;" + str(bm_day) + ";"
 
         #compiles array of music to send
         msg = [0] * 4
 
-        if self.played_low != bm_day or self.need_drone:
-            self.need_drone = False
-            low = sounds.find_low(now_time.weekday(),now_time.time())
-            self.played_low = bm_day
+        if self.need_drone or self.played_low < now_time - timedelta (minutes= self.low_wait):
+            self.low_wait = random.randint(30, 60)
+            low = sounds.find_low()
+            self.played_low = now_time
             self.check_drone = now_time
             msg[0] = low
 

@@ -1,5 +1,6 @@
 #include <Tsunami.h>            // Include the Tsunami library header
 #include <stdlib.h>
+#include <Metro.h>
 
 
 #define SETAUDIO 1
@@ -25,6 +26,7 @@ int DAY6[2] = {3010, 3011};
 int DAY7[2] = {3012, 3013};
 int DRONES[7][2] = {{3000, 3001}, {3002, 3003}, {3004, 3005}, {3006, 3007}, {3008, 3009}, {3010, 3011}, {3012, 3013}};
 int this_day[2] = {3000, 3001};
+int bm_day = -1;
 
 Tsunami tsunami;                // Our Tsunami object
 //variables tracking currently playing song data
@@ -53,11 +55,15 @@ struct control_message {
 
 control_message ctrl_msg = EMPTY_CTRL_MSG;
 
+
+Metro drone_check = Metro(5000);
+
 //---------------------RUNS FIRST FOR SETUP--------------------
 void setup_tsunami () {
   // We should wait for the Tsunami to finish reset before trying to send
   // commands.
   delay(1000);
+  
 
   // Tsunami startup at 57600
   tsunami.start();
@@ -232,13 +238,17 @@ void do_command () {
     case SETAUDIO :
       if (DEBUG_LEVEL)
           Serial.println("SetAudio");
+
+      tsunami.update();
+      delay (200);
+      
       if (ctrl_msg.channels[1]>4000) { //Start Meditation
         fade_out(60);
         meditation = true;
       }
 
       for (int ch = 0; ch < 18; ch++) {
-        if (ctrl_msg.channels[ch]) {
+        if (ctrl_msg.channels[ch] && !tsunami.isTrackPlaying(ctrl_msg.channels[ch])) {
           if (channels[ch]){
             tsunami.trackFade(channels[ch], -70, 1000, true);
           }
@@ -295,6 +305,7 @@ void do_command () {
       //Check if Meditation is finished
      case CHECKMEDITATION :
         tsunami.update();
+        delay(200);
         if (channels[1] > 4000 && tsunami.isTrackPlaying(channels[1])) {
             String msg = "sP" + String (channels[1]);
             remote.write(msg.c_str());
@@ -319,9 +330,9 @@ void do_command () {
       case SETDAY:
         if (DEBUG_LEVEL)
           Serial.println("SetDay");
-
-        this_day[0] = DRONES[ctrl_msg.fade_speed][0];
-        this_day[1] = DRONES[ctrl_msg.fade_speed][1];
+        bm_day = ctrl_msg.fade_speed;
+        this_day[0] = DRONES[bm_day][0];
+        this_day[1] = DRONES[bm_day][1];
         channels[7] = this_day[0];
         tsunami.samplerateOffset(0, 0);        // Reset sample rate offset to 0
         tsunami.masterGain(0, 0);              // Reset the master gain to 0dB
@@ -335,6 +346,13 @@ void do_command () {
 void do_tsunami() {
   delay(10);
   tsunami.update();
+
+  if (bm_day < 0 && drone_check.check()) {
+            //channels[ch] = 3000;
+            Serial.println("Need drone");
+            //check_drone.reset();
+            remote.write("sN");
+        }
 
   for (int ch = 0; ch < 18; ch++) {
     if(!(tsunami.isTrackPlaying(channels[ch]))) {
@@ -356,10 +374,7 @@ void do_tsunami() {
             channels[ch] = this_day[1];
         } else if (channels[ch] == this_day[1]) {
             channels[ch] = this_day[0];
-        } else {
-            channels[ch] = 3000;
-            remote.write("sN");
-        }
+        } 
         tsunami.trackGain(channels[ch], ch_gain[ch]);
         tsunami.trackLoad(channels[ch], 0, true);
         String msg = "sR" + String (channels[ch]);

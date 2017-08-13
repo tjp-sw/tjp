@@ -200,6 +200,10 @@ SUNSET = 2
 NIGHT = 3
 show_mode = SUNRISE
 
+def set_show_mode(int mode):
+    global show_mode
+    show_mode = mode
+
 #  Art car values
 NO_ART_CAR = -1
 ART_CAR_HELLO_DURATION = 30
