@@ -221,7 +221,8 @@ def check_art_car_status(ring_num, amplitude):
 
     if ring_num is None or amplitude is None:
         print "seems as those the data did not make a plane, ring -> art car detection not possible"
-        # return
+        if not artCarHandler.mock:
+            return
 
     ring_ac_newly_detected = artCarHandler.handle_amplitude_info(ring_num, amplitude)
     print "ring detected " + str(ring_ac_newly_detected)
@@ -239,16 +240,21 @@ def check_art_car_status(ring_num, amplitude):
         do_auto(None, art_car_edm)
 
     elif ring_ac_newly_detected >= 0:
+        # Utilizing ArtCarHadler to know which is the oldest ring_num.
+        # Necessary becuase it sounds like the messaging system will be a broadcast
+        # with every node getting the 'hello' ring. (Not just a response to whoever sent the cahnnel data)
+        oldest_ring = artCarHandler.get_oldest_ring()
 
-        # send the hello animation to the ring
-        # HELP: HOW TO SEND TO PARTICULAR NODE TARGETTING A RING?
-        # TODO do_send(?, ?)
+        # send the hello animation broadcast wtih target ring
+        # HELP: HOW TO SEND HELLO ANIMATION AND RING NUM?
+        # show_parameters[HELLO_ANIMATION_PARAM_START] = artCarHandler.get_ring_animation(oldest_ring)
+        # TODO do_send(?, ?) i.e. do_show(None, oldest_ring)
         pass
 
-    # send hello animation stop message to target ring
+    # send hello animation stop message broadcast for target ring
     for ring_num in artCarHandler.rings_to_stop_hello_animation:
-        # HELP: HOW TO SEND TO PARTICULAR NODE TARGETTING A RING?
-        # do_send()
+        # HELP: HOW TO SEND HELLO ANIMATION AND RING NUM?
+        # TODO do_send(?, ?) i.e. do_send(None, oldest_ring)
         pass
 
 do_list(None, None)
