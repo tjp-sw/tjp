@@ -548,31 +548,33 @@ def set_playa_mode(when, mode):
 
 real_start_time = -1.0
 def playa_program(init=False):
-    global real_start_time, testing_meditation_seconds, time_compression_factor, show_mode
+    global real_start_time, testing_meditation_seconds, time_compression_factor, show_mode, virtual_time
     IDEAL_MEDITATION_SECONDS = 20 * 60
 
-    real_time = time.clock()
+#    real_time = time.clock()
     if init:  # run test program
         if real_start_time < 0:
-            time_compression_factor = float(NUM_DAYS * 60 * 24) / TEST_CYCLE_MINUTES	# 60*24 == minutes per day
-            testing_meditation_seconds = int(IDEAL_MEDITATION_SECONDS * time_compression_factor / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
-            real_start_time = real_time
+#            time_compression_factor = float(NUM_DAYS * 60 * 24) / TEST_CYCLE_MINUTES	# 60*24 == minutes per day
+#            testing_meditation_seconds = int(IDEAL_MEDITATION_SECONDS * time_compression_factor / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
+#            real_start_time = real_time
+            real_start_time = BURNING_MAN_START - time.time()
             edm_program(init)	# good enough for now
             show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0	# no EDM animations
             show_mode = SUNRISE
         return
 
-    if real_start_time == BURNING_MAN_START:
-        virtual_time = real_time	# this is the live show at Burning Man
-        show_mode = SUNRISE
-    else:
-        if BURNING_MAN_START <= real_time and real_time < BURNING_MAN_END:
-            time_compression_factor = 1.0
-            print 'Welcome home!'	# Burning Man has just begun!
-            real_start_time = BURNING_MAN_START
-            virtual_time = real_time
-        else:
-            virtual_time = BURNING_MAN_START + (real_time - real_start_time) * time_compression_factor
+    virtual_time = time.time() + real_start_time
+#    if real_start_time == BURNING_MAN_START:
+#        virtual_time = real_time	# this is the live show at Burning Man
+#        show_mode = SUNRISE
+#    else:
+#        if BURNING_MAN_START <= real_time and real_time < BURNING_MAN_END:
+#            time_compression_factor = 1.0
+#            print 'Welcome home!'	# Burning Man has just begun!
+#            real_start_time = BURNING_MAN_START
+#            virtual_time = real_time
+#        else:
+#            virtual_time = BURNING_MAN_START + (real_time - real_start_time) * time_compression_factor
 
     # Show mode is set in music.py
     #show_mode = set_playa_mode(virtual_time, show_mode)
@@ -592,6 +594,20 @@ def playa_program(init=False):
     print ' '
     print 'playa time advanced to', time.ctime(virtual_time), 'on day', bm_day_index, 'at', mode_string
 
+def do_date(ignored, when):
+    global real_start_time
+    try:
+        day, hour = string.split(when, None, 1)	# one token separated by whitespace from the next
+        day = int(day)
+        hour, minute = string.split(hour, ':', 1)
+        hour = int(hour)
+        minute = int(minute)
+    except (AttributeError, ValueError):	# no whitespace or non-integer
+        print 'Usage: day number hour:min'
+        return
+    day = time.strftime('%Y-%b-%d', time.localtime(1503860400 + day * 86400))	# Sunday before is day 0
+    when = time.mktime(time.strptime('%s %u:%u' % (day, hour, minute), '%Y-%b-%d %H:%M'))
+    real_start_time = when - time.time()
 
 # ------------------------------ internal_sound_animations_program() -----------------------------------------------
 # show for when the journey playing its internal audio and the external audio

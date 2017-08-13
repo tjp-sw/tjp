@@ -150,6 +150,7 @@ control_messages = {
 #    'CheckHandStat':	do_unimplemented,
 #    'CheckAudioIn':	do_unimplemented,
     'cp':		(do_change_palette, None, None),
+    'day':		(do_date, None, None),
     'disconnect':	(do_disconnect, None, None),
     'edm':		(do_auto, None, edm_program),
     'led':		(do_simple, 'program', None),
