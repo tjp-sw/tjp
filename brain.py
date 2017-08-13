@@ -210,7 +210,7 @@ def get_external_amplitude_sum(channel_data):
         try:
             amplitude += abs(ord(channel_data[i]) - ord(channel_data[i+7]))
         except:
-            print "channel data format does not have 2 * 7 channels of information " + str(len(channel_data))
+            #print "channel data format does not have 2 * 7 channels of information " + str(len(channel_data))
             return -1
 
     return amplitude
@@ -319,7 +319,7 @@ while running:
                         if len(message) == 24:
                             node, timestamp, channel_data = struct.unpack_from('>BQ14s', message, 1)
                             timestamp /= 1000.0		# convert from milliseconds
-                            print 'node', node, 'channel data', repr(channel_data), 'at', timestamp
+                            #print 'node', node, 'channel data', repr(channel_data), 'at', timestamp
 
                             amplitude_sum = get_external_amplitude_sum(channel_data)
                             if amplitude_sum > 0: # otherwise error reading channel_data

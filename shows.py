@@ -200,7 +200,7 @@ SUNSET = 2
 NIGHT = 3
 show_mode = SUNRISE
 
-def set_show_mode(int mode):
+def set_show_mode(mode):
     global show_mode
     show_mode = mode
 
