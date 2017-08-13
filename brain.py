@@ -12,12 +12,13 @@ internal_show_init = True
 internal_audio_show = True  # triggers internal audio animations..
 
 mega_to_node_map = {
+    1: 2,
     2: 0,
     3: 1,
-    1: 2,
-    6: 3,
-    5: 4,
     4: 5,
+    5: 4,
+    6: 3,
+    7: 6,
     }
 
 # close all TCP connections and continue to run
@@ -374,11 +375,10 @@ while running:
             do_time('time', None)
 
         #audio commands
-        dummy_art_car_bool = False
-        audio_msg = mega_music.tick(dummy_art_car_bool)
+        audio_msg = mega_music.tick()
         if audio_msg is not None:
             do_send(None, encapsulated_audio_msg(audio_msg))	# always send to all nodes
-            #print repr(audio_msg)
+            print repr(audio_msg)
             # meditation = mega.meditation
 
         #pushing animation parameters across nodes

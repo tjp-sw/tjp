@@ -13,7 +13,7 @@
 #ifdef DEBUG
   #define DEBUG_LEVEL 1
 #else
-  #define DEBUG_LEVEL 0
+  #define DEBUG_LEVEL 1
 #endif
 
 //drone constants
@@ -250,7 +250,7 @@ void do_command () {
       for (int ch = 0; ch < 18; ch++) {
         if (ctrl_msg.channels[ch] && !tsunami.isTrackPlaying(ctrl_msg.channels[ch])) {
           if (channels[ch]){
-            tsunami.trackFade(channels[ch], -70, 1000, true);
+            tsunami.trackFade(channels[ch], -70, 10000, true);
           }
           channels[ch]= ctrl_msg.channels[ch];
           ch_loop[ch]= ctrl_msg.bool_loop;
@@ -342,12 +342,26 @@ void do_command () {
   ctrl_msg = EMPTY_CTRL_MSG;
 }
 
+bool isDrone() {
+  tsunami.update();
+
+  if (channels[7] >= 3000 && tsunami.isTrackPlaying(channels[7])) {
+    //Serial.println("Playing Drone");
+    return true;
+  }
+  if (channels[1] >= 4000 && tsunami.isTrackPlaying(channels[1])) {
+    return true;
+  }
+  //Serial.print("No drone: ");
+  //Serial.println (channels[7]);
+  return false;
+}
 //--------UPDATES CHANNEL LISTING/COMMUNICATES WITH PI-----------------------
 void do_tsunami() {
   delay(10);
   tsunami.update();
 
-  if (bm_day < 0 && drone_check.check()) {
+  if (drone_check.check() && !isDrone()) {
             //channels[ch] = 3000;
             Serial.println("Need drone");
             //check_drone.reset();

@@ -73,20 +73,21 @@ def find_low(theme=datetime.today().weekday(), now_time=datetime.now().time()):
 def find_mid(theme=datetime.today().weekday(), now_time=datetime.now().time()):
     if SET_THEME >= 0:
         theme = SET_THEME
-    elif time(6, 25) > now_time > time(19, 25):
-        
-        daily_mids = [song for sublist in MIDS[0:(theme+1)] for song in sublist]
-        return random.choice(daily_mids)
+    if time(6, 25) < now_time < time(19, 25):
+        return random.choice(MIDS[theme])
+    if theme == 7:
+        return random.choice(MIDS[theme])
+    daily_mids = [song for sublist in MIDS[0:(theme+1)] for song in sublist]
+    return random.choice(daily_mids)
     
-    return random.choice(MIDS[theme])
-
 
 def find_high(theme=datetime.today().weekday(), now_time=datetime.now().time()):
     if SET_THEME >= 0:
         theme = SET_THEME
-    elif time(6, 25) > now_time > time(19, 25):
-        
-        daily_highs = [song for sublist in HIGHS[0:(theme+1)] for song in sublist]
-        return random.choice(daily_highs)
+    if time(6, 25) < now_time < time(19, 25):
+        return random.choice(HIGHS[theme])
+    if theme == 7:
+        return random.choice(HIGHS[theme])
+    daily_highs = [song for sublist in HIGHS[0:(theme+1)] for song in sublist]
+    return random.choice(daily_highs)
     
-    return random.choice(HIGHS[theme])

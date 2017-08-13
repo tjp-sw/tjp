@@ -6,6 +6,10 @@ import sys
 from dataBaseInterface import DataBaseInterface
 from audioInfo import AudioEvent, AudioFileInfo
 from audio_event_queue import SortedDLL
+
+DEBUG = True
+INTERNAL_ANIMATIONS_DEBUG = True
+
 # Non-Color Animation Parameter Constants
 #
 # All (most of) the parameters for a show are stored in an array called show_parameters, so that they
@@ -228,7 +232,7 @@ event_queue = SortedDLL()  # create sorted dll to act as the audio event queue (
 NUM_AUDIO_CHANNELS = 7
 current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
 next_audio_event = AudioEvent(-1, -1, "init", "init")
-INTERNAL_ANIMATIONS_DEBUG = True
+
 
 
 def constrained_random_parameter(i):
@@ -260,15 +264,16 @@ def print_parameters():
         print_mode = 'night'
     else:
         print 'illegal show mode'
-    print "show parameters -- day", bm_day_index, 'during', print_mode
-    print "  base parameters", show_parameters[BASE_PARAM_START:BASE_PARAM_END + 1]
-    print "  mid parameters", show_parameters[MID_PARAM_START:MID_PARAM_END + 1]
-    print "  sparkle parameters", show_parameters[SPARKLE_PARAM_START:SPARKLE_PARAM_END + 1]
-    print "  7 color, ring, beat, palette change", show_parameters[SEVEN_PAL_BEAT_PARAM_START:SEVEN_PAL_BEAT_PARAM_END + 1]
-    print "  transition parameters", show_parameters[TRANS_PARAM_START:TRANS_PARAM_END + 1]
-    print "show colors:"
-    print "  ", show_colors
-    print ' '
+    if DEBUG:
+        print "show parameters -- day", bm_day_index, 'during', print_mode
+        print "  base parameters", show_parameters[BASE_PARAM_START:BASE_PARAM_END + 1]
+        print "  mid parameters", show_parameters[MID_PARAM_START:MID_PARAM_END + 1]
+        print "  sparkle parameters", show_parameters[SPARKLE_PARAM_START:SPARKLE_PARAM_END + 1]
+        print "  7 color, ring, beat, palette change", show_parameters[SEVEN_PAL_BEAT_PARAM_START:SEVEN_PAL_BEAT_PARAM_END + 1]
+        print "  transition parameters", show_parameters[TRANS_PARAM_START:TRANS_PARAM_END + 1]
+        print "show colors:"
+        print "  ", show_colors
+        print ' '
 
 #-------------------------------------------- mid_lower_bound() -------------------------------------------
 
@@ -314,10 +319,11 @@ def choose_new_playa_palette():
     global SUNRISE, DAY, SUNSET, NIGHT
 
     if (show_mode == SUNRISE) or (show_mode == DAY):  # use only day's chakra colors
-        #print "  sunrise or day"
-        #print "  bg range", NUM_BASE_COLORS_PER_FAMILY * bm_day_index, NUM_BASE_COLORS_PER_FAMILY * (bm_day_index + 1)-1
-        #print "  mid range", NUM_MID_COLORS_PER_FAMILY * bm_day_index, NUM_MID_COLORS_PER_FAMILY * (bm_day_index + 1) - 1
-        #print "  sp range", NUM_SPARKLE_COLORS_PER_FAMILY * bm_day_index, NUM_SPARKLE_COLORS_PER_FAMILY * (bm_day_index + 1) - 1
+        if DEBUG:
+            print "  sunrise or day"
+            print "  bg range", NUM_BASE_COLORS_PER_FAMILY * bm_day_index, NUM_BASE_COLORS_PER_FAMILY * (bm_day_index + 1)-1
+            print "  mid range", NUM_MID_COLORS_PER_FAMILY * bm_day_index, NUM_MID_COLORS_PER_FAMILY * (bm_day_index + 1) - 1
+            print "  sp range", NUM_SPARKLE_COLORS_PER_FAMILY * bm_day_index, NUM_SPARKLE_COLORS_PER_FAMILY * (bm_day_index + 1) - 1
 
         bg_order = sample(range(NUM_BASE_COLORS_PER_FAMILY * bm_day_index, NUM_BASE_COLORS_PER_FAMILY * (bm_day_index + 1)), 2)
         mid_order = sample(range(NUM_MID_COLORS_PER_FAMILY * bm_day_index, NUM_MID_COLORS_PER_FAMILY * (bm_day_index + 1)), 3)
@@ -333,20 +339,22 @@ def choose_new_playa_palette():
             sp_low = sp_lower_bound(sparkle_step_duration)
             mid_low = mid_lower_bound(mid_step_duration)
 
-        #print "sunset"
-        #print "bg range", NUM_BASE_COLORS_PER_FAMILY * bm_day_index, NUM_BASE_COLORS_PER_FAMILY * (bm_day_index + 1)-1
-        #print "mid range", mid_low, NUM_MID_COLORS_PER_FAMILY * (bm_day_index + 1) - 1
-        #print "sp range", sp_low, NUM_SPARKLE_COLORS_PER_FAMILY * (bm_day_index + 1) - 1
+        if DEBUG:
+            print "sunset"
+            print "bg range", NUM_BASE_COLORS_PER_FAMILY * bm_day_index, NUM_BASE_COLORS_PER_FAMILY * (bm_day_index + 1)-1
+            print "mid range", mid_low, NUM_MID_COLORS_PER_FAMILY * (bm_day_index + 1) - 1
+            print "sp range", sp_low, NUM_SPARKLE_COLORS_PER_FAMILY * (bm_day_index + 1) - 1
 
         bg_order = sample(range(NUM_BASE_COLORS_PER_FAMILY * bm_day_index, NUM_BASE_COLORS_PER_FAMILY * (bm_day_index + 1)), 2)
         mid_order = sample(range(mid_low, NUM_MID_COLORS_PER_FAMILY * (bm_day_index + 1)), 3)
         sp_order = sample(range(sp_low, NUM_SPARKLE_COLORS_PER_FAMILY * (bm_day_index + 1)), 2)
 
     else:  # night time: use all previous colors; background must always be chosen from day's chakara color
-        #print "  night"
-        #print "  bg range", NUM_BASE_COLORS_PER_FAMILY * bm_day_index, NUM_BASE_COLORS_PER_FAMILY * (bm_day_index + 1)-1
-        #print "  mid range", 0, NUM_MID_COLORS_PER_FAMILY * (bm_day_index + 1) - 1
-        #print "  sp range", 0, NUM_SPARKLE_COLORS_PER_FAMILY * (bm_day_index + 1) - 1
+        if DEBUG:
+            print "  night"
+            print "  bg range", NUM_BASE_COLORS_PER_FAMILY * bm_day_index, NUM_BASE_COLORS_PER_FAMILY * (bm_day_index + 1)-1
+            print "  mid range", 0, NUM_MID_COLORS_PER_FAMILY * (bm_day_index + 1) - 1
+            print "sp range", 0, NUM_SPARKLE_COLORS_PER_FAMILY * (bm_day_index + 1) - 1
 
         bg_order = sample(range(NUM_BASE_COLORS_PER_FAMILY * bm_day_index, NUM_BASE_COLORS_PER_FAMILY * (bm_day_index + 1) -1), 2)
         mid_order = sample(range(0, NUM_MID_COLORS_PER_FAMILY * (bm_day_index + 1)), 3)
@@ -364,7 +372,8 @@ def choose_new_playa_palette():
     show_colors[5] = playa_palette[sp_order[0] / NUM_SPARKLE_COLORS_PER_FAMILY][2][sp_order[0] % NUM_SPARKLE_COLORS_PER_FAMILY]
     show_colors[6] = playa_palette[sp_order[1] / NUM_SPARKLE_COLORS_PER_FAMILY][2][sp_order[1] % NUM_SPARKLE_COLORS_PER_FAMILY]
 
-    #print "show colors", show_colors
+    if DEBUG:
+        print "show colors", show_colors
 
 def use_test_palette():
     show_colors[0] = [255,0,0]
@@ -383,7 +392,8 @@ def choose_random_colors_from_edm_palette():
     global current_edm_palette
 
     new = randint(0, len(edm_palettes) - 1)
-    print 'edm palette changed from', current_edm_palette, 'to', new
+    if DEBUG:
+        print 'edm palette changed from', current_edm_palette, 'to', new
     current_edm_palette = new
 
     # choose which colors out of the chosen palette to use
@@ -432,7 +442,8 @@ def edm_program(init=False):
         # change bg show parameters
         for i in range (BACKGROUND_INDEX, BACKGROUND_INDEX + 4):
             show_parameters[i] = constrained_random_parameter(i)
-            print "background parameter ", i, "changed to ", show_parameters[i]
+            if DEBUG:
+                print "background parameter ", i, "changed to ", show_parameters[i]
 
     if bg_parameter_time - bg_parameter_start_time > BASE_PARAMETER_TIME_LIMIT:
         bg_parameter_start_time = bg_parameter_time
@@ -440,7 +451,8 @@ def edm_program(init=False):
         # choose which parameter to change
         change_bg = randint(BACKGROUND_INDEX + 4, MIDLAYER_INDEX - 1)
         show_parameters[change_bg] = constrained_random_parameter(change_bg)
-        print "background parameter ", change_bg, "changed to ", show_parameters[change_bg]
+        if DEBUG:   
+            print "background parameter ", change_bg, "changed to ", show_parameters[change_bg]
 
     # to avoid hard transitions, change disruptive mid animation parameters only when you change mid layer choice
     if mid_time - mid_start_time > MID_TIME_LIMIT:
@@ -449,7 +461,8 @@ def edm_program(init=False):
         # change mid show parameters
         for i in range (MIDLAYER_INDEX, MIDLAYER_INDEX + 5):
             show_parameters[i] = constrained_random_parameter(i)
-            print "mid parameter ", i, "changed to ", show_parameters[i]
+            if DEBUG:
+                print "mid parameter ", i, "changed to ", show_parameters[i]
 
     if mid_parameter_time - mid_parameter_start_time > MID_PARAMETER_TIME_LIMIT:
         mid_parameter_start_time = mid_parameter_time
@@ -457,14 +470,16 @@ def edm_program(init=False):
         # choose which parameter to change
         change_mid = randint(MIDLAYER_INDEX + 5, SPARKLE_INDEX - 1)
         show_parameters[change_mid] = constrained_random_parameter(change_mid)
-        print "mid parameter ", change_mid, "changed to ", show_parameters[change_mid]
+        if DEBUG:
+            print "mid parameter ", change_mid, "changed to ", show_parameters[change_mid]
 
     if sparkle_time - sparkle_start_time > SPARKLE_TIME_LIMIT:
         sparkle_start_time = sparkle_time
 
         # change sparkle animation
         show_parameters[SPARKLE_INDEX] = constrained_random_parameter(SPARKLE_INDEX)
-        print "sparkle choice changed to ", show_parameters[SPARKLE_INDEX]
+        if DEBUG:
+            print "sparkle choice changed to ", show_parameters[SPARKLE_INDEX]
 
     # can change sparkle parameters independently of changing sparkle animation, without having hard transitions
     if sparkle_parameter_time - sparkle_parameter_start_time > SPARKLE_PARAMETER_TIME_LIMIT:
@@ -473,7 +488,8 @@ def edm_program(init=False):
         # choose which parameter to change
         change_sparkle = randint(SPARKLE_INDEX + 1,SPARKLE_INDEX + 10)
         show_parameters[change_sparkle] = constrained_random_parameter(change_sparkle)
-        print "sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
+        if DEBUG:
+            print "sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
 
     constrain_show()	# keep the lights on
 
@@ -500,15 +516,15 @@ TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
 TEST_CYCLE_MINUTES = 15
 NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
 
-""" Unused right now. playa_mode is set in Music.tick()
+
 # ------------------------ set_playa_mode() -------------------------------
 # returns SUNRISE, DAY, SUNSET, NIGHT
 
 def set_playa_mode(when, mode):
-    this_time = datetime.fromtimestamp(when)
+    #this_time = datetime.fromtimestamp(when)
     global SUNRISE, DAY, SUNSET, NIGHT, NUM_DAYS, bm_day_index, testing_meditation_seconds
 
-    bm_day_index = int(when - BURNING_MAN_START) / 86400) % NUM_DAYS
+    bm_day_index = int((when - BURNING_MAN_START) / 86400) % NUM_DAYS
 
     if (mode == NIGHT) and (when >= sunrise_time[bm_day_index]):
         mode = SUNRISE
@@ -546,7 +562,7 @@ def set_playa_mode(when, mode):
 
     # print '  new colors at day', bm_day_index, "mode ", mode, show_colors
     return mode
-"""
+
 
 
 # ------------------------------- playa_program() ----------------------------------
@@ -557,13 +573,13 @@ real_start_time = -1.0
 def playa_program(init=False):
     global real_start_time, testing_meditation_seconds, time_compression_factor, show_mode, virtual_time
     IDEAL_MEDITATION_SECONDS = 20 * 60
-
-#    real_time = time.clock()
+    print "Called Playa Program"
+    real_time = time.clock()
     if init:  # run test program
         if real_start_time < 0:
-#            time_compression_factor = float(NUM_DAYS * 60 * 24) / TEST_CYCLE_MINUTES	# 60*24 == minutes per day
-#            testing_meditation_seconds = int(IDEAL_MEDITATION_SECONDS * time_compression_factor / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
-#            real_start_time = real_time
+            time_compression_factor = float(NUM_DAYS * 60 * 24) / TEST_CYCLE_MINUTES	# 60*24 == minutes per day
+            testing_meditation_seconds = int(IDEAL_MEDITATION_SECONDS * time_compression_factor / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
+            real_start_time = real_time
             real_start_time = BURNING_MAN_START - time.time()
             edm_program(init)	# good enough for now
             show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0	# no EDM animations
@@ -571,20 +587,20 @@ def playa_program(init=False):
         return
 
     virtual_time = time.time() + real_start_time
-#    if real_start_time == BURNING_MAN_START:
-#        virtual_time = real_time	# this is the live show at Burning Man
-#        show_mode = SUNRISE
-#    else:
-#        if BURNING_MAN_START <= real_time and real_time < BURNING_MAN_END:
-#            time_compression_factor = 1.0
-#            print 'Welcome home!'	# Burning Man has just begun!
-#            real_start_time = BURNING_MAN_START
-#            virtual_time = real_time
-#        else:
-#            virtual_time = BURNING_MAN_START + (real_time - real_start_time) * time_compression_factor
+    if real_start_time == BURNING_MAN_START:
+        virtual_time = real_time	# this is the live show at Burning Man
+        show_mode = SUNRISE
+    else:
+        if BURNING_MAN_START <= real_time and real_time < BURNING_MAN_END:
+            time_compression_factor = 1.0
+            print 'Welcome home!'	# Burning Man has just begun!
+            real_start_time = BURNING_MAN_START
+            virtual_time = real_time
+        else:
+            virtual_time = BURNING_MAN_START + (real_time - real_start_time) * time_compression_factor
 
     # Show mode is set in music.py
-    #show_mode = set_playa_mode(virtual_time, show_mode)
+    show_mode = set_playa_mode(virtual_time, show_mode)
 
     bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
 
@@ -716,7 +732,8 @@ def set_appropriate_layer_main_animation(audioInfo):
                 # change bg show parameters
                 for i in range (BACKGROUND_INDEX+1, MIDLAYER_INDEX - 1):
                     show_parameters[i] = constrained_random_parameter(i)
-                    print "background parameter ", i, "changed to ", show_parameters[i]
+                    if DEBUG:
+                        print "background parameter ", i, "changed to ", show_parameters[i]
 
                 bg_parameter_start_time = bg_start_time
 
@@ -731,7 +748,8 @@ def set_appropriate_layer_main_animation(audioInfo):
                 # change mid show parameters
                 for i in range (MIDLAYER_INDEX + 1, SPARKLE_PARAM_START - 1):
                     show_parameters[i] = constrained_random_parameter(i)
-                    print "mid parameter ", i, "changed to ", show_parameters[i]
+                    if DEBUG:
+                        print "mid parameter ", i, "changed to ", show_parameters[i]
 
                 mid_parameter_start_time = mid_start_time
 
@@ -746,7 +764,8 @@ def set_appropriate_layer_main_animation(audioInfo):
                 # choose which parameter to change
                 change_sparkle = randint(SPARKLE_INDEX + 1,SPARKLE_INDEX + 10)
                 show_parameters[change_sparkle] = constrained_random_parameter(change_sparkle)
-                print "sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
+                if DEBUG:
+                    print "sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
 
                 sparkle_parameter_start_time = sparkle_start_time
 
@@ -782,7 +801,8 @@ def drive_internal_animations_v2(init):
                 # change bg show parameters
                 for i in range (BACKGROUND_INDEX + 1, BACKGROUND_INDEX + 4):
                     show_parameters[i] = constrained_weighted_parameter(i, magnitude)
-                    print "background parameter ", i, "changed to ", show_parameters[i]
+                    if DEBUG:
+                        print "background parameter ", i, "changed to ", show_parameters[i]
 
             if bg_parameter_time - bg_parameter_start_time > BASE_PARAMETER_SWTICH_LAG:
                 bg_parameter_start_time = bg_parameter_time
@@ -790,7 +810,8 @@ def drive_internal_animations_v2(init):
                 # choose which parameter to change
                 change_bg = randint(BACKGROUND_INDEX + 4, MIDLAYER_INDEX - 1)
                 show_parameters[change_bg] = constrained_weighted_parameter(change_bg, magnitude)
-                print "background parameter ", change_bg, "changed to ", show_parameters[change_bg]
+                if DEBUG:
+                    print "background parameter ", change_bg, "changed to ", show_parameters[change_bg]
 
             # to avoid hard transitions, change disruptive mid animation parameters only when you change mid layer choice
             if mid_time - mid_start_time > MID_MAIN_ANIMATION_SWITCH_LAG:
@@ -799,7 +820,8 @@ def drive_internal_animations_v2(init):
                 # change mid show parameters
                 for i in range (MIDLAYER_INDEX + 1, MIDLAYER_INDEX + 5):
                     show_parameters[i] = constrained_weighted_parameter(i, magnitude)
-                    print "mid parameter ", i, "changed to ", show_parameters[i]
+                    if DEBUG:
+                        print "mid parameter ", i, "changed to ", show_parameters[i]
 
             if mid_parameter_time - mid_parameter_start_time > MID_PARAMETER_SWTICH_LAG:
                 mid_parameter_start_time = mid_parameter_time
@@ -807,7 +829,8 @@ def drive_internal_animations_v2(init):
                 # choose which parameter to change
                 change_mid = randint(MIDLAYER_INDEX + 5, SPARKLE_INDEX - 1)
                 show_parameters[change_mid] = constrained_weighted_parameter(change_mid, magnitude)
-                print "mid parameter ", change_mid, "changed to ", show_parameters[change_mid]
+                if DEBUG:
+                    print "mid parameter ", change_mid, "changed to ", show_parameters[change_mid]
             '''
             if sparkle_time - sparkle_start_time > SPARKLE_MAIN_ANIMATION_SWITCH_LAG:
                 sparkle_start_time = sparkle_time
@@ -823,13 +846,16 @@ def drive_internal_animations_v2(init):
                 # choose which parameter to change
                 change_sparkle = randint(SPARKLE_INDEX + 1,SPARKLE_INDEX + 10)
                 show_parameters[change_sparkle] = constrained_weighted_parameter(change_sparkle, magnitude)
-                print "sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
+                if DEBUG:
+                    print "sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
 
             if palette_time - palette_start_time > PALETTE_TIME_LIMIT:
                 palette_start_time = palette_time
 
-                # choose_new_playa_palette() TEMP CHENIGN TO EDM FOR 8/13 DEMO
-                choose_random_colors_from_edm_palette()
+
+                choose_new_playa_palette() #TEMP CHENIGN TO EDM FOR 8/13 DEMO
+                #choose_random_colors_from_edm_palette()
+
 
             if magnitude > 5:
                 show_parameters[SPARKLE_INDEX] = constrained_random_parameter(SPARKLE_INDEX)
@@ -878,7 +904,8 @@ def check_time_triggered_animations():
         # change bg show parameters
         for i in range (BACKGROUND_INDEX, BACKGROUND_INDEX + 4):
             show_parameters[i] = constrained_weighted_parameter(i, magnitude)
-            print "TIMEOUT: background parameter ", i, "changed to ", show_parameters[i]
+            if DEBUG:
+                print "TIMEOUT: background parameter ", i, "changed to ", show_parameters[i]
 
     if bg_parameter_time - bg_parameter_start_time > BASE_PARAMETER_TIME_LIMIT:
         bg_parameter_start_time = bg_parameter_time
@@ -886,7 +913,8 @@ def check_time_triggered_animations():
         # choose which parameter to change
         change_bg = randint(BACKGROUND_INDEX + 4, MIDLAYER_INDEX - 1)
         show_parameters[change_bg] = constrained_weighted_parameter(change_bg, magnitude)
-        print "TIMEOUT: background parameter ", change_bg, "changed to ", show_parameters[change_bg]
+        if DEBUG:
+            print "TIMEOUT: background parameter ", change_bg, "changed to ", show_parameters[change_bg]
 
     # to avoid hard transitions, change disruptive mid animation parameters only when you change mid layer choice
     if mid_time - mid_start_time > MID_TIME_LIMIT:
@@ -895,7 +923,8 @@ def check_time_triggered_animations():
         # change mid show parameters
         for i in range (MIDLAYER_INDEX, MIDLAYER_INDEX + 5):
             show_parameters[i] = constrained_weighted_parameter(i, magnitude)
-            print "TIMEOUT: mid parameter ", i, "changed to ", show_parameters[i]
+            if DEBUG:
+                print "TIMEOUT: mid parameter ", i, "changed to ", show_parameters[i]
 
     if mid_parameter_time - mid_parameter_start_time > MID_PARAMETER_TIME_LIMIT:
         mid_parameter_start_time = mid_parameter_time
@@ -903,7 +932,8 @@ def check_time_triggered_animations():
         # choose which parameter to change
         change_mid = randint(MIDLAYER_INDEX + 5, SPARKLE_INDEX - magnitude)
         show_parameters[change_mid] = constrained_random_parameter(change_mid)
-        print "TIMEOUT: mid parameter ", change_mid, "changed to ", show_parameters[change_mid]
+        if DEBUG:
+            print "TIMEOUT: mid parameter ", change_mid, "changed to ", show_parameters[change_mid]
 
     '''
     if sparkle_time - sparkle_start_time > SPARKLE_TIME_LIMIT:
@@ -920,7 +950,8 @@ def check_time_triggered_animations():
         # choose which parameter to change
         change_sparkle = randint(SPARKLE_INDEX,SPARKLE_INDEX + 10)
         show_parameters[change_sparkle] = constrained_weighted_parameter(change_sparkle, magnitude)
-        print "TIMEOUT: sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
+        if DEBUG:
+            print "TIMEOUT: sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
 
     constrain_show()	# keep the lights on
 
@@ -989,11 +1020,13 @@ def drive_internal_animations(init):
 
                 if next_audio_event.kind == "freqband":
                     new_param_value = constrained_weighted_parameter(show_param, magnitude)
-                    print "Frq event [" + str(next_audio_event) +"]: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
+                    if DEBUG:
+                        print "Frq event [" + str(next_audio_event) +"]: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
 
                 elif next_audio_event.kind == "amplitude":
                     new_param_value = constrained_weighted_parameter(show_param, magnitude)
-                    print "Amp event: [" + str(next_audio_event) +"]: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
+                    if DEBUG:
+                        print "Amp event: [" + str(next_audio_event) +"]: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
 
                 # setting the param to its new value
                 show_parameters[show_param] = new_param_value % 255
@@ -1021,7 +1054,8 @@ def drive_internal_animations(init):
 
 def get_random_range(start, end):
     c = choice(range(start, end))
-    print "random param num choice: " + str(c)
+    if DEBUG:
+        print "random param num choice: " + str(c)
     return c
 
 def progress_audio_queue():
@@ -1040,9 +1074,11 @@ def progress_audio_queue():
             break
 
         stale = next_audio_event.exec_time <= timeMs() - 1000
-        # print "diff event - now = " + str(next_audio_event.exec_time - timeMs())
+        if DEBUG:
+            print "diff event - now = " + str(next_audio_event.exec_time - timeMs())
         if stale:
-            print "it's " + str(timeMs()) + " stale event " + str(next_audio_event) + " popping!"
+            if DEBUG:
+                print "it's " + str(timeMs()) + " stale event " + str(next_audio_event) + " popping!"
             event_queue.remove(next_audio_event)
         else:
             break
