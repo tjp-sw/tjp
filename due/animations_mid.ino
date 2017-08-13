@@ -846,41 +846,59 @@ void square_pattern2() {
 
 //-------------------------------- WAVE ---------------------------------
 #include <math.h> //for sin
+//used: MID_COLOR_THICKNESS (1:2), MID_NUM_COLORS(1:3)
+//? to use: MID_BLACK_THICKNESS, INTER_RING_SPEED(1/4:1), MID_RING_OFFSET(-height/2:height/2), INTER_RING_MOTION,
+// not using: MID_INTRA_RING_MOTION, MID_INTRA_RING_SPEED(1/4:1)
 const uint8_t nwave = 12; //per half structure: each half is mirrored
-uint16_t start_pixel[nwave] = {20, 30, 40, 50, 60, 80, 100, 110, 120, 130, 140, 180}; 
-uint8_t  start_ring [nwave] = { 0,  9,  0,  4,  0, 36,   0,  12,   0,   4,   0,   0};
-uint8_t  period     [nwave] = {12,  9,  6,  4, 18, 36,  18,  12,   6,   4,   9,  36}; //N = 6, 8, 12, 18, 4, 2, etc
-uint8_t  wspeed     [nwave] = { 5,  4,  3,  2,  6,  8,   6,   5,   3,   2,   4,   8};
+uint16_t wave_start_pixel[nwave] = {20, 40, 55, 75, 95, 95, 115, 135, 150, 165, 185, LEDS_PER_RING/2}; //204
+uint8_t  wave_start_ring [nwave] = { 0,  9,  0, 12,  0,  6,   0,   9,   0,   6,   0, 36};
+uint8_t  wave_period     [nwave] = {12,  9,  6, 12, 18,  6,  12,   9,   6,   6,  18, 36}; //N = 6, 8, 12, 18, 4, 2, etc (leave int for % arg)
+uint8_t  wave_speed     [nwave] = { 5,  4,  3,  2,  5,  3,   5,   3,   2,   2,   3,  6};
 //uint8_t  amplitude  [nwave] = {5, 5, 5, 5}; //can put this back if desired
 
 void wave() {
-
+  dim_mid_layer(6); //arg is number dim units per cycle: large values dim faster
   //this loop structure means that the higher index waves will overwrite the lower
-  for( uint8_t i=0; i < nwave*2; i++ ) {
-    //draw wave
-    //for( uint8_t j=start_ring[i]-1; j < start_ring[i]+period[i]; j++ ) { //1 period
+  uint8_t thickness = 3;//scale_param(MID_COLOR_THICKNESS, 1, 3); 
+  for( uint8_t i=0; i < nwave*2; i++ ) { //CHANGE BACK TO nwave*2
     for(uint8_t j = 0; j < NUM_RINGS; j++) {
-      //uint16_t pixel = start_pixel[i%nwave] + amplitude[i%nwave] * sin(TWO_PI * j / period[i%nwave]); //use amplitude array
-      uint16_t pixel = start_pixel[i%nwave] + period[i%nwave]/2 * sin(TWO_PI * j / period[i%nwave]); //amplitude=period/2
+      if( (j+wave_start_ring[i%nwave]) % (wave_period[i%nwave]*2) >= wave_period[i%nwave] ) { //half structure
+        continue;
+      }
+      //uint16_t pixel = wave_start_pixel[i%nwave] + amplitude[i%nwave] * sin(TWO_PI * j / wave_period[i%nwave]); //use amplitude array
+      uint16_t pixel = round(float(wave_start_pixel[i%nwave]) + max(4.,float(wave_period[i%nwave]/2)) * sin(TWO_PI * j / wave_period[i%nwave])); //amplitude=period/2
       if( i < nwave )
         pixel = LEDS_PER_RING - pixel; //mirror
       
-      if( (j+start_ring[i%nwave]) % (period[i%nwave]*2) >= period[i%nwave] ) { //half structure
-        mid_layer[j][pixel] = TRANSPARENT;
-        continue;
-      }
-      uint8_t b = j%(NUM_RINGS/4) * 12 / (NUM_RINGS/4); //blend ranges over every 4th structure
-      mid_layer[j][pixel] = get_mid_color(i%nwave < 2*nwave/3 ? 0 : 1, i%nwave < nwave/3 ? 1 : 2, b, 0);
+      uint8_t b = j%(NUM_RINGS/4) * (MID_GRADIENT_SIZE-1) / (NUM_RINGS/4); //blend ranges over every 4th structure
+      uint8_t c1 = getWaveC1(i), c2 = getWaveC2(i);
+      for( uint8_t k = 1; k < thickness+1; k++ )
+        mid_layer[j][pixel+k] = get_mid_color(c1, c2, b, 0);
       //Serial.print("r " + String(j) + " p " + String(pixel) + "; ");
     }
     //Serial.println();
     //move wave for next loop
-    if( mid_count % wspeed[i%nwave] == 0 )
-      start_ring[i%nwave] = (start_ring[i%nwave] < NUM_RINGS-1 ? start_ring[i%nwave]+1 : 0);
+    if( mid_count % wave_speed[i%nwave] == 0 )
+      wave_start_ring[i%nwave] = (wave_start_ring[i%nwave] < NUM_RINGS-1 ? wave_start_ring[i%nwave]+1 : 0);
   }
-  
-}
+} //end wave()
 
+uint8_t getWaveC1(uint8_t i) {
+  if( MID_NUM_COLORS <= 1 )
+    return 0;
+  else if( MID_NUM_COLORS == 2 )
+    return i%2;
+  else
+    return i%3;
+}
+uint8_t getWaveC2(uint8_t i) {
+  if( MID_NUM_COLORS <= 1 )
+    return 0;
+  else if( MID_NUM_COLORS == 2 )
+    return (i+1)%2;
+  else
+    return (i+1)%3;
+}
 
 
 //-------------------------------- ROTATING RINGS ---------------------------------
