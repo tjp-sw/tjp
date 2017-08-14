@@ -8,7 +8,7 @@ import mongo
 RETURN_MOCK = False
 RETURN_MOCK_NEW_PROCESSING = True
 
-INTERNAL_ANIMATIONS_DB_INTER_DEBUG = False
+INTERNAL_ANIMATIONS_DB_INTER_DEBUG = True
 
 # Class for interfacing with the audio database on the pi.
 class DataBaseInterface:

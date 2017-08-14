@@ -246,17 +246,17 @@ def check_art_car_status(ring_num, amplitude):
         # with every node getting the 'hello' ring. (Not just a response to whoever sent the cahnnel data)
         oldest_ring = artCarHandler.get_oldest_ring()
 
-        # send the hello animation broadcast wtih target ring
-        # HELP: HOW TO SEND HELLO ANIMATION AND RING NUM?
-        # show_parameters[HELLO_ANIMATION_PARAM_START] = artCarHandler.get_ring_animation(oldest_ring)
-        # TODO do_send(?, ?) i.e. do_show(None, oldest_ring)
-        pass
+        # send the hello animation broadcast with target ring
+        show_parameters[ART_CAR_RING_PARAM] = oldest_ring
+        show_parameters[HELLO_ANIMATION_PARAM_START] = artCarHandler.get_ring_animation(oldest_ring)
 
+    # 8/13/17 BECAUSE ONLY HAVING ONE RING DOING HELLO ANIMATIONS AT A TIME_LIMIT
+    # THE CODE BLOCK BELOW IS UNNEED... BUT IF DOING HELLO ANIMATIONS ON
+    # MULTIPLE RINGS EVER... FUNCTIONALITY BELOW IS NEEDED
     # send hello animation stop message broadcast for target ring
-    for ring_num in artCarHandler.rings_to_stop_hello_animation:
-        # HELP: HOW TO SEND HELLO ANIMATION AND RING NUM?
-        # TODO do_send(?, ?) i.e. do_send(None, oldest_ring)
-        pass
+    # for ring_num in artCarHandler.rings_to_stop_hello_animation:
+        # HELP: HOW TO SEND (stop) HELLO ANIMATION TO MULTIPLE RING NUMS?
+    #    pass
 
 do_list(None, None)
 print sorted(control_messages.keys())

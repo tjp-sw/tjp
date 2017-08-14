@@ -23,10 +23,10 @@ NUM_COLORS_PER_PALETTE = 7
 
 # splitting 7 color animations into two categories
 # 1) hello animaitons 2) full sctructure art car edm animations
-NUM_7_COLOR_ANIMATIONS_HELLO_START = 0
-NUM_7_COLOR_ANIMATIONS_HELLO_END = 55
-NUM_7_COLOR_ANIMATIONS_AC_EDM_START = 56
-NUM_7_COLOR_ANIMATIONS_AC_EDM_END = NUM_7_COLOR_ANIMATIONS - 1
+NUM_7_COLOR_ANIMATIONS_HELLO_START = 128
+NUM_7_COLOR_ANIMATIONS_HELLO_END = 133
+NUM_7_COLOR_ANIMATIONS_AC_EDM_START = 1
+NUM_7_COLOR_ANIMATIONS_AC_EDM_END = 8
 
 NUM_BASE_TRANSITIONS = 1
 NUM_MID_TRANSITIONS = 1
@@ -67,6 +67,7 @@ MID_PARAM_END = 16
 SPARKLE_PARAM_START = 17
 SPARKLE_PARAM_END = 27
 SEVEN_PAL_BEAT_PARAM_START = 28
+ART_CAR_RING_PARAM = 29
 SEVEN_PAL_BEAT_PARAM_END = 31
 TRANS_PARAM_START = 32
 TRANS_PARAM_END = 39
@@ -106,7 +107,7 @@ show_bounds = [  # order must match show_parameters
         [0, 255], # sparkle spawn frequency, 0 == off entirely (Functions as a boolean when 0|1)
         # show bounds 28 through 30 concern 7-color edm animations
         [0, NUM_7_COLOR_ANIMATIONS],  # which 7 color animation to play, show bound 28
-        [-1, 72], # Ring number of art car (-1 is no car detected)
+        [-1, 72], # Ring number of art car (-1 is no car detected), show bound 29
         [0, NUM_BEAT_EFFECTS],  # which beat effect to use to respond to beat with LEDs, show bound 30
 
         [1, NUM_PALETTE_CHANGE_STYLES], # Palette change style (0 is immediate)
@@ -227,7 +228,7 @@ event_queue = SortedDLL()  # create sorted dll to act as the audio event queue (
 NUM_AUDIO_CHANNELS = 7
 current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
 next_audio_event = AudioEvent(-1, -1, "init", "init")
-INTERNAL_ANIMATIONS_DEBUG = False
+INTERNAL_ANIMATIONS_DEBUG = True
 
 
 def constrained_random_parameter(i):
@@ -485,12 +486,14 @@ def edm_program(init=False):
 
 # choose random 7 color animation values for full structure animations
 def art_car_edm(ignored=True):
-    print "DOING ART CAR ANIMTONAS!"
-    # TODO use the split 7 color animations... but this totally works for now
-    for i in range(SEVEN_PAL_BEAT_PARAM_START, SEVEN_PAL_BEAT_PARAM_END):
-        show_parameters[i] = constrained_random_parameter(i)
-    constrain_show()
+    print "DOING ART CAR EDM ANIMATIONS!"
+
+    # NOTE art car ring num is param 29... between the beat param "starts" and "ends"... should be fixed... eventually
+    show_parameters[SEVEN_PAL_BEAT_PARAM_START] = constrained_random_parameter(SEVEN_PAL_BEAT_PARAM_START)
+    show_parameters[SEVEN_PAL_BEAT_PARAM_END - 1] = constrained_random_parameter(SEVEN_PAL_BEAT_PARAM_END - 1)
+    show_parameters[SEVEN_PAL_BEAT_PARAM_END] = constrained_random_parameter(SEVEN_PAL_BEAT_PARAM_END)
     choose_random_colors_from_edm_palette()
+    constrain_show()
 
 TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
 # For Lee testing: uncomment this

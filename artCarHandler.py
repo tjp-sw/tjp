@@ -2,7 +2,10 @@ from shows import *
 from plyru import lrucache
 from sys import maxint
 
-ART_CAR_DETECTION_DEBUG = False
+ART_CAR_DETECTION_DEBUG = True
+
+# max amount ring amount from already tracked ring to consider probably the same art car
+NEIGHBOR_RANGE = 3
 
 # Utilize a LRU to handle evictions from the ring_to_hello_animation's
 # cache for me. With six nodes sending info should have a max size of 6.
@@ -126,7 +129,7 @@ class ArtCarHandler:
     def give_suitable_hello_animation(self, ring_num):
         # check if neighbor
         for i in self.ring_to_hello_animation.keys():
-            if abs(ring_num - i) == 1: # direct next door nieghbor
+            if abs(ring_num - i) <= NEIGHBOR_RANGE: # direct next door neighbor
 
                 # copy animation to new ring
                 self.ring_to_hello_animation[ring_num] = self.ring_to_hello_animation[i]
@@ -149,7 +152,7 @@ class ArtCarHandler:
 
         # currently grabbing first avaliable hello animaiton
         # TODO randomize a bit
-        for i in range(0, HELLO_ANIMTIONS_NUM): # using edm animations for hello animations
+        for i in range(NUM_7_COLOR_ANIMATIONS_HELLO_START, NUM_7_COLOR_ANIMATIONS_HELLO_END): # using edm animations for hello animations
             if i not in self.hello_animation_to_ring:
                 # add to dictionary to keep track / ensure uniqueness
                 # will be fetched and put into show_params in brain.py
