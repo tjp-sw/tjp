@@ -259,9 +259,9 @@ void do_command () {
           if (DEBUG_LEVEL) {
             Serial.print("Gain ");
             Serial.println(ch_gain[ch]);
+            Serial.print("Now Playing ");
+            Serial.println(channels[ch]);
           }
-          Serial.print("Now Playing ");
-          Serial.println(channels[ch]);
         }
       }
       tsunami.samplerateOffset(0, 0);        // Reset sample rate offset to 0

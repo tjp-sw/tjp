@@ -90,6 +90,9 @@ inline void test_strands() {
 
 inline void test_strands_2strands_only() {
   static uint16_t delay_factor = 0;
+
+  uint8_t col_index  = (loop_count/2) % 4; 
+  CRGB color = col_index == 0 ? CRGB::White : col_index == 1 ? CRGB::Red : col_index == 2 ? CRGB::Blue : CRGB::Green;
   if(loop_count % 2 == 0) {
     if(delay_factor == 0 || delay_factor >= 60) { delay_factor = 1; }
     else { delay_factor*=2; }
@@ -97,18 +100,20 @@ inline void test_strands_2strands_only() {
       Serial.println("delay(" + String(TEST_STRANDS_DELAY_INC * delay_factor) + ")");
     #endif
     for(uint16_t pixel = 0; pixel < PHYSICAL_LEDS_PER_RING; pixel++) {
-      set_led(6, pixel, CRGB::White);//CRGB(128,128,128);
+      set_led(6, pixel, color);//CRGB(128,128,128);
       set_led(7, pixel, CRGB::Black);//CRGB(128,128,128);
     }
   }
   else {
     for(uint16_t pixel = 0; pixel < PHYSICAL_LEDS_PER_RING; pixel++) {
       set_led(6, pixel, CRGB::Black);
-      set_led(7, pixel, CRGB::White);
+      set_led(7, pixel, color);
     }
   }
-  
-  LEDS.show();
-  delay(1000 * delay_factor);
+
+  unsigned long max = millis() + 1000*delay_factor;
+  while(millis() < max) {
+    LEDS.show();
+  }
 }
 

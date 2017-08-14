@@ -323,5 +323,99 @@ inline void fire_hello() {
   }
 }
 
+//---------- BLACK HOLE ------------
+
+inline void black_hole_new() {
+  const uint8_t starting_height = HALF_RING / 2;
+  const uint8_t throttle = 5;
+  const uint8_t max_radius = 25;
+  const uint8_t height_to_width = 6;
+  const uint8_t range = max_radius * 3;
+
+  uint8_t cur_radius = edm_count/throttle;
+  if(cur_radius > max_radius) { cur_radius = max_radius; }
+
+  uint8_t border_size = cur_radius / 12;
+
+  for(int8_t ring_offset = -1*range/height_to_width; ring_offset < range/height_to_width; ring_offset++) {
+    uint8_t ring = (NUM_RINGS + ART_CAR_RING + ring_offset) % NUM_RINGS;
+    if(ring < node_number*RINGS_PER_NODE || ring >= (node_number+1)*RINGS_PER_NODE) { continue; }
+    ring -= node_number*RINGS_PER_NODE;
+
+    for(int16_t pixel_offset = -1*range; pixel_offset < range; pixel_offset++) {
+      uint16_t pixel = starting_height + pixel_offset;
+      uint32_t dist_sq = ring_offset*ring_offset*height_to_width*height_to_width + pixel_offset*pixel_offset;
+      if(dist_sq <= cur_radius*cur_radius) {
+        set_led(ring, pixel, CRGB::Black);
+      }
+      else if(dist_sq <= (cur_radius+border_size)*(cur_radius+border_size)) {
+        set_led(ring, pixel, CRGB::White);
+      }
+      else {
+        // Pull pixels toward center of black hole
+      }
+    }
+  }
+}
+
+inline void black_hole() {
+  const uint8_t starting_height = HALF_RING / 2;
+  const uint8_t throttle = 5;
+  const uint8_t max_radius = 25;
+  const uint8_t height_to_width = 6;
+
+  uint8_t cur_radius = edm_count/throttle;
+  if(cur_radius > max_radius) { cur_radius = max_radius; }
+
+
+  // Pull pixels toward black hole
+  for(uint8_t r = cur_radius + height_to_width; r < 3*cur_radius; r++) {
+    for(int8_t ring_offset = -1*r/height_to_width; ring_offset <= r/height_to_width; ring_offset++) {
+      
+      uint8_t ring = (NUM_RINGS + ART_CAR_RING + ring_offset) % NUM_RINGS;
+      if(ring < node_number*RINGS_PER_NODE || ring >= (node_number+1)*RINGS_PER_NODE) { continue; }
+      ring -= node_number*RINGS_PER_NODE;
+
+      for(int8_t pixel_offset = -1*r; pixel_offset < 0; pixel_offset++) {
+        //uint8_t dist = 
+      }
+      
+      for(int8_t pixel_offset = 0; pixel_offset < r; pixel_offset++) {
+        
+      }
+    }
+  }
+
+  // Draw black hole
+  for(uint8_t r = 0; r <= cur_radius + height_to_width; r++) {
+    uint16_t min_sum_sq = (r-.5)*(r-.5);
+    uint16_t max_sum_sq = (r+.5)*(r+.5);
+
+    for(int8_t ring_offset = -1*r/height_to_width; ring_offset <= r/height_to_width; ring_offset++) {
+      
+      uint8_t ring = (NUM_RINGS + ART_CAR_RING + ring_offset) % NUM_RINGS;
+      if(ring < node_number*RINGS_PER_NODE || ring >= (node_number+1)*RINGS_PER_NODE) { continue; }
+      ring -= node_number*RINGS_PER_NODE;
+
+
+      for(int8_t pixel_offset = -1*r; pixel_offset <= r; pixel_offset++) {
+        uint32_t sum_sq = ring_offset*ring_offset*height_to_width*height_to_width + pixel_offset*pixel_offset;
+        if(sum_sq < min_sum_sq || sum_sq >= max_sum_sq) { continue; }
+
+        if(r <= cur_radius) {
+          set_led(ring, starting_height + pixel_offset, CRGB::Black);
+          if(pixel_offset >= 0) {
+            set_led(ring, starting_height + pixel_offset+1, CRGB::Black);
+          }
+        }
+        else {
+          // Border
+          set_led(ring, starting_height + pixel_offset, CRGB::White);
+        }
+      }
+    }
+  }
+}
+
 
 
