@@ -183,29 +183,6 @@ class Music:
         #compiles array of music to send
         msg = [0] * 4
 
-        if self.played_low < now_time - timedelta (minutes= self.low_wait):
-            self.low_wait = random.randint(30, 60)
-            low = sounds.find_low()
-            self.played_low = now_time
-            #self.check_drone = now_time
-            msg[0] = low
-
-        if self.played_mid <= (now_time - timedelta(seconds=15)):
-            self.played_mid = now_time
-            msg[1] = sounds.find_mid()
-
-        if self.checked_high <= (now_time - timedelta(seconds=25)):
-            #play_chance = random.randint(0, 4)
-            #if play_chance == 0 or \
-            #self.played_high <= (now_time - timedelta(minutes=2)):
-            msg[2] = sounds.find_high()
-            self.played_high = now_time
-            #self.checked_high = now_time
-            
-        """
-        #compiles array of music to send
-        msg = [0] * 4
-
         if self.need_drone or self.played_low < now_time - timedelta (minutes= self.low_wait):
             self.low_wait = random.randint(30, 60)
             low = sounds.find_low()
@@ -225,7 +202,7 @@ class Music:
                 self.played_high = now_time
             self.checked_high = now_time
 
-        
+        """
         elif self.check_drone < now_time - timedelta (minutes= 1):
             self.check_drone = now_time
             if DEBUG > 1:

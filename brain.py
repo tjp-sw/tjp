@@ -210,7 +210,7 @@ def get_external_amplitude_sum(channel_data):
         try:
             amplitude += abs(ord(channel_data[i]) - ord(channel_data[i+7]))
         except:
-            #print "channel data format does not have 2 * 7 channels of information " + str(len(channel_data))
+            print "channel data format does not have 2 * 7 channels of information " + str(len(channel_data))
             return -1
 
     return amplitude
