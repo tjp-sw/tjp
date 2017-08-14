@@ -12,13 +12,12 @@ internal_show_init = True
 internal_audio_show = True  # triggers internal audio animations..
 
 mega_to_node_map = {
-    1: 4,
-    2: 2,
+    2: 0,
     3: 1,
-    4: 0,
-    5: 5,
-    6: 1,
-    7: 3,
+    1: 2,
+    6: 3,
+    5: 4,
+    4: 5,
     }
 
 # close all TCP connections and continue to run
