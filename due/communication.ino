@@ -581,8 +581,8 @@ inline void do_heartbeat() {
   if ((node_number == 255) && (loop_start_time_msec > last_announcement_msec + 1000)) {
     #ifdef I_AM_NODE_MEGA
       if (remote.connected()) {
-        const char mega_message[3] = {'m', (char)mega_number, '\0'};
-        remote.print(mega_message);
+        const char mega_message[3] = {'m', (char)mega_number, '\127'};	// config_switches placeholder
+        remote.write(mega_message, 3);
         #ifdef DEBUG
           print_status("announcing");
         #endif
