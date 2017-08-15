@@ -846,7 +846,10 @@ def drive_internal_animations():
                 show_parameters[SPARKLE_INDEX] = constrained_random_parameter(SPARKLE_INDEX)
                 show_parameters[MIDLAYER_INDEX] = constrained_random_parameter(MIDLAYER_INDEX)
                 show_parameters[BACKGROUND_INDEX] = constrained_random_parameter(BACKGROUND_INDEX)
-                choose_random_colors_from_edm_palette()
+                choose_new_playa_palette()
+
+                if INTERNAL_ANIMATIONS_DEBUG:
+                    print "event with magnitude %i triggered a MAJOR animation change event. ALL layer animations switched."
 
             # remove the 'actioned on' event from the queue
             try:
