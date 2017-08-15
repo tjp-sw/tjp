@@ -611,7 +611,7 @@ def playa_program(init=False):
             # real_start_time = BURNING_MAN_START - time.time()
             real_start_time = time.time()
             real_time = time.time()
-            edm_program(init)	# good enough for now
+            do_internal_sound_animations(init)
             show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0	# no EDM animations
             show_mode = SUNRISE
         return
