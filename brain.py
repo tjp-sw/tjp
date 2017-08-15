@@ -212,6 +212,7 @@ def check_art_car_status(ring_num, amplitude):
     if ring_ac_newly_detected is None:
         # artcar total structure animation was running now stop
         get_internal_animations_handler().set_do_animations(True)
+        print "stopping art car edm takeover animations"
         do_auto(None, playa_program)
         do_show(None, None)
 
@@ -221,6 +222,7 @@ def check_art_car_status(ring_num, amplitude):
 
         # trigger edm animations on whole structure
         do_auto(None, art_car_edm)
+        do_show(None, None)
 
     elif ring_ac_newly_detected >= 0:
         # Utilizing ArtCarHadler to know which is the oldest ring_num.
@@ -309,9 +311,9 @@ while running:
                             if amplitude_sum > 0: # otherwise error reading channel_data
                                 esitmated_ring_number, mean_intensity = analyze_beat(node, amplitude_sum, timestamp)
 
-                            show_mode = get_show_mode()
-                            if show_mode == 1 or show_mode == 3: # not during meditaiton
-                                check_art_car_status(esitmated_ring_number, mean_intensity)
+                                show_mode = get_show_mode()
+                                if show_mode == 1 or show_mode == 3: # not during meditaiton
+                                    check_art_car_status(esitmated_ring_number, mean_intensity)
                     elif message[0:1] == 'm':
                         mega_number = ord(message[1:2])
                         try:

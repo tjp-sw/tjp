@@ -521,8 +521,6 @@ def meditaiton_animations(ignored=True):
     choose_new_playa_palette()
     constrain_show()
 
-    print_parameters()
-
 # choose random 7 color animation values for full structure animations
 def art_car_edm(ignored=True):
     print "DOING ART CAR EDM ANIMATIONS!"
@@ -534,11 +532,9 @@ def art_car_edm(ignored=True):
     choose_random_colors_from_edm_palette()
     constrain_show()
 
-    print_parameters()
-
-#TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
+TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
 # For Lee testing: uncomment this
-TEST_CYCLE_MINUTES = 15
+#TEST_CYCLE_MINUTES = 15
 NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
 
 
@@ -652,16 +648,20 @@ def playa_program(init=False):
     # Show mode is set in music.py
     show_mode_before = show_mode
     set_playa_mode()
-    if show_mode == 0 or show_mode == 2: # sunrise or sunset meditaiton time
-        # do meditation animations
-        meditaiton_animations()
-    elif show_mode_before == show_mode:
-        choose_new_playa_palette()
 
     bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
 
     print ' '
     print '---> Playa time advanced to', time.ctime(virtual_time)
+
+    if show_mode == 0 or show_mode == 2: # sunrise or sunset meditaiton time
+        # do meditation animations
+        meditaiton_animations()
+        return
+    elif (show_mode == 1 or show_mode == 3) and (show_mode_before == 0 or show_mode_before == 2):
+        # need to stop the meditation animations
+        show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0
+        print "stopping meditation animations"
 
     # do intenral sound animations after time progresses for palette purposes
     do_internal_sound_animations()
@@ -696,10 +696,9 @@ def do_internal_sound_animations(init = False):
         print 'performing internal audio show'
 
     if init:
-        print "INITING INTENRAL ANIMTAIONS"
         if show_colors[0] == [33,33,33]:	# invalid values before initialization
             bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
-            print "MADE ITITJA;LSKDJF;LAKSDFJ"
+
             # choose random starting values for each of the parameters
             for i in range(0, NUM_PARAMETERS):
                 show_parameters[i] = constrained_random_parameter(i)
@@ -868,7 +867,7 @@ def drive_internal_animations():
 
                 choose_new_playa_palette()
 
-            if magnitude > 5:
+            if float(magnitude) > 5.9:
                 show_parameters[SPARKLE_INDEX] = constrained_random_parameter(SPARKLE_INDEX)
                 show_parameters[MIDLAYER_INDEX] = constrained_random_parameter(MIDLAYER_INDEX)
                 show_parameters[BACKGROUND_INDEX] = constrained_random_parameter(BACKGROUND_INDEX)
