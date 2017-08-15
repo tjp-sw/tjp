@@ -14,17 +14,19 @@ def panel_touched():
 
 def manual_meditation(med):
     meditation_num = int(med)
-    if meditation_num in range(1,14):
+    if meditation_num in range(1, 14):
         Music.meditation = True
-        if (meditation_num % 2):  # odd
-            shows.set_show_mode(shows.SUNRISE)
-        else:
-            shows.set_show_mode(shows.SUNSET)
+        #if (meditation_num % 2):  # odd
+            #shows.set_show_mode(shows.SUNRISE)
+        #else:
+            #shows.set_show_mode(shows.SUNSET)
         return play([0, 4000+meditation_num])
     return None
 
+
 def check_meditation(node=0):
     return send_music(node, 4)
+
 
 # --------------------Receives information from the Tsunami--------------------------------
 # Returns True if the tsunami is playing the looping drone, False if it is not.
@@ -42,16 +44,16 @@ def status_update(message):
             if this_sound in sounds.MEDITATIONS_SOUNDS:
                 print "Meditation Finished"
                 Music.meditation = False
-                if datetime.now().time() > time(hour=19):
-                    shows.set_show_mode(shows.NIGHT)
-                else:
-                    shows.set_show_mode(shows.DAY)
+                #if datetime.now().time() > time(hour=19):
+                #    shows.set_show_mode(shows.NIGHT)
 
+                #else:
+                #    shows.set_show_mode(shows.DAY)
                 return True
         except ValueError:
             print"Ending sound ValueError " + str(len(message))
             print message[1:]
-            
+
     elif message[0] == 'N':
         if DEBUG:
             print "Need Drone"
@@ -78,7 +80,7 @@ def send_music(node=0, command=1, field2=0, channels=None):
                 break
     if empty_msg is False:
         ctrl_msg = 'a' + ';'.join([str(node), str(command), str(field2),
-                                  ','.join(str(ch) for ch in channels)]) + ';'
+                                   ','.join(str(ch) for ch in channels)]) + ';'
         # print 'audio command:', ctrl_msg
         return ctrl_msg
     return None
@@ -106,7 +108,8 @@ class Music:
     no_low = datetime.min
     no_mid = datetime.min
     no_high = datetime.min
-    #show_mode = 0
+
+    # show_mode = 0
 
     def __init__(self):
         # self.meditation = False
@@ -117,18 +120,17 @@ class Music:
         self.played_high = datetime.min
         self.check_drone = datetime.max
         self.checked_meditation = datetime.min
-        self.low_wait = random.randint(3,6)
-        self.mid_wait = random.randint(5,25)
-        self.high_wait = random.randint(20,35)
-
+        self.low_wait = random.randint(3, 6)
+        self.mid_wait = random.randint(5, 25)
+        self.high_wait = random.randint(20, 35)
 
     def tick(self, silent=False):
         now_time = datetime.now()
         if DEBUG > 1:
             print now_time
         bm_day = now_time.weekday()
- 
-        #Check if mediation has ended
+
+        # Check if mediation has ended
         if Music.meditation:
             if DEBUG > 1:
                 print "meditation"
@@ -137,7 +139,7 @@ class Music:
                 return check_meditation()
             return None
 
-        #Uncomment to silence sound for art cars
+        # Uncomment to silence sound for art cars
         """
         if shows.show_parameters[29] != shows.NO_ART_CAR:
             if DEBUG:
@@ -153,31 +155,31 @@ class Music:
             if time(6, 25) <= now_time.time() <= time(19, 25):
                 if DEBUG > 1:
                     print "setting day"
-                #shows.set_show_mode(shows.DAY)
+                    # shows.set_show_mode(shows.DAY)
             else:
-                #shows.set_show_mode(shows.NIGHT)
+                # shows.set_show_mode(shows.NIGHT)
                 if DEBUG > 1:
                     print "setting night"
         else:
             if DEBUG > 1:
                 print "setting meditation status"
             Music.meditation = True
-            if this_meditation % 2: # odd
+            if this_meditation % 2:  # odd
                 shows.set_show_mode(shows.SUNRISE)
             else:  # even
                 shows.set_show_mode(shows.SUNSET)
             return play([0, this_meditation])
 
-        #Drone Logic
+        # Drone Logic
         if self.need_drone:
-            print "Setting Drone" 
-            self.need_drone=False
+            print "Setting Drone"
+            self.need_drone = False
             return "a0;6;" + str(bm_day) + ";"
 
-        #Soundscape Compilation Logic
+        # Soundscape Compilation Logic
         msg = [0] * 4
 
-        if self.played_low < now_time - timedelta (minutes= self.low_wait):
+        if self.played_low < now_time - timedelta(minutes=self.low_wait):
             self.low_wait = random.randint(3, 5)
             low = sounds.find_low()
             self.played_low = now_time
@@ -186,14 +188,13 @@ class Music:
 
         if self.played_mid <= (now_time - timedelta(seconds=self.mid_wait)):
             self.played_mid = now_time
-            self.mid_wait = random.randint(5,25)
+            self.mid_wait = random.randint(5, 25)
             msg[1] = sounds.find_mid()
 
         if self.played_high <= (now_time - timedelta(seconds=self.high_wait)):
-            self.high_wait = random.randint(20,35)
+            self.high_wait = random.randint(20, 35)
             self.played_high = now_time
             msg[2] = sounds.find_high()
-
 
         """
         elif self.check_drone < now_time - timedelta (minutes= 1):
@@ -201,12 +202,10 @@ class Music:
             if DEBUG > 1:
                 print "check_drone"
             return check_drone()
-
         if Music.no_mid <= (now_time - timedelta(seconds=self.mid_wait)):
             msg[1] = sounds.find_mid()
             self.mid_wait = random.randint(5, 30)
             Music.no_mid = datetime.max
-
         if Music.no_high <= (now_time - timedelta(seconds=self.high_wait)):
                 msg[2] = sounds.find_high()
                 self.high_wait = random.randint(30,60)
@@ -216,7 +215,6 @@ class Music:
         if panel_touched():
             msg[3] = sounds.find_high()
 
-        if DEBUG>1:
+        if DEBUG > 1:
             print msg
         return play(msg)
-
