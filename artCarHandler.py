@@ -108,17 +108,12 @@ class ArtCarHandler:
             else:
                 # start tracking ring
                 self.ring_to_animation_start_time[ring_num] = time.time()
-<<<<<<< Updated upstream
-
-                if ART_CAR_DETECTION_DEBUG:
-                    print "starting to track ring_num %i" % (ring_num)
-=======
                 try:
                     if ART_CAR_DETECTION_DEBUG:
                         print "ring_num %i has met art car hello threshold level. given hello %i" % (ring_num, self.ring_to_hello_animation[ring_num])
                 except:
                     pass
->>>>>>> Stashed changes
+
 
             return ring_num
         else:

@@ -8,10 +8,8 @@ from audioInfo import AudioEvent, AudioFileInfo
 from audio_event_queue import SortedDLL
 
 DEBUG = True
-<<<<<<< Updated upstream
 INTERNAL_ANIMATIONS_DEBUG = False
-=======
->>>>>>> Stashed changes
+
 
 # Non-Color Animation Parameter Constants
 #
@@ -456,11 +454,8 @@ def edm_program(init=False):
         # choose which parameter to change
         change_bg = randint(BACKGROUND_INDEX + 4, MIDLAYER_INDEX - 1)
         show_parameters[change_bg] = constrained_random_parameter(change_bg)
-<<<<<<< Updated upstream
-        if DEBUG:
-=======
+
         if DEBUG:   
->>>>>>> Stashed changes
             print "background parameter ", change_bg, "changed to ", show_parameters[change_bg]
 
     # to avoid hard transitions, change disruptive mid animation parameters only when you change mid layer choice
@@ -863,12 +858,9 @@ def drive_internal_animations_v2(init):
             if palette_time - palette_start_time > PALETTE_TIME_LIMIT:
                 palette_start_time = palette_time
 
-<<<<<<< Updated upstream
+
                 choose_new_playa_palette()
-=======
-                choose_new_playa_palette() #TEMP CHENIGN TO EDM FOR 8/13 DEMO
-                #choose_random_colors_from_edm_palette()
->>>>>>> Stashed changes
+
 
             if magnitude > 5:
                 show_parameters[SPARKLE_INDEX] = constrained_random_parameter(SPARKLE_INDEX)
@@ -1085,12 +1077,7 @@ def progress_audio_queue():
             break
 
         stale = next_audio_event.exec_time <= timeMs() - 1000
-<<<<<<< Updated upstream
 
-=======
-        if DEBUG:
-            print "diff event - now = " + str(next_audio_event.exec_time - timeMs())
->>>>>>> Stashed changes
         if stale:
             if DEBUG:
                 print "it's " + str(timeMs()) + " stale event " + str(next_audio_event) + " popping!"

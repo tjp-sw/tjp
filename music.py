@@ -184,10 +184,6 @@ class Music:
             self.check_drone = now_time
             msg[0] = low
 
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
         if self.played_mid <= (now_time - timedelta(seconds=self.mid_wait)):
             self.played_mid = now_time
             self.mid_wait = random.randint(5,25)
