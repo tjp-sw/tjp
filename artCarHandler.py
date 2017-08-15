@@ -30,7 +30,7 @@ class ArtCarHandler:
         self.rings_to_stop_hello_animation = []
 
         self.flip_mock = False
-        self.mock = False
+        self.mock = True
 
     # returns the oldest ring still above threshold amplitude
     def get_oldest_ring(self):

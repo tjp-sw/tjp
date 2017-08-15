@@ -6,10 +6,12 @@ import sys
 from dataBaseInterface import DataBaseInterface
 from audioInfo import AudioEvent, AudioFileInfo
 from audio_event_queue import SortedDLL
+from internalAnimationsHandler import InternalAninamtionsHandler
 
 DEBUG = True
-INTERNAL_ANIMATIONS_DEBUG = False
+INTERNAL_ANIMATIONS_DEBUG = True
 
+internal_aa_handler = InternalAninamtionsHandler()
 # Non-Color Animation Parameter Constants
 #
 # All (most of) the parameters for a show are stored in an array called show_parameters, so that they
@@ -218,7 +220,6 @@ NO_ART_CAR = -1
 ART_CAR_HELLO_DURATION = 30 # seconds before entire structure edm art car takeover
 ART_CAR_MIN_HELLO_DURATION = 5 # seconds before sending ring hello animation
 #art_car_hello = False # not used
-HELLO_ANIMTIONS_NUM = 10 # TODO figure out the actual number.... Brian send just use 7 color animations stuff...
 ART_CAR_AMPLITUDE_THRESHOLD = 100 # TODO calibrate appropriately... keep track of variation over time would be best but can get messy
 
 #testing_meditation_seconds = 20
@@ -231,11 +232,6 @@ last_show_change_sec = 0.0
 
 show_parameters = [0] * NUM_PARAMETERS
 show_colors = [[33 for rgb in range(0, 3)] for i in range(0, NUM_COLORS_PER_PALETTE)]	# invalid values
-
-event_queue = SortedDLL()  # create sorted dll to act as the audio event queue (with super duper special powers)
-NUM_AUDIO_CHANNELS = 7
-current_internal_track_per_channel = [0] * NUM_AUDIO_CHANNELS
-next_audio_event = AudioEvent(-1, -1, "init", "init")
 
 
 
@@ -422,7 +418,10 @@ def choose_random_colors_from_edm_palette():
 
 def edm_program(init=False):
     global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
-    global show_parameters, show_colors
+    global internal_aa_handler, show_parameters, show_colors
+
+    # just in case anyone wants to use this command... disabling the intenal audio animations
+    internal_aa_handler.set_do_animations(False)
 
     if init:
         if show_colors[0] == [33,33,33]:	# invalid values before initialization
@@ -660,16 +659,16 @@ def do_date(ignored, when):
 
 # ------------------------------ internal_sound_animations_program() -----------------------------------------------
 # show for when the journey playing its internal audio and the external audio
-# is not past threshold amount aka art car not detected
+# is not past threshold amount aka art car not detected or a meditation is happening
+def do_internal_sound_animations(init = False):
+    global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
+    global internal_aa_handler
 
-# still very much under development.... fine tuning audio_events processing and
-# handling here to avoid too frequent or not frequent enough animation parameter changes
-def do_internal_sound_animations(audio_msg, init = False):
-    global internal_show_init, bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
-
+    #audio_msg = internalAninamtionHandler.get_last_audio_msg()
     if INTERNAL_ANIMATIONS_DEBUG:
-        if audio_msg is not None:
-            print 'performing internal audio show for ' + audio_msg
+        #if audio_msg is not None:
+            #print 'performing internal audio show for ' + audio_msg
+        print 'performing internal audio show'
 
     if init:
         if show_colors[0] == [33,33,33]:	# invalid values before initialization
@@ -684,55 +683,18 @@ def do_internal_sound_animations(audio_msg, init = False):
             constrain_show()
             choose_new_playa_palette()  # start with day 1 color palette
 
-    internal_show_init = False
+    internal_aa_handler.set_do_animations(True)
 
-    if audio_msg is not None:
-        interpret_audio_msg(audio_msg)
+    #if audio_msg is not None:
+    #    interpret_audio_msg(audio_msg)
 
-    #pulls from event_queue
-    drive_internal_animations_v2(init)
-
-
-def interpret_audio_msg(audio_msg):
-    channel_map = get_audio_file_info(audio_msg)
-    for channel in channel_map.keys():
-        if current_internal_track_per_channel[channel] > 0: # channel already had a track on it
-            old_audio = current_internal_track_per_channel[channel]
-            remove_audio_events_from_queue(old_audio)
-
-        audioInfo = channel_map[channel]
-        current_internal_track_per_channel[channel] = audioInfo
-        queue_audio_events(audioInfo)
-
-        if audioInfo is not None:
-            if INTERNAL_ANIMATIONS_DEBUG:
-                print "setting main animation param due to new audio track's info " + str(audioInfo.file_index)
-            set_appropriate_layer_main_animation(audioInfo)
+    # uses internal_audio_animation object pulls from event_queue
+    drive_internal_animations()
 
 
-# RJS I don't like how this hard coded... if the audio contorl message changes this needs to as well.
-def get_audio_file_info(audio_msg):
-    # current msg format: a0;1;0;0,50,0,0
-    try:
-        info = audio_msg.split(";")
-        tracks = info[3].split(",")
-    except:
-        print "audio msg format is wrong or has changed", sys.exc_value
-        return {}
-
-    if INTERNAL_ANIMATIONS_DEBUG:
-        print "tracks: " +  str(tracks)
-
-    output = {}
-    i = 0
-    if tracks[i] is not "" and tracks[i] != '':
-        while(i < len(tracks)):
-            if int(tracks[i]) > 0:
-                output[i] = (DataBaseInterface().grabAudioInfo(tracks[i]))
-            i += 1
-
-    return output
-
+def get_internal_animations_handler():
+    global internal_aa_handler
+    return internal_aa_handler
 
 # set the appropriate layer's main animation based on audioInfo's predetermined suitiable animations
 def set_appropriate_layer_main_animation(audioInfo):
@@ -756,7 +718,7 @@ def set_appropriate_layer_main_animation(audioInfo):
 
             if set_random_layer_params:
                 # change bg show parameters
-                for i in range (BACKGROUND_INDEX+1, MIDLAYER_INDEX - 1):
+                for i in range(BACKGROUND_INDEX+1, MIDLAYER_INDEX - 1):
                     show_parameters[i] = constrained_random_parameter(i)
                     if DEBUG:
                         print "background parameter ", i, "changed to ", show_parameters[i]
@@ -772,7 +734,7 @@ def set_appropriate_layer_main_animation(audioInfo):
 
             if set_random_layer_params:
                 # change mid show parameters
-                for i in range (MIDLAYER_INDEX + 1, SPARKLE_PARAM_START - 1):
+                for i in range(MIDLAYER_INDEX + 1, SPARKLE_PARAM_START - 1):
                     show_parameters[i] = constrained_random_parameter(i)
                     if DEBUG:
                         print "mid parameter ", i, "changed to ", show_parameters[i]
@@ -798,16 +760,16 @@ def set_appropriate_layer_main_animation(audioInfo):
 
 # structure very similar to edm show but instead of simply timing, allow for the
 # audio events to trigger the changes. EDM program looks 1000x than this v1... so let's see how this looks
-def drive_internal_animations_v2(init):
+def drive_internal_animations():
     global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
     global show_parameters, show_colors
-    global next_audio_event, event_queue
+    global internal_aa_handler
 
     bg_time = bg_parameter_time = mid_time = mid_parameter_time = sparkle_time = sparkle_parameter_time = palette_time = time.time()
 
-    next_audio_event = progress_audio_queue() # next_audio_event is a global but just to be more clear...
+    next_audio_event = internal_aa_handler.progress_audio_queue() # next_audio_event is a global but just to be more clear...
 
-    if next_audio_event is not None:
+    if next_audio_event is not None and internal_aa_handler.doing_animations:
         # MAYBE: seperate thread handling polling event_queue and sending animations
 
         abso_diff_val = abs(next_audio_event.exec_time - timeMs())
@@ -888,16 +850,13 @@ def drive_internal_animations_v2(init):
 
             # remove the 'actioned on' event from the queue
             try:
-                if event_queue.size > 0:
+                if internal_aa_handler.event_queue.size > 0:
                     if INTERNAL_ANIMATIONS_DEBUG:
-                        print "removing actioned event: " + str(next_audio_event) + " size: " + str(event_queue.size)
+                        print "removing actioned event: " + str(next_audio_event) + " size: " + str(internal_aa_handler.event_queue.size)
 
-                    event_queue.remove(next_audio_event)
-
-                    if INTERNAL_ANIMATIONS_DEBUG:
-                        print "new size: " + str(event_queue.size)
+                    internal_aa_handler.event_queue.remove(next_audio_event)
                 else:
-                    next_audio_event = None
+                    internal_aa_handler.next_audio_event = None
             except AttributeError:
                 # print "event_queue is empty ", sys.exc_value
                 pass
@@ -907,6 +866,7 @@ def drive_internal_animations_v2(init):
     check_time_triggered_animations()
 
     constrain_show()	# keep the lights on
+
 
 # check if time limits have been reached to trigger an animation param change
 # this is necessary now that new track selections are less frequent.
@@ -984,128 +944,6 @@ def check_time_triggered_animations():
         choose_new_playa_palette()
 
 
-
-def drive_internal_animations(init):
-    global next_audio_event, event_queue
-    global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
-
-    if init:
-        bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
-
-    next_audio_event = progress_audio_queue() # next_audio_event is a global but just to be more clear...
-
-    if next_audio_event is not None:
-        # MAYBE: seperate thread handling polling event_queue and sending animations
-
-        abso_diff_val = abs(next_audio_event.exec_time - timeMs())
-        valid_time = abso_diff_val < 1000 # one sec within the auido event
-
-        if INTERNAL_ANIMATIONS_DEBUG and valid_time:
-            print "valid? " + str(valid_time) + " diff: " + str(abso_diff_val)
-            print "Event: " + str(next_audio_event)
-
-        if valid_time: #valid 'next' event
-            magnitude = next_audio_event.magnitude
-
-            #selecting any base, mind, sparkler layer param - very rudimentary.
-            # show_param = randint(0, 27)
-
-            # Selecting a random animaiton paramter to change (exluding the main animations)
-            # if the timing threshold is met to avoid too frequent param changes... TODO see how it looks with varoius 'lags'
-            show_param = -1;
-            if next_audio_event.category == "LOW":
-                # print "here 1L diff: " + str(int(time.time() - bg_parameter_start_time))
-                if int(time.time() - bg_parameter_start_time) >= BASE_PARAMETER_SWTICH_LAG:
-                    # print "here2L"
-                    show_param = get_random_range(BASE_PARAM_START + 1, BASE_PARAM_END)
-                    #show_param = randint(BASE_PARAM_START + 1, BASE_PARAM_END)
-                    bg_parameter_start_time = time.time()
-            elif next_audio_event.category == "MID":
-                # print "here1M diff: " + str(int(time.time() - mid_parameter_start_time))
-                if int(time.time() - mid_parameter_start_time) >= MID_PARAMETER_SWTICH_LAG:
-                    # print "here2M"
-                    show_param = get_random_range(MID_PARAM_START + 1, MID_PARAM_END)
-                    mid_parameter_start_time = time.time()
-            elif next_audio_event.category == "HIGH":
-                # print "here1H diff: " + str(int(time.time() - sparkle_parameter_start_time))
-                if int(time.time() - sparkle_parameter_start_time) >= SPARKLE_PARAMETER_SWTICH_LAG:
-                    # print "here2H"
-                    show_param = get_random_range(SPARKLE_PARAM_START + 1, SPARKLE_PARAM_END)
-                    sparkle_parameter_start_time = time.time()
-
-            if show_param > -1:
-                old_param_value = show_parameters[show_param]
-
-                if INTERNAL_ANIMATIONS_DEBUG:
-                    print "doing animations for event: " + str(next_audio_event)
-
-                if next_audio_event.kind == "freqband":
-                    new_param_value = constrained_weighted_parameter(show_param, magnitude)
-                    if DEBUG:
-                        print "Frq event [" + str(next_audio_event) +"]: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
-
-                elif next_audio_event.kind == "amplitude":
-                    new_param_value = constrained_weighted_parameter(show_param, magnitude)
-                    if DEBUG:
-                        print "Amp event: [" + str(next_audio_event) +"]: Set show_param[" + str(show_param) + "] from " + str(old_param_value) + " to " + str(new_param_value)
-
-                # setting the param to its new value
-                show_parameters[show_param] = new_param_value % 255
-                #do_set_show_parameter(None, str(show_param) + " " + str(new_param_value))
-
-                try:
-                    if event_queue.size > 0:
-                        print "removing actioned event: " + str(next_audio_event) + " size: " + str(event_queue.size)
-                        event_queue.remove(next_audio_event)
-                        print "new size: " + str(event_queue.size)
-                    else:
-                        next_audio_event = None
-                except AttributeError:
-                    # print "event_queue is empty ", sys.exc_value
-                    pass
-
-        if time.time() - palette_start_time > PALETTE_LAG:
-            bm_day_index = int((time.time() - BURNING_MAN_START) / 86400) % NUM_DAYS
-            #get_random_color(bm_day_index, 1) #TODO not sure what this second value should be...
-            # OR should I be using
-            choose_new_playa_palette()
-            palette_start_time = time.time()
-
-        constrain_show()
-
-def get_random_range(start, end):
-    c = choice(range(start, end))
-    if DEBUG:
-        print "random param num choice: " + str(c)
-    return c
-
-def progress_audio_queue():
-    global event_queue, next_audio_event
-    # ensure not looking at events that have already passed
-    while True:
-        try:
-            next_audio_event_node = event_queue.peek()
-            old_event = next_audio_event
-            next_audio_event = next_audio_event_node.value
-            if INTERNAL_ANIMATIONS_DEBUG and str(old_event) != str(next_audio_event):
-                print "next audio event " + str(next_audio_event)
-        except ValueError:
-            #if INTERNAL_ANIMATIONS_DEBUG:
-                #print "event_queue is empty", sys.exc_value
-            break
-
-        stale = next_audio_event.exec_time <= timeMs() - 1000
-
-        if stale:
-            if DEBUG:
-                print "it's " + str(timeMs()) + " stale event " + str(next_audio_event) + " popping!"
-            event_queue.remove(next_audio_event)
-        else:
-            break
-
-    return next_audio_event
-
-
 # similar to constrained_random_parameter but changed dependent on magnitude
 def constrained_weighted_parameter(i, magnitude):
     if show_bounds[i][0] == -1 and show_bounds[i][1] == 1:
@@ -1122,30 +960,6 @@ def constrained_weighted_parameter(i, magnitude):
     if new_parameter < 0:
         new_parameter += 256
     return new_parameter
-
-
-def remove_audio_events_from_queue(audioInfo):
-    for event in audioInfo.events:
-        try:
-            event_queue.remove(event)
-        except ValueError:
-            print "event " + str(event) + " already has been removed from queue"
-        except AttributeError:
-            print "error removing event from queue"
-
-
-def queue_audio_events(audioInfo):
-    cur_time_ms = timeMs()
-    if audioInfo is not None:
-        if INTERNAL_ANIMATIONS_DEBUG:
-            print "queueing events for audioInfo: " + str(audioInfo.file_index)
-        for event in audioInfo.events:
-            # print "event: " + str(event)
-            event.exec_time = int(event.time) + cur_time_ms
-            # print "NEW e TIME = " + str(event.exec_time) + "\nCURNT TIME = " + str(cur_time_ms)
-            node = event_queue.add(event)
-    else:
-        print "seems like it was a database miss... this will happen while we don't have all the auido files"
 
 
 # quantifying the standard deviation aka magnitude of event into show param quantities

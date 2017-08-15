@@ -5,11 +5,9 @@ from shows import *
 from beats import *
 import music
 from artCarHandler import ArtCarHandler
+from internalAnimationsHandler import InternalAninamtionsHandler
 
 artCarHandler = ArtCarHandler(ART_CAR_HELLO_DURATION, ART_CAR_AMPLITUDE_THRESHOLD, ART_CAR_MIN_HELLO_DURATION)
-
-internal_show_init = True
-internal_audio_show = True  # triggers internal audio animations..
 
 mega_to_node_map = {
     1: 2,
@@ -59,11 +57,10 @@ def do_send(socket, message):
             writing.append(s)
 
 def do_auto(ignored, show_name):
-    global auto_show, last_show_change_sec, internal_audio_show
+    global auto_show, last_show_change_sec
 
     auto_show = show_name
     if auto_show:
-        internal_audio_show = False
         auto_show(True)
         last_show_change_sec = time.time()
 
@@ -80,20 +77,6 @@ def do_show(cmd, param):
     do_send(None, struct.pack('>c%uB' % (len(show_parameters) + len(show_colors_list)), 's', *(show_parameters + show_colors_list)))
 
     print_parameters()
-
-#do a dynamically changing show based on internal audio selections. maybe inlcude hand inputs as well.
-def do_dyn_show(audio_msg):
-    global show_colors, show_parameters, internal_show_init
-
-    if INTERNAL_ANIMATIONS_DEBUG:
-        if audio_msg is not None:
-            print 'performing internal audio show for ' + audio_msg
-
-    do_internal_sound_animations(audio_msg, internal_show_init)
-    internal_show_init = False
-
-    do_show(None, None)
-    #do_show("dyn_show", None)
 
 
 next_timesync_sec = 0.0
@@ -135,9 +118,9 @@ def do_change_palette(ignored, style):
 
 
 def stop_auto(ignore, neglect):
-    global auto_show, internal_audio_show
+    global auto_show
     auto_show = None
-    internal_audio_show = True
+
 
 control_messages = {
 #    'SetAllAudio':	    do_unimplemented,
@@ -145,7 +128,6 @@ control_messages = {
 #    'SetVolCh':		do_unimplemented,
 #    'MuteAllAudio':	do_unimplemented,
     'SetAnimation':	    (do_show, None, None),
-    'SetDynAnimation':	(do_dyn_show, None),
 #    'AllLEDoff':	    (do_simple, 'program', '0'),
 #    'CheckHandStat':	do_unimplemented,
 #    'CheckAudioIn':	do_unimplemented,
@@ -217,8 +199,7 @@ def get_external_amplitude_sum(channel_data):
 
 
 def check_art_car_status(ring_num, amplitude):
-    global internal_audio_show, rings_to_hello_animation, auto_show, art_car
-    global rings_to_stop_hello_animation
+    global rings_to_hello_animation, auto_show, art_car
 
     if ring_num is None or amplitude is None:
         print "seems as those the data did not make a plane, ring -> art car detection not possible"
@@ -230,12 +211,13 @@ def check_art_car_status(ring_num, amplitude):
     print "art car ring " + str(artCarHandler.art_car)
     if ring_ac_newly_detected is None:
         # artcar total structure animation was running now stop
-        do_auto(None, None)
-        internal_audio_show = True
+        get_internal_animations_handler().set_do_animations(True)
+        do_auto(None, playa_program)
         do_show(None, None)
+
     elif ring_ac_newly_detected == artCarHandler.art_car and ring_ac_newly_detected != -1:
         # return value signaling ART_CAR_HELLO_DURATION exceeded - trigger edm animations
-        internal_audio_show = False
+        get_internal_animations_handler().set_do_animations(False)
 
         # trigger edm animations on whole structure
         do_auto(None, art_car_edm)
@@ -251,6 +233,7 @@ def check_art_car_status(ring_num, amplitude):
             # send the hello animation broadcast with target ring
             show_parameters[ART_CAR_RING_PARAM] = oldest_ring
             show_parameters[SEVEN_PAL_BEAT_PARAM_START] = artCarHandler.get_ring_animation(oldest_ring)
+            do_show(None, None)
 
 
     # send hello animation stop message broadcast for target ring
@@ -381,19 +364,15 @@ while running:
             do_send(None, encapsulated_audio_msg(audio_msg))	# always send to all nodes
             print repr(audio_msg)
             # meditation = mega.meditation
+            get_internal_animations_handler().interpret_audio_msg(audio_msg)
 
-        #pushing animation parameters across nodes
-        if internal_audio_show and time.time() > last_show_change_sec + TIME_LIMIT:
-            last_show_change_sec = time.time()
-            do_dyn_show(audio_msg)
-        elif auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
+        if auto_show and time.time() > last_show_change_sec + TIME_LIMIT:
             auto_show()
             last_show_change_sec = time.time()
             do_show(None, None)
 
     except KeyboardInterrupt:
         running = False
-
 
     except:
         raise				# uncomment for debugging
