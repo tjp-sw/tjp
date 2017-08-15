@@ -1,9 +1,5 @@
 import shows
 
-import numpy, string, time
-from random import randint
-from random import sample
-from random import choice
 import sys
 from dataBaseInterface import DataBaseInterface
 from audioInfo import AudioEvent, AudioFileInfo

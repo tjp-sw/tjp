@@ -49,7 +49,10 @@ class ArtCarHandler:
 
 
     def get_ring_animation(self, ring_num):
-        return self.ring_to_hello_animation[ring_num]
+        if self.get_detected_duration(ring_num) > self.min_hello_duration_threshold:
+            return self.ring_to_hello_animation[ring_num]
+        else:
+            return 0
 
     def get_detected_duration(self, ring_num):
         if ring_num in self.ring_to_animation_start_time:
