@@ -849,7 +849,7 @@ def drive_internal_animations():
                 choose_new_playa_palette()
 
                 if INTERNAL_ANIMATIONS_DEBUG:
-                    print "event with magnitude %.2f triggered a MAJOR animation change event. ALL layer animations switched." %(magnitude)
+                    print "event with magnitude " + str(magnitude) + " triggered a MAJOR animation change event. ALL layer animations switched."
 
             # remove the 'actioned on' event from the queue
             try:
