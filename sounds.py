@@ -90,4 +90,3 @@ def find_high(theme=datetime.today().weekday(), now_time=datetime.now().time()):
         return random.choice(HIGHS[theme])
     daily_highs = [song for sublist in HIGHS[0:(theme+1)] for song in sublist]
     return random.choice(daily_highs)
-    

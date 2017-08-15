@@ -33,6 +33,8 @@ NUM_7_COLOR_ANIMATIONS_HELLO_START = 128
 NUM_7_COLOR_ANIMATIONS_HELLO_END = 133
 NUM_7_COLOR_ANIMATIONS_AC_EDM_START = 1
 NUM_7_COLOR_ANIMATIONS_AC_EDM_END = 8
+NUM_7_COLOR_MEDITATION_ANIMATIONS_START = 192
+NUM_7_COLOR_MEDITATION_ANIMATIONS_END = 193 #TODO update with actual num of meditaiton animations
 
 NUM_BASE_TRANSITIONS = 1
 NUM_MID_TRANSITIONS = 1
@@ -116,7 +118,7 @@ show_bounds = [  # order must match show_parameters
         [-1, 72], # Ring number of art car (-1 is no car detected), show bound 29
         [0, NUM_BEAT_EFFECTS],  # which beat effect to use to respond to beat with LEDs, show bound 30
 
-        [1, NUM_PALETTE_CHANGE_STYLES], # Palette change style (0 is immediate)
+        [1, NUM_PALETTE_CHANGE_STYLES], # Palette change style (0 is immediate), show bound 31
 
         #show bounds 32 through 39 concern animation transitions
         [1, NUM_BASE_TRANSITIONS], # how to transition the background animation (0 is immediate)
@@ -214,6 +216,10 @@ IDEAL_MEDITATION_SECONDS = 20 * 60
 def set_show_mode(mode):
     global show_mode
     show_mode = mode
+
+def get_show_mode():
+    global show_mode
+    return show_mode
 
 #  Art car values
 NO_ART_CAR = -1
@@ -504,6 +510,19 @@ def edm_program(init=False):
         # For Lee testing: uncomment this to stick with day 1 colors
         # choose_new_playa_palette()
 
+
+# sunrise and sunset mediation animiatons
+def meditaiton_animations(ignored=True):
+    print "STARTING MEDITAITON ANIMATIONS... zen out, okay?"
+
+    show_parameters[SEVEN_PAL_BEAT_PARAM_START] = randint(NUM_7_COLOR_MEDITATION_ANIMATIONS_START, NUM_7_COLOR_MEDITATION_ANIMATIONS_END)
+    show_parameters[SEVEN_PAL_BEAT_PARAM_END - 1] = constrained_random_parameter(SEVEN_PAL_BEAT_PARAM_END - 1)
+    show_parameters[SEVEN_PAL_BEAT_PARAM_END] = randint(NUM_PALETTE_CHANGE_STYLES-2, NUM_PALETTE_CHANGE_STYLES) # want transitions to be especially gradual
+    choose_new_playa_palette()
+    constrain_show()
+
+    print_parameters()
+
 # choose random 7 color animation values for full structure animations
 def art_car_edm(ignored=True):
     print "DOING ART CAR EDM ANIMATIONS!"
@@ -633,13 +652,19 @@ def playa_program(init=False):
     # Show mode is set in music.py
     show_mode_before = show_mode
     set_playa_mode()
-    if show_mode_before == show_mode:
+    if show_mode == 0 or show_mode == 2: # sunrise or sunset meditaiton time
+        # do meditation animations
+        meditaiton_animations()
+    elif show_mode_before == show_mode:
         choose_new_playa_palette()
 
     bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
 
     print ' '
     print '---> Playa time advanced to', time.ctime(virtual_time)
+
+    # do intenral sound animations after time progresses for palette purposes
+    do_internal_sound_animations()
 
 
 def do_date(ignored, when):
@@ -671,9 +696,10 @@ def do_internal_sound_animations(init = False):
         print 'performing internal audio show'
 
     if init:
+        print "INITING INTENRAL ANIMTAIONS"
         if show_colors[0] == [33,33,33]:	# invalid values before initialization
             bg_start_time = bg_parameter_start_time = mid_start_time = mid_parameter_start_time = sparkle_start_time = sparkle_parameter_start_time = palette_start_time = time.time()
-
+            print "MADE ITITJA;LSKDJF;LAKSDFJ"
             # choose random starting values for each of the parameters
             for i in range(0, NUM_PARAMETERS):
                 show_parameters[i] = constrained_random_parameter(i)
