@@ -8,7 +8,7 @@ from audioInfo import AudioEvent, AudioFileInfo
 from audio_event_queue import SortedDLL
 
 DEBUG = True
-INTERNAL_ANIMATIONS_DEBUG = True
+INTERNAL_ANIMATIONS_DEBUG = False
 
 # Non-Color Animation Parameter Constants
 #
@@ -211,7 +211,8 @@ def set_show_mode(mode):
 
 #  Art car values
 NO_ART_CAR = -1
-ART_CAR_HELLO_DURATION = 30
+ART_CAR_HELLO_DURATION = 30 # seconds before entire structure edm art car takeover
+ART_CAR_MIN_HELLO_DURATION = 5 # seconds before sending ring hello animation
 #art_car_hello = False # not used
 HELLO_ANIMTIONS_NUM = 10 # TODO figure out the actual number.... Brian send just use 7 color animations stuff...
 ART_CAR_AMPLITUDE_THRESHOLD = 100 # TODO calibrate appropriately... keep track of variation over time would be best but can get messy
@@ -505,11 +506,13 @@ def art_car_edm(ignored=True):
     print "DOING ART CAR EDM ANIMATIONS!"
 
     # NOTE art car ring num is param 29... between the beat param "starts" and "ends"... should be fixed... eventually
-    show_parameters[SEVEN_PAL_BEAT_PARAM_START] = constrained_random_parameter(SEVEN_PAL_BEAT_PARAM_START)
+    show_parameters[SEVEN_PAL_BEAT_PARAM_START] = randint(NUM_7_COLOR_ANIMATIONS_AC_EDM_START, NUM_7_COLOR_ANIMATIONS_AC_EDM_END)
     show_parameters[SEVEN_PAL_BEAT_PARAM_END - 1] = constrained_random_parameter(SEVEN_PAL_BEAT_PARAM_END - 1)
     show_parameters[SEVEN_PAL_BEAT_PARAM_END] = constrained_random_parameter(SEVEN_PAL_BEAT_PARAM_END)
     choose_random_colors_from_edm_palette()
     constrain_show()
+
+    print_parameters()
 
 TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
 # For Lee testing: uncomment this
@@ -1069,8 +1072,7 @@ def progress_audio_queue():
             break
 
         stale = next_audio_event.exec_time <= timeMs() - 1000
-        if DEBUG:
-            print "diff event - now = " + str(next_audio_event.exec_time - timeMs())
+
         if stale:
             if DEBUG:
                 print "it's " + str(timeMs()) + " stale event " + str(next_audio_event) + " popping!"

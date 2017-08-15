@@ -14,9 +14,10 @@ NEIGHBOR_RANGE = 3
 class ArtCarHandler:
     'a class to track art car visits'
 
-    def __init__(self, duration=ART_CAR_HELLO_DURATION, threshold=ART_CAR_AMPLITUDE_THRESHOLD):
+    def __init__(self, duration=ART_CAR_HELLO_DURATION, threshold=ART_CAR_AMPLITUDE_THRESHOLD, min_hello_duration=ART_CAR_MIN_HELLO_DURATION):
         self.duration_threshold = duration
         self.amplitude_threshold = threshold
+        self.min_hello_duration_threshold = min_hello_duration
         self.art_car = -1
         self.art_car_takover = False
         # a dictionary with key of ring_num and value of the current hello animation playing
@@ -48,7 +49,17 @@ class ArtCarHandler:
 
 
     def get_ring_animation(self, ring_num):
-        return self.ring_to_hello_animation(ring_num)
+        return self.ring_to_hello_animation[ring_num]
+
+    def get_detected_duration(self, ring_num):
+        if ring_num in self.ring_to_animation_start_time:
+            # already tracked... getting time since start of tracking
+            return time.time() - self.ring_to_animation_start_time[ring_num]
+        else:
+            return 0
+
+    def get_min_hello_duration(self):
+        return self.min_hello_duration_threshold
 
     # Returns ring number of detected art car
     # Also mutates a dictionary of rings as keys and value containing the hello animation being shown
@@ -66,33 +77,40 @@ class ArtCarHandler:
 
         if amplitude > self.amplitude_threshold:
             # check if already tracking ring_num
-            # print "greater than %i" % self.amplitude_threshold
-            if ring_num in self.ring_to_hello_animation:
-                # already detected... check time threshold
+
+            if ring_num in self.ring_to_animation_start_time:
+                # already tracked... seeing if past min_hello_duration
                 art_car_detected_seconds = time.time() - self.ring_to_animation_start_time[ring_num]
 
                 if ART_CAR_DETECTION_DEBUG:
                     print "ring %i has been tracked for %i" % (ring_num, art_car_detected_seconds)
 
-                if int(art_car_detected_seconds) > int(self.duration_threshold):
-                    if self.art_car is NO_ART_CAR:
-                        print "tracked for greater than %i" % self.duration_threshold
-                        self.art_car = ring_num
-                        # HELP set edm animation here or further up in brain's check_art_car_status?
-                            # Setting further up
-                        print "art car ring in shows " + str(self.art_car)
+                if ring_num in self.ring_to_hello_animation:
+                    # already tracked and past initial time threshold (has a hello animation)... check time threshold for total takeover
 
-                        if ART_CAR_DETECTION_DEBUG:
-                            print "art car pass ART_CAR_HELLO_DURATION triggering edm animations on structure"
-                    if int(art_car_detected_seconds) > int(self.duration_threshold + 10):
-                        self.flip_mock = True
+                    if int(art_car_detected_seconds) > int(self.duration_threshold):
+                        if self.art_car is NO_ART_CAR:
+                            print "tracked for greater than %i" % self.duration_threshold
+                            self.art_car = ring_num
+
+                            if ART_CAR_DETECTION_DEBUG:
+                                print "art car pass ART_CAR_HELLO_DURATION triggering edm animations on structure"
+
+                        if self.mock and int(art_car_detected_seconds) > int(self.duration_threshold + 10):
+                            self.flip_mock = True
+
+                elif int(art_car_detected_seconds) > int(self.min_hello_duration_threshold):
+                    # give hello animation & update dictionaries
+                    self.give_suitable_hello_animation(ring_num)
+
+                    if ART_CAR_DETECTION_DEBUG:
+                        print "ring_num %i has met art car hello threshold level. given hello %i" % (ring_num, self.ring_to_hello_animation[ring_num])
             else:
-                # give hello animation & update dictionaries
-                self.give_suitable_hello_animation(ring_num)
+                # start tracking ring
                 self.ring_to_animation_start_time[ring_num] = time.time()
 
                 if ART_CAR_DETECTION_DEBUG:
-                    print "ring_num %i has met art car hello threshold level. given hello %i" % (ring_num, self.ring_to_hello_animation[ring_num])
+                    print "starting to track ring_num %i" % (ring_num)
 
             return ring_num
         else:

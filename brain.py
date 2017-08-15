@@ -6,7 +6,7 @@ from beats import *
 import music
 from artCarHandler import ArtCarHandler
 
-artCarHandler = ArtCarHandler(ART_CAR_HELLO_DURATION, ART_CAR_AMPLITUDE_THRESHOLD)
+artCarHandler = ArtCarHandler(ART_CAR_HELLO_DURATION, ART_CAR_AMPLITUDE_THRESHOLD, ART_CAR_MIN_HELLO_DURATION)
 
 internal_show_init = True
 internal_audio_show = True  # triggers internal audio animations..
@@ -246,9 +246,11 @@ def check_art_car_status(ring_num, amplitude):
         # with every node getting the 'hello' ring. (Not just a response to whoever sent the cahnnel data)
         oldest_ring = artCarHandler.get_oldest_ring()
 
-        # send the hello animation broadcast with target ring
-        show_parameters[ART_CAR_RING_PARAM] = oldest_ring
-        show_parameters[HELLO_ANIMATION_PARAM_START] = artCarHandler.get_ring_animation(oldest_ring)
+        # check if the oldest is past the min hello duration
+        if artCarHandler.get_detected_duration(oldest_ring) > artCarHandler.get_min_hello_duration():
+            # send the hello animation broadcast with target ring
+            show_parameters[ART_CAR_RING_PARAM] = oldest_ring
+            show_parameters[SEVEN_PAL_BEAT_PARAM_START] = artCarHandler.get_ring_animation(oldest_ring)
 
     # 8/13/17 BECAUSE ONLY HAVING ONE RING DOING HELLO ANIMATIONS AT A TIME_LIMIT
     # THE CODE BLOCK BELOW IS UNNEED... BUT IF DOING HELLO ANIMATIONS ON
