@@ -82,7 +82,7 @@ class InternalAninamtionsHandler:
                 if shows.DEBUG:
                     print "it's " + str(shows.timeMs()) + " stale event " + str(self.next_audio_event) + " removing"
                 if shows.INTERNAL_ANIMATIONS_DEBUG:
-                    print "new audio event queue size: " + str(self.audio_event_queue.size)
+                    print "new audio event queue size: " + str(self.event_queue.size)
                 self.event_queue.remove(self.next_audio_event)
             else:
                 break
