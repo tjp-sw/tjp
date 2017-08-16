@@ -75,11 +75,12 @@ uint8_t art_car = NO_ART_CAR;                                           //
 #define BASE_SCROLLING_DIM 1                                  //
 #define BASE_2COLOR_GRADIENT 2                                //
 #define BASE_SCROLLING_HALF_DIM 3                             //
+#define BASE_HORIZONTAL_GRADIENT 4
 #define LEE_COLOR_RANGE 250                                   //
 #define LEE_BRIGHTNESS 249                                    //
 #define LEE_CHECK 248                                         //
 #define LEE_PICK_HSV 247                                      //
-#define NUM_BASE_ANIMATIONS 3  // Equal to last animation     //
+#define NUM_BASE_ANIMATIONS 4  // Equal to last animation     //
                                                               //
 // Mid layer                                                  //
 #define SNAKE 1                                               //
@@ -87,16 +88,15 @@ uint8_t art_car = NO_ART_CAR;                                           //
 #define DISCO_FIRE 3                                          //
 #define FIRE_ONE_SIDED 254  // Only used with EDM animation   //
 #define DISCO_FIRE_ONE_SIDED 253                              //
-#define MID_SCROLLING_DIM1 4                                  //
-#define MID_SCROLLING_DIM2 5                                  //
-#define MID_SCROLLING_DIM3 6                                  //
-#define MID_SCROLLING_DIM4 7                                  //
-#define MID_SCROLLING_DIM5 8                                  //
-#define ARROW 9                                               //
-#define RADIATION 10                                          //
-#define SQUARE 11                                             //
-#define SQUARE2 12                                            //
-#define WAVE 13                                               //
+#define MID_SCROLLING_DIM2 4                                  //
+#define MID_SCROLLING_DIM3 5                                  //
+#define MID_SCROLLING_DIM4 6                                  //
+#define MID_SCROLLING_DIM5 7                                  //
+#define ARROW 8                                               //
+#define RADIATION 9                                          //
+#define SQUARE 10                                             //
+#define SQUARE2 11                                            //
+#define WAVE 12                                               //
 #define NUM_MID_ANIMATIONS 12  // Equal to last animation     //
                                                               //
 // Sparkle layer                                              //
@@ -201,7 +201,7 @@ uint8_t show_parameters[NUM_SHOW_PARAMETERS];                                   
                                                                                                   //
 #define PALETTE_CHANGE            (show_parameters[PALETTE_CHANGE_INDEX])                         //
 #define BEAT_EFFECT               (show_parameters[BEAT_EFFECT_INDEX])                            //
-#define ART_CAR_RING              (show_parameters[ART_CAR_RING_INDEX])                           //
+#define ART_CAR_RING              ((int8_t)show_parameters[ART_CAR_RING_INDEX])                   //
                                                                                                   //
 #define BASE_COLOR_THICKNESS      (show_parameters[BASE_COLOR_THICKNESS_INDEX])                   //
 #define BASE_BLACK_THICKNESS      (show_parameters[BASE_BLACK_THICKNESS_INDEX])                   //
@@ -418,7 +418,7 @@ uint8_t band_distribution[NUM_BANDS]; // bass=0, mid=1, treble=2; sums to 255 //
 #define TRANSPARENT 0
 #define WHITE 1
 #define BLACK 2
-#define GRAY 3
+#define MID_LAYER_SPARKLE 3
 
 // Base and mid INTRA_RING_MOTION values
 //#define NONE 0 // Defined above in animations

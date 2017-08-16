@@ -1,5 +1,7 @@
 // This is totally untested on the mega
 
+#ifdef THIS_AINT_DEFINED
+
 /* To do:
  * Test when peak history is changed to time the read occured, not current_time
  * Test shorter delays in read_frequencies
@@ -12,7 +14,6 @@
 #include <FastLED.h>
 
 
-unsigned long current_time;
 unsigned long loop_count = 0;
 
 #define NUM_BANDS 3
@@ -632,3 +633,4 @@ void detect_edm_events() {
     cycles_building = 0;
   }
 }
+#endif

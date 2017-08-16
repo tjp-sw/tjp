@@ -126,7 +126,7 @@ inline void equalizer_full(uint8_t display_mode, uint8_t min_ring, uint8_t max_r
       if(node_number*RINGS_PER_NODE + ring < min_ring) { continue; }
       if(node_number*RINGS_PER_NODE + ring >= max_ring) { continue; }
       
-      for(uint16_t pixel = cur_height; pixel <= cur_height + height; pixel++) {
+      for(uint16_t pixel = cur_height; pixel < cur_height + height; pixel++) {
         set_led(ring, pixel, color);
         if(display_mode == DISPLAY_SPLIT) { set_led(ring, LEDS_PER_RING - 1 - pixel, color); }
       }

@@ -190,7 +190,6 @@ inline void create_mid_palette(CRGBPalette256* new_palette, CRGB color0, CRGB co
   new_palette->entries[TRANSPARENT] = CRGB::Black;
   new_palette->entries[WHITE] = CRGB::White;
   new_palette->entries[BLACK] = CRGB::Black;
-  new_palette->entries[GRAY] = CRGB(128, 128, 128);
 
   CRGB temp;
   for(uint8_t i = 0; i < 3*MID_GRADIENT_SIZE; i++) {
@@ -247,6 +246,8 @@ inline void create_sparkle_palette(CRGBPalette256* new_palette, CRGB color0, CRG
     new_palette->entries[palette_offset + 6] = CRGB(temp.r / 20, temp.g / 20, temp.b / 20);
      */
   }
+
+  mid_palette.entries[MID_LAYER_SPARKLE] = get_sparkle_color(0);
 }
 
 // Loads initial colors until brain sends us something

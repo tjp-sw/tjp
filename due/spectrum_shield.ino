@@ -27,7 +27,7 @@ inline void setup_spectrum_shield() {
 
 // Read sound frequencies for each band and channel. Each channel has 7 frequency "buckets"  0 - 6.
 // freq_internal[0] is channel 1 lowest frequency, freq_external[6] is channel 2 highest frequency
-#define NOISE_REDUCTION 70
+#define NOISE_REDUCTION 0
 #define FREQ_HISTORY_SIZE 3
 uint8_t freq_history[FREQ_HISTORY_SIZE];
 inline void read_frequencies() {
@@ -39,20 +39,6 @@ inline void read_frequencies() {
     freq_external[i] = analogRead(SS_PIN_DC_TWO);
     delayMicroseconds(25);
 
-    /*
-    // Testing mic input on backplane
-    if(freq_internal[i] > 200) {
-      Serial.print("Internal Channel " + String(i) + " = ");
-      Serial.println(freq_internal[i]);
-    }
-
-    if(freq_external[i] > 200) {
-      Serial.print("External Channel " + String(i) + " = ");
-      Serial.println(freq_external[i]);
-    }
-    Serial.print(".");
-    */
-
     #if NOISE_REDUCTION > 0
       freq_internal[i] = freq_internal[i] <= NOISE_REDUCTION ? 0 : freq_internal[i] - NOISE_REDUCTION;
       freq_external[i] = freq_external[i] <= NOISE_REDUCTION ? 0 : freq_external[i] - NOISE_REDUCTION;
@@ -61,9 +47,6 @@ inline void read_frequencies() {
       }
     #endif
 
-freq_internal[i] = (loop_count*16) % 256;
-freq_external[i] = (loop_count*16) % 256;
-    
     //freq_internal[i] >>= 2;
     //freq_external[i] >>= 2;
 
@@ -81,9 +64,7 @@ freq_external[i] = (loop_count*16) % 256;
     if(freq_external[i] >= max_in_history) { freq_smooth[i] = freq_external[i]; }
     else { freq_smooth[i] = (history_sum + freq_history[0]) / FREQ_HISTORY_SIZE; }
 
-  //Serial.print(freq_external[i]);
-  //Serial.print(", ");
-    
+
     // Move to next channel
     digitalWrite(SS_PIN_STROBE, HIGH);
     delayMicroseconds(10);
@@ -91,6 +72,18 @@ freq_external[i] = (loop_count*16) % 256;
     delayMicroseconds(10);
   }
 
-  //Serial.println();
+  #ifdef DEBUG_SPECTRUM_SHIELD
+    Serial.print("Internal = ");  
+    for(uint8_t i = 0; i < NUM_CHANNELS; i++) {
+      Serial.print(String(freq_internal[i]) + "\t");
+    }
+    Serial.println();
+    
+    Serial.print("External = ");  
+    for(uint8_t i = 0; i < NUM_CHANNELS; i++) {
+      Serial.print(String(freq_external[i]) + "\t");
+    }
+    Serial.println();
+  #endif
 }
 
