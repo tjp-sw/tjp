@@ -133,7 +133,7 @@ void do_network_input() {
     else if (loop_start_time_msec >= next_connect_msec) {
       if (remote.connect(brain, 3528)) {
         network_data = "";
-	remote.write("SN");
+	      remote.write("sN", 2);
         #ifdef DEBUG
           print_status("connected to brain");
         #endif
@@ -187,14 +187,14 @@ inline void assign_node(uint8_t node_num) {
     Serial.println("Assigned node #" + String(node_number));
   #endif
 
-  for(int i = 0; i < STRIPS_PER_NODE; i ++)
+  /*for(int i = 0; i < STRIPS_PER_NODE; i ++)
     leds[LEDS_PER_STRIP*i] = CRGB::Red;
   LEDS.show();
   delay(500);
   for(int i = 0; i < STRIPS_PER_NODE; i ++)
     leds[LEDS_PER_STRIP*i] = CRGB::Green;
   LEDS.show();
-  delay(500);
+  delay(500);*/
   for(int i = 0; i < STRIPS_PER_NODE; i ++)
     leds[LEDS_PER_STRIP*i] = CRGB::Blue;
   LEDS.show();
@@ -300,9 +300,10 @@ inline void process_commands(String& input) {
         break;
 
       case 'c': // Channel audio out data, 14 channels/bytes total
+        last_channel_message = millis();
         size += 1 + 2 * NUM_CHANNELS + sizeof (unsigned long long);
         if (input.length() >= size) {
-          store_audio_packet((uint8_t *)input.c_str());
+          //store_audio_packet((uint8_t *)input.c_str());
           remote.write((uint8_t *)input.c_str(), size);
         }
         else {
@@ -317,6 +318,7 @@ inline void process_commands(String& input) {
 
       case 'd':
       {
+        last_channel_message = millis();
         if(node_number != 255) {
           const uint8_t node_message[2] = { 'n', node_number };
           NodeMate.write(node_message, 2);
@@ -439,10 +441,14 @@ inline void process_commands(String& input) {
 
               memcpy(show_parameters, params, NUM_SHOW_PARAMETERS);
               memcpy(target_palette, colors, 3*NUM_COLORS_PER_PALETTE);
+              correct_show_params();
 
               if(last_edm_animation == DEBUG_MODE) {
                 // When coming out of debug mode, skip the transition logic
                 memcpy(current_palette, target_palette, 3*NUM_COLORS_PER_PALETTE);
+                create_mid_palette(&mid_palette, current_palette[2], current_palette[3], current_palette[4]);
+                create_sparkle_palette(&sparkle_palette, current_palette[5], current_palette[6]);
+
                 init_base_animation();
                 init_mid_animation();
                 init_sparkle_animation(0, NUM_RINGS);
@@ -454,27 +460,31 @@ inline void process_commands(String& input) {
                 blend_sparkle_layer = current_palette[5] != target_palette[5] || current_palette[6] != target_palette[6];
 
                 if(BASE_ANIMATION != last_base_animation) {
-                  transition_out_base_animation = true;
                   next_base_animation = BASE_ANIMATION;
                   BASE_ANIMATION = last_base_animation;
+                  transition_in_base_animation = false;
+                  transition_out_base_animation = true;
                 }
   
                 if(MID_ANIMATION != last_mid_animation) {
-                  transition_out_mid_animation = true;
                   next_mid_animation = MID_ANIMATION;
                   MID_ANIMATION = last_mid_animation;
+                  transition_in_mid_animation = false;
+                  transition_out_mid_animation = true;
                 }
   
                 if(SPARKLE_ANIMATION != last_sparkle_animation) {
-                  transition_out_sparkle_animation = true;
                   next_sparkle_animation = SPARKLE_ANIMATION;
                   SPARKLE_ANIMATION = last_sparkle_animation;
+                  transition_in_sparkle_animation = false;
+                  transition_out_sparkle_animation = true;
                 }
   
                 if(EDM_ANIMATION != last_edm_animation) {
-                  transition_out_edm_animation = true;
                   next_edm_animation = EDM_ANIMATION;
                   EDM_ANIMATION = last_edm_animation;
+                  transition_in_edm_animation = false;
+                  transition_out_edm_animation = true;
                 }
               }
 
@@ -539,6 +549,7 @@ inline void process_commands(String& input) {
           #ifdef I_AM_NODE_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
             HandMate.write((uint8_t *)input.c_str(), size);
+            last_channel_message += (epoch_msec - old_epoch_msec);
           #endif // I_AM_NODE_MEGA
         }
         else {
@@ -560,6 +571,38 @@ inline void process_commands(String& input) {
     input = input.substring(size);  // discard processed message
   }
 }
+
+#ifdef I_AM_DUE
+inline void correct_show_params() {
+  BASE_ANIMATION %= NUM_BASE_ANIMATIONS;
+  if(BASE_INTRA_RING_MOTION_INDEX < -1 || BASE_INTRA_RING_MOTION_INDEX > 2) { show_parameters[BASE_INTRA_RING_MOTION_INDEX] = 2; }
+  if(BASE_INTER_RING_MOTION_INDEX < -1 || BASE_INTER_RING_MOTION_INDEX > 2) { show_parameters[BASE_INTER_RING_MOTION_INDEX] = 2; }
+
+  MID_ANIMATION %= NUM_MID_ANIMATIONS;
+  MID_NUM_COLORS %= 3;
+  if(MID_INTRA_RING_MOTION_INDEX < -1 || MID_INTRA_RING_MOTION_INDEX > 2) { show_parameters[MID_INTRA_RING_MOTION_INDEX] = 2; }
+  if(MID_INTER_RING_MOTION_INDEX < -1 || MID_INTER_RING_MOTION_INDEX > 2) { show_parameters[MID_INTER_RING_MOTION_INDEX] = 2; }
+
+  SPARKLE_ANIMATION %= NUM_SPARKLE_ANIMATIONS;
+  if(SPARKLE_INTRA_RING_MOTION_INDEX < -1 || SPARKLE_INTRA_RING_MOTION_INDEX > 2) { show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = 1; }
+  if(SPARKLE_INTER_RING_MOTION_INDEX < -1 || SPARKLE_INTER_RING_MOTION_INDEX > 2) { show_parameters[SPARKLE_INTER_RING_MOTION_INDEX] = 1; }
+
+  if(EDM_ANIMATION > NUM_EDM_ANIMATIONS) { EDM_ANIMATION = 0; }
+  if(ART_CAR_RING > 72 || ART_CAR_RING < -1) { show_parameters[ART_CAR_RING_INDEX] = (EDM_ANIMATION == NONE ? -1 : 0); }
+
+  BEAT_EFFECT %= NUM_BEAT_EFFECTS;
+  PALETTE_CHANGE = 1 + PALETTE_CHANGE % NUM_PALETTE_CHANGE_TYPES;
+
+  BASE_TRANSITION = 1;
+  MID_TRANSITION = 1;
+  SPARKLE_TRANSITION = 1;
+
+  BASE_TRANSITION_SPEED %= MAX_TRANSITION_SPEED;
+  MID_TRANSITION_SPEED %= MAX_TRANSITION_SPEED;
+  SPARKLE_TRANSITION_SPEED %= MAX_TRANSITION_SPEED;
+  EDM_TRANSITION_SPEED %= MAX_TRANSITION_SPEED;
+}
+#endif
 
 #if defined(I_AM_NODE_MEGA) || defined(I_AM_DUE)
 inline void do_mate_input() {

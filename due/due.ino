@@ -16,6 +16,7 @@
 #define DEBUG                     // Enables serial output         //
 #ifdef DEBUG                                                         //
   //#define DEBUG_TIMING            // Times each step in loop()     //
+  //#define DEBUG_SPECTRUM_SHIELD     // Output all read values        //
   //#define DEBUG_LED_WRITE_DATA 10 // Dumps LED data every X cycles //
   //#define TEST_AVAIL_RAM 17600    // How much RAM we have left     //
 #endif                                                               //
@@ -74,7 +75,7 @@ inline void manually_set_animation_params() {             //
                                                           //
   PALETTE_CHANGE = PALETTE_CHANGE_IMMEDIATE;              //
   BEAT_EFFECT = NONE;                                     //
-  ART_CAR_RING = NO_ART_CAR;                              //
+  show_parameters[ART_CAR_RING_INDEX] = NO_ART_CAR;       //
                                                           //
   BASE_TRANSITION = TRANSITION_BY_ALPHA;                  //
   BASE_TRANSITION_SPEED = FAST_TRANSITION;                //
@@ -92,6 +93,8 @@ inline void manually_set_animation_params() {             //
 
 // the setup function runs once when you press reset or power the board
 void setup() {
+  delay(1000);
+  
   #ifdef TEST_AVAIL_RAM
     static byte test[TEST_AVAIL_RAM];
     test[0] = 0;
@@ -105,9 +108,6 @@ void setup() {
   #endif
 
 
-  // Initialize FastLED parallel output controller (must be 8, even if we use fewer)
-  LEDS.addLeds<WS2811_PORTD, 8>(leds, LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
-
   // Hold data lines low
   digitalWrite(25, 0);
   digitalWrite(26, 0);
@@ -115,7 +115,10 @@ void setup() {
   digitalWrite(28, 0);
   digitalWrite(14, 0);
   digitalWrite(15, 0);
-  delay(500);
+  delay(1000);
+
+  // Initialize FastLED parallel output controller (must be 8, even if we use fewer)
+  LEDS.addLeds<WS2811_PORTD, 8>(leds, LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
 
   //  Clear all LEDs
   LEDS.clear(true);
@@ -227,7 +230,7 @@ void loop() {
       downbeat_proximity = step * 255 / 9; // Using full range of downbeat_proximity (0-255)
     #endif
   
-    do_beat_effects();
+    //do_beat_effects();
   }
   #ifdef DEBUG_TIMING
     now = millis();
@@ -663,6 +666,10 @@ inline void draw_current_base(uint8_t min_ring, uint8_t max_ring) {
       base_scrolling_2color_gradient(min_ring, max_ring);
       break;
 
+    case BASE_HORIZONTAL_GRADIENT:
+      base_horizontal_gradient(min_ring, max_ring);
+      break;
+
     case LEE_COLOR_RANGE:
       normalized_all_colors();
       break;
@@ -705,10 +712,6 @@ inline void draw_current_mid(uint8_t min_ring, uint8_t max_ring) {
 
     case DISCO_FIRE_ONE_SIDED:
       fire(FIRE_PALETTE_DISABLED, false, min_ring, max_ring);
-      break;
-
-    case MID_SCROLLING_DIM1:
-      mid_scrolling_dim1(min_ring, max_ring);
       break;
 
     case MID_SCROLLING_DIM2:

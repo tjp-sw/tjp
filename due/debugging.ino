@@ -4,6 +4,8 @@
 // Number of lit pixels signals which strand it is for the current node
 // Number of empty pixels singals which node number it is
 inline void draw_debug_mode() {  
+  if(millis() < 10000) { return; }
+
   uint8_t ringOffset, unlitPixels, throttle;
 
   if(node_number < NUM_NODES) {

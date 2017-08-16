@@ -5,8 +5,8 @@
 // BASE_COLOR_THICKNESS(1:8), BASE_BLACK_THICKNESS(0:8), BASE_INTRA_RING_MOTION(-1:1), BASE_RING_OFFSET(-period/2:period/2), BASE_INTRA_RING_SPEED(8:32)
 // missing: INTER_RING_OFFSET, INTER_RING_MOTION
 inline void base_scrolling_dim(uint8_t min_ring, uint8_t max_ring) {
-  uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 10, 16);
-  uint8_t black_thickness = scale_param(BASE_BLACK_THICKNESS, 0, 3);
+  uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 8, 16);
+  uint8_t black_thickness = scale_param(BASE_BLACK_THICKNESS, 0, 0);
   uint8_t intra_speed = 1 << scale_param(BASE_INTRA_RING_SPEED, 3, 5);
   uint8_t period = color_thickness + black_thickness;
   int8_t ring_offset = scale_param(BASE_RING_OFFSET, -1 * period/2, period/2);
@@ -23,10 +23,10 @@ inline void base_scrolling_dim(uint8_t min_ring, uint8_t max_ring) {
     shades[i][num_dim_levels-1] = current_palette[i];
     for(int8_t dim_level = num_dim_levels - 2; dim_level >= 0; dim_level--) {
       if(dim_level >= num_dim_levels/2) {
-        shades[i][dim_level] = CRGB(qsub8(shades[i][dim_level+1].r, step_size_large.r), qsub8(shades[i][dim_level+1].g, step_size_large.g), qsub8(shades[i][dim_level+1].b, step_size_large.b));
+        shades[i][dim_level] = CRGB(1 + qsub8(shades[i][dim_level+1].r, 1 + step_size_large.r), qsub8(1 + shades[i][dim_level+1].g, 1 + step_size_large.g), qsub8(1 + shades[i][dim_level+1].b, 1 + step_size_large.b));
       }
       else {
-        shades[i][dim_level] = CRGB(qsub8(shades[i][dim_level+1].r, step_size_small.r), qsub8(shades[i][dim_level+1].g, step_size_small.g), qsub8(shades[i][dim_level+1].b, step_size_small.b));
+        shades[i][dim_level] = CRGB(1 + qsub8(shades[i][dim_level+1].r, 1 + step_size_small.r), qsub8(1 + shades[i][dim_level+1].g, 1 + step_size_small.g), qsub8(1 + shades[i][dim_level+1].b, 1 + step_size_small.b));
       }
     }
   }
@@ -161,9 +161,9 @@ inline void base_scrolling_2color_gradient(uint8_t min_ring, uint8_t max_ring) {
 // BASE_COLOR_THICKNESS(3:6), BASE_BLACK_THICKNESS(1, 4), BASE_INTRA_RING_MOTION(-1:1), BASE_RING_OFFSET(-period/2:period/2), BASE_INTRA_RING_SPEED(8:32)
 // missing: INTER_RING_MOTION, INTER_RING_OFFSET
 inline void base_scrolling_half_dim(uint8_t min_ring, uint8_t max_ring) {
-  uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 3, 6);
-  uint8_t black_thickness = scale_param(BASE_BLACK_THICKNESS, 1, 4);
-  uint8_t intra_speed = 1 << scale_param(BASE_INTRA_RING_SPEED, 2, 4);
+  uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 4, 10);
+  uint8_t black_thickness = scale_param(BASE_BLACK_THICKNESS, 0, 1);
+  uint8_t intra_speed = 1 << scale_param(BASE_INTRA_RING_SPEED, 3, 4);
   uint8_t period = color_thickness + black_thickness;
   int8_t ring_offset = scale_param(BASE_RING_OFFSET, -1 * period/2, period/2);
   uint16_t extended_led_count = ((LEDS_PER_RING-1)/period+1)*period;
@@ -228,12 +228,42 @@ inline void base_scrolling_half_dim(uint8_t min_ring, uint8_t max_ring) {
   }
 }
 
-
-
 //------------------------------------------- UNDER DEVELOPMENT --------------------------------------------
 //--------------------- Only move above this line when code has been thoroughly tested ---------------------
 //--------------------- Only include in allowable animations when moved above this line --------------------
 //----------------------------------------------------------------------------------------------------------
 
 
+//--------------------------------- HORIZONTAL GRADIENT ------------------------------
+inline void base_horizontal_gradient(uint8_t min_ring, uint8_t max_ring) {
+  const uint8_t max_inter_speed = 4;
+  
+  uint8_t color_thickness = 12*scale_param(BASE_COLOR_THICKNESS, 1, 3);
+  uint8_t intra_speed = 1 << scale_param(BASE_INTRA_RING_SPEED, 3, 4);
+  uint8_t inter_speed = scale_param(BASE_INTRA_RING_SPEED, 1, max_inter_speed);
+  int8_t alternating_multiplier = BASE_INTRA_RING_MOTION;
+  
+  
+  CRGB shades[2*color_thickness];
+  fill_gradient_RGB(shades, 0, current_palette[0], color_thickness-1, current_palette[1]);
+  fill_gradient_RGB(shades, color_thickness, current_palette[1], 2*color_thickness-1, current_palette[0]);
+
+  if(node_number*RINGS_PER_NODE > min_ring) { min_ring = node_number*RINGS_PER_NODE; }
+  if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
+  
+  for(uint8_t physical_ring = min_ring; physical_ring < max_ring; physical_ring++) {
+    uint8_t ring = physical_ring % RINGS_PER_NODE;
+    
+    if(BASE_INTRA_RING_MOTION == ALTERNATE) { alternating_multiplier = ring % 2 == 0 ? -1 : 1; }
+    int16_t ring_idx = physical_ring + alternating_multiplier * inter_speed * base_count / 4;
+    while(ring_idx < 0) { ring_idx += NUM_RINGS; }
+    ring_idx %= NUM_RINGS;
+    
+    for(uint16_t pixel = 0; pixel < LEDS_PER_RING; pixel++) {
+      set_led(ring, pixel, shades[ring_idx % color_thickness]);
+      //int16_t pixel_motion_offset = pixel*intra_ring_motion*
+      //set_led(ring, pixel, shades[physical_ring % color_thickness]);
+    }
+  }
+}
 
