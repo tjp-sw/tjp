@@ -49,8 +49,13 @@ class ArtCarHandler:
 
 
     def get_ring_animation(self, ring_num):
+
         if self.get_detected_duration(ring_num) > self.min_hello_duration_threshold:
-            return self.ring_to_hello_animation[ring_num]
+            try:
+                return self.ring_to_hello_animation[ring_num]
+            except:
+                print "there is actual no hello animaiton but seems to be past hello duration????"
+                return 0
         else:
             return 0
 
