@@ -356,7 +356,7 @@ while running:
                             print 'received unknown', repr(message[0:60]), '... (', len(message), 'bytes) from', remote_name[s]
                             pos = message.find('c')
                             if pos < 0:
-                                pos = length(message)	# discard all
+                                pos = len(message)	# discard all
                             print 'discarding', pos, 'bytes of input', repr(message[0:pos]), 'and continuing'
                             message = message[pos:]
                     if len(message) > 0:
