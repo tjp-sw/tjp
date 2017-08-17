@@ -13,7 +13,7 @@
 #ifdef DEBUG
   #define DEBUG_LEVEL 1
 #else
-  #define DEBUG_LEVEL 1
+  #define DEBUG_LEVEL 0
 #endif
 
 //drone constants
@@ -24,7 +24,7 @@ int DAY4[2] = {3006, 3007};
 int DAY5[2] = {3008, 3009};
 int DAY6[2] = {3010, 3011};
 int DAY7[2] = {3012, 3013};
-int DRONES[7][2] = {{3000, 3001}, {3002, 3003}, {3004, 3005}, {3006, 3007}, {3008, 3009}, {3010, 3011}, {3012, 3013}};
+int DRONES[8][2] = {{3000, 3001}, {3002, 3003}, {3004, 3005}, {3006, 3007}, {3008, 3009}, {3010, 3011}, {3012, 3013},{2999,2999}};
 int this_day[2] = {3000, 3001};
 int bm_day = -1;
 
@@ -255,7 +255,12 @@ void do_command () {
           channels[ch]= ctrl_msg.channels[ch];
           ch_loop[ch]= ctrl_msg.bool_loop;
           tsunami.trackGain(channels[ch], ch_gain[ch]);
-          tsunami.trackLoad(channels[ch], 0, true);
+          tsunami.trackLoad(channels[ch], 1, false);
+          tsunami.trackLoad(channels[ch], 2, false);
+          tsunami.trackLoad(channels[ch], 3, false);
+          tsunami.trackLoad(channels[ch], 4, false);
+
+
           if (DEBUG_LEVEL) {
             Serial.print("Gain ");
             Serial.println(ch_gain[ch]);
@@ -376,7 +381,10 @@ void do_tsunami() {
             Serial.println(channels[ch]);
         }
         tsunami.trackGain(channels[ch], ch_gain[ch]);
-        tsunami.trackLoad(channels[ch], 0, true);
+        tsunami.trackLoad(channels[ch], 1, true);
+        tsunami.trackLoad(channels[ch], 2, true);
+        tsunami.trackLoad(channels[ch], 3, true);
+        tsunami.trackLoad(channels[ch], 4, true);
         //String msg = create_lengthed_message("sR", channels[ch]);
         //remote.write(msg.c_str(), msg.length());
       } else if (ch == 7 && channels[ch] > 0) {

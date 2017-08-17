@@ -1,9 +1,9 @@
 import random, struct
 from datetime import datetime, timedelta, time
 import sounds, shows
-import time as epoch_time
+#import time as epoch_time
 
-DEBUG = 1
+DEBUG = 0
 
 # Just random....this signal is coming from the touchpad which is not written yet.
 def panel_touched():
@@ -128,7 +128,10 @@ class Music:
         now_time = datetime.now()
         if DEBUG > 1:
             print now_time
-        bm_day = now_time.weekday()
+        if now_time.day == 27:
+            bm_day = 8
+        else:
+            bm_day = now_time.weekday()
 
         # Check if mediation has ended
         if Music.meditation:
@@ -168,6 +171,8 @@ class Music:
                 shows.set_show_mode(shows.SUNRISE)
             else:  # even
                 shows.set_show_mode(shows.SUNSET)
+            if now_time.weekday() == 1:
+                return play([0, this_meditation, 3999])
             return play([0, this_meditation])
 
         # Drone Logic
@@ -177,44 +182,46 @@ class Music:
             return "a0;6;" + str(bm_day) + ";"
 
         # Soundscape Compilation Logic
-        msg = [0] * 4
+        if bm_day < 8 :
+            msg = [0] * 4
+            if self.played_low < now_time - timedelta(minutes=self.low_wait):
+                self.low_wait = random.randint(3, 5)
+                low = sounds.find_low()
+                self.played_low = now_time
+                self.check_drone = now_time
+                msg[0] = low
 
-        if self.played_low < now_time - timedelta(minutes=self.low_wait):
-            self.low_wait = random.randint(3, 5)
-            low = sounds.find_low()
-            self.played_low = now_time
-            self.check_drone = now_time
-            msg[0] = low
+            if self.played_mid <= (now_time - timedelta(seconds=self.mid_wait)):
+                self.played_mid = now_time
+                self.mid_wait = random.randint(5, 25)
+                msg[1] = sounds.find_mid()
 
-        if self.played_mid <= (now_time - timedelta(seconds=self.mid_wait)):
-            self.played_mid = now_time
-            self.mid_wait = random.randint(5, 25)
-            msg[1] = sounds.find_mid()
-
-        if self.played_high <= (now_time - timedelta(seconds=self.high_wait)):
-            self.high_wait = random.randint(20, 35)
-            self.played_high = now_time
-            msg[2] = sounds.find_high()
-
-        """
-        elif self.check_drone < now_time - timedelta (minutes= 1):
-            self.check_drone = now_time
-            if DEBUG > 1:
-                print "check_drone"
-            return check_drone()
-        if Music.no_mid <= (now_time - timedelta(seconds=self.mid_wait)):
-            msg[1] = sounds.find_mid()
-            self.mid_wait = random.randint(5, 30)
-            Music.no_mid = datetime.max
-        if Music.no_high <= (now_time - timedelta(seconds=self.high_wait)):
+            if self.played_high <= (now_time - timedelta(seconds=self.high_wait)):
+                self.high_wait = random.randint(20, 35)
+                self.played_high = now_time
                 msg[2] = sounds.find_high()
-                self.high_wait = random.randint(30,60)
-                Music.no_high = datetime.max
-        """
 
-        if panel_touched():
-            msg[3] = sounds.find_high()
+            """
+            elif self.check_drone < now_time - timedelta (minutes= 1):
+                self.check_drone = now_time
+                if DEBUG > 1:
+                    print "check_drone"
+                return check_drone()
+            if Music.no_mid <= (now_time - timedelta(seconds=self.mid_wait)):
+                msg[1] = sounds.find_mid()
+                self.mid_wait = random.randint(5, 30)
+                Music.no_mid = datetime.max
+            if Music.no_high <= (now_time - timedelta(seconds=self.high_wait)):
+                    msg[2] = sounds.find_high()
+                    self.high_wait = random.randint(30,60)
+                    Music.no_high = datetime.max
+            """
 
-        if DEBUG > 1:
-            print msg
-        return play(msg)
+            if panel_touched():
+                msg[3] = sounds.find_high()
+
+            if DEBUG > 1:
+                print msg
+            return play(msg)
+        else:
+            return None
