@@ -297,59 +297,63 @@ while running:
                     print sys.exc_value
                     message = None
                 if message:
-                    if message[0:1] == 'b':
-                        if len(message) >= 55:
-                            do_send(None, message)	# relay to all nodes
-                            print 'beat message', repr(message), 'from', remote_name[s]
-                            message = message[55:]
-                        else:
-                            print 'beat message expected 55 but has', len(message), 'bytes'
-                    elif message[0:1] == 'c':
-                        if len(message) == 24:
-                            node, timestamp, channel_data = struct.unpack_from('>BQ14s', message, 1)
-                            timestamp /= 1000.0		# convert from milliseconds
-                            #print 'node', node, 'channel data', repr(channel_data), 'at', timestamp
+                    while len(message) > 0:
+                        if message[0:1] == 'b':
+                            if len(message) >= 55:
+                                do_send(None, message)	# relay to all nodes
+                                print 'beat message', repr(message), 'from', remote_name[s]
+                                message = message[55:]
+                            else:
+                                print 'beat message expected 55 but has', len(message), 'bytes'
+                                break
+                        elif message[0:1] == 'c':
+                            if len(message) >= 24:
+                                node, timestamp, channel_data = struct.unpack_from('>BQ14s', message, 1)
+                                timestamp /= 1000.0		# convert from milliseconds
+                                #print 'node', node, 'channel data', repr(channel_data), 'at', timestamp
 
-                            amplitude_sum = get_external_amplitude_sum(channel_data)
-                            if amplitude_sum > 0: # otherwise error reading channel_data
-                                esitmated_ring_number, mean_intensity = analyze_beat(node, amplitude_sum, timestamp)
+                                amplitude_sum = get_external_amplitude_sum(channel_data)
+                                if amplitude_sum > 0: # otherwise error reading channel_data
+                                    esitmated_ring_number, mean_intensity = analyze_beat(node, amplitude_sum, timestamp)
 
-                                show_mode = get_show_mode()
-                                if show_mode == 1 or show_mode == 3: # not during meditaiton
-                                    check_art_car_status(esitmated_ring_number, mean_intensity)
-                            message = message[24:]
+                                    show_mode = get_show_mode()
+                                    if show_mode == 1 or show_mode == 3: # not during meditaiton
+                                        check_art_car_status(esitmated_ring_number, mean_intensity)
+                                message = message[24:]
+                            else:
+                                print 'channel message expected 24 but has', len(message), 'bytes'
+                                break
+                        elif message[0:1] == 'm':
+                            if len(message) >= 3:
+                                mega_number = ord(message[1:2])
+                                try:
+                                    node_number = mega_to_node_map[mega_number]
+                                except KeyError:
+                                    if mega_number >= 100:	# mock_mega
+                                        node_number = mega_number % 6 + 10
+                                    else:
+                                        node_number = None
+                                print 'mega', mega_number, '( node ', repr(node_number), 'switches', repr(ord(message[2:3])), ') is at', remote_name[s]
+                                if node_number != None:
+                                    remote_name[s] = 'node %u' % node_number
+                                    do_send(s, struct.pack('>cB', 'n', node_number))
+                                message = message[3:]
+                            else:
+                                print 'mega message expected 3 but has', len(message), 'bytes'
+                                break
+                        elif message[0:1] == 's':
+                            # print 'tsunami says:', repr(message), 'from', remote_name[s]
+                            msg = message[0:2]
+                            if message[1:2] == 'N':
+                                size = 0
+                            else:	# remove the length byte for local processing
+                                size = ord(message[2:3])
+                                msg += message[3:3+size]
+                            if music.status_update(msg):
+                                mega_music.need_drone = True
+                            message = message[3+size:]
                         else:
-                            print 'channel message expected 24 but has', len(message), 'bytes'
-                    elif message[0:1] == 'm':
-                        if len(message) >= 3:
-                            mega_number = ord(message[1:2])
-                            try:
-                                node_number = mega_to_node_map[mega_number]
-                            except KeyError:
-                                if mega_number >= 100:	# mock_mega
-                                    node_number = mega_number % 6 + 10
-                                else:
-                                    node_number = None
-                            print 'mega', mega_number, '( node ', repr(node_number), 'switches', repr(ord(message[2:3])), ') is at', remote_name[s]
-                            if node_number != None:
-                                remote_name[s] = 'node %u' % node_number
-                                do_send(s, struct.pack('>cB', 'n', node_number))
-                            message = message[3:]
-                        else:
-                            print 'mega message expected 3 but has', len(message), 'bytes'
-                    elif message[0:1] == 's':
-                        # print 'tsunami says:', repr(message), 'from', remote_name[s]
-                        msg = message[0:2]
-                        if message[1:2] == 'N':
-                            size = 0
-                        else:	# remove the length byte for local processing
-                            size = ord(message[2:3])
-                            msg += message[3:3+size]
-                        if music.status_update(msg):
-                            mega_music.need_drone = True
-                        message = message[3+size:]
-                    else:
-                        print 'received unknown', repr(message), 'from', remote_name[s]
+                            print 'received unknown', repr(message), 'from', remote_name[s]
                     if len(message) > 0:
                         print 'discarding', len(message), 'bytes of input'
                 else:
