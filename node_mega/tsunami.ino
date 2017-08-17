@@ -307,12 +307,12 @@ void do_command () {
         tsunami.update();
         delay(200);
         if (channels[1] > 4000 && tsunami.isTrackPlaying(channels[1])) {
-            String msg = "sP" + String (channels[1]);
-            remote.write(msg.c_str());
+            String msg = create_lengthed_message("sP", channels[1]);
+            remote.write(msg.c_str(), msg.length());
             meditation = true;
         } else {
-            String msg = "sE" + String (channels[1]);
-            remote.write(msg.c_str());
+            String msg = create_lengthed_message("sE", channels[1]);
+            remote.write(msg.c_str(), msg.length());
             meditation = false;
         }
       break;
@@ -320,10 +320,10 @@ void do_command () {
       case CHECKDRONE :
         tsunami.update();
         if (channels[7] > 0 && tsunami.isTrackPlaying(channels[7])) {
-            String msg = "sP" + String (channels[7]);
-            remote.write(msg.c_str());
+            String msg = create_lengthed_message("sP", channels[7]);
+            remote.write(msg.c_str(), msg.length());
         } else {
-            remote.write("sN");
+            remote.write("sN", 2);
         }
       break;
 
@@ -365,7 +365,7 @@ void do_tsunami() {
             //channels[ch] = 3000;
             Serial.println("Need drone");
             //check_drone.reset();
-            remote.write("sN");
+            remote.write("sN", 2);
         }
 
   for (int ch = 0; ch < 18; ch++) {
@@ -377,8 +377,8 @@ void do_tsunami() {
         }
         tsunami.trackGain(channels[ch], ch_gain[ch]);
         tsunami.trackLoad(channels[ch], 0, true);
-        String msg = "sR" + String (channels[ch]);
-        remote.write(msg.c_str());
+        //String msg = create_lengthed_message("sR", channels[ch]);
+        //remote.write(msg.c_str(), msg.length());
       } else if (ch == 7 && channels[ch] > 0) {
         if (DEBUG_LEVEL){
             Serial.print("Changing Drone ");
@@ -391,16 +391,16 @@ void do_tsunami() {
         } 
         tsunami.trackGain(channels[ch], ch_gain[ch]);
         tsunami.trackLoad(channels[ch], 0, true);
-        String msg = "sR" + String (channels[ch]);
-        remote.write(msg.c_str());
+        //String msg = create_lengthed_message("sR", channels[ch]);
+        //remote.write(msg.c_str(), msg.length());
       } else {
         if (channels[ch]) {
           if (DEBUG_LEVEL) {
               Serial.print("Ending ");
               Serial.println(channels[ch]);
           }
-          String msg = "sE" + String (channels[ch]);
-          remote.write(msg.c_str());
+          String msg = create_lengthed_message("sE", channels[ch]);
+          remote.write(msg.c_str(), msg.length());
         }
         channels[ch]= 0;
         ch_gain[ch]=0;
@@ -515,3 +515,13 @@ void serialEvent() {
      }
   }
 }
+
+String create_lengthed_message(String prefix, int value) {
+  String val_str = String(value);
+  uint8_t val_length = val_str.length();
+
+  //Serial.println("Converting " + prefix + ", " + String(value) + " to '" + prefix + (char)val_length + val_str + "'");
+
+  return prefix + (char)val_length + val_str;
+}
+
