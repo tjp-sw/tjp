@@ -292,7 +292,7 @@ while running:
                 do_time(remote, None);			# synchronize time immediately
             else:
                 try:
-                    message = s.recv(1024)
+                    message = s.recv(102400)
                 except:
                     print sys.exc_value
                     message = None
@@ -342,18 +342,23 @@ while running:
                                 print 'mega message expected 3 but has', len(message), 'bytes'
                                 break
                         elif message[0:1] == 's':
-                            # print 'tsunami says:', repr(message), 'from', remote_name[s]
                             msg = message[0:2]
                             if message[1:2] == 'N':
-                                size = 0
+                                size = -1	# no length byte
                             else:	# remove the length byte for local processing
                                 size = ord(message[2:3])
                                 msg += message[3:3+size]
+                            # print 'tsunami says:', repr(msg), 'from', remote_name[s]
                             if music.status_update(msg):
                                 mega_music.need_drone = True
                             message = message[3+size:]
                         else:
-                            print 'received unknown', repr(message), 'from', remote_name[s]
+                            print 'received unknown', repr(message[0:60]), '... (', len(message), 'bytes) from', remote_name[s]
+                            pos = message.find('c')
+                            if pos < 0:
+                                pos = length(message)	# discard all
+                            print 'discarding', pos, 'bytes of input', repr(message[0:pos]), 'and continuing'
+                            message = message[pos:]
                     if len(message) > 0:
                         print 'discarding', len(message), 'bytes of input'
                 else:
