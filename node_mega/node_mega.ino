@@ -26,7 +26,7 @@ void loop()
   do_communication();
   //do_beat_detect();
   do_tsunami();
-  check_for_failure();
+  //check_for_failure();
 }
 
 void reset_due() {
