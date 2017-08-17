@@ -288,14 +288,12 @@ inline void process_commands(String& input) {
               #ifdef DEBUG
                 print_status("insufficient audio data");
               #endif
-              return;
             }
         }
         else {
           #ifdef DEBUG
             print_status("insufficient audio data");
           #endif
-          return;
         }
         break;
 
@@ -312,7 +310,6 @@ inline void process_commands(String& input) {
             print_status("bytes available: ", (long)input.length());
             print_status("insufficient channel data");
           #endif
-          return;
         }
         break;
 
@@ -356,7 +353,6 @@ inline void process_commands(String& input) {
           #ifdef DEBUG
             print_status("insufficient beat data");
           #endif
-          return;
         }
         break;
 
@@ -398,7 +394,6 @@ inline void process_commands(String& input) {
           #ifdef DEBUG
             print_status("insufficient node/program data");
           #endif
-          return;
         }
         break;
 
@@ -515,7 +510,6 @@ inline void process_commands(String& input) {
           #ifdef DEBUG
             print_status("insufficient show data");
           #endif
-          return;
         }
         break;
 
@@ -556,7 +550,6 @@ inline void process_commands(String& input) {
           #ifdef DEBUG
             print_status("insufficient time data");
           #endif
-          return;
         }
         break;
 
