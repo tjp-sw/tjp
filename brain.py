@@ -301,6 +301,8 @@ while running:
                         if len(message) == 55:
                             do_send(None, message)	# relay to all nodes
                             print 'beat message', repr(message), 'from', remote_name[s]
+                        else:
+                            print 'beat message expected 55 but has', len(message), 'bytes'
                     elif message[0:1] == 'c':
                         if len(message) == 24:
                             node, timestamp, channel_data = struct.unpack_from('>BQ14s', message, 1)
@@ -314,21 +316,33 @@ while running:
                                 show_mode = get_show_mode()
                                 if show_mode == 1 or show_mode == 3: # not during meditaiton
                                     check_art_car_status(esitmated_ring_number, mean_intensity)
+                        else:
+                            print 'channel message expected 24 but has', len(message), 'bytes'
                     elif message[0:1] == 'm':
-                        mega_number = ord(message[1:2])
-                        try:
-                            node_number = mega_to_node_map[mega_number]
-                        except KeyError:
-                            if mega_number >= 100:	# mock_mega
-                                node_number = mega_number % 6 + 10
-                            else:
-                                node_number = None
-                        print 'mega', mega_number, '( node ', repr(node_number), ') is at', remote_name[s]
-                        if node_number != None:
-                            remote_name[s] = 'node %u' % node_number
-                            do_send(s, struct.pack('>cB', 'n', node_number))
+                        if len(message) == 2 or len(message) == 3:
+                            mega_number = ord(message[1:2])
+                            try:
+                                node_number = mega_to_node_map[mega_number]
+                            except KeyError:
+                                if mega_number >= 100:	# mock_mega
+                                    node_number = mega_number % 6 + 10
+                                else:
+                                    node_number = None
+                            print 'mega', mega_number, '( node ', repr(node_number), ') is at', remote_name[s]
+                            if node_number != None:
+                                remote_name[s] = 'node %u' % node_number
+                                do_send(s, struct.pack('>cB', 'n', node_number))
+                        else:
+                            print 'mega message expected 2 or 3 but has', len(message), 'bytes'
                     elif message[0:1] == 's':
-                        if music.status_update(message):
+                        # print 'tsunami says:', repr(message), 'from', remote_name[s]
+                        msg = message[0:2]
+                        if message[1:2] == 'N':
+                            size = 0
+                        else:	# remove the length byte for local processing
+                            size = ord(message[2:3])
+                            msg += message[3:3+size]
+                        if music.status_update(msg):
                             mega_music.need_drone = True
 
                     else:
