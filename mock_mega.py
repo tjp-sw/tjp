@@ -162,7 +162,7 @@ def loop():
                 remote = socket.create_connection(server)
                 network_data = ''
                 print 'mega', mega_number, 'connected %s:%d' % remote.getsockname(), 'to %s:%d' % remote.getpeername()
-                remote.sendall(struct.pack('>cB', 'm', mega_number))
+                remote.sendall(struct.pack('>cBB', 'm', mega_number, 126))
             except:
                 print 'mega', mega_number, sys.exc_value, 'by %s:%d' % server
                 time.sleep(10)
