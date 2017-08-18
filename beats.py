@@ -49,7 +49,7 @@ def analyze_beat(node, intensity, timestamp):
         deviation_sum += abs(beat_history[i][INTENSITY] - mean_intensity)
     mean_deviation = int(deviation_sum / float(len(beat_history)) + 0.5) 	# no risk of division by zero
 
-    print 'beat %u intensity %u (mean %u +-%u) at %.3f from node %u' % (len(beat_history), intensity, mean_intensity, mean_deviation, timestamp, node)
+    #print 'beat %u intensity %u (mean %u +-%u) at %.3f from node %u' % (len(beat_history), intensity, mean_intensity, mean_deviation, timestamp, node)
 
     # thanks to Ben at https://stackoverflow.com/questions/1400213/3d-least-squares-plane
     tmp_A = []

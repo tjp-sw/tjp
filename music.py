@@ -16,10 +16,11 @@ def manual_meditation(med):
     meditation_num = int(med)
     if meditation_num in range(1, 14):
         Music.meditation = True
-        #if (meditation_num % 2):  # odd
-            #shows.set_show_mode(shows.SUNRISE)
-        #else:
-            #shows.set_show_mode(shows.SUNSET)
+        if (meditation_num % 2):  # odd
+            shows.set_show_mode(shows.SUNRISE)
+        else:
+            shows.set_show_mode(shows.SUNSET)
+            
         return play([0, 4000+meditation_num])
     return None
 
@@ -44,9 +45,8 @@ def status_update(message):
             if this_sound in sounds.MEDITATIONS_SOUNDS:
                 print "Meditation Finished"
                 Music.meditation = False
-                #if datetime.now().time() > time(hour=19):
+                # if datetime.now().time() > time(hour=19):
                 #    shows.set_show_mode(shows.NIGHT)
-
                 #else:
                 #    shows.set_show_mode(shows.DAY)
                 return True
@@ -157,19 +157,21 @@ class Music:
             Music.meditation = False
             if time(6, 25) <= now_time.time() <= time(19, 25):
                 if DEBUG > 1:
-                    print "setting day"
-                    # shows.set_show_mode(shows.DAY)
+                    print "in music.py, setting day on", shows.bm_day_index
+                    #shows.set_show_mode(shows.DAY)
             else:
                 # shows.set_show_mode(shows.NIGHT)
                 if DEBUG > 1:
-                    print "setting night"
+                    print "in music.py, setting night on", shows.bm_day_index
         else:
             if DEBUG > 1:
                 print "setting meditation status"
             Music.meditation = True
             if this_meditation % 2:  # odd
-                shows.set_show_mode(shows.SUNRISE)
+                print "in music.py, setting sunrise on", shows.bm_day_index
+                #shows.set_show_mode(shows.SUNRISE)
             else:  # even
+                print "in music.py, setting sunset on", shows.bm_day_index
                 shows.set_show_mode(shows.SUNSET)
             if now_time.weekday() == 1:
                 return play([0, this_meditation, 3999])

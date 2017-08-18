@@ -10,13 +10,13 @@ from internalAnimationsHandler import InternalAninamtionsHandler
 artCarHandler = ArtCarHandler(ART_CAR_HELLO_DURATION, ART_CAR_AMPLITUDE_THRESHOLD, ART_CAR_MIN_HELLO_DURATION)
 
 mega_to_node_map = {
-    1: 2,
+    1: 1,
     2: 0,
-    3: 1,
+    3: 2,
     4: 5,
     5: 4,
     6: 3,
-    7: 6,
+    7: 0,
     }
 
 # close all TCP connections and continue to run
@@ -190,7 +190,7 @@ def get_external_amplitude_sum(channel_data):
     # 7 channels of audio data
     for i in range(0, 6):
         try:
-            amplitude += abs(ord(channel_data[i]) - ord(channel_data[i+7]))
+            amplitude += ord(channel_data[i+7])
         except:
             print "channel data format does not have 2 * 7 channels of information " + str(len(channel_data))
             return -1
@@ -312,13 +312,13 @@ while running:
                                 timestamp /= 1000.0		# convert from milliseconds
                                 #print 'node', node, 'channel data', repr(channel_data), 'at', timestamp
 
-                                amplitude_sum = get_external_amplitude_sum(channel_data)
-                                if amplitude_sum > 0: # otherwise error reading channel_data
-                                    esitmated_ring_number, mean_intensity = analyze_beat(node, amplitude_sum, timestamp)
+                                #amplitude_sum = get_external_amplitude_sum(channel_data)
+                                #if amplitude_sum > 0: # otherwise error reading channel_data
+                                #    esitmated_ring_number, mean_intensity = analyze_beat(node, amplitude_sum, timestamp)
 
-                                    show_mode = get_show_mode()
-                                    if show_mode == 1 or show_mode == 3: # not during meditaiton
-                                        check_art_car_status(esitmated_ring_number, mean_intensity)
+                                #    show_mode = get_show_mode()
+                                #    if show_mode == 1 or show_mode == 3: # not during meditaiton
+                                #        check_art_car_status(esitmated_ring_number, mean_intensity)
                                 message = message[24:]
                             else:
                                 print 'channel message expected 24 but has', len(message), 'bytes'
