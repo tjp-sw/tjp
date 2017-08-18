@@ -683,6 +683,7 @@ def set_playa_mode():
 real_start_time = -1.0
 
 
+time_speed_factor = 1
 def playa_program(init=False):
     global real_start_time, testing_meditation_seconds, time_speed_factor, show_mode, virtual_time, bm_day_index
 
@@ -756,7 +757,8 @@ def do_date(ignored, when):
         return
     day = time.strftime('%Y-%b-%d', time.localtime(1503860400 + day * 86400))  # Sunday before is day 0
     when = time.mktime(time.strptime('%s %u:%u' % (day, hour, minute), '%Y-%b-%d %H:%M'))
-    real_start_time = when - time.time()
+    real_start_time = time.time() + (STATIC_START - when) / time_speed_factor
+
 
 
 # ------------------------------ internal_sound_animations_program() -----------------------------------------------
