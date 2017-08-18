@@ -14,6 +14,8 @@
 
     EthernetClient remote;
 
+    uint8_t config_switches;
+
     #define NodeMate  Serial3
   #endif // I_AM_NODE_MEGA
 
@@ -239,6 +241,16 @@ inline void setup_communication() {
     }
 
     #ifdef I_AM_NODE_MEGA
+      config_switches = 0;
+      for (int pin = 50; pin < 54; pin++) {
+        pinMode(pin, INPUT);
+        config_switches <<= 1;
+        config_switches |= digitalRead(pin);
+      }
+      #ifdef DEBUG
+        print_status("the configuration switches are set to ", config_switches);
+      #endif
+
       delay(50);              // extra time for Ethernet shield to power on
       // establish MAC address and IP address of this device
       byte mac[] = { 0x35, 0x28, 0x35, 0x28, 0x00, mega_number };
@@ -618,7 +630,7 @@ inline void do_heartbeat() {
   if ((node_number == 255) && (loop_start_time_msec > last_announcement_msec + 1000)) {
     #ifdef I_AM_NODE_MEGA
       if (remote.connected()) {
-        const char mega_message[3] = {'m', (char)mega_number, '\127'};	// config_switches placeholder
+        const char mega_message[3] = {'m', (char)mega_number, (char)config_switches};
         remote.write(mega_message, 3);
         #ifdef DEBUG
           print_status("announcing");
