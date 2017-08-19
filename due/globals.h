@@ -131,6 +131,10 @@ uint8_t art_car = NO_ART_CAR;                                           //
 #define LIGHTNING 131                                         //
 #define FIRE_HELLO 132                                        //
 #define BLACK_HOLE 133                                        //
+
+// Meditation animations
+#define MEDITATION_SUNRISE 192
+#define MEDITATION_SUNSET 193
                                                               //
 // Debug animations (drawn on EDM layer)                      //
 #define DEBUG_MODE 254        // Startup animation            //

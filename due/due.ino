@@ -3,6 +3,7 @@
 //------------------------ Config -----------------------------------//
 // Due controlled versus pi controlled animation choices             //
 #define PI_CONTROLLED                                              //
+#define AUDIO_PACKET_THROTTLE 100 // min ms between sending audio packets
 #ifndef PI_CONTROLLED                                                //
   #define TESTING_NODE_NUMBER 0   // To test diff nodes              //
   //#define CYCLE           // Cycles through shows in order         //
@@ -871,6 +872,14 @@ inline void draw_current_edm(uint8_t min_ring, uint8_t max_ring) {
 
     case BLACK_HOLE:
       black_hole();
+      break;
+
+    case MEDITATION_SUNRISE:
+      bloom();
+      break;
+
+    case MEDITATION_SUNSET:
+      drip();
       break;
 
     default:
