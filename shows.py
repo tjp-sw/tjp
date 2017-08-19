@@ -47,13 +47,13 @@ PALETTE_TIME_LIMIT = 7
 PALETTE_TIME_LIMIT = 5
 
 # constants to protect against too frequent param changes during dynamic show
-BASE_MAIN_ANIMATION_SWITCH_LAG = 12
-BASE_PARAMETER_SWTICH_LAG = 3
-MID_MAIN_ANIMATION_SWITCH_LAG = 8
-MID_PARAMETER_SWTICH_LAG = 2
-SPARKLE_MAIN_ANIMATION_SWITCH_LAG = 6
-SPARKLE_PARAMETER_SWTICH_LAG = 1
-PALETTE_LAG = 7
+BASE_MAIN_ANIMATION_SWITCH_LAG = 0#12
+BASE_PARAMETER_SWTICH_LAG = 0#3
+MID_MAIN_ANIMATION_SWITCH_LAG = 0#8
+MID_PARAMETER_SWTICH_LAG = 0#2
+SPARKLE_MAIN_ANIMATION_SWITCH_LAG = 0#6
+SPARKLE_PARAMETER_SWTICH_LAG = 0#1
+PALETTE_LAG = 0#7
 
 BACKGROUND_INDEX = 0
 MIDLAYER_INDEX = 8
@@ -828,7 +828,8 @@ def drive_internal_animations_v2(init):
             if palette_time - palette_start_time > PALETTE_TIME_LIMIT:
                 palette_start_time = palette_time
 
-                choose_new_playa_palette()
+                # choose_new_playa_palette() TEMP CHENIGN TO EDM FOR 8/13 DEMO
+                choose_random_colors_from_edm_palette
 
             # remove the 'actioned on' event from the queue
             try:
@@ -869,7 +870,7 @@ def check_time_triggered_animations():
         bg_start_time = bg_time
 
         # change bg show parameters
-        for i in range (BACKGROUND_INDEX+1, BACKGROUND_INDEX + 4):
+        for i in range (BACKGROUND_INDEX, BACKGROUND_INDEX + 4):
             show_parameters[i] = constrained_weighted_parameter(i, magnitude)
             print "TIMEOUT: background parameter ", i, "changed to ", show_parameters[i]
 
@@ -886,7 +887,7 @@ def check_time_triggered_animations():
         mid_start_time = mid_time
 
         # change mid show parameters
-        for i in range (MIDLAYER_INDEX+1, MIDLAYER_INDEX + 5):
+        for i in range (MIDLAYER_INDEX, MIDLAYER_INDEX + 5):
             show_parameters[i] = constrained_weighted_parameter(i, magnitude)
             print "TIMEOUT: mid parameter ", i, "changed to ", show_parameters[i]
 
@@ -911,7 +912,7 @@ def check_time_triggered_animations():
         sparkle_parameter_start_time = sparkle_parameter_time
 
         # choose which parameter to change
-        change_sparkle = randint(SPARKLE_INDEX + 1,SPARKLE_INDEX + 10)
+        change_sparkle = randint(SPARKLE_INDEX,SPARKLE_INDEX + 10)
         show_parameters[change_sparkle] = constrained_weighted_parameter(change_sparkle, magnitude)
         print "TIMEOUT: sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
 
@@ -921,7 +922,8 @@ def check_time_triggered_animations():
         palette_start_time = palette_time
 
         # not sure if want palette changes for this time based stuff...
-        choose_new_playa_palette()
+        # choose_new_playa_palette() SWTICHING TO EDM JUST FOR DEMO 8/13 TO SEE PALETTE CHANGE FREQUENCY
+        choose_random_colors_from_edm_palette()
 
 
 
