@@ -267,3 +267,145 @@ inline void base_horizontal_gradient(uint8_t min_ring, uint8_t max_ring) {
   }
 }
 
+
+
+inline void this_is_a_template(uint8_t min_ring, uint8_t max_ring) {
+  // Animation-specific constants
+  const uint8_t max_inter_speed = 4;
+  
+
+  // Scale show parameters
+  uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 6, 10);
+  uint8_t black_thickness = scale_param(BASE_BLACK_THICKNESS, 1, 3);
+  uint8_t intra_speed = 1 << scale_param(BASE_INTRA_RING_SPEED, 3, 6);
+  uint8_t inter_speed = scale_param(BASE_INTER_RING_SPEED, 1, max_inter_speed) * BASE_INTER_RING_MOTION;
+  int8_t alternating_multiplier = BASE_INTRA_RING_MOTION;
+  
+
+  // Compute pattern periods, they should only be: 1, 2, 3, 4, 6, 8, 9, 12, 18, 24, 36, 72
+  uint8_t x_period = 12;
+  uint16_t y_period = 100;
+  uint16_t extended_y_period = ((LEDS_PER_RING-1)/y_period+1)*y_period;
+  // Ring offset is based on the period
+  uint8_t ring_offset = scale_param(BASE_RING_OFFSET, -10, 10);
+
+
+  // Update min/max rings
+  if(node_number*RINGS_PER_NODE > min_ring) { min_ring = node_number*RINGS_PER_NODE; }
+  if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
+
+
+  // Create pattern
+  CRGB shades[x_period][y_period];
+
+
+  // Compute ring movement
+  int32_t ring_movement = inter_speed * base_count / max_inter_speed;
+  while(ring_movement < 0) { ring_movement += NUM_RINGS; }
+
+  // Loop over rings
+  for(uint8_t ring = 0; ring < NUM_RINGS; ring++) {
+    // Moving idx space for ring
+    uint8_t ring_idx = (ring + ring_movement) % NUM_RINGS;
+    if(ring_idx < min_ring || ring_idx >= max_ring) { continue; }
+    uint8_t actual_ring = ring_idx % RINGS_PER_NODE; // Only for base layer
+
+    // Compute pixel movement
+    if(BASE_INTRA_RING_MOTION == ALTERNATE) { alternating_multiplier = ring % 2 == 0 ? -1 : 1; }
+    int32_t pixel_offset = ring_idx * ring_offset + alternating_multiplier * intra_speed * base_count / THROTTLE;
+    while(pixel_offset < 0) { pixel_offset += LEDS_PER_RING; }
+
+    // Loop over pixels
+    for(uint16_t pixel = 0; pixel < extended_y_period; pixel++) {
+
+      // Moving idx space for pixel
+      uint16_t pixel_idx = (pixel + pixel_offset) % extended_y_period;
+      if(pixel_idx >= LEDS_PER_RING) { continue; }
+
+      // Draw actual pixel
+      set_led(actual_ring, pixel_idx, shades[ring][pixel]);
+    }
+  }
+}
+
+
+inline void this_is_a_template_test_dim(uint8_t min_ring, uint8_t max_ring) {
+  // Animation-specific constants
+  const uint8_t max_inter_speed = 4;
+  
+
+  // Scale show parameters
+  uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 6, 16);
+  uint8_t black_thickness = scale_param(BASE_BLACK_THICKNESS, 1, 3);
+  uint8_t intra_speed = 1 << scale_param(BASE_INTRA_RING_SPEED, 3, 6);
+  uint8_t inter_speed = scale_param(BASE_INTER_RING_SPEED, 1, max_inter_speed) * BASE_INTER_RING_MOTION;
+  int8_t alternating_multiplier = BASE_INTRA_RING_MOTION;
+  
+
+  // Compute pattern periods, they should only be: 1, 2, 3, 4, 6, 8, 9, 12, 18, 24, 36, 72
+  uint8_t x_period = 2;
+  uint16_t y_period = color_thickness + black_thickness;
+  
+  // Enforce period values
+  if(y_period >= 16) { color_thickness -= (y_period-16); }
+  else if(y_period > 8) { color_thickness -= (y_period-8); }
+  
+  // Ring offset and extended period are based on the period
+  uint8_t ring_offset = scale_param(BASE_RING_OFFSET, -10, 10);
+  uint16_t extended_y_period = ((LEDS_PER_RING-1)/y_period+1)*y_period;
+  
+
+  // Update min/max rings
+  if(node_number*RINGS_PER_NODE > min_ring) { min_ring = node_number*RINGS_PER_NODE; }
+  if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
+
+
+  // Create pattern
+  CRGB shades[x_period][y_period];
+  for(uint8_t i = 0; i < x_period; i++) {
+    CRGB orig_color = current_palette[i];
+    
+    uint8_t j = 0;
+    uint8_t half_color_thickness = color_thickness / 2;
+    for(; j < half_color_thickness; j++) {
+      // Build from dim to bright
+      shades[i][j] = orig_color;
+      shades[i][j].fadeLightBy(255 * (half_color_thickness - j) / half_color_thickness);
+    }
+    for(; j < color_thickness; j++) {
+      shades[i][j] = orig_color;
+      shades[i][j].fadeLightBy(255 * (j - half_color_thickness) / half_color_thickness);
+    }
+    for(; j < y_period; j++) { shades[i][j] = CRGB::Black; }
+  }
+
+
+  // Compute ring movement
+  int32_t ring_movement = inter_speed * base_count / max_inter_speed;
+  while(ring_movement < 0) { ring_movement += NUM_RINGS; }
+
+  // Loop over rings
+  for(uint8_t ring = 0; ring < NUM_RINGS; ring++) {
+    // Moving idx space for ring
+    uint8_t ring_idx = (ring + ring_movement) % NUM_RINGS;
+    if(ring_idx < min_ring || ring_idx >= max_ring) { continue; }
+    uint8_t actual_ring = ring_idx % RINGS_PER_NODE; // Only for base layer
+
+    // Compute pixel movement
+    if(BASE_INTRA_RING_MOTION == ALTERNATE) { alternating_multiplier = ring % 2 == 0 ? -1 : 1; }
+    int32_t pixel_offset = ring_idx * ring_offset + alternating_multiplier * intra_speed * base_count / THROTTLE;
+    while(pixel_offset < 0) { pixel_offset += LEDS_PER_RING; }
+
+    // Loop over pixels
+    for(uint16_t pixel = 0; pixel < extended_y_period; pixel++) {
+
+      // Moving idx space for pixel
+      uint16_t pixel_idx = (pixel + pixel_offset) % extended_y_period;
+      if(pixel_idx >= LEDS_PER_RING) { continue; }
+
+      // Draw actual pixel
+      set_led(actual_ring, pixel_idx, shades[ring][pixel]);
+    }
+  }
+}
+
