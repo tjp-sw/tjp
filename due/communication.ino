@@ -310,7 +310,7 @@ inline void process_commands(String& input) {
         break;
 
       case 'c': // Channel audio out data, 14 channels/bytes total
-        last_channel_message = millis();
+        //last_channel_message = millis();
         size += 1 + 2 * NUM_CHANNELS + sizeof (unsigned long long);
         if (input.length() >= size) {
           //store_audio_packet((uint8_t *)input.c_str());
@@ -327,7 +327,7 @@ inline void process_commands(String& input) {
 
       case 'd':
       {
-        last_channel_message = millis();
+        //last_channel_message = millis();
         if(node_number != 255) {
           const uint8_t node_message[2] = { 'n', node_number };
           NodeMate.write(node_message, 2);
@@ -492,6 +492,22 @@ inline void process_commands(String& input) {
                   EDM_ANIMATION = last_edm_animation;
                   transition_in_edm_animation = false;
                   transition_out_edm_animation = true;
+
+                  if(EDM_ANIMATION > 0 && EDM_ANIMATION < 128 || EDM_ANIMATION >= 192) {
+                    // Art car stay or meditation animation playing
+                    BASE_ANIMATION = NONE;
+                    MID_ANIMATION = NONE;
+                    SPARKLE_ANIMATION = NONE;
+                    next_base_animation = NONE;
+                    next_mid_animation = NONE;
+                    next_sparkle_animation = NONE;
+                    transition_in_basee_animation = false;
+                    transition_out_base_animation = false;
+                    transition_in_mid_animation = false;
+                    transition_out_mid_animation = false;
+                    transition_in_sparkle_animation = false;
+                    transition_out_sparkle_animation = false;
+                  }
                 }
               }
 
@@ -555,7 +571,7 @@ inline void process_commands(String& input) {
           #ifdef I_AM_NODE_MEGA
             NodeMate.write((uint8_t *)input.c_str(), size);
             HandMate.write((uint8_t *)input.c_str(), size);
-            last_channel_message += (epoch_msec - old_epoch_msec);
+            //last_channel_message += (epoch_msec - old_epoch_msec);
           #endif // I_AM_NODE_MEGA
         }
         else {
@@ -592,7 +608,7 @@ inline void correct_show_params() {
   if(SPARKLE_INTRA_RING_MOTION_INDEX < -1 || SPARKLE_INTRA_RING_MOTION_INDEX > 2) { show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = 1; }
   if(SPARKLE_INTER_RING_MOTION_INDEX < -1 || SPARKLE_INTER_RING_MOTION_INDEX > 2) { show_parameters[SPARKLE_INTER_RING_MOTION_INDEX] = 1; }
 
-  if(EDM_ANIMATION > NUM_EDM_ANIMATIONS) { EDM_ANIMATION = 0; }
+  //if(EDM_ANIMATION > NUM_EDM_ANIMATIONS) { EDM_ANIMATION = 0; }
   if(ART_CAR_RING > 72 || ART_CAR_RING < -1) { show_parameters[ART_CAR_RING_INDEX] = (EDM_ANIMATION == NONE ? -1 : 0); }
 
   BEAT_EFFECT %= NUM_BEAT_EFFECTS;
@@ -660,7 +676,7 @@ inline void do_communication() {
   #ifdef I_AM_DUE
     do_mate_input();
     if (node_number < NUM_NODES && loop_start_time_msec > next_audio_msec) {
-      next_audio_msec = loop_start_time_msec + 100;	// 10 times per second
+      next_audio_msec = loop_start_time_msec + AUDIO_PACKET_THROTTLE;
       send_audio_out();
     }
   #endif

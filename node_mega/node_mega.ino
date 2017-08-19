@@ -5,7 +5,7 @@
 
 unsigned long long epoch_msec;
 uint8_t node_number = 255;
-unsigned long last_channel_message = 0;
+//unsigned long last_channel_message = 0;
 
 void setup()
 {
@@ -39,6 +39,7 @@ void reset_due() {
   delay(500);
 }
 
+/*
 void check_for_failure() {
   unsigned long curMS = millis();
   if(node_number < 6 && (curMS - last_channel_message > 10000) && (curMS > 30000)) {
@@ -48,4 +49,4 @@ void check_for_failure() {
     asm volatile ("  jmp 0"); // Reset mega and due if no node assignment after 45 sec
   }
 }
-
+*/
