@@ -45,7 +45,8 @@ class InternalAninamtionsHandler:
             info = audio_msg.split(";")
             tracks = info[3].split(",")
         except:
-            print "audio msg format is wrong or has changed", sys.exc_value
+            if shows.INTERNAL_ANIMATIONS_DEBUG:
+                print "audio msg format is wrong or has changed", sys.exc_value
             return {}
 
         if shows.INTERNAL_ANIMATIONS_DEBUG:
@@ -95,9 +96,11 @@ class InternalAninamtionsHandler:
             try:
                 self.event_queue.remove(event)
             except ValueError:
-                print "event " + str(event) + " already has been removed from queue"
+                if shows.INTERNAL_ANIMATIONS_DEBUG:
+                    print "event " + str(event) + " already has been removed from queue"
             except AttributeError:
-                print "error removing event from queue"
+                if shows.INTERNAL_ANIMATIONS_DEBUG:
+                    print "error removing event from queue"
         if shows.INTERNAL_ANIMATIONS_DEBUG:
             print "new event queue size after removal: " + str(self.event_queue.size)
 
@@ -112,7 +115,7 @@ class InternalAninamtionsHandler:
                 event.exec_time = int(event.time) + cur_time_ms
                 # print "NEW e TIME = " + str(event.exec_time) + "\nCURNT TIME = " + str(cur_time_ms)
                 node = self.event_queue.add(event)
-        else:
+        elif shows.INTERNAL_ANIMATIONS_DEBUG:
             print "seems like it was a database miss... this will happen while we don't have all the auido files"
 
         if shows.INTERNAL_ANIMATIONS_DEBUG:

@@ -294,7 +294,7 @@ def print_parameters():
         print_mode = 'sunset meditation'
     elif show_mode == NIGHT:
         print_mode = 'night'
-    else:
+    elif DEBUG:
         print 'illegal show mode'
     if DEBUG:
         print ''
@@ -444,7 +444,7 @@ def update_playa_palette(sound_day, frequency):
             changed = next_high_index
         next_high_index += ((next_high_index - 5) + 1) % 2 + 5
 
-    else:
+    elif DEBUG:
         print "frequency out of range"
 
     if DEBUG:
@@ -578,7 +578,8 @@ def edm_program(init=False):
 
 # sunrise and sunset mediation animiatons
 def meditaiton_animations(ignored=True):
-    print "STARTING MEDITAITON ANIMATIONS... zen out, okay?"
+    if DEBUG:
+        print "STARTING MEDITAITON ANIMATIONS... zen out, okay?"
 
     show_parameters[SEVEN_PAL_BEAT_PARAM_START] = randint(NUM_7_COLOR_MEDITATION_ANIMATIONS_START,
                                                           NUM_7_COLOR_MEDITATION_ANIMATIONS_END)
@@ -591,7 +592,8 @@ def meditaiton_animations(ignored=True):
 
 # choose random 7 color animation values for full structure animations
 def art_car_edm(ignored=True):
-    print "DOING ART CAR EDM ANIMATIONS!"
+    if DEBUG:
+        print "DOING ART CAR EDM ANIMATIONS!"
 
     # NOTE art car ring num is param 29... between the beat param "starts" and "ends"... should be fixed... eventually
     show_parameters[SEVEN_PAL_BEAT_PARAM_START] = randint(NUM_7_COLOR_ANIMATIONS_AC_EDM_START,
@@ -619,24 +621,29 @@ def set_playa_mode():
     # this is also set in playa_program, but not before the start of burning man
     # we need this value to be allowed to be -1 to start static
     bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
-    print "******* in set playa mode virtual time is", time.ctime(virtual_time), 'on day', bm_day_index
+    if DEBUG:
+        print "******* in set playa mode virtual time is", time.ctime(virtual_time), 'on day', bm_day_index
 
     # todays_length = sunset_time[bm_day_index] - sunrise_time[bm_day_index]
 
 
     if virtual_time - sunrise_time[bm_day_index + 1] <= IDEAL_MEDITATION_SECONDS:
         show_mode = SUNRISE
-        print 'now it is sunrise'
+        if DEBUG:
+            print 'now it is sunrise'
     elif virtual_time - sunset_time[bm_day_index + 1] < 0:
         show_mode = DAY
-        print 'now it is daytime'
+        if DEBUG:
+            print 'now it is daytime'
     elif virtual_time - sunset_time[bm_day_index + 1] <= IDEAL_MEDITATION_SECONDS:
         show_mode = SUNSET
-        print 'now it is sunset'
+        if DEBUG:
+            print 'now it is sunset'
         color_evolution_timer = time.time()
     else:
         show_mode = NIGHT
-        print 'now it is night'
+        if DEBUG:
+            print 'now it is night'
     choose_new_playa_palette()
 
 
@@ -671,7 +678,8 @@ def set_playa_mode():
         exit(1)
 
     choose_new_playa_palette()
-    print '  new colors at day', bm_day_index, "show_mode ", show_mode, show_colors
+    if DEBUG:
+        print '  new colors at day', bm_day_index, "show_mode ", show_mode, show_colors
     #return show_mode
 """
 
@@ -708,14 +716,16 @@ def playa_program(init=False):
     else:
         if BURNING_MAN_START <= real_time and real_time < BURNING_MAN_END:
             time_speed_factor = 1.0
-            print 'Welcome home!'	# Burning Man has just begun!
+            if DEBUG:
+                print 'Welcome home!'	# Burning Man has just begun!
             real_start_time = BURNING_MAN_START
             virtual_time = real_time
         else:
             virtual_time = STATIC_START + (real_time - real_start_time) * time_speed_factor
 
-    print ' '
-    print '---> Playa time advanced to', time.ctime(virtual_time)
+    if DEBUG:
+        print ' '
+        print '---> Playa time advanced to', time.ctime(virtual_time)
 
     if virtual_time < BURNING_MAN_START:
         # fixme: add this code
@@ -723,7 +733,7 @@ def playa_program(init=False):
         return
 
     bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
-    if bm_day_index == 7:  # burning man is over
+    if DEBUG and bm_day_index == 7:  # burning man is over
         print "Burning man has ended"
         exit(1)
 
@@ -738,7 +748,8 @@ def playa_program(init=False):
     elif (show_mode == 1 or show_mode == 3) and (show_mode_before == 0 or show_mode_before == 2):
         # need to stop the meditation animations
         show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0
-        print "stopping meditation animations"
+        if DEBUG:
+            print "stopping meditation animations"
 
     # do intenral sound animations after time progresses for palette purposes
     do_internal_sound_animations()

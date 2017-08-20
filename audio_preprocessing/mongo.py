@@ -12,6 +12,7 @@ import sys
 sys.path.insert(0, '../')
 from audioInfo import AudioFileInfo, AudioEvent
 
+MONGO_DEBUG = True
 
 def encode_events(events):
     output = []
@@ -54,7 +55,8 @@ def get_collection():
         db = client.audioInfo
         files = db.audioFiles
     except:
-        print 'mongo database:', sys.exc_value
+        if MONGO_DEBUG:
+            print 'mongo database:', sys.exc_value
         files = {}
     return files
 
@@ -64,7 +66,8 @@ def insert_audio_data(audioInfoList):
     files = get_collection()
 
     res = files.delete_many({})
-    print res.deleted_count
+    if MONGO_DEBUG:
+        print res.deleted_count
     for audioInfo in audioInfoList:
         to_mongo(audioInfo)
 
@@ -79,7 +82,8 @@ def to_mongo(audioInfo):
     try:
         files.insert({"_id": audioInfo.file_index, "AudioFileInfo": ec})
     except:
-        print "duplicate key... audio files aren't uniquely named: ", sys.exc_value
+        if MONGO_DEBUG:
+            print "duplicate key... audio files aren't uniquely named: ", sys.exc_value
 
 def grab_audio_info(colleciton, file_num):
     global files
@@ -87,9 +91,11 @@ def grab_audio_info(colleciton, file_num):
         audioInfo = decode_custom(files.find_one({"_id": file_num})["AudioFileInfo"])
         return audioInfo
     except TypeError:
-        print "Invalid audio file number " + file_num + "... something went pretty wrong!"
+        if MONGO_DEBUG:
+            print "Invalid audio file number " + file_num + "... something went pretty wrong!"
     except:
-        print 'mongo database:', sys.exc_value
+        if MONGO_DEBUG:
+            print 'mongo database:', sys.exc_value
 
 
 #infoList = parser.parseProcessedAudioData()

@@ -7,6 +7,8 @@ import music
 from artCarHandler import ArtCarHandler
 from internalAnimationsHandler import InternalAninamtionsHandler
 
+BRAIN_DEBUG = True
+
 artCarHandler = ArtCarHandler(ART_CAR_HELLO_DURATION, ART_CAR_AMPLITUDE_THRESHOLD, ART_CAR_MIN_HELLO_DURATION)
 
 mega_to_node_map = {
@@ -159,7 +161,8 @@ while listener:
         listener.bind(('', 3528))	# any local IPv4 address, port 3528
         break
     except:
-        print sys.exc_value
+        if BRAIN_DEBUG:
+            print sys.exc_value
         time.sleep(10)
 listener.listen(6)		# maximum connection backlog
 
@@ -192,7 +195,8 @@ def get_external_amplitude_sum(channel_data):
         try:
             amplitude += ord(channel_data[i+7])
         except:
-            print "channel data format does not have 2 * 7 channels of information " + str(len(channel_data))
+            if BRAIN_DEBUG:
+                print "channel data format does not have 2 * 7 channels of information " + str(len(channel_data))
             return -1
 
     return amplitude
@@ -202,17 +206,20 @@ def check_art_car_status(ring_num, amplitude):
     global rings_to_hello_animation, auto_show, art_car
 
     if ring_num is None or amplitude is None:
-        print "seems as those the data did not make a plane, ring -> art car detection not possible"
+        if BRAIN_DEBUG:
+            print "seems as those the data did not make a plane, ring -> art car detection not possible"
         if not artCarHandler.mock:
             return
 
     ring_ac_newly_detected = artCarHandler.handle_amplitude_info(ring_num, amplitude)
-    print "ring detected " + str(ring_ac_newly_detected)
-    print "art car ring " + str(artCarHandler.art_car)
+    if BRAIN_DEBUG:
+        print "ring detected " + str(ring_ac_newly_detected)
+        print "art car ring " + str(artCarHandler.art_car)
     if ring_ac_newly_detected is None:
         # artcar total structure animation was running now stop
         get_internal_animations_handler().set_do_animations(True)
-        print "stopping art car edm takeover animations"
+        if BRAIN_DEBUG:
+            print "stopping art car edm takeover animations"
         do_auto(None, playa_program)
         do_show(None, None)
 
@@ -244,8 +251,9 @@ def check_art_car_status(ring_num, amplitude):
         # TODO do_send(?, ?) i.e. do_send(None, oldest_ring)
         pass
 
-do_list(None, None)
-print sorted(control_messages.keys())
+if BRAIN_DEBUG:
+    do_list(None, None)
+    print sorted(control_messages.keys())
 mega_music = music.Music()
 running = True
 while running:
@@ -288,23 +296,27 @@ while running:
                 sources.append(remote)			# remember this connection
                 message_queues[remote] = Queue.Queue()	# create outgoing FIFO queue
                 remote_name[remote] = '%s:%d' % addr	# addr is the same as remote.getpeername()
-                print 'connection from', remote_name[remote]
+                if BRAIN_DEBUG:
+                    print 'connection from', remote_name[remote]
                 do_time(remote, None);			# synchronize time immediately
             else:
                 try:
                     message = s.recv(102400)
                 except:
-                    print sys.exc_value
+                    if BRAIN_DEBUG:
+                        print sys.exc_value
                     message = None
                 if message:
                     while len(message) > 0:
                         if message[0:1] == 'b':
                             if len(message) >= 55:
                                 do_send(None, message)	# relay to all nodes
-                                print 'beat message', repr(message), 'from', remote_name[s]
+                                if BRAIN_DEBUG:
+                                    print 'beat message', repr(message), 'from', remote_name[s]
                                 message = message[55:]
                             else:
-                                print 'beat message expected 55 but has', len(message), 'bytes'
+                                if BRAIN_DEBUG:
+                                    print 'beat message expected 55 but has', len(message), 'bytes'
                                 break
                         elif message[0:1] == 'c':
                             if len(message) >= 24:
@@ -321,7 +333,8 @@ while running:
                                 #        check_art_car_status(esitmated_ring_number, mean_intensity)
                                 message = message[24:]
                             else:
-                                print 'channel message expected 24 but has', len(message), 'bytes'
+                                if BRAIN_DEBUG:
+                                    print 'channel message expected 24 but has', len(message), 'bytes'
                                 break
                         elif message[0:1] == 'm':
                             if len(message) >= 3:
@@ -333,13 +346,15 @@ while running:
                                         node_number = mega_number % 6 + 10
                                     else:
                                         node_number = None
-                                print 'mega', mega_number, '( node ', repr(node_number), 'switches', repr(ord(message[2:3])), ') is at', remote_name[s]
+                                if BRAIN_DEBUG:
+                                    print 'mega', mega_number, '( node ', repr(node_number), 'switches', repr(ord(message[2:3])), ') is at', remote_name[s]
                                 if node_number != None:
                                     remote_name[s] = 'node %u' % node_number
                                     do_send(s, struct.pack('>cB', 'n', node_number))
                                 message = message[3:]
                             else:
-                                print 'mega message expected 3 but has', len(message), 'bytes'
+                                if BRAIN_DEBUG:
+                                    print 'mega message expected 3 but has', len(message), 'bytes'
                                 break
                         elif message[0:1] == 's':
                             msg = message[0:2]
@@ -353,13 +368,15 @@ while running:
                                 mega_music.need_drone = True
                             message = message[3+size:]
                         else:
-                            print 'received unknown', repr(message[0:60]), '... (', len(message), 'bytes) from', remote_name[s]
+                            if BRAIN_DEBUG:
+                                print 'received unknown', repr(message[0:60]), '... (', len(message), 'bytes) from', remote_name[s]
                             pos = message.find('c')
                             if pos < 0:
                                 pos = len(message)	# discard all
-                            print 'discarding', pos, 'bytes of input', repr(message[0:pos]), 'and continuing'
+                            if BRAIN_DEBUG:
+                                print 'discarding', pos, 'bytes of input', repr(message[0:pos]), 'and continuing'
                             message = message[pos:]
-                    if len(message) > 0:
+                    if BRAIN_DEBUG and len(message) > 0:
                         print 'discarding', len(message), 'bytes of input'
                 else:
                     disconnect(s, 'remote closed')
@@ -380,7 +397,8 @@ while running:
                 else:
                     unsent = len(next_msg) - sent
                     if unsent != 0:
-                        print 'failed to send %d bytes to %s' % (unsent, remote_name[s])
+                        if BRAIN_DEBUG:
+                            print 'failed to send %d bytes to %s' % (unsent, remote_name[s])
                         # Queue module can't push unsent data back to the front of the queue
 
         for s in oops:
@@ -394,7 +412,8 @@ while running:
         audio_msg = mega_music.tick()
         if audio_msg is not None:
             do_send(None, encapsulated_audio_msg(audio_msg))	# always send to all nodes
-            print repr(audio_msg)
+            if BRAIN_DEBUG:
+                print repr(audio_msg)
             # meditation = mega.meditation
             get_internal_animations_handler().interpret_audio_msg(audio_msg)
 
@@ -407,8 +426,9 @@ while running:
         running = False
 
     except:
-        raise				# uncomment for debugging
-        print sys.exc_value
+        if BRAIN_DEBUG:
+            raise			# uncomment for debugging
+            # print sys.exc_value
         do_disconnect(None, None)	# TODO: be more selective
 
 
