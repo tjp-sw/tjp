@@ -69,6 +69,9 @@ class ArtCarHandler:
     def get_min_hello_duration(self):
         return self.min_hello_duration_threshold
 
+    def is_takeover(self):
+        return self.art_car_takover
+
     # Returns ring number of detected art car
     # Also mutates a dictionary of rings as keys and value containing the hello animation being shown
     def handle_amplitude_info(self, ring_num, amplitude):
@@ -100,6 +103,7 @@ class ArtCarHandler:
                         if self.art_car is NO_ART_CAR:
                             print "tracked for greater than %i" % self.duration_threshold
                             self.art_car = ring_num
+                            self.art_car_takover = True
 
                             if ART_CAR_DETECTION_DEBUG:
                                 print "art car pass ART_CAR_HELLO_DURATION triggering edm animations on structure"
@@ -135,6 +139,7 @@ class ArtCarHandler:
                     print "turning off art car edm animation triggered by ring %i \
                             for %i seconds and clearing art car tracking caches" % (ring_num, int(time.time() - self.ring_to_animation_start_time[ring_num]))
                     show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0
+                    self.art_car_takover = False
 
                     # clearing art car tracking cache to start from scratch again
                     self.ring_to_animation_start_time.clear()

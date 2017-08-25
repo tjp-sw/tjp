@@ -411,9 +411,15 @@ while running:
         #audio commands
         audio_msg = mega_music.tick()
         if audio_msg is not None:
-            do_send(None, encapsulated_audio_msg(audio_msg))	# always send to all nodes
-            if BRAIN_DEBUG:
-                print repr(audio_msg)
+            if artCarHandler.art_car_takover == False:
+                do_send(None, encapsulated_audio_msg(audio_msg))	# always send to all nodes
+                if BRAIN_DEBUG:
+                    print repr(audio_msg)
+            else:
+                mega_music.mute()
+                if BRAIN_DEBUG:
+                    print "in art car takeover mode not sending audio info"
+
             # meditation = mega.meditation
             get_internal_animations_handler().interpret_audio_msg(audio_msg)
 
