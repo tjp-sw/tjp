@@ -202,8 +202,8 @@ def get_external_amplitude_sum(channel_data):
     return amplitude
 
 
+# check art car detection status and change animation accordingly
 def check_art_car_status(ring_num, amplitude):
-    global rings_to_hello_animation, auto_show, art_car
 
     if ring_num is None or amplitude is None:
         if BRAIN_DEBUG:
@@ -243,13 +243,14 @@ def check_art_car_status(ring_num, amplitude):
             show_parameters[ART_CAR_RING_PARAM] = oldest_ring
             show_parameters[SEVEN_PAL_BEAT_PARAM_START] = artCarHandler.get_ring_animation(oldest_ring)
             do_show(None, None)
+    else:
+        # no art car detected past threshold tell any rings playing hello animations to stop
 
-
-    # send hello animation stop message broadcast for target ring
-    for ring_num in artCarHandler.rings_to_stop_hello_animation:
-        # HELP: HOW TO SEND HELLO ANIMATION AND RING NUM?
-        # TODO do_send(?, ?) i.e. do_send(None, oldest_ring)
-        pass
+        # send hello animation stop message broadcast for target ring
+        for ring_num_stop in artCarHandler.rings_to_stop_hello_animation:
+            show_parameters[ART_CAR_RING_PARAM] = ring_num_stop
+            show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0
+            do_show(None, None)
 
 if BRAIN_DEBUG:
     do_list(None, None)
