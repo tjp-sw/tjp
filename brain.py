@@ -207,7 +207,7 @@ def check_art_car_status(ring_num, amplitude):
 
     if ring_num is None or amplitude is None:
         if BRAIN_DEBUG:
-            print "seems as those the data did not make a plane, ring -> art car detection not possible"
+            print "seems as though the data did not make a plane, ring -> art car detection not possible"
         if not artCarHandler.mock:
             return
 
@@ -325,13 +325,13 @@ while running:
                                 timestamp /= 1000.0		# convert from milliseconds
                                 #print 'node', node, 'channel data', repr(channel_data), 'at', timestamp
 
-                                #amplitude_sum = get_external_amplitude_sum(channel_data)
-                                #if amplitude_sum > 0: # otherwise error reading channel_data
-                                #    esitmated_ring_number, mean_intensity = analyze_beat(node, amplitude_sum, timestamp)
+                                amplitude_sum = get_external_amplitude_sum(channel_data)
+                                if amplitude_sum > 0: # otherwise error reading channel_data
+                                    esitmated_ring_number, mean_intensity = analyze_beat(node, amplitude_sum, timestamp)
 
-                                #    show_mode = get_show_mode()
-                                #    if show_mode == 1 or show_mode == 3: # not during meditaiton
-                                #        check_art_car_status(esitmated_ring_number, mean_intensity)
+                                    show_mode = get_show_mode()
+                                    if show_mode == 1 or show_mode == 3: # not during meditaiton
+                                        check_art_car_status(esitmated_ring_number, mean_intensity)
                                 message = message[24:]
                             else:
                                 if BRAIN_DEBUG:

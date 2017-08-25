@@ -15,14 +15,13 @@ microphone_coordinates = [
 
 # 1. detect presence and direction of a loud beat
 # 2. send beat predictions to the nodes
-# 3. return estimated ring number and it's mean intensity
+# 3. return estimated ring number and its amplitude
 beat_history = []
-intensity_sum = 0
 
 TOTAL_RINGS = 72 # could import conductor.py but refraining... seems like a pretty constant number
 
 def analyze_beat(node, intensity, timestamp):
-    global beat_history, intensity_sum, ring_to_mean_intensity
+    global beat_history
     NODE = 0
     INTENSITY = 1
     TIMESTAMP = 2
@@ -36,20 +35,8 @@ def analyze_beat(node, intensity, timestamp):
                 beat_history = beat_history[i:]
                 # print 'removed', i, 'entries from beat_history leaving', len(beat_history)
             break
-        else:
-            intensity_sum -= beat_history[i][INTENSITY]	# pending deletion
 
-    intensity_sum += intensity
     beat_history += [(node, intensity, timestamp)]	# a list of 3-tuples
-
-    mean_intensity = int(intensity_sum / float(len(beat_history)) + 0.5) 	# no risk of division by zero
-    # there may be a way to do this incrementally similar to intensity_sum
-    deviation_sum = 0
-    for i in range(0, len(beat_history)):
-        deviation_sum += abs(beat_history[i][INTENSITY] - mean_intensity)
-    mean_deviation = int(deviation_sum / float(len(beat_history)) + 0.5) 	# no risk of division by zero
-
-    #print 'beat %u intensity %u (mean %u +-%u) at %.3f from node %u' % (len(beat_history), intensity, mean_intensity, mean_deviation, timestamp, node)
 
     # thanks to Ben at https://stackoverflow.com/questions/1400213/3d-least-squares-plane
     tmp_A = []
@@ -81,10 +68,10 @@ def analyze_beat(node, intensity, timestamp):
         if fit[0] == 0:					# no division by zero, please
             if fit[1] > 0:
                 direction_radians = 0.0			# along y axis positive
-                print "up"
+                # print "up"
             else:
                 direction_radians = math.pi		# along y axis negative
-                print "down"
+                # print "down"
         else:
             FULL_CIRCLE = math.pi * 2.0
             direction_radians = FULL_CIRCLE + math.pi * 0.5 - math.atan(fit[1] / fit[0])
@@ -93,11 +80,12 @@ def analyze_beat(node, intensity, timestamp):
             if direction_radians >= FULL_CIRCLE:
                 direction_radians -= FULL_CIRCLE	# normalize
 
-        print 'art car direction = %.2f degrees' % math.degrees(direction_radians)
+        amplitude = fit[0]*fit[0] + fit[1]*fit[1]
+        print 'art car direction = %.2f degrees, amplitude = %.1f' % (math.degrees(direction_radians), amplitude)
         esitmated_ring_number = int(math.degrees(direction_radians) / (360 / TOTAL_RINGS))
-        print 'estimated ring number = %i' % esitmated_ring_number
+        # print 'estimated ring number = %i' % esitmated_ring_number
 
-        return esitmated_ring_number, mean_intensity
+        return esitmated_ring_number, amplitude
 
 if False:	# debug art car direction computation
     fake_time = int(time.time()) - 5
