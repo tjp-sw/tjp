@@ -4,13 +4,9 @@
   #ifdef I_AM_NODE_MEGA
     #include <SPI.h>
     #include <Ethernet.h>
-    
-    IPAddress brain; // will be the current Pi brain IP address
-    IPAddress brain3(169,254,136,0); // Journey Pi 1 (can't find atm)
-    IPAddress brain2(169,254,96,0); // Journey Pi 2
-    IPAddress brain1(169,254,153,249); // Journey Pi 3
-    IPAddress brain4(169,254,94,48); //RJS my Pi IP
-    //IPAddress brain5(169,254,?,?); // Jeff's Pi
+
+    IPAddress brain(169,254,136,0);
+    //IPAddress brain(169,254,94,48); //RJS my Pi IP
     IPAddress subnet_mask(255,255,0,0);
 
     unsigned long next_connect_msec;
@@ -136,47 +132,14 @@ void do_network_input() {
       network_data = "";
       delay_next_network_connection(10);
     }
-    else if (loop_start_time_msec >= next_connect_msec) {  // try to connect to one of the brain IP addresses
-      if (remote.connect(brain1, 3528)) {
+    else if (loop_start_time_msec >= next_connect_msec) {
+      if (remote.connect(brain, 3528)) {
         network_data = "";
-        remote.write("sN", 2);
-        brain = brain1;
+	      remote.write("sN", 2);
         #ifdef DEBUG
-          print_status("connected to brain 1");
+          print_status("connected to brain");
         #endif
       }
-      else if (remote.connect(brain2, 3528)) {
-        network_data = "";
-        remote.write("sN", 2);
-        brain = brain2;
-        #ifdef DEBUG
-          print_status("connected to brain 2");
-        #endif
-      }
-      else if (remote.connect(brain3, 3528)) {
-        network_data = "";
-        remote.write("sN", 2);
-        brain = brain3;
-        #ifdef DEBUG
-          print_status("connected to brain 3");
-        #endif
-      }
-      else if (remote.connect(brain4, 3528)) {
-        network_data = "";
-        remote.write("sN", 2);
-        brain = brain4;
-        #ifdef DEBUG
-          print_status("connected to brain 4");
-        #endif
-      }
-      //else if (remote.connect(brain5, 3528)) {
-      //  network_data = "";
-      //  remote.write("sN", 2);
-      //  brain = brain5;
-      //  #ifdef DEBUG
-      //    print_status("connected to brain 5");
-      //  #endif
-      //}
       else {
         #ifdef DEBUG
           print_status("connection to brain failed");
