@@ -502,7 +502,7 @@ inline void process_commands(String& input) {
                   transition_in_edm_animation = false;
                   transition_out_edm_animation = true;
 
-                  if(EDM_ANIMATION > 0 && EDM_ANIMATION < 128 || EDM_ANIMATION >= 192) {
+                  if((EDM_ANIMATION > 0 && EDM_ANIMATION < 128) || (EDM_ANIMATION >= 192)) {
                     // Art car stay or meditation animation playing
                     BASE_ANIMATION = NONE;
                     MID_ANIMATION = NONE;
@@ -510,7 +510,7 @@ inline void process_commands(String& input) {
                     next_base_animation = NONE;
                     next_mid_animation = NONE;
                     next_sparkle_animation = NONE;
-                    transition_in_basee_animation = false;
+                    transition_in_base_animation = false;
                     transition_out_base_animation = false;
                     transition_in_mid_animation = false;
                     transition_out_mid_animation = false;

@@ -239,7 +239,7 @@ inline void base_horizontal_gradient(uint8_t min_ring, uint8_t max_ring) {
   const uint8_t max_inter_speed = 4;
   
   uint8_t color_thickness = 12*scale_param(BASE_COLOR_THICKNESS, 1, 3);
-  uint8_t intra_speed = 1 << scale_param(BASE_INTRA_RING_SPEED, 3, 4);
+  //uint8_t intra_speed = 1 << scale_param(BASE_INTRA_RING_SPEED, 3, 4);
   uint8_t inter_speed = scale_param(BASE_INTRA_RING_SPEED, 1, max_inter_speed);
   int8_t alternating_multiplier = BASE_INTRA_RING_MOTION;
   
@@ -268,7 +268,7 @@ inline void base_horizontal_gradient(uint8_t min_ring, uint8_t max_ring) {
 }
 
 
-
+/*
 inline void this_is_a_template(uint8_t min_ring, uint8_t max_ring) {
   // Animation-specific constants
   const uint8_t max_inter_speed = 4;
@@ -409,3 +409,4 @@ inline void this_is_a_template_test_dim(uint8_t min_ring, uint8_t max_ring) {
   }
 }
 
+*/

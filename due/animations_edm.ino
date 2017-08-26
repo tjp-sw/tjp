@@ -324,7 +324,7 @@ inline void fire_hello() {
 }
 
 //---------- BLACK HOLE ------------
-
+/*
 inline void black_hole_new() {
   const uint8_t starting_height = HALF_RING / 2;
   const uint8_t throttle = 5;
@@ -356,7 +356,7 @@ inline void black_hole_new() {
       }
     }
   }
-}
+}*/
 
 inline void black_hole() {
   const uint8_t starting_height = HALF_RING / 2;
