@@ -139,8 +139,8 @@ class Music:
         virtual_date_time = datetime.fromtimestamp(shows.virtual_time)
         now_time = virtual_date_time  # datetime.now()
 
-        if DEBUG:
-            print "^^^ in music.py tick date is: " +str(now_time)
+        #if DEBUG:
+        #    print "^^^ in music.py tick date is: " +str(now_time)
         
         if DEBUG > 1:
             print now_time
