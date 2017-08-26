@@ -16,7 +16,7 @@ void bloom(){
   if(!start_flag){
     for( ring = 0; ring < NUM_RINGS; ring++){
       for( pixel = 0; pixel < LEDS_PER_RING; pixel++){
-        mid_layer[ring][pixel] = BLACK;
+        leds[get_1d_index(ring, pixel)] = BLACK;  // leds[get_1d_index(ring, pixel)] = BLACK;
         start_flag = 1;
       }
     }
@@ -30,11 +30,11 @@ void bloom(){
     for( pixel = 0; pixel < bound; pixel++){
       // activate dimming to give flash sense
       if(bound%2 ==0){
-                mid_layer[ring][pixel] = get_mid_color(0);
+                leds[get_1d_index(ring, pixel)] = get_mid_color(0);
       }
       else{
         // dimming effect
-        mid_layer[ring][pixel] = get_mid_color(0,6);
+        leds[get_1d_index(ring, pixel)] = get_mid_color(0,6);
       }
     }
   }
@@ -42,11 +42,11 @@ void bloom(){
   for(ring = (NUM_RINGS/2) +1; ring < NUM_RINGS; ring++){
     for(pixel = LEDS_PER_RING; pixel > LEDS_PER_RING - bound; pixel--){
        if(bound%2 ==0){
-                  mid_layer[ring][pixel] = get_mid_color(0);
+          leds[get_1d_index(ring, pixel)] = get_mid_color(0);
         }
         else{
           // dimming effect
-          mid_layer[ring][pixel] = get_mid_color(0,6);
+          leds[get_1d_index(ring, pixel)] = get_mid_color(0,6);
         }
     }
   }
@@ -68,7 +68,7 @@ void drip(){
   if(!start_flagg){
      for( ring = 0; ring < NUM_RINGS; ring++){
       for( pixel = 0; pixel < LEDS_PER_RING; pixel++){
-        mid_layer[ring][pixel] = BLACK;
+        leds[get_1d_index(ring, pixel)] = BLACK;
         start_flagg = 1;
       }
     }
@@ -78,7 +78,7 @@ void drip(){
   light_pix = round(loop_count/(float)50);
   for(ring = 0; ring <NUM_RINGS; ring++){
     for(pixel = 0; pixel<light_pix; pixel++){
-      mid_layer[ring][pixel] = get_mid_color(0);
+      leds[get_1d_index(ring, pixel)] = get_mid_color(0);
     }
   }
 
@@ -87,8 +87,8 @@ void drip(){
   if(dif<light_pix){
     for(ring = 0; ring < NUM_RINGS; ring++){
       for(pixel = LEDS_PER_RING;pixel>light_pix; pixel--){
-        mid_layer[ring][pixel] = get_mid_color(0);
-        mid_layer[ring][pixel-1] = BLACK;
+        leds[get_1d_index(ring, pixel)] = get_mid_color(0);
+        leds[get_1d_index(ring, pixel-1)] = BLACK;  //mid_layer[ring][pixel-1] = BLACK;
       }
     }
   }
