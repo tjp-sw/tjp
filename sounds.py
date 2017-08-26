@@ -34,6 +34,7 @@ ALL_MIDS = [song for sublist in MIDS for song in sublist]
 ALL_HIGHS = [song for sublist in HIGHS for song in sublist]
 
 MEDITATIONS_SOUNDS = range(4001,4015)
+MEDITATIONS_HACK = 2515
 
 MEDITATIONS_TIMES = ["06:19 28/8/17",  # Monday
                      "19:34 28/8/17",
@@ -58,15 +59,19 @@ def play_static():
 
 #If it is time to play a meditation will return the number of the correct meditation. Otherwise returns None.
 def play_meditation(this_time=datetime.fromtimestamp(shows.virtual_time)):
-    approx_time= datetime.time(this_time)
-    if (approx_time < time(6, 18) or approx_time > time(6, 31)) and \
-       (approx_time < time(19, 33) or approx_time > time(19, 38)):
+    print "time speed factor for animations " + str(shows.time_speed_factor)
+    if shows.time_speed_factor == 1:
+        approx_time= datetime.time(this_time)
+        if (approx_time < time(6, 18) or approx_time > time(6, 31)) and \
+           (approx_time < time(19, 33) or approx_time > time(19, 38)):
+            return None
+        for meditation in MEDITATIONS.iterkeys():
+            if this_time >= meditation and \
+               this_time <= meditation + timedelta(minutes=5):
+                return MEDITATIONS[meditation]
         return None
-    for meditation in MEDITATIONS.iterkeys():
-        if this_time >= meditation and \
-           this_time <= meditation + timedelta(minutes=5):
-            return MEDITATIONS[meditation]
-    return None
+    else:
+        return MEDITATIONS_HACK
 
 def find_low(theme=shows.bm_day_index, now_time=datetime.fromtimestamp(shows.virtual_time)):
     if SET_THEME >= 0:
