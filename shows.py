@@ -766,7 +766,7 @@ def do_date(ignored, when):
     except (AttributeError, ValueError):  # no whitespace or non-integer
         print 'Usage: day number hour:min'
         return
-    day = time.strftime('%Y-%b-%d', time.localtime(1503860400 + day * 86400))  # Sunday before is day 0
+    day = time.strftime('%Y-%b-%d', time.localtime(1503946800 + day * 86400))  # Monday is day 0
     when = time.mktime(time.strptime('%s %u:%u' % (day, hour, minute), '%Y-%b-%d %H:%M'))
     real_start_time = time.time() + (STATIC_START - when) / time_speed_factor
 
