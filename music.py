@@ -33,22 +33,29 @@ def check_meditation(node=0):
 # Returns True if the tsunami is playing the looping drone, False if it is not.
 def status_update(message):
     message = message[1:]
+    virtual_date_time = datetime.fromtimestamp(shows.virtual_time)
+
+    if DEBUG:
+        print "^^^ in music.py date is: ", virtual_date_time
     if message[0] == 'E':
         try:
             this_sound = int(message[1:])
             if DEBUG:
                 print "Sound ending: ", this_sound
             if this_sound in sounds.ALL_MIDS:
-                Music.no_mid = datetime.now()
+                Music.no_mid = virtual_date_time  #datetime.now()
             if this_sound in sounds.ALL_HIGHS:
-                Music.no_high = datetime.now()
+                Music.no_high = virtual_date_time  #datetime.now()
             if this_sound in sounds.MEDITATIONS_SOUNDS:
                 print "Meditation Finished"
                 Music.meditation = False
+                if virtual_date_time.time() > time(hour=19):
                 # if datetime.now().time() > time(hour=19):
-                #    shows.set_show_mode(shows.NIGHT)
-                #else:
-                #    shows.set_show_mode(shows.DAY)
+                    shows.set_show_mode(shows.NIGHT)
+                    print  "in music.py set to night time "
+                else:
+                    shows.set_show_mode(shows.DAY)
+                    print "in music.py set to day time "
                 return True
         except ValueError:
             print"Ending sound ValueError " + str(len(message))
@@ -61,7 +68,7 @@ def status_update(message):
     elif message[0] == 'P':
         print "Still Playing: " + message[1:]
         try:
-            if int(message[1:]) == 3000 and datetime.now().weekday() != 0:
+            if int(message[1:]) == 3000 and virtual_date_time.weekday() != 0:
                 return True
         except:
             pass
@@ -125,7 +132,8 @@ class Music:
         self.high_wait = random.randint(20, 35)
 
     def tick(self, silent=False):
-        now_time = datetime.now()
+        virtual_date_time = datetime.fromtimestamp(shows.virtual_time / 1000)
+        now_time = virtual_date_time  # datetime.now()
         if DEBUG > 1:
             print now_time
         if now_time.day == 27:
