@@ -195,13 +195,16 @@ class Music:
             return play([0, this_meditation])
 
         # Drone Logic
-        if self.need_drone:
+        if bm_day < 0:
+            print "trying to play static"
+            #return play([0, sounds.play_static()])
+        elif self.need_drone:
             print "Setting Drone"
             self.need_drone = False
             return "a0;6;" + str(bm_day) + ";"
 
         # Soundscape Compilation Logic
-        if bm_day < 8 :
+        if bm_day >= 0 :
             msg = [0] * 4
             if self.played_low < now_time - timedelta(minutes=self.low_wait):
                 self.low_wait = random.randint(3, 5)

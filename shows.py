@@ -229,7 +229,7 @@ DAY = 1
 SUNSET = 2
 NIGHT = 3
 show_mode = SUNRISE
-bm_day_index = 0
+bm_day_index = -1
 virtual_time = -1.0
 IDEAL_MEDITATION_SECONDS = 20 * 60
 
@@ -623,7 +623,7 @@ def art_car_edm(ignored=True):
     constrain_show()
 
 
-TEST_CYCLE_MINUTES = 3  # rush through the entire week in this number of minutes
+TEST_CYCLE_MINUTES = 5  # rush through the entire week in this number of minutes
 # For Lee testing: uncomment this
 # TEST_CYCLE_MINUTES = 15
 NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
@@ -717,7 +717,8 @@ def playa_program(init=False):
     real_time = time.time()
     if init:  # set up to run test program
         if real_start_time < 0:
-            time_speed_factor = float(NUM_DAYS * 60 * 24) / TEST_CYCLE_MINUTES	# 60*24 == minutes per day
+            time_speed_factor = 1
+            #time_speed_factor = float(NUM_DAYS * 60 * 24) / TEST_CYCLE_MINUTES	# 60*24 == minutes per day
             #testing_meditation_seconds = int(IDEAL_MEDITATION_SECONDS * time_speed_factor)  # / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
             # real_start_time = real_time
             # real_start_time = BURNING_MAN_START - time.time()

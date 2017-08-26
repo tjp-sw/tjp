@@ -153,9 +153,9 @@ class ArtCarHandler:
                     self.rings_to_stop_hello_animation.append(ring_num)
 
                     # remove from tracking
-                    self.ring_to_animation_start_time.pop(ring_num)
-                    self.hello_animation_to_ring.pop(self.ring_to_hello_animation[ring_num])
-                    self.ring_to_hello_animation.pop(ring_num)
+                    del self.ring_to_animation_start_time[ring_num]
+                    del self.hello_animation_to_ring[self.ring_to_hello_animation[ring_num]]
+                    del self.ring_to_hello_animation[ring_num]
 
         return -1
 
