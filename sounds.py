@@ -64,13 +64,13 @@ def play_meditation(this_time=datetime.now()):
             return MEDITATIONS[meditation]
     return None
 
-def find_low(theme=datetime.today().weekday(), now_time=datetime.now().time()):
+def find_low(theme=shows.bm_day_index, now_time=datetime.fromtimestamp(shows.virtual_time)):
     if SET_THEME >= 0:
         theme = SET_THEME
     return random.choice(LOWS[theme])
 
 
-def find_mid(theme=datetime.today().weekday(), now_time=datetime.now().time()):
+def find_mid(theme=shows.bm_day_index, now_time=datetime.fromtimestamp(shows.virtual_time)):
     if SET_THEME >= 0:
         theme = SET_THEME
     if time(6, 25) < now_time < time(19, 25):
@@ -81,7 +81,7 @@ def find_mid(theme=datetime.today().weekday(), now_time=datetime.now().time()):
     return random.choice(daily_mids)
 
 
-def find_high(theme=datetime.today().weekday(), now_time=datetime.now().time()):
+def find_high(theme=shows.bm_day_index, now_time=datetime.fromtimestamp(shows.virtual_time)):
     if SET_THEME >= 0:
         theme = SET_THEME
     if time(6, 25) < now_time < time(19, 25):

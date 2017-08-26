@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, time
 import sounds, shows
 #import time as epoch_time
 
-DEBUG = 0
+DEBUG = 1
 
 # Just random....this signal is coming from the touchpad which is not written yet.
 def panel_touched():
@@ -36,7 +36,7 @@ def status_update(message):
     virtual_date_time = datetime.fromtimestamp(shows.virtual_time)
 
     if DEBUG:
-        print "^^^ in music.py date is: ", virtual_date_time
+        print "^^^ in music.py date is: " + str(virtual_date_time)
     if message[0] == 'E':
         try:
             this_sound = int(message[1:])
@@ -136,14 +136,18 @@ class Music:
         mute(node)
 
     def tick(self, silent=False):
-        virtual_date_time = datetime.fromtimestamp(shows.virtual_time / 1000)
+        virtual_date_time = datetime.fromtimestamp(shows.virtual_time)
         now_time = virtual_date_time  # datetime.now()
+
+        if DEBUG:
+            print "^^^ in music.py tick date is: " +str(now_time)
+        
         if DEBUG > 1:
             print now_time
         if now_time.day == 27:
-            bm_day = 8
+            bm_day = -1 # 8
         else:
-            bm_day = now_time.weekday()
+            bm_day = shows.bm_day_index  # now_time.weekday()
 
         # Check if mediation has ended
         if Music.meditation:
