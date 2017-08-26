@@ -8,7 +8,7 @@ loop_counter = 60 ms; 1000ms = 1 second. 16.6 loop_counter per second
 */
 
 byte start_flag = 0; 
-void bloom(/*byte lock*/){
+void bloom(){
   short int ring,pixel,spacing,bound;
   spacing = round(1200/(float)LEDS_PER_RING); // should be 3;
   bound = round((loop_count/16.6)*spacing);
@@ -61,7 +61,7 @@ void bloom(/*byte lock*/){
  */
 byte start_flagg = 0;
 short int light_pix;
-void drip(/*byte lock*/){
+void drip(){
   short int ring,pixel, dif;
   light_pix = 0;
   // create blackscreen
