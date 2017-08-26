@@ -12,13 +12,12 @@ BRAIN_DEBUG = True
 artCarHandler = ArtCarHandler(ART_CAR_HELLO_DURATION, ART_CAR_AMPLITUDE_THRESHOLD, ART_CAR_MIN_HELLO_DURATION)
 
 mega_to_node_map = {
-    1: 1,
-    2: 0,
+    5: 0,
+    6: 1,
     3: 2,
-    4: 5,
-    5: 4,
-    6: 3,
-    7: 0,
+    1: 3,
+    4: 4,
+    7: 5,
     }
 
 # close all TCP connections and continue to run
@@ -137,6 +136,8 @@ control_messages = {
     'day':		(do_date, None, None),
     'disconnect':	(do_disconnect, None, None),
     'edm':		(do_auto, None, edm_program),
+    'initialize':	(do_simple, None, None),
+    'Initialize':	(do_simple, None, None),
     'led':		(do_simple, 'program', None),
     'list':		(do_list, None, None),
     'node':		(do_simple, None, None),
@@ -202,12 +203,12 @@ def get_external_amplitude_sum(channel_data):
     return amplitude
 
 
+# check art car detection status and change animation accordingly
 def check_art_car_status(ring_num, amplitude):
-    global rings_to_hello_animation, auto_show, art_car
 
     if ring_num is None or amplitude is None:
         if BRAIN_DEBUG:
-            print "seems as those the data did not make a plane, ring -> art car detection not possible"
+            print "seems as though the data did not make a plane, ring -> art car detection not possible"
         if not artCarHandler.mock:
             return
 
@@ -243,13 +244,14 @@ def check_art_car_status(ring_num, amplitude):
             show_parameters[ART_CAR_RING_PARAM] = oldest_ring
             show_parameters[SEVEN_PAL_BEAT_PARAM_START] = artCarHandler.get_ring_animation(oldest_ring)
             do_show(None, None)
+    else:
+        # no art car detected past threshold tell any rings playing hello animations to stop
 
-
-    # send hello animation stop message broadcast for target ring
-    for ring_num in artCarHandler.rings_to_stop_hello_animation:
-        # HELP: HOW TO SEND HELLO ANIMATION AND RING NUM?
-        # TODO do_send(?, ?) i.e. do_send(None, oldest_ring)
-        pass
+        # send hello animation stop message broadcast for target ring
+        for ring_num_stop in artCarHandler.rings_to_stop_hello_animation:
+            show_parameters[ART_CAR_RING_PARAM] = ring_num_stop
+            show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0
+            do_show(None, None)
 
 if BRAIN_DEBUG:
     do_list(None, None)
@@ -324,13 +326,13 @@ while running:
                                 timestamp /= 1000.0		# convert from milliseconds
                                 #print 'node', node, 'channel data', repr(channel_data), 'at', timestamp
 
-                                #amplitude_sum = get_external_amplitude_sum(channel_data)
-                                #if amplitude_sum > 0: # otherwise error reading channel_data
-                                #    esitmated_ring_number, mean_intensity = analyze_beat(node, amplitude_sum, timestamp)
+                                amplitude_sum = get_external_amplitude_sum(channel_data)
+                                if amplitude_sum > 0: # otherwise error reading channel_data
+                                    esitmated_ring_number, mean_intensity = analyze_beat(node, amplitude_sum, timestamp)
 
-                                #    show_mode = get_show_mode()
-                                #    if show_mode == 1 or show_mode == 3: # not during meditaiton
-                                #        check_art_car_status(esitmated_ring_number, mean_intensity)
+                                    show_mode = get_show_mode()
+                                    if show_mode == 1 or show_mode == 3: # not during meditaiton
+                                        check_art_car_status(esitmated_ring_number, mean_intensity)
                                 message = message[24:]
                             else:
                                 if BRAIN_DEBUG:
@@ -411,9 +413,15 @@ while running:
         #audio commands
         audio_msg = mega_music.tick()
         if audio_msg is not None:
-            do_send(None, encapsulated_audio_msg(audio_msg))	# always send to all nodes
-            if BRAIN_DEBUG:
-                print repr(audio_msg)
+            if artCarHandler.art_car_takover == False:
+                do_send(None, encapsulated_audio_msg(audio_msg))	# always send to all nodes
+                if BRAIN_DEBUG:
+                    print repr(audio_msg)
+            else:
+                mega_music.mute()
+                if BRAIN_DEBUG:
+                    print "in art car takeover mode not sending audio info"
+
             # meditation = mega.meditation
             get_internal_animations_handler().interpret_audio_msg(audio_msg)
 

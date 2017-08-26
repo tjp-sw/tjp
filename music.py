@@ -131,6 +131,10 @@ class Music:
         self.mid_wait = random.randint(5, 25)
         self.high_wait = random.randint(20, 35)
 
+
+    def mute(self, node=0):
+        mute(node)
+
     def tick(self, silent=False):
         virtual_date_time = datetime.fromtimestamp(shows.virtual_time / 1000)
         now_time = virtual_date_time  # datetime.now()
@@ -151,6 +155,7 @@ class Music:
             return None
 
         # Uncomment to silence sound for art cars
+        # 8/24/17 RJS actually not valid art car logic anymore as param 29 is used for lots more than art car takeover
         """
         if shows.show_parameters[29] != shows.NO_ART_CAR:
             if DEBUG:

@@ -5,6 +5,7 @@
 
 unsigned long long epoch_msec;
 uint8_t node_number = 255;
+bool do_soft_reset = false;
 //unsigned long last_channel_message = 0;
 
 void setup()
@@ -27,6 +28,10 @@ void loop()
   //do_beat_detect();
   do_tsunami();
   //check_for_failure();
+  if (do_soft_reset) {
+    do_soft_reset = false;
+    setup();
+  }
 }
 
 void reset_due() {

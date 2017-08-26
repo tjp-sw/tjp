@@ -73,8 +73,10 @@ void setup_tsunami () {
   //  reset while the Tsunami was already playing.
   tsunami.stopAllTracks();
   tsunami.samplerateOffset(0, 0);
-  tsunami.masterGain(0, 0);              // Reset the master gain to 0dB
-
+  tsunami.masterGain(0, 0);              // Reset the master gain to ****
+  tsunami.masterGain(1, 0);              // Reset the master gain to ****
+  tsunami.masterGain(2, 0);              // Reset the master gain to ****
+  tsunami.masterGain(3, 0);              // Reset the master gain to ****
   // Enable track reporting from the Tsunami
   tsunami.setReporting(true);
 
@@ -255,10 +257,10 @@ void do_command () {
           channels[ch]= ctrl_msg.channels[ch];
           ch_loop[ch]= ctrl_msg.bool_loop;
           tsunami.trackGain(channels[ch], ch_gain[ch]);
+          tsunami.trackLoad(channels[ch], 0, false);
           tsunami.trackLoad(channels[ch], 1, false);
           tsunami.trackLoad(channels[ch], 2, false);
           tsunami.trackLoad(channels[ch], 3, false);
-          tsunami.trackLoad(channels[ch], 4, false);
 
 
           if (DEBUG_LEVEL) {
@@ -270,7 +272,10 @@ void do_command () {
         }
       }
       tsunami.samplerateOffset(0, 0);        // Reset sample rate offset to 0
-      tsunami.masterGain(0, 0);              // Reset the master gain to 0dB
+      tsunami.masterGain(0, 0);              // Reset the master gain to ****
+      tsunami.masterGain(1, 0);              // Reset the master gain to ****
+      tsunami.masterGain(2, 0);              // Reset the master gain to ****
+      tsunami.masterGain(3, 0);              // Reset the master gain to ****             // Reset the master gain to 0dB
       tsunami.resumeAllInSync();
       break;
 
@@ -340,7 +345,10 @@ void do_command () {
         this_day[1] = DRONES[bm_day][1];
         channels[7] = this_day[0];
         tsunami.samplerateOffset(0, 0);        // Reset sample rate offset to 0
-        tsunami.masterGain(0, 0);              // Reset the master gain to 0dB
+        tsunami.masterGain(0, 0);              // Reset the master gain to ****
+        tsunami.masterGain(1, 0);              // Reset the master gain to ****
+        tsunami.masterGain(2, 0);              // Reset the master gain to ****
+        tsunami.masterGain(3, 0);              // Reset the master gain to ****
         tsunami.trackGain(channels[7], ch_gain[7]);
         tsunami.trackPlayPoly(channels[7], 0, true);
   }
@@ -381,10 +389,10 @@ void do_tsunami() {
             Serial.println(channels[ch]);
         }
         tsunami.trackGain(channels[ch], ch_gain[ch]);
+        tsunami.trackLoad(channels[ch], 0, true);
         tsunami.trackLoad(channels[ch], 1, true);
         tsunami.trackLoad(channels[ch], 2, true);
         tsunami.trackLoad(channels[ch], 3, true);
-        tsunami.trackLoad(channels[ch], 4, true);
         //String msg = create_lengthed_message("sR", channels[ch]);
         //remote.write(msg.c_str(), msg.length());
       } else if (ch == 7 && channels[ch] > 0) {
@@ -422,7 +430,10 @@ void do_tsunami() {
   }
 
   tsunami.samplerateOffset(0, 0);        // Reset sample rate offset to 0
-  tsunami.masterGain(0, 0);              // Reset the master gain to 0dB
+  tsunami.masterGain(0, 0);              // Reset the master gain to ****
+  tsunami.masterGain(1, 0);              // Reset the master gain to ****
+  tsunami.masterGain(2, 0);              // Reset the master gain to ****
+  tsunami.masterGain(3, 0);              // Reset the master gain to ****
   tsunami.resumeAllInSync();
 }
 

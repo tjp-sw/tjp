@@ -110,6 +110,7 @@ inline uint8_t get_mid_alpha(uint8_t ring, uint16_t pixel) {
 
 // Functions to transition between animations on each layer. Returns true as long as the transition is ongoing. 
 inline bool transition_out_base() {
+  Serial.print("base out = " + String(transition_progress_base));
   if(transition_progress_base >= 255 - BASE_TRANSITION_SPEED || BASE_ANIMATION == NONE) {
     transition_progress_base = 255;
     return false;
@@ -121,6 +122,7 @@ inline bool transition_out_base() {
 }
 
 inline bool transition_in_base() {
+  Serial.print("base in = " + String(transition_progress_base));
   if(transition_progress_base <= BASE_TRANSITION_SPEED || BASE_ANIMATION == NONE) {
     transition_progress_base = 0;
     return false;
@@ -132,6 +134,7 @@ inline bool transition_in_base() {
 }
 
 inline bool transition_out_mid() {
+  Serial.print("mid out = " + String(transition_progress_mid));
   if(transition_progress_mid >= 255 - MID_TRANSITION_SPEED || MID_ANIMATION == NONE) {
     transition_progress_mid = 255;
     return false;
@@ -143,6 +146,7 @@ inline bool transition_out_mid() {
 }
 
 inline bool transition_in_mid() {
+  Serial.print("mid in = " + String(transition_progress_mid));
   if(transition_progress_mid <= MID_TRANSITION_SPEED || MID_ANIMATION == NONE) {
     transition_progress_mid = 0;
     return false;
@@ -154,6 +158,7 @@ inline bool transition_in_mid() {
 }
 
 inline bool transition_out_sparkle() {
+  Serial.print("sparkle out = " + String(transition_progress_sparkle));
   if(transition_progress_sparkle >= 255 - SPARKLE_TRANSITION_SPEED || SPARKLE_ANIMATION == NONE) {
     transition_progress_sparkle = 255;
     return false;
@@ -165,6 +170,7 @@ inline bool transition_out_sparkle() {
 }
 
 inline bool transition_in_sparkle() {
+  Serial.print("sparkle in = " + String(transition_progress_sparkle));
   if(transition_progress_sparkle <= SPARKLE_TRANSITION_SPEED || EDM_ANIMATION == NONE) {
     transition_progress_sparkle = 0;
     return false;
@@ -176,6 +182,7 @@ inline bool transition_in_sparkle() {
 }
 
 inline bool transition_out_edm() {
+  Serial.print("edm out = " + String(transition_progress_edm));
   if(transition_progress_edm >= 255 - EDM_TRANSITION_SPEED || EDM_ANIMATION == NONE) {
     transition_progress_edm = 255;
     return false;
@@ -187,6 +194,7 @@ inline bool transition_out_edm() {
 }
 
 inline bool transition_in_edm() {
+  Serial.print("edm in = " + String(transition_progress_edm));
   if(transition_progress_edm <= EDM_TRANSITION_SPEED || EDM_ANIMATION == NONE) {
     transition_progress_edm = 0;
     return false;
