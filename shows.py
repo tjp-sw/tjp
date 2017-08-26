@@ -425,13 +425,15 @@ def update_playa_palette(sound_day, frequency):
                         
     if (frequency == BASE):  # always choose from today's color palette
         new_bg = randint(0, NUM_BASE_COLORS_PER_FAMILY)
+        print "next base index", next_base_index, "new high", new_bg
         show_colors[next_base_index] = playa_palette[bm_day_index][0][new_bg]
-        if DEBUT:
+        if DEBUG:
             changed = next_base_index
         next_base_index += (next_base_index + 1) % 2
 
     elif (frequency == MID):
         new_mid = randint(0, NUM_MID_COLORS_PER_FAMILY)
+        print "next mid index", next_mid_index, "new high", new_mid
         show_colors[next_mid_index] = playa_palette[sound_day][1][new_mid]
         if DEBUG:
             changed = next_mid_index
@@ -439,6 +441,7 @@ def update_playa_palette(sound_day, frequency):
 
     elif (frequency == HIGH):
         new_high = randint(0, NUM_SPARKLE_COLORS_PER_FAMILY)
+        print "next high index", next_high_index, "new high", new_high
         show_colors[next_high_index] = playa_palette[sound_day][2][new_high]
         if DEBUG:
             changed = next_high_index

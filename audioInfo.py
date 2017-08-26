@@ -50,28 +50,34 @@ class AudioFileInfo:
 
 
     def getAudioDay(self):
-        if(self.file_index in DAY1_LOW or self.file_index in DAY1_MID or self.file_index in DAY1_HIGH):
-            return 0
-        elif(self.file_index in DAY2_LOW or self.file_index in DAY2_MID or self.file_index in DAY2_HIGH):
-            return 1
-        elif(self.file_index in DAY3_LOW or self.file_index in DAY3_MID or self.file_index in DAY3_HIGH):
-            return 2
-        elif(self.file_index in DAY4_LOW or self.file_index in DAY4_MID or self.file_index in DAY4_HIGH):
-            return 3
-        elif(self.file_index in DAY5_LOW or self.file_index in DAY5_MID or self.file_index in DAY5_HIGH):
-            return 4
-        elif(self.file_index in DAY6_LOW or self.file_index in DAY6_MID or self.file_index in DAY6_HIGH):
-            return 5
-        elif(self.file_index in DAY7_LOW or self.file_index in DAY7_MID or self.file_index in DAY7_HIGH):
-            return 6
+        out = -1
+        if(int(self.file_index) in DAY1_LOW or int(self.file_index) in DAY1_MID or int(self.file_index) in DAY1_HIGH):
+            out = 0
+        elif(int(self.file_index) in DAY2_LOW or int(self.file_index) in DAY2_MID or int(self.file_index) in DAY2_HIGH):
+            out =  1
+        elif(int(self.file_index) in DAY3_LOW or int(self.file_index) in DAY3_MID or int(self.file_index) in DAY3_HIGH):
+            out =  2
+        elif(int(self.file_index) in DAY4_LOW or int(self.file_index) in DAY4_MID or int(self.file_index) in DAY4_HIGH):
+            out =  3
+        elif(int(self.file_index) in DAY5_LOW or int(self.file_index) in DAY5_MID or int(self.file_index) in DAY5_HIGH):
+            out =  4
+        elif(int(self.file_index) in DAY6_LOW or int(self.file_index) in DAY6_MID or int(self.file_index) in DAY6_HIGH):
+            out =  5
+        elif(int(self.file_index) in DAY7_LOW or int(self.file_index) in DAY7_MID or int(self.file_index) in DAY7_HIGH):
+            out =  6
+        print "audio day: " + str(out)
+        return out
 
     def getNumericalCategory(self):
+        out = -1
         if(self.category == "LOW"):
-            return 0
+            out =  0
         elif(self.category == "MID"):
-            return 1
+            out =  1
         elif(self.category == "HIGH"):
-            return 2
+            out =  2
+        print "audio cat num: " + str(out)
+        return out
 
     def getRandomSuitableAnimation(self):
         if len(self.animations) > 0:
