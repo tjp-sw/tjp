@@ -111,6 +111,18 @@ def do_meditation (ignored, meditation_num):
     if meditation_play:
         do_send(None, encapsulated_audio_msg(meditation_play))
 
+
+def do_gain(ignored, g):
+    try:
+        gain = int(g)
+        if gain < -70 or 10 < gain:
+            raise ValueError
+    except (TypeError, ValueError):  # non-integer or out of range
+        print 'Usage: gain num (-70 to 10)'
+        return
+    do_send(None, struct.pack('>cb', 'g', gain))
+
+
 def do_change_palette(ignored, style):
     if style == None:
         choose_new_playa_palette()
@@ -136,6 +148,7 @@ control_messages = {
     'day':		(do_date, None, None),
     'disconnect':	(do_disconnect, None, None),
     'edm':		(do_auto, None, edm_program),
+    'gain':		(do_gain, None, None),
     'initialize':	(do_simple, None, None),
     'Initialize':	(do_simple, None, None),
     'led':		(do_simple, 'program', None),

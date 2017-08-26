@@ -344,6 +344,22 @@ inline void process_commands(String& input) {
         delay_next_network_connection(10);
         break;
 
+      case 'g':
+        size += 1;  // signed 8-bit integer
+        if (input.length() >= size) {
+          const int8_t gain = input[1];
+          #ifdef DEBUG
+            print_status("new audio gain:", gain);
+          #endif
+          set_tsunami_master_gain(gain);
+        }
+        else {
+          #ifdef DEBUG
+            print_status("insufficient audio gain data");
+          #endif
+        }
+        break;
+
       case 'I':
         do_soft_reset = true;
         remote.stop();

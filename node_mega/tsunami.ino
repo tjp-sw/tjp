@@ -87,6 +87,14 @@ void setup_tsunami () {
     Serial.println("Tsunami Ready");
 }
 
+void set_tsunami_master_gain(const int gain) {
+  tsunami.masterGain(0, gain);
+  tsunami.masterGain(1, gain);
+  tsunami.masterGain(2, gain);
+  tsunami.masterGain(3, gain);
+}
+
+
 //------------------PARSES COMMANDS FROM THE PI--------------------
 void handle_command(const char command[]) {
     String cmd_str (command);
