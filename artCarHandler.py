@@ -154,8 +154,11 @@ class ArtCarHandler:
 
                     # remove from tracking
                     del self.ring_to_animation_start_time[ring_num]
-                    del self.hello_animation_to_ring[self.ring_to_hello_animation[ring_num]]
-                    del self.ring_to_hello_animation[ring_num]
+
+                    if ring_num in self.ring_to_hello_animation:
+                        # check if was playing a hello animation
+                        del self.hello_animation_to_ring[self.ring_to_hello_animation[ring_num]]
+                        del self.ring_to_hello_animation[ring_num]
 
         return -1
 
