@@ -578,14 +578,22 @@ def edm_program(init=False):
 
 # sunrise and sunset mediation animiatons
 def meditaiton_animations(ignored=True):
-    if DEBUG:
-        print "STARTING MEDITAITON ANIMATIONS... zen out, okay?"
 
-    show_parameters[SEVEN_PAL_BEAT_PARAM_START] = randint(NUM_7_COLOR_MEDITATION_ANIMATIONS_START,
-                                                          NUM_7_COLOR_MEDITATION_ANIMATIONS_END)
-    show_parameters[SEVEN_PAL_BEAT_PARAM_END - 1] = constrained_random_parameter(SEVEN_PAL_BEAT_PARAM_END - 1)
-    show_parameters[SEVEN_PAL_BEAT_PARAM_END] = randint(NUM_PALETTE_CHANGE_STYLES - 2,
-                                                        NUM_PALETTE_CHANGE_STYLES)  # want transitions to be especially gradual
+    if show_parameters[SEVEN_PAL_BEAT_PARAM_START] in range(NUM_7_COLOR_MEDITATION_ANIMATIONS_START, NUM_7_COLOR_MEDITATION_ANIMATIONS_END + 1):
+        # only running single meditation animation per sunset/rise" 
+        if DEBUG:
+            print "CONTINUING doing MEDITAITON ANIMATIONS... zen out, okay?" 
+    else:
+        # select the meditation animation to use
+        if DEBUG:
+            print "START doing MEDITAITON ANIMATIONS... zen out, okay?"
+
+        show_parameters[SEVEN_PAL_BEAT_PARAM_START] = randint(NUM_7_COLOR_MEDITATION_ANIMATIONS_START,
+                                                              NUM_7_COLOR_MEDITATION_ANIMATIONS_END)
+        show_parameters[SEVEN_PAL_BEAT_PARAM_END - 1] = constrained_random_parameter(SEVEN_PAL_BEAT_PARAM_END - 1)
+        show_parameters[SEVEN_PAL_BEAT_PARAM_END] = randint(NUM_PALETTE_CHANGE_STYLES - 2,
+                                                            NUM_PALETTE_CHANGE_STYLES)  # want transitions to be especially gradual
+    
     choose_new_playa_palette()
     constrain_show()
 
@@ -741,7 +749,7 @@ def playa_program(init=False):
     show_mode_before = show_mode
     set_playa_mode()
 
-    if show_mode == 0 or show_mode == 2:  # sunrise or sunset meditaiton time
+    if show_mode == SUNRISE or show_mode == SUNSET:  # sunrise or sunset meditaiton time
         # do meditation animations
         meditaiton_animations()
         return
