@@ -136,6 +136,8 @@ control_messages = {
     'day':		(do_date, None, None),
     'disconnect':	(do_disconnect, None, None),
     'edm':		(do_auto, None, edm_program),
+    'initialize':	(do_simple, None, None),
+    'Initialize':	(do_simple, None, None),
     'led':		(do_simple, 'program', None),
     'list':		(do_list, None, None),
     'node':		(do_simple, None, None),

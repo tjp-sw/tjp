@@ -343,6 +343,15 @@ inline void process_commands(String& input) {
         network_data = "";
         delay_next_network_connection(10);
         break;
+
+      case 'I':
+        do_soft_reset = true;
+        remote.stop();
+        break;
+
+      case 'i':
+        reset_due();
+        break;
       #endif // I_AM_NODE_MEGA
 
       case 'b': // time of the next beat, unsigned 64-bit integer
