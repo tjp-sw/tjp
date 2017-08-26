@@ -422,30 +422,38 @@ def update_playa_palette(sound_day, frequency):
         print ''
         print '---> Updating palette on day', bm_day_index, 'in mode', show_mode
         print '     current colors:', show_colors
+	# print '     next base, mid, high indices:', next_base_index, next_mid_index, next_high_index
+        # print '     changing frequency', frequency, 'to day ', sound_day, '...'
                         
     if (frequency == BASE):  # always choose from today's color palette
-        new_bg = randint(0, NUM_BASE_COLORS_PER_FAMILY)
-        print "next base index", next_base_index, "new high", new_bg
+        new_bg = randint(0, NUM_BASE_COLORS_PER_FAMILY - 1)
+        print "     updating base index", next_base_index, "to base color", new_bg
         show_colors[next_base_index] = playa_palette[bm_day_index][0][new_bg]
         if DEBUG:
             changed = next_base_index
-        next_base_index += (next_base_index + 1) % 2
+        next_base_index = (next_base_index + 1) % 2
+        if DEBUG:
+            print "     after update, next base index is", next_base_index
 
     elif (frequency == MID):
-        new_mid = randint(0, NUM_MID_COLORS_PER_FAMILY)
-        print "next mid index", next_mid_index, "new high", new_mid
+        new_mid = randint(0, NUM_MID_COLORS_PER_FAMILY - 1)
+        print "     updating mid index", next_mid_index, "to mid color", new_mid
         show_colors[next_mid_index] = playa_palette[sound_day][1][new_mid]
         if DEBUG:
             changed = next_mid_index
-        next_mid_index += ((next_mid_index - 2) + 1) % 3 + 2
+        next_mid_index = ((next_mid_index - 2) + 1) % 3 + 2
+        if DEBUG:
+            print "     after update, next mid index is", next_mid_index
 
     elif (frequency == HIGH):
-        new_high = randint(0, NUM_SPARKLE_COLORS_PER_FAMILY)
-        print "next high index", next_high_index, "new high", new_high
+        new_high = randint(0, NUM_SPARKLE_COLORS_PER_FAMILY - 1)
+        print "     updating high index", next_high_index, "to high color", new_high
         show_colors[next_high_index] = playa_palette[sound_day][2][new_high]
         if DEBUG:
             changed = next_high_index
-        next_high_index += ((next_high_index - 5) + 1) % 2 + 5
+        next_high_index = ((next_high_index - 5) + 1) % 2 + 5
+        if DEBUG:
+            print "     after update, next high index is", next_high_index
 
     elif DEBUG:
         print "frequency out of range"

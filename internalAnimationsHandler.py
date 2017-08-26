@@ -34,7 +34,7 @@ class InternalAninamtionsHandler:
                 if shows.INTERNAL_ANIMATIONS_DEBUG:
                     print "setting main animation param due to new audio track's info " + str(audioInfo.file_index)
                 shows.set_appropriate_layer_main_animation(audioInfo)
-                # shows.update_playa_palette(audioInfo.getAudioDay(), audioInfo.getNumericalCategory())
+                shows.update_playa_palette(audioInfo.getAudioDay(), audioInfo.getNumericalCategory())
 
 
     # RJS I don't like how this hard coded... if the audio contorl message changes this needs to as well.
