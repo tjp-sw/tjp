@@ -81,8 +81,9 @@ def analyze_beat(node, intensity, timestamp):
                 direction_radians -= FULL_CIRCLE	# normalize
 
         amplitude = fit[0]*fit[0] + fit[1]*fit[1]
-        print 'art car direction = %.2f degrees, amplitude = %.1f' % (math.degrees(direction_radians), amplitude)
         esitmated_ring_number = int(math.degrees(direction_radians) / (360 / TOTAL_RINGS))
+        print 'art car direction = %.2f degrees, ring num = %d, amplitude = %.1f' % (math.degrees(direction_radians), esitmated_ring_number, amplitude)
+        
         # print 'estimated ring number = %i' % esitmated_ring_number
 
         return esitmated_ring_number, amplitude
