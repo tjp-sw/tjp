@@ -3,6 +3,29 @@
 from sys import maxint
 from random import randint
 
+# Stores Music library and returns appropriate songs
+# SUPER HACKY... SHOUDL REALLY IMPORT sounds.py BUT TIRED AND SLOPPY RIGHT NOW
+DAY1_LOW = range(1,7)
+DAY1_MID = range(7, 56)
+DAY1_HIGH = range(1000,1019)
+DAY2_LOW = range(2100,2105)
+DAY2_MID = range(100, 159)
+DAY2_HIGH = range(1100,1135)
+DAY3_LOW = range(2200,2207)
+DAY3_MID = range(1200, 1277)
+DAY3_HIGH = range(200, 217)
+DAY4_LOW = range(2300,2303)
+DAY4_MID = range(1300,1376)
+DAY4_HIGH = range(300,306)
+DAY5_LOW = range(2500, 2512)
+DAY5_MID = range(501, 587)
+DAY5_HIGH = range(1500, 1512)
+DAY6_LOW = range(2600, 2610)
+DAY6_MID = range(600, 649)
+DAY6_HIGH = range(1600, 1616)
+DAY7_LOW = range(2700, 2704)
+DAY7_MID = range(1700,1774)
+DAY7_HIGH = range(700,714)
 
 class AudioFileInfo:
     def __init__(self, name, index, category, events = [], animations = []):
@@ -25,6 +48,30 @@ class AudioFileInfo:
     def addAnimation(self, animation):
         self.animations.append(animation)
 
+
+    def getAudioDay(self):
+        if(self.file_index in DAY1_LOW or self.file_index in DAY1_MID or self.file_index in DAY1_HIGH):
+            return 0
+        elif(self.file_index in DAY2_LOW or self.file_index in DAY2_MID or self.file_index in DAY2_HIGH):
+            return 1
+        elif(self.file_index in DAY3_LOW or self.file_index in DAY3_MID or self.file_index in DAY3_HIGH):
+            return 2
+        elif(self.file_index in DAY4_LOW or self.file_index in DAY4_MID or self.file_index in DAY4_HIGH):
+            return 3
+        elif(self.file_index in DAY5_LOW or self.file_index in DAY5_MID or self.file_index in DAY5_HIGH):
+            return 4
+        elif(self.file_index in DAY6_LOW or self.file_index in DAY6_MID or self.file_index in DAY6_HIGH):
+            return 5
+        elif(self.file_index in DAY7_LOW or self.file_index in DAY7_MID or self.file_index in DAY7_HIGH):
+            return 6
+
+    def getNumericalCategory(self):
+        if(self.category == "LOW"):
+            return 0
+        elif(self.category == "MID"):
+            return 1
+        elif(self.category == "HIGH"):
+            return 2
 
     def getRandomSuitableAnimation(self):
         if len(self.animations) > 0:
@@ -79,3 +126,4 @@ class AudioEvent:
 
     def __repr__(self):
         return "kind: %s, time: %s, magnitude: %s, category: %s, exec_time: %s" % (self.kind, self.time, self.magnitude, self.category, self.exec_time)
+
