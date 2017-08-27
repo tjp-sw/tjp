@@ -634,7 +634,6 @@ TEST_CYCLE_MINUTES = 15
 NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
 
 
-"""
 def determine_show_mode():
     global show_mode, virtual_time
     if virtual_time - sunrise_time[bm_day_index + 1] <= IDEAL_MEDITATION_SECONDS:
@@ -702,7 +701,6 @@ def set_playa_mode():
     if DEBUG:
         print '  new colors at day', bm_day_index, "show_mode ", show_mode, show_colors
     #return show_mode
-"""
 
 
 # ------------------------------- playa_program() ----------------------------------
