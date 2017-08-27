@@ -214,7 +214,7 @@ sunrise_time = [time.mktime(time.strptime('2017-Aug-27 06:20', '%Y-%b-%d %H:%M')
                 time.mktime(time.strptime('2017-Sep-3 06:27', '%Y-%b-%d %H:%M')),
                 time.mktime(time.strptime('2017-Sep-4 06:28', '%Y-%b-%d %H:%M'))]
 sunset_time = [time.mktime(time.strptime('2017-Aug-27 19:36', '%Y-%b-%d %H:%M')),
-               time.mktime(time.strptime('2017-Aug-28 19:35', '%Y-%b-%d %H:%M')),
+               time.mktime(time.strptime('2017-Aug-28 19:00', '%Y-%b-%d %H:%M')),
                time.mktime(time.strptime('2017-Aug-29 19:33', '%Y-%b-%d %H:%M')),
                time.mktime(time.strptime('2017-Aug-30 19:31', '%Y-%b-%d %H:%M')),
                time.mktime(time.strptime('2017-Aug-31 19:30', '%Y-%b-%d %H:%M')),
@@ -604,9 +604,12 @@ def meditaiton_animations(ignored=True):
         show_parameters[SEVEN_PAL_BEAT_PARAM_END - 1] = constrained_random_parameter(SEVEN_PAL_BEAT_PARAM_END - 1)
         show_parameters[SEVEN_PAL_BEAT_PARAM_END] = randint(NUM_PALETTE_CHANGE_STYLES - 2,
                                                             NUM_PALETTE_CHANGE_STYLES)  # want transitions to be especially gradual
+
+    show_parameters[SPARKLE_PARAM_START] = 0 #keeping zero to ensure seeing the med animation
+    show_parameters[MID_PARAM_START] = 0 #keeping zero to ensure seeing the med animation
+    show_parameters[BASE_PARAM_START] = 0 #keeping zero to ensure seeing the med animation
     
     choose_new_playa_palette()
-    constrain_show()
 
 
 # choose random 7 color animation values for full structure animations
