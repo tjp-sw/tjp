@@ -80,9 +80,7 @@ def find_low(theme=shows.bm_day_index, now_time=datetime.fromtimestamp(shows.vir
 
 
 def find_mid(theme=shows.bm_day_index, now_time=datetime.fromtimestamp(shows.virtual_time)):
-    print now_time.time()
-    print shows.bm_day_index
-    print time(6, 25)
+    print "bm_day_index in sounds: " + str(shows.bm_day_index)
     if SET_THEME >= 0:
         theme = SET_THEME
     if time(6, 25) < now_time.time() < time(19, 25):
@@ -94,9 +92,7 @@ def find_mid(theme=shows.bm_day_index, now_time=datetime.fromtimestamp(shows.vir
 
 
 def find_high(theme=shows.bm_day_index, now_time=datetime.fromtimestamp(shows.virtual_time)):
-    print now_time.time()
-    print shows.bm_day_index
-    print time(6, 25)
+    print "bm_day_index in sounds: " + str(shows.bm_day_index)
     if SET_THEME >= 0:
         theme = SET_THEME
     if time(6, 25) < now_time.time() < time(19, 25):
