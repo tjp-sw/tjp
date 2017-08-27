@@ -12,12 +12,12 @@ BRAIN_DEBUG = True
 artCarHandler = ArtCarHandler(ART_CAR_HELLO_DURATION, ART_CAR_AMPLITUDE_THRESHOLD, ART_CAR_MIN_HELLO_DURATION)
 
 mega_to_node_map = {
-    5: 0,
-    6: 1,
-    3: 2,
-    1: 3,
-    4: 4,
-    7: 5,
+    5: 1,
+    6: 2,
+    3: 3,
+    2: 4,
+    4: 5,
+    7: 0,
     }
 
 # close all TCP connections and continue to run
