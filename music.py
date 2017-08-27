@@ -197,7 +197,7 @@ class Music:
         # Drone Logic
         if bm_day < 0:
             print "trying to play static"
-            #return play([0, sounds.play_static()])
+            return play([0, sounds.play_static()])
         elif self.need_drone:
             print "Setting Drone"
             self.need_drone = False

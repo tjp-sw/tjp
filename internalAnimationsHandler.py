@@ -4,6 +4,7 @@ import sys
 from dataBaseInterface import DataBaseInterface
 from audioInfo import AudioEvent, AudioFileInfo
 from audio_event_queue import SortedDLL
+import shows
 
 NUM_AUDIO_CHANNELS = 7
 
@@ -20,21 +21,24 @@ class InternalAninamtionsHandler:
         self.doing_animations = do
 
     def interpret_audio_msg(self, audio_msg):
-        channel_map = self.get_audio_file_info(audio_msg)
-        for channel in channel_map.keys():
-            if self.current_internal_track_per_channel[channel] > 0: # channel already had a track on it
-                old_audio = self.current_internal_track_per_channel[channel]
-                self.remove_audio_events_from_queue(old_audio)
+        print "day index: " + str(shows.bm_day_index)
 
-            audioInfo = channel_map[channel]
-            self.current_internal_track_per_channel[channel] = audioInfo
-            self.queue_audio_events(audioInfo)
+        if shows.bm_day_index >= 0: # preventing queing the static audio events prior to bm start (while just playing static animations)
+            channel_map = self.get_audio_file_info(audio_msg)
+            for channel in channel_map.keys():
+                if self.current_internal_track_per_channel[channel] > 0: # channel already had a track on it
+                    old_audio = self.current_internal_track_per_channel[channel]
+                    self.remove_audio_events_from_queue(old_audio)
 
-            if audioInfo is not None and self.doing_animations:
-                if shows.INTERNAL_ANIMATIONS_DEBUG:
-                    print "setting main animation param due to new audio track's info " + str(audioInfo.file_index)
-                shows.set_appropriate_layer_main_animation(audioInfo)
-                shows.update_playa_palette(audioInfo.getAudioDay(), audioInfo.getNumericalCategory())
+                audioInfo = channel_map[channel]
+                self.current_internal_track_per_channel[channel] = audioInfo
+                self.queue_audio_events(audioInfo)
+
+                if audioInfo is not None and self.doing_animations:
+                    if shows.INTERNAL_ANIMATIONS_DEBUG:
+                        print "setting main animation param due to new audio track's info " + str(audioInfo.file_index)
+                    shows.set_appropriate_layer_main_animation(audioInfo)
+                    shows.update_playa_palette(audioInfo.getAudioDay(), audioInfo.getNumericalCategory())
 
 
     # RJS I don't like how this hard coded... if the audio contorl message changes this needs to as well.
