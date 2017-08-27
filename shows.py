@@ -687,7 +687,7 @@ def set_playa_mode():
     #    if sunset_meditation_just_ended:
     #        show_mode = NIGHT
 
-    elif (show_mode == SUNRISE) and (virtual_time >= (sunrise_time[bm_day_index] + IDEAL_MEDITATION_SECONDS)):
+    if (show_mode == SUNRISE) and (virtual_time >= (sunrise_time[bm_day_index] + IDEAL_MEDITATION_SECONDS)):
         show_mode = DAY
 
     elif (show_mode == SUNSET) and (virtual_time >= (sunset_time[bm_day_index] + IDEAL_MEDITATION_SECONDS)):
