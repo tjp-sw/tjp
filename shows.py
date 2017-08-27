@@ -214,7 +214,7 @@ sunrise_time = [time.mktime(time.strptime('2017-Aug-27 06:20', '%Y-%b-%d %H:%M')
                 time.mktime(time.strptime('2017-Sep-3 06:27', '%Y-%b-%d %H:%M')),
                 time.mktime(time.strptime('2017-Sep-4 06:28', '%Y-%b-%d %H:%M'))]
 sunset_time = [time.mktime(time.strptime('2017-Aug-27 19:36', '%Y-%b-%d %H:%M')),
-               time.mktime(time.strptime('2017-Aug-28 19:35', '%Y-%b-%d %H:%M')),
+               time.mktime(time.strptime('2017-Aug-28 19:00', '%Y-%b-%d %H:%M')),
                time.mktime(time.strptime('2017-Aug-29 19:33', '%Y-%b-%d %H:%M')),
                time.mktime(time.strptime('2017-Aug-30 19:31', '%Y-%b-%d %H:%M')),
                time.mktime(time.strptime('2017-Aug-31 19:30', '%Y-%b-%d %H:%M')),
