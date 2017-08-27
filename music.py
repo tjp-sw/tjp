@@ -175,9 +175,9 @@ class Music:
             if time(6, 25) <= now_time.time() <= time(19, 25):
                 if DEBUG > 1:
                     print "in music.py, setting day on", shows.bm_day_index
-                    #shows.set_show_mode(shows.DAY)
+                    shows.set_show_mode(shows.DAY)
             else:
-                # shows.set_show_mode(shows.NIGHT)
+                shows.set_show_mode(shows.NIGHT)
                 if DEBUG > 1:
                     print "in music.py, setting night on", shows.bm_day_index
         else:
@@ -196,7 +196,8 @@ class Music:
 
         # Drone Logic
         if bm_day < 0:
-            print "trying to play static"
+            pass
+            #print "trying to play static"
             #return play([0, sounds.play_static()])
         elif self.need_drone:
             print "Setting Drone"

@@ -22,7 +22,7 @@ internal_aa_handler = InternalAninamtionsHandler()
 NUM_7_COLOR_ANIMATIONS = 255
 NUM_BASE_ANIMATIONS = 3
 NUM_MID_ANIMATIONS = 12
-NUM_SPARKLE_ANIMATIONS = 11
+NUM_SPARKLE_ANIMATIONS = 6
 
 NUM_BEAT_EFFECTS = 8
 NUM_PARAMETERS = 40
@@ -276,10 +276,9 @@ def constrained_random_parameter(i):
 
 def constrain_show():
     global show_parameters
-    #if show_parameters[BACKGROUND_INDEX] == 0 and show_parameters[MIDLAYER_INDEX] == 0 and show_parameters[
-    #    SPARKLE_INDEX] == 0:
-    #    show_parameters[BACKGROUND_INDEX] = 1  # never black
-    pass
+    if show_parameters[BACKGROUND_INDEX] == 0 and show_parameters[MIDLAYER_INDEX] == 0 and show_parameters[
+        SPARKLE_INDEX] == 0:
+        show_parameters[BACKGROUND_INDEX] = 1  # never black
 
 
 # ------------------------------------------------- print_parameters() --------------------------------------------
@@ -606,10 +605,6 @@ def meditaiton_animations(ignored=True):
         show_parameters[SEVEN_PAL_BEAT_PARAM_END] = randint(NUM_PALETTE_CHANGE_STYLES - 2,
                                                             NUM_PALETTE_CHANGE_STYLES)  # want transitions to be especially gradual
     
-    show_parameters[SPARKLE_PARAM_START] = 0 #keeping zero to ensure seeing the med animation
-    show_parameters[MID_PARAM_START] = 0 #keeping zero to ensure seeing the med animation
-    show_parameters[BASE_PARAM_START] = 0 #keeping zero to ensure seeing the med animation
-
     choose_new_playa_palette()
     constrain_show()
 
@@ -628,9 +623,9 @@ def art_car_edm(ignored=True):
     constrain_show()
 
 
-# TEST_CYCLE_MINUTES = 5  # rush through the entire week in this number of minutes
+TEST_CYCLE_MINUTES = 5  # rush through the entire week in this number of minutes
 # For Lee testing: uncomment this
-TEST_CYCLE_MINUTES = 15
+# TEST_CYCLE_MINUTES = 15
 NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
 
 
@@ -640,25 +635,17 @@ NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
 
 def set_playa_mode():
 
-    global SUNRISE, DAY, SUNSET, NIGHT, NUM_DAYS, IDEAL_MEDITATION_SECONDS, show_mode, color_evolution_timer, bm_day_index
+    global SUNRISE, DAY, SUNSET, NIGHT, NUM_DAYS, IDEAL_MEDITATION_SECONDS, show_mode, color_evolution_timer
 
     # this is also set in playa_program, but not before the start of burning man
     # we need this value to be allowed to be -1 to start static
-    #bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
-    #if DEBUG:
-    #    print "******* in set playa mode virtual time is", time.ctime(virtual_time), 'on day', bm_day_index
+    bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
+    if DEBUG:
+        print "******* in set playa mode virtual time is", time.ctime(virtual_time), 'on day', bm_day_index
 
     # todays_length = sunset_time[bm_day_index] - sunrise_time[bm_day_index]
 
-    if (show_mode == NIGHT) and (virtual_time >= sunrise_time[bm_day_index]):
-        show_mode = SUNRISE
-        choose_new_playa_palette()
-    elif (show_mode == DAY) and (virtual_time >= sunset_time[bm_day_index]):
-        show_mode = SUNSET
-        color_evolution_timer = time.time()
-        choose_new_playa_palette()
 
-"""
     if virtual_time - sunrise_time[bm_day_index + 1] <= IDEAL_MEDITATION_SECONDS:
         show_mode = SUNRISE
         if DEBUG:
@@ -678,6 +665,14 @@ def set_playa_mode():
             print 'now it is night'
     choose_new_playa_palette()
 
+
+"""
+    if (show_mode == NIGHT) and (virtual_time >= sunrise_time[bm_day_index]):
+        show_mode = SUNRISE
+
+    elif (show_mode == DAY) and (virtual_time >= sunset_time[bm_day_index]):
+        show_mode = SUNSET
+        color_evolution_timer = time.time()
 
     # fixme: Kienen's code will set day and night show_modes at end of meditations
     #   i'll set these next 2 on timer for now, but this won't work for playa bc meditations are not same length
@@ -722,7 +717,6 @@ def playa_program(init=False):
     real_time = time.time()
     if init:  # set up to run test program
         if real_start_time < 0:
-            quantify_magnitude_impact 
             time_speed_factor = 1
             #time_speed_factor = float(NUM_DAYS * 60 * 24) / TEST_CYCLE_MINUTES	# 60*24 == minutes per day
             #testing_meditation_seconds = int(IDEAL_MEDITATION_SECONDS * time_speed_factor)  # / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
@@ -904,16 +898,14 @@ def set_appropriate_layer_main_animation(audioInfo):
 # structure very similar to edm show but instead of simply timing, allow for the
 # audio events to trigger the changes. EDM program looks 1000x than this v1... so let's see how this looks
 def drive_internal_animations():
-    global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time
-    global show_parameters, show_colors, bm_day_index
+    global bg_start_time, bg_parameter_start_time, mid_start_time, mid_parameter_start_time, sparkle_start_time, sparkle_parameter_start_time, palette_start_time, bm_day_index
+    
+    global show_parameters, show_colors
     global internal_aa_handler
 
-    if bm_day_index < 0:
-        show_parameters[SPARKLE_PARAM_START] = 254 #the static animation
-        show_parameters[MID_PARAM_START] = 0 #the static animation
-        show_parameters[BASE_PARAM_START] = 0 #the static animation
+    if bm_day_index == -1:
+        show_parameters[] = 254
     else:
-
         bg_time = bg_parameter_time = mid_time = mid_parameter_time = sparkle_time = sparkle_parameter_time = palette_time = time.time()
 
         next_audio_event = internal_aa_handler.progress_audio_queue()  # next_audio_event is a global but just to be more clear...
@@ -941,7 +933,7 @@ def drive_internal_animations():
                         if DEBUG:
                             print "background parameter ", i, "changed to ", show_parameters[i]
 
-                if bg_parameter_time - bg_parameter_start_time > BASE_PARAMETER_SWTICH_LAG:
+                if bg_parameter_time - bg_parameter_start_time > BASE_PARAMETER_SWTICH_LAG: 
                     bg_parameter_start_time = bg_parameter_time
 
                     # choose which parameter to change
@@ -960,7 +952,7 @@ def drive_internal_animations():
                         if DEBUG:
                             print "mid parameter ", i, "changed to ", show_parameters[i]
 
-                if mid_parameter_time - mid_parameter_start_time > MID_PARAMETER_SWTICH_LAG:
+                if mid_parameter_time - mid_parameter_start_time > MID_PARAMETER_SWTICH_LAG: 
                     mid_parameter_start_time = mid_parameter_time
 
                     # choose which parameter to change
@@ -968,14 +960,14 @@ def drive_internal_animations():
                     show_parameters[change_mid] = constrained_weighted_parameter(change_mid, magnitude)
                     if DEBUG:
                         print "mid parameter ", change_mid, "changed to ", show_parameters[change_mid]
-                '''
-                if sparkle_time - sparkle_start_time > SPARKLE_MAIN_ANIMATION_SWITCH_LAG:
-                    sparkle_start_time = sparkle_time
+            '''
+            if sparkle_time - sparkle_start_time > SPARKLE_MAIN_ANIMATION_SWITCH_LAG:
+                sparkle_start_time = sparkle_time
 
-                    # change sparkle animation
-                    show_parameters[SPARKLE_INDEX] = constrained_weighted_parameter(SPARKLE_INDEX, magnitude)
-                    print "sparkle choice changed to ", show_parameters[SPARKLE_INDEX]
-                '''
+                # change sparkle animation
+                show_parameters[SPARKLE_INDEX] = constrained_weighted_parameter(SPARKLE_INDEX, magnitude)
+                print "sparkle choice changed to ", show_parameters[SPARKLE_INDEX]
+            '''
                 # can change sparkle parameters independently of changing sparkle animation, without having hard transitions
                 if sparkle_parameter_time - sparkle_parameter_start_time > SPARKLE_PARAMETER_SWTICH_LAG:
                     sparkle_parameter_start_time = sparkle_parameter_time
@@ -998,17 +990,15 @@ def drive_internal_animations():
                     choose_new_playa_palette()
 
                     if INTERNAL_ANIMATIONS_DEBUG:
-                        print "event with magnitude " + str(
-                            magnitude) + " triggered a MAJOR animation change event. ALL layer animations switched."
+                        print "event with magnitude " + str(magnitude) + " triggered a MAJOR animation change event. ALL layer animations switched."
 
                 # remove the 'actioned on' event from the queue
                 try:
                     if internal_aa_handler.event_queue.size > 0:
                         if INTERNAL_ANIMATIONS_DEBUG:
-                            print "removing actioned event: " + str(next_audio_event) + " size: " + str(
-                                internal_aa_handler.event_queue.size)
+                            print "removing actioned event: " + str(next_audio_event) + " size: " + str(internal_aa_handler.event_queue.size)
 
-                        internal_aa_handler.event_queue.remove(next_audio_event)
+                            internal_aa_handler.event_queue.remove(next_audio_event)
                     else:
                         internal_aa_handler.next_audio_event = None
                 except AttributeError:
@@ -1019,7 +1009,7 @@ def drive_internal_animations():
         # to keep animations changing
         check_time_triggered_animations()
 
-    constrain_show()  # keep the lights on
+        constrain_show()  # keep the lights on
 
 
 # check if time limits have been reached to trigger an animation param change
