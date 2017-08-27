@@ -218,7 +218,7 @@ def get_external_amplitude_sum(channel_data):
 
 # check art car detection status and change animation accordingly
 def check_art_car_status(ring_num, amplitude):
-
+    global last_show_change_sec
     if ring_num is None or amplitude is None:
         if BRAIN_DEBUG:
             #print "seems as though the data did not make a plane, ring -> art car detection not possible"
