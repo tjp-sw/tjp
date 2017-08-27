@@ -631,6 +631,8 @@ NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
 
 def determine_show_mode():
     global show_mode, virtual_time
+    show_mode_before = show_mode
+
     if virtual_time - sunrise_time[bm_day_index + 1] <= IDEAL_MEDITATION_SECONDS:
         show_mode = SUNRISE
         if DEBUG:
@@ -643,11 +645,15 @@ def determine_show_mode():
         show_mode = SUNSET
         if DEBUG:
             print 'now it is sunset'
-        color_evolution_timer = time.time()
+        if show_mode_before != show_mode: # ensuring not reset color evolution timer each time this is called!
+            color_evolution_timer = time.time()
     else:
         show_mode = NIGHT
         if DEBUG:
             print 'now it is night'
+
+    if show_mode_before != show_mode:
+        choose_new_playa_palette()
 
 # ------------------------ set_playa_mode() -------------------------------
 # returns SUNRISE, DAY, SUNSET, NIGHT
@@ -667,7 +673,6 @@ def set_playa_mode():
 
 
     determine_show_mode()
-    choose_new_playa_palette()
 
 
 """
@@ -689,16 +694,6 @@ def set_playa_mode():
     #        show_mode = DAY
     #    if sunset_meditation_just_ended:
     #        show_mode = NIGHT
-
-    elif (show_mode == SUNRISE) and (virtual_time >= (sunrise_time[bm_day_index] + IDEAL_MEDITATION_SECONDS)):
-        show_mode = DAY
-
-    elif (show_mode == SUNSET) and (virtual_time >= (sunset_time[bm_day_index] + IDEAL_MEDITATION_SECONDS)):
-        show_mode = NIGHT
-
-    else:
-        print 'not at burning man'
-        exit(1)
 
     choose_new_playa_palette()
     if DEBUG:
@@ -910,110 +905,115 @@ def drive_internal_animations():
 
     bg_time = bg_parameter_time = mid_time = mid_parameter_time = sparkle_time = sparkle_parameter_time = palette_time = time.time()
 
-    next_audio_event = internal_aa_handler.progress_audio_queue()  # next_audio_event is a global but just to be more clear...
+    if bm_day_index < 0:
+        # doing static animation
+        show_parameters[SPARKLE_PARAM_START] = 254 #the static animation
+        show_parameters[MID_PARAM_START] = 0 #the static animation
+        show_parameters[BASE_PARAM_START] = 0 #the static animation
+    else:
 
-    if next_audio_event is not None and internal_aa_handler.doing_animations:
-        # MAYBE: seperate thread handling polling event_queue and sending animations
+        next_audio_event = internal_aa_handler.progress_audio_queue()  # next_audio_event is a global but just to be more clear...
 
-        abso_diff_val = abs(next_audio_event.exec_time - timeMs())
-        valid_time = abso_diff_val < 1000  # one sec within the auido event
+        if next_audio_event is not None and internal_aa_handler.doing_animations:
+            # MAYBE: seperate thread handling polling event_queue and sending animations
 
-        if INTERNAL_ANIMATIONS_DEBUG and valid_time:
-            print "valid? " + str(valid_time) + " diff: " + str(abso_diff_val)
-            print "Event: " + str(next_audio_event)
+            abso_diff_val = abs(next_audio_event.exec_time - timeMs())
+            valid_time = abso_diff_val < 1000  # one sec within the auido event
 
-        if valid_time:  # valid 'next' event
-            magnitude = next_audio_event.magnitude
+            if INTERNAL_ANIMATIONS_DEBUG and valid_time:
+                print "valid? " + str(valid_time) + " diff: " + str(abso_diff_val)
+                print "Event: " + str(next_audio_event)
 
-            # to avoid hard transitions, change disruptive base animation parameters only when you change background choice
-            if bg_time - bg_start_time > BASE_MAIN_ANIMATION_SWITCH_LAG:
-                bg_start_time = bg_time
+            if valid_time:  # valid 'next' event
+                magnitude = next_audio_event.magnitude
 
-                # change bg show parameters
-                for i in range(BACKGROUND_INDEX + 1, BACKGROUND_INDEX + 4):
-                    show_parameters[i] = constrained_weighted_parameter(i, magnitude)
+                # to avoid hard transitions, change disruptive base animation parameters only when you change background choice
+                if bg_time - bg_start_time > BASE_MAIN_ANIMATION_SWITCH_LAG:
+                    bg_start_time = bg_time
+
+                    # change bg show parameters
+                    for i in range(BACKGROUND_INDEX + 1, BACKGROUND_INDEX + 4):
+                        show_parameters[i] = constrained_weighted_parameter(i, magnitude)
+                        if DEBUG:
+                            print "background parameter ", i, "changed to ", show_parameters[i]
+
+                if bg_parameter_time - bg_parameter_start_time > BASE_PARAMETER_SWTICH_LAG:
+                    bg_parameter_start_time = bg_parameter_time
+
+                    # choose which parameter to change
+                    change_bg = randint(BACKGROUND_INDEX + 4, MIDLAYER_INDEX - 1)
+                    show_parameters[change_bg] = constrained_weighted_parameter(change_bg, magnitude)
                     if DEBUG:
-                        print "background parameter ", i, "changed to ", show_parameters[i]
+                        print "background parameter ", change_bg, "changed to ", show_parameters[change_bg]
 
-            if bg_parameter_time - bg_parameter_start_time > BASE_PARAMETER_SWTICH_LAG:
-                bg_parameter_start_time = bg_parameter_time
+                # to avoid hard transitions, change disruptive mid animation parameters only when you change mid layer choice
+                if mid_time - mid_start_time > MID_MAIN_ANIMATION_SWITCH_LAG:
+                    mid_start_time = mid_time
 
-                # choose which parameter to change
-                change_bg = randint(BACKGROUND_INDEX + 4, MIDLAYER_INDEX - 1)
-                show_parameters[change_bg] = constrained_weighted_parameter(change_bg, magnitude)
-                if DEBUG:
-                    print "background parameter ", change_bg, "changed to ", show_parameters[change_bg]
+                    # change mid show parameters
+                    for i in range(MIDLAYER_INDEX + 1, MIDLAYER_INDEX + 5):
+                        show_parameters[i] = constrained_weighted_parameter(i, magnitude)
+                        if DEBUG:
+                            print "mid parameter ", i, "changed to ", show_parameters[i]
 
-            # to avoid hard transitions, change disruptive mid animation parameters only when you change mid layer choice
-            if mid_time - mid_start_time > MID_MAIN_ANIMATION_SWITCH_LAG:
-                mid_start_time = mid_time
+                if mid_parameter_time - mid_parameter_start_time > MID_PARAMETER_SWTICH_LAG:
+                    mid_parameter_start_time = mid_parameter_time
 
-                # change mid show parameters
-                for i in range(MIDLAYER_INDEX + 1, MIDLAYER_INDEX + 5):
-                    show_parameters[i] = constrained_weighted_parameter(i, magnitude)
+                    # choose which parameter to change
+                    change_mid = randint(MIDLAYER_INDEX + 5, SPARKLE_INDEX - 1)
+                    show_parameters[change_mid] = constrained_weighted_parameter(change_mid, magnitude)
                     if DEBUG:
-                        print "mid parameter ", i, "changed to ", show_parameters[i]
+                        print "mid parameter ", change_mid, "changed to ", show_parameters[change_mid]
+                '''
+                if sparkle_time - sparkle_start_time > SPARKLE_MAIN_ANIMATION_SWITCH_LAG:
+                    sparkle_start_time = sparkle_time
 
-            if mid_parameter_time - mid_parameter_start_time > MID_PARAMETER_SWTICH_LAG:
-                mid_parameter_start_time = mid_parameter_time
+                    # change sparkle animation
+                    show_parameters[SPARKLE_INDEX] = constrained_weighted_parameter(SPARKLE_INDEX, magnitude)
+                    print "sparkle choice changed to ", show_parameters[SPARKLE_INDEX]
+                '''
+                # can change sparkle parameters independently of changing sparkle animation, without having hard transitions
+                if sparkle_parameter_time - sparkle_parameter_start_time > SPARKLE_PARAMETER_SWTICH_LAG:
+                    sparkle_parameter_start_time = sparkle_parameter_time
 
-                # choose which parameter to change
-                change_mid = randint(MIDLAYER_INDEX + 5, SPARKLE_INDEX - 1)
-                show_parameters[change_mid] = constrained_weighted_parameter(change_mid, magnitude)
-                if DEBUG:
-                    print "mid parameter ", change_mid, "changed to ", show_parameters[change_mid]
-            '''
-            if sparkle_time - sparkle_start_time > SPARKLE_MAIN_ANIMATION_SWITCH_LAG:
-                sparkle_start_time = sparkle_time
+                    # choose which parameter to change
+                    change_sparkle = randint(SPARKLE_INDEX + 1, SPARKLE_INDEX + 10)
+                    show_parameters[change_sparkle] = constrained_weighted_parameter(change_sparkle, magnitude)
+                    if DEBUG:
+                        print "sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
 
-                # change sparkle animation
-                show_parameters[SPARKLE_INDEX] = constrained_weighted_parameter(SPARKLE_INDEX, magnitude)
-                print "sparkle choice changed to ", show_parameters[SPARKLE_INDEX]
-            '''
-            # can change sparkle parameters independently of changing sparkle animation, without having hard transitions
-            if sparkle_parameter_time - sparkle_parameter_start_time > SPARKLE_PARAMETER_SWTICH_LAG:
-                sparkle_parameter_start_time = sparkle_parameter_time
+                if palette_time - palette_start_time > PALETTE_TIME_LIMIT:
+                    palette_start_time = palette_time
 
-                # choose which parameter to change
-                change_sparkle = randint(SPARKLE_INDEX + 1, SPARKLE_INDEX + 10)
-                show_parameters[change_sparkle] = constrained_weighted_parameter(change_sparkle, magnitude)
-                if DEBUG:
-                    print "sparkle parameter ", change_sparkle, "changed to ", show_parameters[change_sparkle]
+                    choose_new_playa_palette()
 
-            if palette_time - palette_start_time > PALETTE_TIME_LIMIT:
-                palette_start_time = palette_time
+                if float(magnitude) > 5.9:
+                    show_parameters[SPARKLE_INDEX] = constrained_random_parameter(SPARKLE_INDEX)
+                    show_parameters[MIDLAYER_INDEX] = constrained_random_parameter(MIDLAYER_INDEX)
+                    show_parameters[BACKGROUND_INDEX] = constrained_random_parameter(BACKGROUND_INDEX)
+                    choose_new_playa_palette()
 
-                choose_new_playa_palette()
-
-            if float(magnitude) > 5.9:
-                show_parameters[SPARKLE_INDEX] = constrained_random_parameter(SPARKLE_INDEX)
-                show_parameters[MIDLAYER_INDEX] = constrained_random_parameter(MIDLAYER_INDEX)
-                show_parameters[BACKGROUND_INDEX] = constrained_random_parameter(BACKGROUND_INDEX)
-                choose_new_playa_palette()
-
-                if INTERNAL_ANIMATIONS_DEBUG:
-                    print "event with magnitude " + str(
-                        magnitude) + " triggered a MAJOR animation change event. ALL layer animations switched."
-
-            # remove the 'actioned on' event from the queue
-            try:
-                if internal_aa_handler.event_queue.size > 0:
                     if INTERNAL_ANIMATIONS_DEBUG:
-                        print "removing actioned event: " + str(next_audio_event) + " size: " + str(
-                            internal_aa_handler.event_queue.size)
+                        print "event with magnitude " + str(
+                            magnitude) + " triggered a MAJOR animation change event. ALL layer animations switched."
 
-                    internal_aa_handler.event_queue.remove(next_audio_event)
-                else:
-                    internal_aa_handler.next_audio_event = None
-            except AttributeError:
-                # print "event_queue is empty ", sys.exc_value
-                pass
+                # remove the 'actioned on' event from the queue
+                try:
+                    if internal_aa_handler.event_queue.size > 0:
+                        if INTERNAL_ANIMATIONS_DEBUG:
+                            print "removing actioned event: " + str(next_audio_event) + " size: " + str(
+                                internal_aa_handler.event_queue.size)
 
-    # necessary backup trigger now that new track selections are less frequent
-    # to keep animations changing
-    check_time_triggered_animations()
+                        internal_aa_handler.event_queue.remove(next_audio_event)
+                    else:
+                        internal_aa_handler.next_audio_event = None
+                except AttributeError:
+                    # print "event_queue is empty ", sys.exc_value
+                    pass
 
-    constrain_show()  # keep the lights on
+        # necessary backup trigger now that new track selections are less frequent
+        # to keep animations changing
+        check_time_triggered_animations()
 
 
 # check if time limits have been reached to trigger an animation param change
