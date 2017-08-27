@@ -15,7 +15,7 @@ mega_to_node_map = {
     5: 0,
     6: 1,
     3: 2,
-    1: 3,
+    2: 3,
     4: 4,
     7: 5,
     }
@@ -222,7 +222,6 @@ def check_art_car_status(ring_num, amplitude):
     if ring_num is None or amplitude is None:
         if BRAIN_DEBUG:
             print "seems as though the data did not make a plane, ring -> art car detection not possible"
-            pass
         if not artCarHandler.mock:
             return
 
@@ -242,13 +241,9 @@ def check_art_car_status(ring_num, amplitude):
         # return value signaling ART_CAR_HELLO_DURATION exceeded - trigger edm animations
         get_internal_animations_handler().set_do_animations(False)
 
-        # trigger edm animations on whole structure if time has past time 
-        if time.time() > last_show_change_sec + TIME_LIMIT:
-            auto_show()
-            last_show_change_sec = time.time()
-            do_show(None, None)
-            do_auto(None, art_car_edm)
-            do_show(None, None)
+        # trigger edm animations on whole structure
+        do_auto(None, art_car_edm)
+        do_show(None, None)
 
     elif ring_ac_newly_detected >= 0:
         # Utilizing ArtCarHadler to know which is the oldest ring_num.
@@ -340,17 +335,18 @@ while running:
                                 break
                         elif message[0:1] == 'c':
                             if len(message) >= 24:
-                                node, timestamp, channel_data = struct.unpack_from('>BQ14s', message, 1)
-                                timestamp /= 1000.0		# convert from milliseconds
-                                #print 'node', node, 'channel data', repr(channel_data), 'at', timestamp
+                                if False:
+                                    node, timestamp, channel_data = struct.unpack_from('>BQ14s', message, 1)
+                                    timestamp /= 1000.0		# convert from milliseconds
+                                    #print 'node', node, 'channel data', repr(channel_data), 'at', timestamp
 
-                                amplitude_sum = get_external_amplitude_sum(channel_data)
-                                if amplitude_sum > 0: # otherwise error reading channel_data
-                                    esitmated_ring_number, mean_intensity = analyze_beat(node, amplitude_sum, timestamp)
+                                    amplitude_sum = get_external_amplitude_sum(channel_data)
+                                    if amplitude_sum > 0: # otherwise error reading channel_data
+                                        esitmated_ring_number, mean_intensity = analyze_beat(node, amplitude_sum, timestamp)
 
-                                    show_mode = get_show_mode()
-                                    if show_mode == 1 or show_mode == 3: # not during meditaiton
-                                        check_art_car_status(esitmated_ring_number, mean_intensity)
+                                        show_mode = get_show_mode()
+                                        if show_mode == 1 or show_mode == 3: # not during meditaiton
+                                            check_art_car_status(esitmated_ring_number, mean_intensity)
                                 message = message[24:]
                             else:
                                 if BRAIN_DEBUG:
