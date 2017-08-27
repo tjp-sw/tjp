@@ -130,6 +130,8 @@ class Music:
         self.low_wait = random.randint(3, 6)
         self.mid_wait = random.randint(5, 25)
         self.high_wait = random.randint(20, 35)
+        self.played_static = datetime.min
+        self.static_wait = 14 # ~14 second static track duration
 
 
     def mute(self, node=0):
@@ -196,8 +198,10 @@ class Music:
 
         # Drone Logic
         if bm_day < 0:
-            print "trying to play static"
-            return play([0, sounds.play_static()])
+            if self.played_static < now_time - timedelta(seconds=self.static_wait):
+                print "trying to play static"
+                self.played_static = now_time
+                return play([0, sounds.play_static()])
         elif self.need_drone:
             print "Setting Drone"
             self.need_drone = False
