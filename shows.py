@@ -634,31 +634,9 @@ TEST_CYCLE_MINUTES = 15
 NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
 
 
-# ------------------------ set_playa_mode() -------------------------------
-# returns SUNRISE, DAY, SUNSET, NIGHT
-# this is a hack for testing - I'll fix it and incorporate kienen's stuff soon -- Diane
-
-def set_playa_mode():
-
-    global SUNRISE, DAY, SUNSET, NIGHT, NUM_DAYS, IDEAL_MEDITATION_SECONDS, show_mode, color_evolution_timer, bm_day_index
-
-    # this is also set in playa_program, but not before the start of burning man
-    # we need this value to be allowed to be -1 to start static
-    #bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
-    #if DEBUG:
-    #    print "******* in set playa mode virtual time is", time.ctime(virtual_time), 'on day', bm_day_index
-
-    # todays_length = sunset_time[bm_day_index] - sunrise_time[bm_day_index]
-
-    if (show_mode == NIGHT) and (virtual_time >= sunrise_time[bm_day_index]):
-        show_mode = SUNRISE
-        choose_new_playa_palette()
-    elif (show_mode == DAY) and (virtual_time >= sunset_time[bm_day_index]):
-        show_mode = SUNSET
-        color_evolution_timer = time.time()
-        choose_new_playa_palette()
-
 """
+def determine_show_mode():
+    global show_mode, virtual_time
     if virtual_time - sunrise_time[bm_day_index + 1] <= IDEAL_MEDITATION_SECONDS:
         show_mode = SUNRISE
         if DEBUG:
@@ -676,6 +654,25 @@ def set_playa_mode():
         show_mode = NIGHT
         if DEBUG:
             print 'now it is night'
+
+# ------------------------ set_playa_mode() -------------------------------
+# returns SUNRISE, DAY, SUNSET, NIGHT
+# this is a hack for testing - I'll fix it and incorporate kienen's stuff soon -- Diane
+
+def set_playa_mode():
+
+    global SUNRISE, DAY, SUNSET, NIGHT, NUM_DAYS, IDEAL_MEDITATION_SECONDS, show_mode, color_evolution_timer
+
+    # this is also set in playa_program, but not before the start of burning man
+    # we need this value to be allowed to be -1 to start static
+    bm_day_index = int((virtual_time - BURNING_MAN_START) / 86400) % NUM_DAYS
+    if DEBUG:
+        print "******* in set playa mode virtual time is", time.ctime(virtual_time), 'on day', bm_day_index
+
+    # todays_length = sunset_time[bm_day_index] - sunrise_time[bm_day_index]
+
+
+    determine_show_mode()
     choose_new_playa_palette()
 
 
@@ -781,7 +778,7 @@ def playa_program(init=False):
 
 
 def do_date(ignored, when):
-    global real_start_time
+    global bm_day_index, real_start_time, virtual_time
     try:
         day, hour = string.split(when, None, 1)  # one token separated by whitespace from the next
         day = int(day)
@@ -791,10 +788,12 @@ def do_date(ignored, when):
     except (AttributeError, ValueError):  # no whitespace or non-integer
         print 'Usage: day number hour:min'
         return
+    bm_day_index = day
     day = time.strftime('%Y-%b-%d', time.localtime(1503946800 + day * 86400))  # Monday is day 0
     when = time.mktime(time.strptime('%s %u:%u' % (day, hour, minute), '%Y-%b-%d %H:%M'))
     real_start_time = time.time() + (STATIC_START - when) / time_speed_factor
-
+    virtual_time = STATIC_START + (time.time() - real_start_time) * time_speed_factor
+    determine_show_mode()
 
 
 # ------------------------------ internal_sound_animations_program() -----------------------------------------------
