@@ -59,7 +59,7 @@ def play_static():
 
 #If it is time to play a meditation will return the number of the correct meditation. Otherwise returns None.
 def play_meditation(this_time=datetime.fromtimestamp(shows.virtual_time)):
-    print "time speed factor for animations " + str(shows.time_speed_factor)
+    #print "time speed factor for animations " + str(shows.time_speed_factor)
     if shows.time_speed_factor == 1:
         approx_time= datetime.time(this_time)
         if (approx_time < time(6, 18) or approx_time > time(6, 31)) and \
