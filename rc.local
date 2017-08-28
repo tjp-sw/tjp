@@ -18,6 +18,6 @@ if [ "$_IP" ]; then
 fi
 
 cd ~pi/tjp
-su pi -c './brain.py live' < /dev/null > /dev/null 2>&1
+su pi -c './brain.py live' < /dev/null > /dev/null 2>&1 &
 
 exit 0
