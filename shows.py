@@ -1017,6 +1017,7 @@ def drive_internal_animations():
 
         # necessary backup trigger now that new track selections are less frequent
         # to keep animations changing
+        constrain_show()
         check_time_triggered_animations()
 
 
