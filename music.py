@@ -131,7 +131,7 @@ class Music:
         self.mid_wait = random.randint(5, 25)
         self.high_wait = random.randint(20, 35)
         self.played_static = datetime.min
-        self.static_wait = 14 # ~14 second static track duration
+        self.static_wait = 5 # ~14 second static track duration
 
 
     def mute(self, node=0):

@@ -910,6 +910,7 @@ def drive_internal_animations():
 
     if bm_day_index < 0:
         # doing static animation
+        print "playing static animation"
         show_parameters[SPARKLE_PARAM_START] = 254 #the static animation
         show_parameters[MID_PARAM_START] = 0 #the static animation
         show_parameters[BASE_PARAM_START] = 0 #the static animation
