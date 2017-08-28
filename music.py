@@ -141,8 +141,9 @@ class Music:
         virtual_date_time = datetime.fromtimestamp(shows.virtual_time)
         now_time = virtual_date_time  # datetime.now()
 
-        #if DEBUG:
+        # if DEBUG:
         #    print "^^^ in music.py tick date is: " +str(now_time)
+        #    print "in music.py, day is " + str(shows.get_bm_index())
         
         if DEBUG > 1:
             print now_time
@@ -187,25 +188,11 @@ class Music:
             if DEBUG > 1:
                 print "no meditation"
             Music.meditation = False
-            if time(6, 25) <= now_time.time() <= time(19, 25):
-                if DEBUG > 1:
-                    print "in music.py, setting day on", shows.bm_day_index
-                    #shows.set_show_mode(shows.DAY)
-            else:
-                # shows.set_show_mode(shows.NIGHT)
-                if DEBUG > 1:
-                    print "in music.py, setting night on", shows.bm_day_index
         else:
+            Music.meditation = True
             if DEBUG > 1:
                 print "setting meditation status"
-            Music.meditation = True
-            if this_meditation % 2:  # odd
-                print "in music.py, setting sunrise on", shows.bm_day_index
-                #shows.set_show_mode(shows.SUNRISE)
-            else:  # even
-                print "in music.py, setting sunset on", shows.bm_day_index
-                shows.set_show_mode(shows.SUNSET)
-            if now_time.weekday() == 1:
+            if shows.get_bm_index() == 1:
                 return play([0, this_meditation, 3999])
             return play([0, this_meditation])
         
