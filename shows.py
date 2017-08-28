@@ -626,7 +626,7 @@ def art_car_edm(ignored=True):
     constrain_show()
 
 
-TEST_CYCLE_MINUTES = 5  # rush through the entire week in this number of minutes
+TEST_CYCLE_MINUTES = 420  # rush through the entire week in this number of minutes
 # For Lee testing: uncomment this
 # TEST_CYCLE_MINUTES = 15
 NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)

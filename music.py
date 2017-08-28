@@ -131,7 +131,7 @@ class Music:
         self.mid_wait = random.randint(5, 25)
         self.high_wait = random.randint(20, 35)
         self.played_static = datetime.min
-        self.static_wait = 5 # ~14 second static track duration
+        self.static_wait = 3 # ~14 second static track duration
 
 
     def mute(self, node=0):
@@ -168,6 +168,19 @@ class Music:
                 print "silent"
             return None
         """
+
+        # static logic prior to bm monday
+        # needs to be up here for meditation hack (testing hack) to work!
+        no_drone = False # hack for avoiding a drone while trying todo static
+        if bm_day < 0:
+            no_drone = True
+            if self.played_static < now_time - timedelta(seconds=self.static_wait):
+                print "trying to play static"
+                self.played_static = now_time
+                return play([0, sounds.play_static()])
+        else:
+            no_drone = False
+
         # Meditation Logic
         this_meditation = sounds.play_meditation(now_time)
         if this_meditation is None:
@@ -195,14 +208,9 @@ class Music:
             if now_time.weekday() == 1:
                 return play([0, this_meditation, 3999])
             return play([0, this_meditation])
-
+        
         # Drone Logic
-        if bm_day < 0:
-            if self.played_static < now_time - timedelta(seconds=self.static_wait):
-                print "trying to play static"
-                self.played_static = now_time
-                return play([0, sounds.play_static()])
-        elif self.need_drone:
+        if self.need_drone and no_drone == False:
             print "Setting Drone"
             self.need_drone = False
             return "a0;6;" + str(bm_day) + ";"
