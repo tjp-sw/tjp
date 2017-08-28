@@ -180,7 +180,13 @@ while listener:
         time.sleep(10)
 listener.listen(6)		# maximum connection backlog
 
-sources = [sys.stdin, listener]	# read from these
+sources = []
+if len(sys.argv) <= 1:	# interactive when no command line parameters
+    sources += [sys.stdin]
+else:			# noninteractive, run playa program
+    do_auto(None, playa_program)
+    do_date(None, ' '.join(sys.argv[1:]))
+sources += [listener]	# read from these
 writing = []		# write to these sockets
 message_queues = {}	# queues of outgoing messages
 remote_name = {}	# socket remote name because getpeername() can fail
