@@ -52,8 +52,6 @@ MEDITATIONS_TIMES = ["06:19 28/8/17",  # Monday
                      "19:24 03/9/17" ]
 MEDITATIONS = dict(itertools.izip([datetime.strptime(m, "%H:%M %d/%m/%y") for m in MEDITATIONS_TIMES], MEDITATIONS_SOUNDS))
 
-SET_THEME = -1
-
 def play_static():
     return STATIC
 
@@ -73,33 +71,27 @@ def play_meditation(this_time=datetime.fromtimestamp(shows.virtual_time)):
     else:
         return MEDITATIONS_HACK
 
-def find_low(theme=shows.bm_day_index, now_time=datetime.fromtimestamp(shows.virtual_time)):
-    if SET_THEME >= 0:
-        theme = SET_THEME
+def find_low(theme=shows.get_bm_index(), now_time=datetime.fromtimestamp(shows.virtual_time)):
     return random.choice(LOWS[theme])
 
 
-def find_mid(theme=shows.bm_day_index, now_time=datetime.fromtimestamp(shows.virtual_time)):
-    print "bm_day_index in sounds: " + str(shows.bm_day_index)
-    if SET_THEME >= 0:
-        theme = SET_THEME
-    if time(6, 25) < now_time.time() < time(19, 25):
+def find_mid(theme=shows.get_bm_index(), now_time=shows.virtual_time):
+    theme = shows.get_bm_index()
+    print "bm_day_index in sounds: " + str(theme)
+    if shows.get_show_mode() == shows.DAY:
         return random.choice(MIDS[theme])
-    if theme == 7:
-        return random.choice(MIDS[theme])
-    daily_mids = [song for sublist in MIDS[0:(theme+1)] for song in sublist]
-    return random.choice(daily_mids)
+    else:
+        daily_mids = [song for sublist in MIDS[0:(theme+1)] for song in sublist]
+        return random.choice(daily_mids)
 
 
-def find_high(theme=shows.bm_day_index, now_time=datetime.fromtimestamp(shows.virtual_time)):
-    print "bm_day_index in sounds: " + str(shows.bm_day_index)
-    if SET_THEME >= 0:
-        theme = SET_THEME
-    if time(6, 25) < now_time.time() < time(19, 25):
+def find_high(theme=shows.get_bm_index(), now_time=datetime.fromtimestamp(shows.virtual_time)):
+    theme = shows.get_bm_index()
+    print "bm_day_index in sounds: " + str(theme)
+    if shows.get_show_mode() == shows.DAY:
         return random.choice(HIGHS[theme])
-    if theme == 7:
-        return random.choice(HIGHS[theme])
-    daily_highs = [song for sublist in HIGHS[0:(theme+1)] for song in sublist]
-    return random.choice(daily_highs)
+    else:
+        daily_highs = [song for sublist in HIGHS[0:(theme+1)] for song in sublist]
+        return random.choice(daily_highs)
 
 

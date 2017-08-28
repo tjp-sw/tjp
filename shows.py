@@ -63,6 +63,9 @@ SPARKLE_MAIN_ANIMATION_SWITCH_LAG = 0  # 6
 SPARKLE_PARAMETER_SWTICH_LAG = 0  # 1
 PALETTE_LAG = 0  # 7
 
+SUNRISE_ANIMATION_NUM = 192
+SUNSET_ANIMATION_NUM = 193
+
 BACKGROUND_INDEX = 0
 MIDLAYER_INDEX = 8
 SPARKLE_INDEX = 17
@@ -233,6 +236,10 @@ bm_day_index = -1
 virtual_time = -1.0
 IDEAL_MEDITATION_SECONDS = 20 * 60
 
+
+def get_bm_index():
+    global bm_day_index
+    return bm_day_index
 
 def set_show_mode(mode):
     global show_mode
@@ -599,8 +606,11 @@ def meditaiton_animations(ignored=True):
         if DEBUG:
             print "START doing MEDITAITON ANIMATIONS... zen out, okay?"
 
-        show_parameters[SEVEN_PAL_BEAT_PARAM_START] = randint(NUM_7_COLOR_MEDITATION_ANIMATIONS_START,
-                                                              NUM_7_COLOR_MEDITATION_ANIMATIONS_END)
+        if get_show_mode() == SUNRISE:
+            show_parameters[SEVEN_PAL_BEAT_PARAM_START] = SUNRISE_ANIMATION_NUM #constasnt for sunrise
+        else:
+            show_parameters[SEVEN_PAL_BEAT_PARAM_START] = SUNSET_ANIMATION_NUM #constant for sunset
+
         show_parameters[SEVEN_PAL_BEAT_PARAM_END - 1] = constrained_random_parameter(SEVEN_PAL_BEAT_PARAM_END - 1)
         show_parameters[SEVEN_PAL_BEAT_PARAM_END] = randint(NUM_PALETTE_CHANGE_STYLES - 2,
                                                             NUM_PALETTE_CHANGE_STYLES)  # want transitions to be especially gradual
