@@ -5,6 +5,8 @@ from shows import *
 from beats import *
 import music
 
+internal_show_init = True
+
 mega_to_node_map = {
     1: 4,
     2: 2,
