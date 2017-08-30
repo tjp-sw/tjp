@@ -63,8 +63,8 @@ def insert_audio_data(audioInfoList):
     global files
     files = get_collection()
 
-    res = files.delete_many({})
-    print res.deleted_count
+    #res = files.delete_many({})
+    #print res.deleted_count
     for audioInfo in audioInfoList:
         to_mongo(audioInfo)
 
@@ -78,7 +78,7 @@ def to_mongo(audioInfo):
     # print ec
     try:
         files.insert({"_id": audioInfo.file_index, "AudioFileInfo": ec})
-    except DuplicateKeyError:
+    except:
         print "duplicate key... audio files aren't uniquely named: ", sys.exc_value
 
 def grab_audio_info(colleciton, file_num):
@@ -86,10 +86,10 @@ def grab_audio_info(colleciton, file_num):
     try:
         audioInfo = decode_custom(files.find_one({"_id": file_num})["AudioFileInfo"])
         return audioInfo
-    except ServerSelectionTimeoutError:
-        print 'mongo database:', sys.exc_value
     except TypeError:
         print "Invalid audio file number " + file_num + "... something went pretty wrong!"
+    except:
+        print 'mongo database:', sys.exc_value
 
 
 #infoList = parser.parseProcessedAudioData()

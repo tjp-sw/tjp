@@ -11,7 +11,7 @@ mega_to_node_map = {
     3: 1,
     4: 0,
     5: 5,
-    6: 6,
+    6: 1,
     7: 3,
     }
 
@@ -304,7 +304,7 @@ while running:
         if audio_msg is not None:
             print repr(audio_msg)
             do_send(None, audio_msg)	# always send to all nodes
-            print repr(audio_msg)
+            #print repr(audio_msg)
             # meditation = mega.meditation
 
         #pushing animation parameters across nodes

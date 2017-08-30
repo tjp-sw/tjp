@@ -21,10 +21,10 @@ DAY5_MID = range(501, 587)
 DAY5_HIGH = range(1500, 1512)
 DAY6_LOW = range(2600, 2610)
 DAY6_MID = range(600, 649)
-DAY6_HIGH = range(1600, 1516)
-DAY7_LOW = [20]
-DAY7_MID = [20]
-DAY7_HIGH = [20]
+DAY6_HIGH = range(1600, 1616)
+DAY7_LOW = range(2700, 2704)
+DAY7_MID = range(1700,1774)
+DAY7_HIGH = range(700,714)
 MIDS = [DAY1_MID, DAY2_MID, DAY3_MID, DAY4_MID, DAY5_MID, DAY6_MID, DAY7_MID]
 HIGHS = [DAY1_HIGH, DAY2_HIGH, DAY3_HIGH, DAY4_HIGH, DAY5_HIGH, DAY6_HIGH, DAY7_HIGH]
 LOWS = [DAY1_LOW, DAY2_LOW, DAY3_LOW, DAY4_LOW, DAY5_LOW, DAY6_LOW, DAY7_LOW]
@@ -50,7 +50,7 @@ MEDITATIONS_TIMES = ["06:19 28/8/17",  # Monday
                      "19:24 03/9/17" ]
 MEDITATIONS = dict(itertools.izip([datetime.strptime(m, "%H:%M %d/%m/%y") for m in MEDITATIONS_TIMES], MEDITATIONS_SOUNDS))
 
-SET_THEME = 0
+SET_THEME = -1
 
 #If it is time to play a meditation will return the number of the correct meditation. Otherwise returns None.
 def play_meditation(this_time=datetime.now()):
@@ -74,7 +74,7 @@ def find_mid(theme=datetime.today().weekday()):
     if SET_THEME >= 0:
         theme = SET_THEME
     elif shows.show_mode == shows.NIGHT:
-        daily_mids = [song for sublist in MIDS[0:theme] for song in sublist]
+        daily_mids = [song for sublist in MIDS[0:(theme+1)] for song in sublist]
         return random.choice(daily_mids)
     return random.choice(MIDS[theme])
 
@@ -83,6 +83,6 @@ def find_high(theme=datetime.today().weekday()):
     if SET_THEME >= 0:
         theme = SET_THEME
     elif shows.show_mode == shows.NIGHT:
-        daily_highs = [song for sublist in HIGHS[0:theme] for song in sublist]
+        daily_highs = [song for sublist in HIGHS[0:(theme+1)] for song in sublist]
         return random.choice(daily_highs)
     return random.choice(HIGHS[theme])

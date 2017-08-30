@@ -15,8 +15,8 @@ from audio_event_queue import SortedDLL
 
 NUM_7_COLOR_ANIMATIONS = 7
 NUM_BASE_ANIMATIONS = 3
-NUM_MID_ANIMATIONS = 13
-NUM_SPARKLE_ANIMATIONS = 10
+NUM_MID_ANIMATIONS = 8
+NUM_SPARKLE_ANIMATIONS = 6
 
 NUM_BEAT_EFFECTS = 8
 NUM_PARAMETERS = 41
@@ -40,7 +40,7 @@ SPARKLE_TIME_LIMIT = 37
 SPARKLE_PARAMETER_TIME_LIMIT =  13
 PALETTE_TIME_LIMIT = 7
 # For Lee testing
-# PALETTE_TIME_LIMIT = 5
+PALETTE_TIME_LIMIT = 5
 
 # constants to protect against too frequent param changes during dynamic show
 BASE_MAIN_ANIMATION_SWITCH_LAG = 0#15
@@ -405,6 +405,7 @@ def edm_program(init=False):
             constrain_show()
             choose_new_playa_palette()  # start with day 1 color palette
 
+
         print_parameters()
         return
 
@@ -465,9 +466,9 @@ def edm_program(init=False):
     if palette_time - palette_start_time > PALETTE_TIME_LIMIT:
         palette_start_time = palette_time
 
-        choose_random_colors_from_edm_palette()
+        #choose_random_colors_from_edm_palette()
         # For Lee testing: uncomment this to stick with day 1 colors
-        #choose_new_playa_palette()
+        choose_new_playa_palette()
 
 # fixme: ART_CAR mode will be set by Jeff's code
 #    if art_car_detected for first ART_CAR_HELLO_DURATION seconds:
@@ -482,7 +483,7 @@ def edm_program(init=False):
 
 TEST_CYCLE_MINUTES = 3	# rush through the entire week in this number of minutes
 # For Lee testing: uncomment this
-#TEST_CYCLE_MINUTES = 15
+TEST_CYCLE_MINUTES = 15
 NUM_DAYS = int((BURNING_MAN_END - BURNING_MAN_START) / 86400 + 0.5)
 
 """ Unused right now. playa_mode is set in Music.tick()
