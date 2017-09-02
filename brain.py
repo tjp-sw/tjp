@@ -459,8 +459,8 @@ while running:
         running = False
 
     except:
-        if BRAIN_DEBUG:
-            raise			# uncomment for debugging
+        if len(sys.argv) <= 1:
+            raise
             # print sys.exc_value
         do_disconnect(None, None)	# TODO: be more selective
 
