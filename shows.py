@@ -469,6 +469,7 @@ def update_playa_palette(sound_day, frequency):
             print "     after update, next high index is", next_high_index
 
     elif DEBUG:
+        changed = None
         print "frequency out of range"
 
     if DEBUG:
