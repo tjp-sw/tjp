@@ -130,6 +130,8 @@ class Music:
         self.low_wait = random.randint(3, 6)
         self.mid_wait = random.randint(5, 25)
         self.high_wait = random.randint(20, 35)
+        self.played_static = datetime.min
+        self.static_wait = 3 # ~14 second static track duration
 
 
     def mute(self, node=0):
@@ -139,8 +141,9 @@ class Music:
         virtual_date_time = datetime.fromtimestamp(shows.virtual_time)
         now_time = virtual_date_time  # datetime.now()
 
-        #if DEBUG:
+        # if DEBUG:
         #    print "^^^ in music.py tick date is: " +str(now_time)
+        #    print "in music.py, day is " + str(shows.get_bm_index())
         
         if DEBUG > 1:
             print now_time
@@ -166,39 +169,35 @@ class Music:
                 print "silent"
             return None
         """
+
+        # static logic prior to bm monday
+        # needs to be up here for meditation hack (testing hack) to work!
+        no_drone = False # hack for avoiding a drone while trying todo static
+        if bm_day < 0:
+            no_drone = True
+            if self.played_static < now_time - timedelta(seconds=self.static_wait):
+                print "trying to play static"
+                self.played_static = now_time
+                return play([0, sounds.play_static()])
+        else:
+            no_drone = False
+
         # Meditation Logic
         this_meditation = sounds.play_meditation(now_time)
         if this_meditation is None:
             if DEBUG > 1:
                 print "no meditation"
             Music.meditation = False
-            if time(6, 25) <= now_time.time() <= time(19, 25):
-                if DEBUG > 1:
-                    print "in music.py, setting day on", shows.bm_day_index
-                    #shows.set_show_mode(shows.DAY)
-            else:
-                # shows.set_show_mode(shows.NIGHT)
-                if DEBUG > 1:
-                    print "in music.py, setting night on", shows.bm_day_index
         else:
+            Music.meditation = True
             if DEBUG > 1:
                 print "setting meditation status"
-            Music.meditation = True
-            if this_meditation % 2:  # odd
-                print "in music.py, setting sunrise on", shows.bm_day_index
-                #shows.set_show_mode(shows.SUNRISE)
-            else:  # even
-                print "in music.py, setting sunset on", shows.bm_day_index
-                shows.set_show_mode(shows.SUNSET)
-            if now_time.weekday() == 1:
+            if shows.get_bm_index() == 1:
                 return play([0, this_meditation, 3999])
             return play([0, this_meditation])
-
+        
         # Drone Logic
-        if bm_day < 0:
-            print "trying to play static"
-            #return play([0, sounds.play_static()])
-        elif self.need_drone:
+        if self.need_drone and no_drone == False:
             print "Setting Drone"
             self.need_drone = False
             return "a0;6;" + str(bm_day) + ";"

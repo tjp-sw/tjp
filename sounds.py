@@ -36,6 +36,9 @@ ALL_HIGHS = [song for sublist in HIGHS for song in sublist]
 MEDITATIONS_SOUNDS = range(4001,4015)
 MEDITATIONS_HACK = 2515
 
+MEDS = {}
+
+
 MEDITATIONS_TIMES = ["06:19 28/8/17",  # Monday
                      "19:34 28/8/17",
                      "06:21 29/8/17",  # Tuesday
@@ -50,56 +53,57 @@ MEDITATIONS_TIMES = ["06:19 28/8/17",  # Monday
                      "19:26 02/9/17",
                      "06:26 03/9/17",  # Sunday
                      "19:24 03/9/17" ]
-MEDITATIONS = dict(itertools.izip([datetime.strptime(m, "%H:%M %d/%m/%y") for m in MEDITATIONS_TIMES], MEDITATIONS_SOUNDS))
 
-SET_THEME = -1
+for i in range(0,len(MEDITATIONS_TIMES)):
+    MEDS[i] = 4001 + i
+
+MED_NUMS =  range(0,len(MEDITATIONS_TIMES))
+#MEDITATIONS = dict(itertools.izip([datetime.strptime(m, "%H:%M %d/%m/%y") for m in MEDITATIONS_TIMES], MEDITATIONS_SOUNDS))
+
 
 def play_static():
     return STATIC
 
 #If it is time to play a meditation will return the number of the correct meditation. Otherwise returns None.
-def play_meditation(this_time=datetime.fromtimestamp(shows.virtual_time)):
-    print "time speed factor for animations " + str(shows.time_speed_factor)
+def play_meditation(day=datetime.fromtimestamp(shows.virtual_time)):
+    #print "time speed factor for animations " + str(shows.time_speed_factor)
+    day = shows.get_bm_index()
+    # print "day index in sounds med: " + str(day)
     if shows.time_speed_factor == 1:
-        approx_time= datetime.time(this_time)
-        if (approx_time < time(6, 18) or approx_time > time(6, 31)) and \
-           (approx_time < time(19, 33) or approx_time > time(19, 38)):
+        if day != -1:
+            show_mode = shows.get_show_mode()
+            if show_mode == shows.SUNRISE:
+                return MEDS[day]
+            elif show_mode == shows.SUNSET:
+                return MEDS[day+1]
+            else:
+                return None
+        else:
             return None
-        for meditation in MEDITATIONS.iterkeys():
-            if this_time >= meditation and \
-               this_time <= meditation + timedelta(minutes=5):
-                return MEDITATIONS[meditation]
-        return None
     else:
         return MEDITATIONS_HACK
 
-def find_low(theme=shows.bm_day_index, now_time=datetime.fromtimestamp(shows.virtual_time)):
-    if SET_THEME >= 0:
-        theme = SET_THEME
+def find_low(theme=shows.get_bm_index(), now_time=datetime.fromtimestamp(shows.virtual_time)):
     return random.choice(LOWS[theme])
 
 
-def find_mid(theme=shows.bm_day_index, now_time=datetime.fromtimestamp(shows.virtual_time)):
-    print "bm_day_index in sounds: " + str(shows.bm_day_index)
-    if SET_THEME >= 0:
-        theme = SET_THEME
-    if time(6, 25) < now_time.time() < time(19, 25):
+def find_mid(theme=shows.get_bm_index(), now_time=shows.virtual_time):
+    theme = shows.get_bm_index()
+    print "bm_day_index in sounds: " + str(theme)
+    if shows.get_show_mode() == shows.DAY:
         return random.choice(MIDS[theme])
-    if theme == 7:
-        return random.choice(MIDS[theme])
-    daily_mids = [song for sublist in MIDS[0:(theme+1)] for song in sublist]
-    return random.choice(daily_mids)
+    else:
+        daily_mids = [song for sublist in MIDS[0:(theme+1)] for song in sublist]
+        return random.choice(daily_mids)
 
 
-def find_high(theme=shows.bm_day_index, now_time=datetime.fromtimestamp(shows.virtual_time)):
-    print "bm_day_index in sounds: " + str(shows.bm_day_index)
-    if SET_THEME >= 0:
-        theme = SET_THEME
-    if time(6, 25) < now_time.time() < time(19, 25):
+def find_high(theme=shows.get_bm_index(), now_time=datetime.fromtimestamp(shows.virtual_time)):
+    theme = shows.get_bm_index()
+    print "bm_day_index in sounds: " + str(theme)
+    if shows.get_show_mode() == shows.DAY:
         return random.choice(HIGHS[theme])
-    if theme == 7:
-        return random.choice(HIGHS[theme])
-    daily_highs = [song for sublist in HIGHS[0:(theme+1)] for song in sublist]
-    return random.choice(daily_highs)
+    else:
+        daily_highs = [song for sublist in HIGHS[0:(theme+1)] for song in sublist]
+        return random.choice(daily_highs)
 
 
