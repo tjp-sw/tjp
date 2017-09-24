@@ -217,7 +217,7 @@ sunrise_time = [time.mktime(time.strptime('2017-Aug-27 06:20', '%Y-%b-%d %H:%M')
                 time.mktime(time.strptime('2017-Sep-3 06:27', '%Y-%b-%d %H:%M')),
                 time.mktime(time.strptime('2017-Sep-4 06:28', '%Y-%b-%d %H:%M'))]
 sunset_time = [time.mktime(time.strptime('2017-Aug-27 19:36', '%Y-%b-%d %H:%M')),
-               time.mktime(time.strptime('2017-Aug-28 19:00', '%Y-%b-%d %H:%M')),
+               time.mktime(time.strptime('2017-Aug-28 19:35', '%Y-%b-%d %H:%M')),
                time.mktime(time.strptime('2017-Aug-29 19:33', '%Y-%b-%d %H:%M')),
                time.mktime(time.strptime('2017-Aug-30 19:31', '%Y-%b-%d %H:%M')),
                time.mktime(time.strptime('2017-Aug-31 19:30', '%Y-%b-%d %H:%M')),
@@ -353,7 +353,7 @@ def sp_lower_bound(sparkle_step):
 def choose_new_playa_palette():
     global SUNRISE, DAY, SUNSET, NIGHT, virtual_time, show_mode, bm_day_index
 
-    if (show_mode == SUNRISE) or (show_mode == DAY):  # use only day's chakra colors
+    if (show_mode == SUNRISE) or (show_mode == DAY) or (bm_day_index == 6):  # use only day's chakra colors
         bg_order = sample(
             range(NUM_BASE_COLORS_PER_FAMILY * bm_day_index, NUM_BASE_COLORS_PER_FAMILY * (bm_day_index + 1)), 2)
         mid_order = sample(
@@ -445,7 +445,10 @@ def update_playa_palette(sound_day, frequency):
     elif (frequency == MID):
         new_mid = randint(0, NUM_MID_COLORS_PER_FAMILY - 1)
         print "     updating mid index", next_mid_index, "to mid color", new_mid
-        show_colors[next_mid_index] = playa_palette[sound_day][1][new_mid]
+        if bm_day_index == 6:
+            show_colors[next_mid_index] = playa_palette[bm_day_index][1][new_mid]
+        else:
+            show_colors[next_mid_index] = playa_palette[sound_day][1][new_mid]
         if DEBUG:
             changed = next_mid_index
         next_mid_index = ((next_mid_index - 2) + 1) % 3 + 2
@@ -455,7 +458,10 @@ def update_playa_palette(sound_day, frequency):
     elif (frequency == HIGH):
         new_high = randint(0, NUM_SPARKLE_COLORS_PER_FAMILY - 1)
         print "     updating high index", next_high_index, "to high color", new_high
-        show_colors[next_high_index] = playa_palette[sound_day][2][new_high]
+        if bm_day_index == 6:
+            show_colors[next_high_index] = playa_palette[bm_day_index][2][new_high]
+        else:
+            show_colors[next_high_index] = playa_palette[sound_day][2][new_high]
         if DEBUG:
             changed = next_high_index
         next_high_index = ((next_high_index - 5) + 1) % 2 + 5
@@ -463,6 +469,7 @@ def update_playa_palette(sound_day, frequency):
             print "     after update, next high index is", next_high_index
 
     elif DEBUG:
+        changed = None
         print "frequency out of range"
 
     if DEBUG:

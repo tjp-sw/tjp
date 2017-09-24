@@ -111,7 +111,7 @@ uint8_t art_car = NO_ART_CAR;                                           //
 #define TORUS_KNOT 9                                          //
 #define TORUS_LINK 10                                         //
 #define PANIC 11                                              //
-#define NUM_SPARKLE_ANIMATIONS 11  // Equal to last animation //
+#define NUM_SPARKLE_ANIMATIONS 8  // Equal to last animation //
 #define STATIC 254  // only used on Sunday before BM start    //
                                                               //
 // EDM animations (in the base layer, starting at 128)        //
