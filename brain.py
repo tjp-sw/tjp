@@ -154,6 +154,7 @@ control_messages = {
     'led':		(do_simple, 'program', None),
     'list':		(do_list, None, None),
     'node':		(do_simple, None, None),
+    'og':		(do_auto, None, old_globe_program),
     'pause':		(do_auto, None, None),
     'playa':		(do_auto, None, playa_program),
     'quit':		(do_quit, None, None),

@@ -794,6 +794,38 @@ def playa_program(init=False):
     do_internal_sound_animations()
 
 
+# baseline: Burning Man Saturday night (bm_day_index == 5, show_mode == NIGHT)
+# target: Friday Day for 2.5 days, then Saturday night
+def old_globe_program(init=False):
+    global real_start_time, testing_meditation_seconds, time_speed_factor, show_mode, virtual_time, bm_day_index
+
+    real_time = time.time()
+    if init:  # set up to run test program
+        if real_start_time < 0:
+            time_speed_factor = 1
+            #time_speed_factor = float(NUM_DAYS * 60 * 24) / TEST_CYCLE_MINUTES	# 60*24 == minutes per day
+            #testing_meditation_seconds = int(IDEAL_MEDITATION_SECONDS * time_speed_factor)  # / 233)	# 233 produces about 1/5 of the day with a 3 minute test cycle
+            # real_start_time = real_time
+            # real_start_time = BURNING_MAN_START - time.time()
+            real_start_time = time.time()
+            real_time = time.time()
+            do_internal_sound_animations(init)
+            show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0	# no EDM animations
+            show_mode = NIGHT
+        return
+    virtual_time = real_time
+
+    if DEBUG:
+        print ' '
+        print '---> Old Globe time advanced to', time.ctime(virtual_time)
+
+    bm_day_index = 5
+    determine_show_mode()
+
+    # do intenral sound animations after time progresses for palette purposes
+    do_internal_sound_animations()
+
+
 def do_date(ignored, when):
     global bm_day_index, real_start_time, virtual_time
     try:
