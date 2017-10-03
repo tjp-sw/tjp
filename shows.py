@@ -225,6 +225,7 @@ sunset_time = [time.mktime(time.strptime('2017-Aug-27 19:36', '%Y-%b-%d %H:%M'))
                time.mktime(time.strptime('2017-Sep-2 19:27', '%Y-%b-%d %H:%M')),
                time.mktime(time.strptime('2017-Sep-3 19:25', '%Y-%b-%d %H:%M')),
                time.mktime(time.strptime('2017-Sep-4 19:23', '%Y-%b-%d %H:%M'))]
+OLD_GLOBE_TRANSITION = time.mktime(time.strptime('2017-Oct-6 12:00', '%Y-%b-%d %H:%M'))
 
 #  Show modes
 SUNRISE = 0
@@ -794,8 +795,7 @@ def playa_program(init=False):
     do_internal_sound_animations()
 
 
-# baseline: Burning Man Saturday night (bm_day_index == 5, show_mode == NIGHT)
-# target: Friday Day for 2.5 days, then Saturday night
+# BM Friday Day before the transition time, then BM Saturday night
 def old_globe_program(init=False):
     global real_start_time, testing_meditation_seconds, time_speed_factor, show_mode, virtual_time, bm_day_index
 
@@ -811,16 +811,22 @@ def old_globe_program(init=False):
             real_time = time.time()
             do_internal_sound_animations(init)
             show_parameters[SEVEN_PAL_BEAT_PARAM_START] = 0	# no EDM animations
-            show_mode = NIGHT
-        return
+
     virtual_time = real_time
 
     if DEBUG:
         print ' '
         print '---> Old Globe time advanced to', time.ctime(virtual_time)
 
-    bm_day_index = 5
-    determine_show_mode()
+    show_mode_before = show_mode
+    if virtual_time < OLD_GLOBE_TRANSITION:
+	bm_day_index = 4
+        show_mode = DAY
+    else:
+	bm_day_index = 5
+        show_mode = NIGHT
+    if show_mode_before != show_mode:
+        choose_new_playa_palette()
 
     # do intenral sound animations after time progresses for palette purposes
     do_internal_sound_animations()
