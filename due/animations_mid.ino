@@ -86,6 +86,10 @@ inline void snake(uint8_t min_ring, uint8_t max_ring) {
 #define MAX_WIND_COOLING 70 // Largest extra cooling, at center of the wind
 #define MAX_WIND_RANGE 6    // Wind cooling reaches 6 rings in either direction from center
 inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, uint8_t max_ring) {
+  fire(palette_type, draw_inner_half, min_ring, max_ring, 0);
+}
+
+inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, uint8_t max_ring, uint8_t extra_cooling) {
   uint8_t cooling = palette_type == FIRE_PALETTE_DISABLED ? 18 : 10;//scale_param(MID_BLACK_THICKNESS, 15, 15);
   if(MID_INTRA_RING_MOTION == ALTERNATE) { cooling += 6; }
   uint8_t sparking_chance = 180;//scale_param(MID_COLOR_THICKNESS, 130, 130);
@@ -118,23 +122,23 @@ inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, u
     }
     
     for(uint16_t pixel = 0; pixel < HALF_RING; pixel+=4) {
-      mid_layer[ring][pixel] = qsub8(mid_layer[ring][pixel], random8(0, cooling+wind_cooling));
+      mid_layer[ring][pixel] = qsub8(mid_layer[ring][pixel], random8(0, cooling+wind_cooling+extra_cooling));
       if(draw_inner_half) {
-        mid_layer[ring][LEDS_PER_RING - 1 - pixel] = qsub8(mid_layer[ring][LEDS_PER_RING - 1 - pixel],  random8(0, cooling+wind_cooling));
+        mid_layer[ring][LEDS_PER_RING - 1 - pixel] = qsub8(mid_layer[ring][LEDS_PER_RING - 1 - pixel],  random8(0, cooling+wind_cooling+extra_cooling));
       }
     }
 
     // Cool down cells that otherwise are never cooled and don't inherit heat from below
     if(MID_INTRA_RING_MOTION != DOWN) {
-      mid_layer[ring][LEDS_PER_RING - 2] = qsub8(mid_layer[ring][LEDS_PER_RING-2], random8(0, cooling+wind_cooling));
+      mid_layer[ring][LEDS_PER_RING - 2] = qsub8(mid_layer[ring][LEDS_PER_RING-2], random8(0, cooling+wind_cooling+extra_cooling));
       mid_layer[ring][1] = qsub8(mid_layer[ring][1], random8(0, cooling+wind_cooling));
     }
     
     if(MID_INTRA_RING_MOTION != UP) {
-      mid_layer[ring][HALF_RING - 1] = qsub8(mid_layer[ring][HALF_RING - 1], random8(0, cooling+wind_cooling));
-      mid_layer[ring][HALF_RING - 2] = qsub8(mid_layer[ring][HALF_RING - 2], random8(0, cooling+wind_cooling));
-      mid_layer[ring][HALF_RING] = qsub8(mid_layer[ring][HALF_RING], random8(0, cooling+wind_cooling));
-      mid_layer[ring][HALF_RING + 1] = qsub8(mid_layer[ring][HALF_RING + 1], random8(0, cooling+wind_cooling));
+      mid_layer[ring][HALF_RING - 1] = qsub8(mid_layer[ring][HALF_RING - 1], random8(0, cooling+wind_cooling+extra_cooling));
+      mid_layer[ring][HALF_RING - 2] = qsub8(mid_layer[ring][HALF_RING - 2], random8(0, cooling+wind_cooling+extra_cooling));
+      mid_layer[ring][HALF_RING] = qsub8(mid_layer[ring][HALF_RING], random8(0, cooling+wind_cooling+extra_cooling));
+      mid_layer[ring][HALF_RING + 1] = qsub8(mid_layer[ring][HALF_RING + 1], random8(0, cooling+wind_cooling+extra_cooling));
     }
   }
 
@@ -284,10 +288,14 @@ inline void mid_scrolling_dim2(uint8_t min_ring, uint8_t max_ring) {
   for(uint8_t ring = min_ring; ring < max_ring; ring++) {
     if(MID_INTRA_RING_MOTION == ALTERNATE) { alternating_multiplier = ring % 2 == 0 ? -1 : 1; }
     int16_t motion_offset = ring*ring_offset + alternating_multiplier * intra_speed * mid_count / THROTTLE;
+  //Serial.println("extended count = " + String(extended_led_count));
+  //Serial.println("motion offset = " + String(motion_offset));
     while(motion_offset < 0) { motion_offset += extended_led_count; }
-
+  //Serial.println("end");
     for(uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
+      //Serial.println(pixel);
       uint16_t idx = (pixel + motion_offset) % extended_led_count;
+
       if(idx >= LEDS_PER_RING) { continue; }
 
       // Color is dependent on the the LED position, and is a gradient from one hue to the next
@@ -308,7 +316,7 @@ inline void mid_scrolling_dim2(uint8_t min_ring, uint8_t max_ring) {
         mid_layer[ring][idx] = TRANSPARENT;
       }
       else {
-        uint8_t dim_amount = MAX_MID_DIMMING - (pattern_idx - color_thickness - black_thickness - MAX_MID_DIMMING);\
+        uint8_t dim_amount = MAX_MID_DIMMING - (pattern_idx - color_thickness - black_thickness - MAX_MID_DIMMING);
         mid_layer[ring][idx] = get_mid_color(color_index, next_color, blend_amount, dim_amount);
       }
     }
@@ -333,7 +341,9 @@ inline void mid_scrolling_dim3(uint8_t min_ring, uint8_t max_ring) {
     int16_t motion_offset = ring*ring_offset + alternating_multiplier * intra_speed * mid_count / THROTTLE;
     while(motion_offset < 0) { motion_offset += extended_led_count; }
 
+    //Serial.println(extended_led_count);
     for(uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
+      //Serial.println(pixel);
       uint16_t idx = (pixel + motion_offset) % extended_led_count;
       if(idx >= LEDS_PER_RING) { continue; }
 
@@ -377,7 +387,9 @@ inline void mid_scrolling_dim4(uint8_t min_ring, uint8_t max_ring) {
     int16_t motion_offset = ring*ring_offset + alternating_multiplier * intra_speed * mid_count / THROTTLE;
     while(motion_offset < 0) { motion_offset += extended_led_count; }
 
+    //Serial.println(extended_led_count);
     for(uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
+      //Serial.println(pixel);
       uint16_t idx = (pixel + motion_offset) % extended_led_count;
       if(idx >= LEDS_PER_RING) { continue; }
 
@@ -423,7 +435,9 @@ inline void mid_scrolling_dim5(uint8_t min_ring, uint8_t max_ring) {
 
     int16_t color_motion_offset = -3 * alternating_multiplier * intra_speed * mid_count / THROTTLE;
     while(color_motion_offset < 0) { color_motion_offset += extended_led_count; }
+    //Serial.println(extended_led_count);
     for(uint16_t pixel = 0; pixel < extended_led_count; pixel++) {
+      //Serial.println(pixel);
       uint16_t idx = (pixel + motion_offset) % extended_led_count;
       if(idx >= LEDS_PER_RING) { continue; }
 
