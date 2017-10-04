@@ -16,6 +16,18 @@ inline void sparkle_glitter(uint8_t num_colors, bool generate_all_nodes, uint8_t
   uint8_t range = scale_param(SPARKLE_RANGE, 40, 204);
 
   clear_sparkle_layer();
+
+  if(SPARKLE_ANIMATION == STATIC || EDM_ANIMATION == STATIC) {
+    // STATIC
+    clear_mid_layer();
+    leds_all = CRGB(8, 9, 8);
+    color_thickness = 1;
+    portion = 4;
+    min_dim = 105;
+    max_dim = 126;
+    range = 199;
+    num_colors = 1;
+  }
   
   uint8_t lower_limit = HALF_RING-range;
   uint16_t upper_limit = HALF_RING + range - color_thickness;
@@ -527,7 +539,7 @@ inline void sparkle_circle_trails() {
 
 inline void sparkle_torus_knot() {
   int num_extended_pixels = 72 * 7;
-  uint8_t knot_width = scale_param(SPARKLE_COLOR_THICKNESS, 1, 10);
+  uint8_t knot_width = scale_param(SPARKLE_COLOR_THICKNESS, 4, 10);
   uint8_t num_stripes_index = scale_param(SPARKLE_PORTION, 0, 9);
   uint8_t intra_throttle = scale_param(SPARKLE_INTRA_RING_SPEED, 10, 20);
   uint8_t inter_throttle = scale_param(SPARKLE_INTER_RING_SPEED, 10, 20);
@@ -633,10 +645,10 @@ inline void sparkle_torus_link() {
   float pixels_2_rotated_in_decimal = num_segments_to_rotate_2 * 7.0 / segment_2_length;
 
   
-  Serial.println("sparkle count " + String(sparkle_count));
-  Serial.println("num stripes " + String(num_1_stripes)  + " and "+  String(num_2_stripes));
-  Serial.println("num segments to rotate " + String(num_segments_to_rotate_1)  + " and "+  String(num_segments_to_rotate_2));
-  Serial.println("widths " + String(knot_1_width) + " and "+ String(knot_2_width));
+  //Serial.println("sparkle count " + String(sparkle_count));
+  //Serial.println("num stripes " + String(num_1_stripes)  + " and "+  String(num_2_stripes));
+  //Serial.println("num segments to rotate " + String(num_segments_to_rotate_1)  + " and "+  String(num_segments_to_rotate_2));
+  //Serial.println("widths " + String(knot_1_width) + " and "+ String(knot_2_width));
 
   clear_sparkle_layer();
   

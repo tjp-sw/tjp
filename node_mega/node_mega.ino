@@ -6,7 +6,7 @@
 unsigned long long epoch_msec;
 uint8_t node_number = 255;
 bool do_soft_reset = false;
-//unsigned long last_channel_message = 0;
+unsigned long last_channel_message = 0;
 
 void setup()
 {
@@ -30,7 +30,7 @@ void loop()
   //check_for_failure();
   if (do_soft_reset) {
     do_soft_reset = false;
-    setup();
+    reset_due();
   }
 }
 
@@ -44,14 +44,18 @@ void reset_due() {
   delay(500);
 }
 
-/*
+
 void check_for_failure() {
   unsigned long curMS = millis();
-  if(node_number < 6 && (curMS - last_channel_message > 10000) && (curMS > 30000)) {
-    asm volatile ("  jmp 0"); // Reset mega and due if communication lost for 10 sec (after running for at least 30 and connecting)
+  if((curMS - last_channel_message > 40000) && (curMS > 60000)) {
+    Serial.println(curMS);
+    Serial.println(last_channel_message);
+    delay(1000 * random(10));
+    reset_due();
+    //asm volatile ("  jmp 0"); // Reset mega and due if communication lost for 40 sec (after running for at least 60 and connecting)
   }
-  else if(curMS > 45000 && node_number >= 6) {
+  /*else if(curMS > 45000 && node_number >= 6) {
     asm volatile ("  jmp 0"); // Reset mega and due if no node assignment after 45 sec
-  }
+  }*/
 }
-*/
+

@@ -3,7 +3,7 @@
 //------------------------ Config -----------------------------------//
 // Due controlled versus pi controlled animation choices             //
 #define PI_CONTROLLED                                              //
-#define AUDIO_PACKET_THROTTLE 100 // min ms between sending audio packets
+#define AUDIO_PACKET_THROTTLE 900 // min ms between sending audio packets
 #ifndef PI_CONTROLLED                                                //
   #define TESTING_NODE_NUMBER 0   // To test diff nodes              //
   //#define CYCLE           // Cycles through shows in order         //
@@ -14,7 +14,7 @@
 #include "globals.h"        // Leave this here, for #define order    //
                                                                      //
 // Testing tools                                                     //
-#define DEBUG                     // Enables serial output         //
+//#define DEBUG                     // Enables serial output         //
 #ifdef DEBUG                                                         //
   //#define DEBUG_TIMING            // Times each step in loop()     //
   //#define DEBUG_SPECTRUM_SHIELD     // Output all read values        //
@@ -43,8 +43,8 @@ inline void manually_set_animation_params() {             //
   // Use NONE to signify a layer that is off temporarily  //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   BASE_ANIMATION = NONE;                                  //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK, LEE_PICK_HSV
   MID_ANIMATION = NONE;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  SPARKLE_ANIMATION = NONE;                               //
-  EDM_ANIMATION = EQ_PULSE;                            //
+  SPARKLE_ANIMATION = STATIC;                               //
+  EDM_ANIMATION = NONE;                            //
                                                           //
   BASE_COLOR_THICKNESS = 255;                             //
   BASE_BLACK_THICKNESS = 255;                             //
@@ -102,6 +102,7 @@ void setup() {
   #endif
 
   // Setup Serial port
+  Serial.begin(115200); // contingency
   #ifdef DEBUG
     Serial.begin(115200);
     Serial.println("Serial port initialized.");
@@ -239,7 +240,6 @@ void loop() {
     last_debug_time = now;
   #endif
 
-
   // Transition smoothly between animations
   transition_animations();
   #ifdef DEBUG_TIMING
@@ -247,7 +247,6 @@ void loop() {
     serial_val[5] = now - last_debug_time;
     last_debug_time = now;
   #endif
-
 
   if(EDM_ANIMATION == 0 || EDM_ANIMATION >= 128) {
     // Draw layers
@@ -257,7 +256,7 @@ void loop() {
       serial_val[6] = now - last_debug_time;
       last_debug_time = now;
     #endif
-  
+
     draw_current_mid(0, NUM_RINGS);
     #ifdef DEBUG_TIMING
       now = millis();
@@ -265,14 +264,12 @@ void loop() {
       last_debug_time = now;
     #endif
   
-  
     draw_current_sparkle(0, NUM_RINGS);
     #ifdef DEBUG_TIMING
       now = millis();
       serial_val[8] = now - last_debug_time;
       last_debug_time = now;
     #endif
-  
   
     // Overlay layers
     write_pixel_data();
@@ -282,7 +279,6 @@ void loop() {
       last_debug_time = now;
     #endif
   }
-
 
   // Overlay EDM layer
   draw_current_edm(0, NUM_RINGS);
@@ -305,7 +301,6 @@ void loop() {
       }
     }
   #endif
-
 
   // Write current node's LEDs
   if ((BEAT_EFFECT != JERKY_MOTION) || is_beat) { LEDS.show(); }
@@ -694,6 +689,7 @@ inline void draw_current_base(uint8_t min_ring, uint8_t max_ring) {
 }
 
 inline void draw_current_mid(uint8_t min_ring, uint8_t max_ring) {
+  //Serial.println("Current mid = " + String(MID_ANIMATION));
   switch(MID_ANIMATION) {
     case SNAKE:
       snake(min_ring, max_ring);
@@ -759,7 +755,12 @@ inline void draw_current_mid(uint8_t min_ring, uint8_t max_ring) {
 inline void draw_current_sparkle(uint8_t min_ring, uint8_t max_ring) {
   switch(SPARKLE_ANIMATION) {
     case STATIC:
+      SPARKLE_PORTION = 100;
+      SPARKLE_RANGE = 255;
+      SPARKLE_MIN_DIM = 255; // Start everything at minimum brightness
+      SPARKLE_MAX_DIM = 255;
       sparkle_glitter(1, false, min_ring, max_ring);
+      break;
       
     case GLITTER:
       sparkle_glitter(2, false, min_ring, max_ring);
@@ -875,11 +876,11 @@ inline void draw_current_edm(uint8_t min_ring, uint8_t max_ring) {
       break;
 
     case MEDITATION_SUNRISE:
-      bloom();
+      fire_chakra();
       break;
 
     case MEDITATION_SUNSET:
-      drip();
+      bloom();
       break;
 
     default:
@@ -994,13 +995,16 @@ inline void init_sparkle_animation(uint8_t min_ring, uint8_t max_ring) {
   switch(SPARKLE_ANIMATION) {
     case GLITTER:
     case RAIN:
-      // Don't clear sparkles when starting these animations
+      // Don't clear sparkles when starting these animat ions
       break;
 
     case STATIC:
-      SPARKLE_PORTION = 255;
+      SPARKLE_PORTION = 100;
+      SPARKLE_RANGE = 255;
       SPARKLE_MIN_DIM = 255; // Start everything at minimum brightness
       SPARKLE_MAX_DIM = 255;
+      SPARKLE_COLOR_THICKNESS = 1;
+      break;
 
     case WARP_SPEED:
       random16_set_seed(0); // Synchronize RNG on different nodes
@@ -1031,6 +1035,7 @@ inline void init_sparkle_animation(uint8_t min_ring, uint8_t max_ring) {
     case PANIC:
     case NONE:
       clear_sparkle_layer();
+      break;
 
     default:
       break;
@@ -1081,6 +1086,17 @@ inline void init_edm_animation() {
       if(node_number == ART_CAR_RING/RINGS_PER_NODE) { clear_mid_layer(); }
       break;
 
+    case MEDITATION_SUNSET:
+      leds_all = CRGB::Black;
+      break;
+
+    case MEDITATION_SUNRISE:
+      leds_all = CRGB::Black;
+      override_default_blending = true;
+      show_parameters[MID_INTRA_RING_MOTION_INDEX] = UP;
+      clear_mid_layer(); // Clear old pixels which are now "heat" values
+      break;
+    
     default:
       break;
   }
@@ -1130,6 +1146,10 @@ inline void cleanup_sparkle_animation(uint8_t animation_index) {
 
 inline void cleanup_edm_animation(uint8_t animation_index) {
   switch(animation_index) {
+    case MEDITATION_SUNRISE:
+      override_default_blending = false;
+      cleanup_fire();
+      break;
     default:
       break;
   }

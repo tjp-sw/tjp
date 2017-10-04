@@ -310,7 +310,7 @@ inline void process_commands(String& input) {
         break;
 
       case 'c': // Channel audio out data, 14 channels/bytes total
-        //last_channel_message = millis();
+        last_channel_message = millis();
         size += 1 + 2 * NUM_CHANNELS + sizeof (unsigned long long);
         if (input.length() >= size) {
           //store_audio_packet((uint8_t *)input.c_str());
@@ -327,7 +327,7 @@ inline void process_commands(String& input) {
 
       case 'd':
       {
-        //last_channel_message = millis();
+        last_channel_message = millis();
         if(node_number != 255) {
           const uint8_t node_message[2] = { 'n', node_number };
           NodeMate.write(node_message, 2);
@@ -465,6 +465,9 @@ inline void process_commands(String& input) {
               colors[i++] = input[j++];
             }
 
+
+            if(params[8] >= 4 && params[8] <= 7) { params[8] += 4; };
+
             if(node_number < NUM_NODES) {
               uint8_t last_base_animation = BASE_ANIMATION;
               uint8_t last_mid_animation = MID_ANIMATION;
@@ -511,28 +514,26 @@ inline void process_commands(String& input) {
                   transition_in_sparkle_animation = false;
                   transition_out_sparkle_animation = true;
                 }
-  
-                if(EDM_ANIMATION != last_edm_animation) {
-                  next_edm_animation = EDM_ANIMATION;
-                  EDM_ANIMATION = last_edm_animation;
-                  transition_in_edm_animation = false;
-                  transition_out_edm_animation = true;
 
-                  if((EDM_ANIMATION > 0 && EDM_ANIMATION < 128) || (EDM_ANIMATION >= 192)) {
-                    // Art car stay or meditation animation playing
-                    BASE_ANIMATION = NONE;
-                    MID_ANIMATION = NONE;
-                    SPARKLE_ANIMATION = NONE;
-                    next_base_animation = NONE;
-                    next_mid_animation = NONE;
-                    next_sparkle_animation = NONE;
-                    transition_in_base_animation = false;
-                    transition_out_base_animation = false;
-                    transition_in_mid_animation = false;
-                    transition_out_mid_animation = false;
-                    transition_in_sparkle_animation = false;
-                    transition_out_sparkle_animation = false;
-                  }
+                if(EDM_ANIMATION != last_edm_animation) {
+                  cleanup_edm_animation(last_edm_animation);
+                  init_edm_animation();
+                }
+                
+                if((EDM_ANIMATION > 0 && EDM_ANIMATION < 128) || (EDM_ANIMATION >= 192)) {
+                  // Art car stay or meditation animation playing
+                  BASE_ANIMATION = NONE;
+                  MID_ANIMATION = NONE;
+                  SPARKLE_ANIMATION = NONE;
+                  next_base_animation = NONE;
+                  next_mid_animation = NONE;
+                  next_sparkle_animation = NONE;
+                  transition_in_base_animation = false;
+                  transition_out_base_animation = false;
+                  transition_in_mid_animation = false;
+                  transition_out_mid_animation = false;
+                  transition_in_sparkle_animation = false;
+                  transition_out_sparkle_animation = false;
                 }
               }
 
@@ -629,10 +630,12 @@ inline void correct_show_params() {
   if(MID_INTRA_RING_MOTION_INDEX < -1 || MID_INTRA_RING_MOTION_INDEX > 2) { show_parameters[MID_INTRA_RING_MOTION_INDEX] = 2; }
   if(MID_INTER_RING_MOTION_INDEX < -1 || MID_INTER_RING_MOTION_INDEX > 2) { show_parameters[MID_INTER_RING_MOTION_INDEX] = 2; }
 
-  SPARKLE_ANIMATION %= NUM_SPARKLE_ANIMATIONS;
-  if(SPARKLE_INTRA_RING_MOTION_INDEX < -1 || SPARKLE_INTRA_RING_MOTION_INDEX > 2) { show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = 1; }
-  if(SPARKLE_INTER_RING_MOTION_INDEX < -1 || SPARKLE_INTER_RING_MOTION_INDEX > 2) { show_parameters[SPARKLE_INTER_RING_MOTION_INDEX] = 1; }
-
+  if(SPARKLE_ANIMATION != 254) {
+    SPARKLE_ANIMATION %= NUM_SPARKLE_ANIMATIONS;
+    if(SPARKLE_INTRA_RING_MOTION_INDEX < -1 || SPARKLE_INTRA_RING_MOTION_INDEX > 2) { show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = 1; }
+    if(SPARKLE_INTER_RING_MOTION_INDEX < -1 || SPARKLE_INTER_RING_MOTION_INDEX > 2) { show_parameters[SPARKLE_INTER_RING_MOTION_INDEX] = 1; }
+  }
+  
   //if(EDM_ANIMATION > NUM_EDM_ANIMATIONS) { EDM_ANIMATION = 0; }
   if(ART_CAR_RING > 72 || ART_CAR_RING < -1) { show_parameters[ART_CAR_RING_INDEX] = (EDM_ANIMATION == NONE ? -1 : 0); }
 
@@ -646,7 +649,6 @@ inline void correct_show_params() {
   BASE_TRANSITION_SPEED %= MAX_TRANSITION_SPEED;
   MID_TRANSITION_SPEED %= MAX_TRANSITION_SPEED;
   SPARKLE_TRANSITION_SPEED %= MAX_TRANSITION_SPEED;
-  EDM_TRANSITION_SPEED %= MAX_TRANSITION_SPEED;
 }
 #endif
 

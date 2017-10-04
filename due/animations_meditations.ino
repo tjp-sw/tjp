@@ -9,14 +9,16 @@ loop_counter = 60 ms; 1000ms = 1 second. 16.6 loop_counter per second
 
 byte start_flag = 0; 
 void bloom(){
-  short int ring,pixel,spacing,bound;
+  leds_all = CRGB::Black;
+  short int ring,pixel,spacing;
   spacing = round(1200/(float)LEDS_PER_RING); // should be 3;
-  bound = round((loop_count/16.6)*spacing);
+  int bound = 30 + edm_count/500;
+  if(bound >= LEDS_PER_RING/2) { bound = LEDS_PER_RING/2; }
   // make sure everything is black first time into function
   if(!start_flag){
-    for( ring = 0; ring < NUM_RINGS; ring++){
+    for( ring = node_number*RINGS_PER_NODE; ring < (node_number+1)*RINGS_PER_NODE; ring++){
       for( pixel = 0; pixel < LEDS_PER_RING; pixel++){
-        leds[get_1d_index(ring, pixel)] = BLACK;  // leds[get_1d_index(ring, pixel)] = BLACK;
+        leds[get_1d_index(ring % RINGS_PER_NODE, pixel % LEDS_PER_RING)] = CRGB::Black;  // leds[get_1d_index(ring, pixel)] = BLACK;
         start_flag = 1;
       }
     }
@@ -26,28 +28,17 @@ void bloom(){
   // second half of rings light up moving backward
 
   // forward light
-  for(ring = 0; ring < NUM_RINGS/2; ring++){
-    for( pixel = 0; pixel < bound; pixel++){
-      // activate dimming to give flash sense
-      if(bound%2 ==0){
-                leds[get_1d_index(ring, pixel)] = get_mid_color(0);
-      }
-      else{
-        // dimming effect
-        leds[get_1d_index(ring, pixel)] = get_mid_color(0,6);
-      }
-    }
-  }
-// backward light
-  for(ring = (NUM_RINGS/2) +1; ring < NUM_RINGS; ring++){
-    for(pixel = LEDS_PER_RING; pixel > LEDS_PER_RING - bound; pixel--){
-       if(bound%2 ==0){
-          leds[get_1d_index(ring, pixel)] = get_mid_color(0);
-        }
-        else{
-          // dimming effect
-          leds[get_1d_index(ring, pixel)] = get_mid_color(0,6);
-        }
+  for(ring = 0; ring < NUM_RINGS; ring++){
+    if(ring < node_number*RINGS_PER_NODE || ring >= (node_number+1)*RINGS_PER_NODE) { continue; }
+    uint8_t offset = ring % 12;
+    if(offset >= 6) { offset = 12 - offset; }
+    uint8_t this_bound = bound + 6 * offset;
+    if(this_bound > LEDS_PER_RING/2) { this_bound = LEDS_PER_RING/2; }
+    CRGB this_color = ColorFromPalette(mid_palette, get_mid_color(ring % 3, (edm_count/4 + ring) % NUM_MID_DIMMING_LEVELS));
+    this_color.fadeToBlackBy(255 * ((edm_count/4 + ring) % 12) / 12);
+    for( pixel = 0; pixel < this_bound; pixel++){
+      leds[get_1d_index(ring % RINGS_PER_NODE, pixel % LEDS_PER_RING)] = this_color;
+      leds[get_1d_index(ring % RINGS_PER_NODE, (LEDS_PER_RING - 1 - pixel) % LEDS_PER_RING)] = this_color;
     }
   }
 }
@@ -62,23 +53,26 @@ void bloom(){
 byte start_flagg = 0;
 short int light_pix;
 void drip(){
+  leds_all = CRGB::Black;
   short int ring,pixel, dif;
   light_pix = 0;
   // create blackscreen
   if(!start_flagg){
      for( ring = 0; ring < NUM_RINGS; ring++){
+      if(ring < node_number*RINGS_PER_NODE || ring >= (node_number+1)*RINGS_PER_NODE) { continue; }
       for( pixel = 0; pixel < LEDS_PER_RING; pixel++){
-        leds[get_1d_index(ring, pixel)] = BLACK;
+        leds[get_1d_index(ring % RINGS_PER_NODE, pixel % LEDS_PER_RING)] = BLACK;
         start_flagg = 1;
       }
     }
   }
   // determine number of pixels to placed and light them up
   dif = light_pix;
-  light_pix = round(loop_count/(float)50);
+  light_pix = edm_count/600;
   for(ring = 0; ring <NUM_RINGS; ring++){
+    if(ring < node_number*RINGS_PER_NODE || ring >= (node_number+1)*RINGS_PER_NODE) { continue; }
     for(pixel = 0; pixel<light_pix; pixel++){
-      leds[get_1d_index(ring, pixel)] = get_mid_color(0);
+      leds[get_1d_index(ring % RINGS_PER_NODE, pixel % LEDS_PER_RING)] = get_mid_color(0);
     }
   }
 
@@ -86,12 +80,22 @@ void drip(){
   //if so add a new pixel from left to right
   if(dif<light_pix){
     for(ring = 0; ring < NUM_RINGS; ring++){
+      if(ring < node_number*RINGS_PER_NODE || ring >= (node_number+1)*RINGS_PER_NODE) { continue; }
       for(pixel = LEDS_PER_RING;pixel>light_pix; pixel--){
-        leds[get_1d_index(ring, pixel)] = get_mid_color(0);
-        leds[get_1d_index(ring, pixel-1)] = BLACK;  //mid_layer[ring][pixel-1] = BLACK;
+        leds[get_1d_index(ring % RINGS_PER_NODE, pixel % LEDS_PER_RING)] = get_mid_color(0);
+        leds[get_1d_index(ring % RINGS_PER_NODE, (pixel-1) % LEDS_PER_RING)] = BLACK;  //mid_layer[ring][pixel-1] = BLACK;
       }
     }
   }
 }
 
+void fire_chakra() {
+  leds_all = CRGB::Black;
+  clear_sparkle_layer();
+  show_parameters[MID_INTRA_RING_MOTION_INDEX] = UP;
+  int16_t chakra_cooling = 33 - edm_count / 500;
+  if(chakra_cooling < 0) { chakra_cooling = 0; }
+  fire(FIRE_PALETTE_STANDARD, true, 0, NUM_RINGS-1, chakra_cooling);
+  write_pixel_data();
+}
 

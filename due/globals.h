@@ -80,7 +80,7 @@ uint8_t art_car = NO_ART_CAR;                                           //
 #define LEE_BRIGHTNESS 249                                    //
 #define LEE_CHECK 248                                         //
 #define LEE_PICK_HSV 247                                      //
-#define NUM_BASE_ANIMATIONS 4  // Equal to last animation     //
+#define NUM_BASE_ANIMATIONS 3  // Equal to last animation     //
                                                               //
 // Mid layer                                                  //
 #define SNAKE 1                                               //
@@ -111,7 +111,7 @@ uint8_t art_car = NO_ART_CAR;                                           //
 #define TORUS_KNOT 9                                          //
 #define TORUS_LINK 10                                         //
 #define PANIC 11                                              //
-#define NUM_SPARKLE_ANIMATIONS 8  // Equal to last animation //
+#define NUM_SPARKLE_ANIMATIONS 9  // Equal to last animation //
 #define STATIC 254  // only used on Sunday before BM start    //
                                                               //
 // EDM animations (in the base layer, starting at 128)        //
@@ -310,7 +310,7 @@ int8_t blacken_node_number = 0;                               //
 #define RINGS_PER_NODE 12                                                 //
 #define STRIPS_PER_NODE 6 // Everyone should update this to 6! Leaving it at 4 to not impose, since it may require re-wiring your LED strips. //
 #define PHYSICAL_LEDS_PER_RING 420                                        //
-#define LEDS_PER_RING 408                                                 //
+#define LEDS_PER_RING 400                                                 //
                                                                           //
 #if STRIPS_PER_NODE == 4                                                  //
   #define LEDS_PER_STRIP (2*PHYSICAL_LEDS_PER_RING + LEDS_PER_RING + 1)   //
