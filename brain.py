@@ -184,8 +184,8 @@ listener.listen(6)		# maximum connection backlog
 sources = []
 if len(sys.argv) <= 1:	# interactive when no command line parameters
     sources += [sys.stdin]
-else:			# noninteractive, run playa program
-    do_auto(None, playa_program)
+else:			# noninteractive, run Old Globe program
+    do_auto(None, old_globe_program)
     do_date(None, ' '.join(sys.argv[1:]))
 sources += [listener]	# read from these
 writing = []		# write to these sockets
