@@ -225,7 +225,7 @@ sunset_time = [time.mktime(time.strptime('2017-Aug-27 19:36', '%Y-%b-%d %H:%M'))
                time.mktime(time.strptime('2017-Sep-2 19:27', '%Y-%b-%d %H:%M')),
                time.mktime(time.strptime('2017-Sep-3 19:25', '%Y-%b-%d %H:%M')),
                time.mktime(time.strptime('2017-Sep-4 19:23', '%Y-%b-%d %H:%M'))]
-OLD_GLOBE_TRANSITION = time.mktime(time.strptime('2017-Oct-6 12:00', '%Y-%b-%d %H:%M'))
+OLD_GLOBE_TRANSITION = time.mktime(time.strptime('2017-Oct-6 00:01', '%Y-%b-%d %H:%M'))
 
 #  Show modes
 SUNRISE = 0
