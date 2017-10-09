@@ -276,7 +276,7 @@ inline void cleanup_fire() {
 inline void mid_scrolling_dim2(uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(MID_COLOR_THICKNESS, 1, 6);
   uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 6, 24);
-  uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 6);
+  uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 5);
   uint8_t dim_period = color_thickness + black_thickness + 2*MAX_MID_DIMMING;
   uint8_t full_period = dim_period * MID_NUM_COLORS;
   int8_t ring_offset = scale_param(MID_RING_OFFSET, -1 * dim_period/2, dim_period/2);
@@ -326,7 +326,7 @@ inline void mid_scrolling_dim2(uint8_t min_ring, uint8_t max_ring) {
 inline void mid_scrolling_dim3(uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(MID_COLOR_THICKNESS, 1, 6);
   uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 6, 24);
-  uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 6);
+  uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 5);
   uint8_t dim_period = color_thickness + black_thickness + 2*MAX_MID_DIMMING;
   uint8_t full_period = dim_period * MID_NUM_COLORS;
   int8_t ring_offset = scale_param(MID_RING_OFFSET, -1 * dim_period/2, dim_period/2);
@@ -372,7 +372,7 @@ inline void mid_scrolling_dim3(uint8_t min_ring, uint8_t max_ring) {
 inline void mid_scrolling_dim4(uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(MID_COLOR_THICKNESS, 1, 6);
   uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 6, 24);
-  uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 6);
+  uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 5);
   uint8_t dim_period = color_thickness + black_thickness + 2*MAX_MID_DIMMING;
   uint8_t full_period = dim_period * MID_NUM_COLORS;
   int8_t ring_offset = scale_param(MID_RING_OFFSET, -1 * dim_period/2, dim_period/2);
@@ -418,7 +418,7 @@ inline void mid_scrolling_dim4(uint8_t min_ring, uint8_t max_ring) {
 inline void mid_scrolling_dim5(uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(MID_COLOR_THICKNESS, 1, 6);
   uint8_t black_thickness = scale_param(MID_BLACK_THICKNESS, 6, 24);
-  uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 6);
+  uint8_t intra_speed = 1 << scale_param(MID_INTRA_RING_SPEED, 3, 5);
   uint8_t dim_period = color_thickness + black_thickness + 2*MAX_MID_DIMMING;
   uint8_t full_period = dim_period * MID_NUM_COLORS;
   int8_t ring_offset = scale_param(MID_RING_OFFSET, -1 * dim_period/2, dim_period/2);

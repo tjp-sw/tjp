@@ -7,7 +7,7 @@
 inline void base_scrolling_dim(uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 8, 16);
   uint8_t black_thickness = scale_param(BASE_BLACK_THICKNESS, 0, 0);
-  uint8_t intra_speed = 1 << scale_param(BASE_INTRA_RING_SPEED, 3, 5);
+  uint8_t intra_speed = 1 << scale_param(BASE_INTRA_RING_SPEED, 2, 4);
   uint8_t period = color_thickness + black_thickness;
   int8_t ring_offset = scale_param(BASE_RING_OFFSET, -1 * period/2, period/2);
   uint16_t extended_led_count = ((LEDS_PER_RING-1)/period+1)*period;
@@ -163,7 +163,7 @@ inline void base_scrolling_2color_gradient(uint8_t min_ring, uint8_t max_ring) {
 inline void base_scrolling_half_dim(uint8_t min_ring, uint8_t max_ring) {
   uint8_t color_thickness = scale_param(BASE_COLOR_THICKNESS, 4, 10);
   uint8_t black_thickness = scale_param(BASE_BLACK_THICKNESS, 0, 1);
-  uint8_t intra_speed = 1 << scale_param(BASE_INTRA_RING_SPEED, 3, 4);
+  uint8_t intra_speed = 1 << scale_param(BASE_INTRA_RING_SPEED, 2, 4);
   uint8_t period = color_thickness + black_thickness;
   int8_t ring_offset = scale_param(BASE_RING_OFFSET, -1 * period/2, period/2);
   uint16_t extended_led_count = ((LEDS_PER_RING-1)/period+1)*period;

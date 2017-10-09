@@ -10,8 +10,8 @@ loop_counter = 60 ms; 1000ms = 1 second. 16.6 loop_counter per second
 byte start_flag = 0; 
 void bloom(){
   leds_all = CRGB::Black;
-  short int ring,pixel,spacing;
-  spacing = round(1200/(float)LEDS_PER_RING); // should be 3;
+  short int ring,pixel;
+  //spacing = round(1200/(float)LEDS_PER_RING); // should be 3;
   int bound = 30 + edm_count/500;
   if(bound >= LEDS_PER_RING/2) { bound = LEDS_PER_RING/2; }
   // make sure everything is black first time into function

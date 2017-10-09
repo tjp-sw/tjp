@@ -2,12 +2,12 @@
 
 //------------------------ Config -----------------------------------//
 // Due controlled versus pi controlled animation choices             //
-#define PI_CONTROLLED                                              //
-#define AUDIO_PACKET_THROTTLE 900 // min ms between sending audio packets
+//#define PI_CONTROLLED                                              //
+//#define AUDIO_PACKET_THROTTLE 900 // min ms between sending audio packets
 #ifndef PI_CONTROLLED                                                //
   #define TESTING_NODE_NUMBER 0   // To test diff nodes              //
   //#define CYCLE           // Cycles through shows in order         //
-  //#define CYCLE_RANDOM    // Cycles through shows randomly         //
+  #define CYCLE_RANDOM    // Cycles through shows randomly         //
   //#define CYCLE_PARAMS    // Locks in show, cycles show_parameters //
 #endif                                                               //
                                                                      //
@@ -38,59 +38,76 @@
 //-------- Manually set animation parameters here --------//
 ////////////////////////////////////////////////////////////
 inline void manually_set_animation_params() {             //
-                                                          //
-  // Set to OFF to disable a layer during CYCLE'ing.      //
-  // Use NONE to signify a layer that is off temporarily  //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  BASE_ANIMATION = NONE;                                  //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK, LEE_PICK_HSV
-  MID_ANIMATION = NONE;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  SPARKLE_ANIMATION = STATIC;                               //
-  EDM_ANIMATION = NONE;                            //
-                                                          //
-  BASE_COLOR_THICKNESS = 255;                             //
-  BASE_BLACK_THICKNESS = 255;                             //
-  show_parameters[BASE_INTRA_RING_MOTION_INDEX] = CCW;    //
-  BASE_INTRA_RING_SPEED = 255;                            //
-  show_parameters[BASE_INTER_RING_MOTION_INDEX] = NONE;   //
-  BASE_INTER_RING_SPEED = 0;                              //
-  show_parameters[BASE_RING_OFFSET_INDEX] = 16;           //
-                                                          //
-  MID_NUM_COLORS = 3;                                     //
-  MID_COLOR_THICKNESS = 100;                              //
-  MID_BLACK_THICKNESS = 255;                              //
-  show_parameters[MID_INTRA_RING_MOTION_INDEX] = DOWN;    //
-  MID_INTRA_RING_SPEED = 120;                             //
-  show_parameters[MID_INTER_RING_MOTION_INDEX] = NONE;    //
-  MID_INTER_RING_SPEED = 0;                               //
-  show_parameters[MID_RING_OFFSET_INDEX] = 32;            //
-                                                          //
-  SPARKLE_PORTION = 100;                                   //
-  SPARKLE_COLOR_THICKNESS = 100;                            //
-  show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = UP;  //
-  SPARKLE_INTRA_RING_SPEED = 128;                         //
-  show_parameters[SPARKLE_INTER_RING_MOTION_INDEX] = DOWN;//
-  SPARKLE_INTER_RING_SPEED = 0;                           //
-  SPARKLE_MIN_DIM = 0;                                    //
-  SPARKLE_MAX_DIM = 255;                                  //
-  SPARKLE_RANGE = 0;                                      //
-  SPARKLE_SPAWN_FREQUENCY = 0;                            //
-                                                          //
-  PALETTE_CHANGE = PALETTE_CHANGE_IMMEDIATE;              //
-  BEAT_EFFECT = NONE;                                     //
-  show_parameters[ART_CAR_RING_INDEX] = NO_ART_CAR;       //
-                                                          //
-  BASE_TRANSITION = TRANSITION_BY_ALPHA;                  //
-  BASE_TRANSITION_SPEED = FAST_TRANSITION;                //
-                                                          //
-  MID_TRANSITION = TRANSITION_BY_ALPHA;                   //
-  MID_TRANSITION_SPEED = MEDIUM_TRANSITION;               //
-                                                          //
-  SPARKLE_TRANSITION = TRANSITION_BY_ALPHA;               //
-  SPARKLE_TRANSITION_SPEED = SLOW_TRANSITION;             //
-                                                          //
-  EDM_TRANSITION = NONE;                                  //
-  EDM_TRANSITION_SPEED = VERY_SLOW_TRANSITION;            //
-}                                                         //
-//--------------------------------------------------------//
+
+  // For YOUtopia 2017: Configure each node's animation here
+  switch(node_number) {
+    case 0:
+      // Set to OFF to disable a layer during CYCLE'ing.      //
+      // Use NONE to signify a layer that is off temporarily  //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+      BASE_ANIMATION = 1;                                  //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK, LEE_PICK_HSV
+      MID_ANIMATION = 1;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+      SPARKLE_ANIMATION = OFF;                               //
+      EDM_ANIMATION = OFF;                            //
+                                                              //
+      BASE_COLOR_THICKNESS = 255;                             //
+      BASE_BLACK_THICKNESS = 255;                             //
+      show_parameters[BASE_INTRA_RING_MOTION_INDEX] = CCW;    //
+      BASE_INTRA_RING_SPEED = 255;                            //
+      show_parameters[BASE_INTER_RING_MOTION_INDEX] = NONE;   //
+      BASE_INTER_RING_SPEED = 0;                              //
+      show_parameters[BASE_RING_OFFSET_INDEX] = 16;           //
+                                                              //
+      MID_NUM_COLORS = 3;                                     //
+      MID_COLOR_THICKNESS = 100;                              //
+      MID_BLACK_THICKNESS = 255;                              //
+      show_parameters[MID_INTRA_RING_MOTION_INDEX] = DOWN;    //
+      MID_INTRA_RING_SPEED = 120;                             //
+      show_parameters[MID_INTER_RING_MOTION_INDEX] = NONE;    //
+      MID_INTER_RING_SPEED = 0;                               //
+      show_parameters[MID_RING_OFFSET_INDEX] = 32;            //
+                                                              //
+      SPARKLE_PORTION = 100;                                   //
+      SPARKLE_COLOR_THICKNESS = 100;                            //
+      show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = UP;  //
+      SPARKLE_INTRA_RING_SPEED = 128;                         //
+      show_parameters[SPARKLE_INTER_RING_MOTION_INDEX] = DOWN;//
+      SPARKLE_INTER_RING_SPEED = 0;                           //
+      SPARKLE_MIN_DIM = 0;                                    //
+      SPARKLE_MAX_DIM = 255;                                  //
+      SPARKLE_RANGE = 0;                                      //
+      SPARKLE_SPAWN_FREQUENCY = 0;                            //
+                                                              //
+      PALETTE_CHANGE = PALETTE_CHANGE_SLOW_BLEND;              //
+      BEAT_EFFECT = NONE;                                     //
+      show_parameters[ART_CAR_RING_INDEX] = NO_ART_CAR;       //
+                                                              //
+      BASE_TRANSITION = TRANSITION_BY_ALPHA;                  //
+      BASE_TRANSITION_SPEED = FAST_TRANSITION;                //
+                                                              //
+      MID_TRANSITION = TRANSITION_BY_ALPHA;                   //
+      MID_TRANSITION_SPEED = MEDIUM_TRANSITION;               //
+                                                              //
+      SPARKLE_TRANSITION = TRANSITION_BY_ALPHA;               //
+      SPARKLE_TRANSITION_SPEED = SLOW_TRANSITION;             //
+                                                              //
+      EDM_TRANSITION = NONE;                                  //
+      EDM_TRANSITION_SPEED = VERY_SLOW_TRANSITION;            //
+      break;
+
+    case 1:
+      break;
+
+    case 2:
+      break;
+
+    case 3:
+      break;
+
+    case 4:
+      break;
+
+  }
+}
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -192,7 +209,7 @@ void loop() {
 
 
   // Read spectrum shield before communicating with Pi
-  read_frequencies();
+  //read_frequencies();
   #ifdef DEBUG_TIMING
     now = millis();
     serial_val[1] = now - last_debug_time;
@@ -221,7 +238,7 @@ void loop() {
     last_debug_time = now;
   #endif
 
-
+/*
   // Apply beat effects
   if(EDM_ANIMATION != OFF && EDM_ANIMATION != NONE) {
     #ifndef PI_CONTROLLED
@@ -239,6 +256,7 @@ void loop() {
     serial_val[4] = now - last_debug_time;
     last_debug_time = now;
   #endif
+*/
 
   // Transition smoothly between animations
   transition_animations();
@@ -247,6 +265,7 @@ void loop() {
     serial_val[5] = now - last_debug_time;
     last_debug_time = now;
   #endif
+
 
   if(EDM_ANIMATION == 0 || EDM_ANIMATION >= 128) {
     // Draw layers
@@ -544,7 +563,7 @@ inline void cycle_through_animations() {
     memcpy(target_palette, initial_palette, 3*NUM_COLORS_PER_PALETTE);
     blend_base_layer = blend_mid_layer = blend_sparkle_layer = true;
     #ifdef CYCLE_RANDOM
-      PALETTE_CHANGE = 1 + random8(NUM_PALETTE_CHANGE_TYPES);
+      //PALETTE_CHANGE = 1 + random8(NUM_PALETTE_CHANGE_TYPES);
     #elif defined(CYCLE) || defined(CYCLE_PARAMS)
       PALETTE_CHANGE = (PALETTE_CHANGE+1) % (NUM_PALETTE_CHANGE_TYPES+1);
     #endif
@@ -565,8 +584,8 @@ inline void cycle_through_animations() {
       transition_out_base_animation = true;
       #ifdef CYCLE_RANDOM
         next_base_animation = 1 + random8(NUM_BASE_ANIMATIONS);
-        BASE_TRANSITION = 1 + random8(NUM_BASE_TRANSITION_MODES);
-        BASE_TRANSITION_SPEED = 1 + random8(MAX_TRANSITION_SPEED);
+        //BASE_TRANSITION = 1 + random8(NUM_BASE_TRANSITION_MODES);
+        //BASE_TRANSITION_SPEED = 1 + random8(MAX_TRANSITION_SPEED);
       #elif defined(CYCLE)
         next_base_animation = (BASE_ANIMATION+1) % (NUM_BASE_ANIMATIONS+1);
         BASE_TRANSITION = (BASE_TRANSITION+1) % (NUM_BASE_TRANSITION_MODES+1);
@@ -583,8 +602,8 @@ inline void cycle_through_animations() {
 
       #ifdef CYCLE_RANDOM
         next_mid_animation = 1 + random8(NUM_MID_ANIMATIONS);
-        MID_TRANSITION = 1 + random8(NUM_MID_TRANSITION_MODES);
-        MID_TRANSITION_SPEED = 1 + random8(MAX_TRANSITION_SPEED);
+        //MID_TRANSITION = 1 + random8(NUM_MID_TRANSITION_MODES);
+        //MID_TRANSITION_SPEED = 1 + random8(MAX_TRANSITION_SPEED);
       #elif defined(CYCLE)
         next_mid_animation = (MID_ANIMATION+1) % (NUM_MID_ANIMATIONS+1);
         MID_TRANSITION = (MID_TRANSITION+1) % (NUM_MID_TRANSITION_MODES+1);
@@ -601,8 +620,8 @@ inline void cycle_through_animations() {
 
       #ifdef CYCLE_RANDOM
         next_sparkle_animation = 1 + random8(NUM_SPARKLE_ANIMATIONS);
-        SPARKLE_TRANSITION = 1 + random8(NUM_SPARKLE_TRANSITION_MODES);
-        SPARKLE_TRANSITION_SPEED = 1 + random8(MAX_TRANSITION_SPEED);
+        //SPARKLE_TRANSITION = 1 + random8(NUM_SPARKLE_TRANSITION_MODES);
+        //SPARKLE_TRANSITION_SPEED = 1 + random8(MAX_TRANSITION_SPEED);
       #elif defined(CYCLE)
         next_sparkle_animation = (SPARKLE_ANIMATION+1) % (NUM_SPARKLE_ANIMATIONS+1);
         SPARKLE_TRANSITION = (SPARKLE_TRANSITION+1) % (NUM_SPARKLE_TRANSITION_MODES+1);
@@ -619,8 +638,8 @@ inline void cycle_through_animations() {
 
       #ifdef CYCLE_RANDOM
         next_edm_animation = 1 + random8(NUM_EDM_ANIMATIONS);
-        EDM_TRANSITION = 1 + random8(NUM_EDM_TRANSITION_MODES);
-        EDM_TRANSITION_SPEED = 1 + random8(MAX_TRANSITION_SPEED);
+        //EDM_TRANSITION = 1 + random8(NUM_EDM_TRANSITION_MODES);
+        //EDM_TRANSITION_SPEED = 1 + random8(MAX_TRANSITION_SPEED);
       #elif defined(CYCLE)
         next_edm_animation = (EDM_ANIMATION+1) % (NUM_EDM_ANIMATIONS+1);
         EDM_TRANSITION = (EDM_TRANSITION+1) % (NUM_EDM_TRANSITION_MODES+1);
@@ -629,7 +648,7 @@ inline void cycle_through_animations() {
         next_edm_animation = EDM_ANIMATION;
       #endif
     }
-  
+  /*
     if(current_time - beat_effect_start_time >= BEAT_EFFECT_TIME) {
       beat_effect_start_time = current_time;
       #ifdef CYCLE_RANDOM
@@ -641,7 +660,7 @@ inline void cycle_through_animations() {
       #ifdef DEBUG
         Serial.println("New beat effect: " + String(BEAT_EFFECT));
       #endif
-    }
+    }*/
   }
 }
 #endif

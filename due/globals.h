@@ -9,6 +9,25 @@
 //--------------------------------------------//
 
 //------------------ Built-in color palettes -----------------------//
+// Palettes for YOUtopia 2017
+CRGB fruit_loop[7] = {                                              //
+    //CRGB(188,0,208), CRGB(255,73,0),                    // dark   //
+    //CRGB(178,6,88), CRGB(162,80,204), CRGB(255,65,65),  // medium //
+    //CRGB(255,247,0), CRGB(255,127,14)};                 // light  //
+    CRGB(10,0,25), CRGB(8,8,25),                         // dark   //
+    CRGB(0,0,180), CRGB(130,30,160), CRGB(90,70,160),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+                                                                    //
+  CRGB icy_bright[7] = {                                            //
+    CRGB(0,0,30), CRGB(0,15,20),                         // dark   //
+    CRGB(20,80,160), CRGB(30,100,100), CRGB(0,30,160),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+                                                                    //
+  CRGB watermelon[7] = {                                            //
+    CRGB(0,0,30), CRGB(5,5,10),                         // dark   //
+    CRGB(80,0,160), CRGB(0,80,160), CRGB(70,70,150),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+/*
 CRGB fruit_loop[7] = {                                              //
     //CRGB(188,0,208), CRGB(255,73,0),                    // dark   //
     //CRGB(178,6,88), CRGB(162,80,204), CRGB(255,65,65),  // medium //
@@ -29,6 +48,7 @@ CRGB fruit_loop[7] = {                                              //
     CRGB(47,140,9), CRGB(72,160,5), CRGB(100,22,90),     // medium  //
     CRGB(47,192,91), CRGB(70,190,91)};                    // light  //
 #endif                                                              //
+*/
 /*                                                                  //
 CRGB fruit_loop[7] = {                                              //
     //CRGB(188,0,208), CRGB(255,73,0),                    // dark   //
@@ -83,21 +103,21 @@ uint8_t art_car = NO_ART_CAR;                                           //
 #define NUM_BASE_ANIMATIONS 3  // Equal to last animation     //
                                                               //
 // Mid layer                                                  //
-#define SNAKE 1                                               //
-#define FIRE 2                                                //
-#define DISCO_FIRE 3                                          //
+#define MID_SCROLLING_DIM2 1                                  //
+#define MID_SCROLLING_DIM3 2                                  //
+#define MID_SCROLLING_DIM4 3                                  //
+#define MID_SCROLLING_DIM5 4                                  //
+#define SNAKE 5                                               //
+#define FIRE 6                                                //
+#define DISCO_FIRE 7                                          //
 #define FIRE_ONE_SIDED 254  // Only used with EDM animation   //
 #define DISCO_FIRE_ONE_SIDED 253                              //
-#define MID_SCROLLING_DIM2 4                                  //
-#define MID_SCROLLING_DIM3 5                                  //
-#define MID_SCROLLING_DIM4 6                                  //
-#define MID_SCROLLING_DIM5 7                                  //
 #define ARROW 8                                               //
 #define RADIATION 9                                          //
 #define SQUARE 10                                             //
 #define SQUARE2 11                                            //
 #define WAVE 12                                               //
-#define NUM_MID_ANIMATIONS 12  // Equal to last animation     //
+#define NUM_MID_ANIMATIONS 4  // Equal to last animation     //
                                                               //
 // Sparkle layer                                              //
 #define GLITTER 1                                             //
