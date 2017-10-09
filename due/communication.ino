@@ -466,7 +466,7 @@ inline void process_commands(String& input) {
             }
 
 
-            if(params[8] >= 4 && params[8] <= 7) { params[8] += 4; };
+            //if(params[8] >= 4 && params[8] <= 7) { params[8] += 4; };
 
             if(node_number < NUM_NODES) {
               uint8_t last_base_animation = BASE_ANIMATION;
@@ -694,6 +694,7 @@ inline void do_heartbeat() {
 }
 
 inline void do_communication() {
+/*  
   loop_start_time_msec = millis();
   #ifdef I_AM_NODE_MEGA
     do_network_input();
@@ -713,4 +714,5 @@ inline void do_communication() {
   #ifdef DEBUG
     do_led();
   #endif
+  */
 }
