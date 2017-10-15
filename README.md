@@ -20,3 +20,5 @@ Programs currently available:
 * **setup_mega** may be run on a Mega to manage its EEPROM.
 
 * **test_due** demonstrates FastLED parallel output.
+
+![Short Clip from Burning Man](https://user-images.githubusercontent.com/2586247/31589241-2ca0211e-b1b3-11e7-9ae7-901fb77990e9.gif)
