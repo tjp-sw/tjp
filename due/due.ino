@@ -1,4 +1,5 @@
 #include <FastLED.h>
+#define NODE_NUMBER 2
 
 //------------------------ Config -----------------------------------//
 // Due controlled versus pi controlled animation choices             //
@@ -7,7 +8,9 @@
 #ifndef PI_CONTROLLED                                                //
   #define TESTING_NODE_NUMBER 0   // To test diff nodes              //
   //#define CYCLE           // Cycles through shows in order         //
-  #define CYCLE_RANDOM    // Cycles through shows randomly         //
+  #if NODE_NUMBER != 0 && NODE_NUMBER != 2
+    #define CYCLE_RANDOM    // Cycles through shows randomly         //
+  #endif
   //#define CYCLE_PARAMS    // Locks in show, cycles show_parameters //
 #endif                                                               //
                                                                      //
@@ -25,7 +28,7 @@
                                                                      //
 // How fast animations/palettes will cycle                           //
 #if defined(CYCLE) || defined(CYCLE_RANDOM) || defined(CYCLE_PARAMS) //
-  #define BASE_ANIMATION_TIME 13000                                  //
+  #define BASE_ANIMATION_TIME 25000                                  //
   #define MID_ANIMATION_TIME 9000                                    //
   #define SPARKLE_ANIMATION_TIME 7000                                //
   #define PALETTE_CHANGE_TIME 5000                                   //
@@ -40,8 +43,7 @@
 inline void manually_set_animation_params() {             //
 
   // For YOUtopia 2017: Configure each node's animation here
-  switch(node_number) {
-    case 0:
+#if NODE_NUMBER == 4
       // Set to OFF to disable a layer during CYCLE'ing.      //
       // Use NONE to signify a layer that is off temporarily  //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       BASE_ANIMATION = 1;                                  //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK, LEE_PICK_HSV
@@ -82,7 +84,7 @@ inline void manually_set_animation_params() {             //
       show_parameters[ART_CAR_RING_INDEX] = NO_ART_CAR;       //
                                                               //
       BASE_TRANSITION = TRANSITION_BY_ALPHA;                  //
-      BASE_TRANSITION_SPEED = FAST_TRANSITION;                //
+      BASE_TRANSITION_SPEED = SLOW_TRANSITION;                //
                                                               //
       MID_TRANSITION = TRANSITION_BY_ALPHA;                   //
       MID_TRANSITION_SPEED = MEDIUM_TRANSITION;               //
@@ -92,21 +94,116 @@ inline void manually_set_animation_params() {             //
                                                               //
       EDM_TRANSITION = NONE;                                  //
       EDM_TRANSITION_SPEED = VERY_SLOW_TRANSITION;            //
-      break;
 
-    case 1:
-      break;
+#elif NODE_NUMBER == 1
 
-    case 2:
-      break;
+#elif NODE_NUMBER == 2
+      BASE_ANIMATION = OFF;                                  //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK, LEE_PICK_HSV
+      MID_ANIMATION = 1;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+      SPARKLE_ANIMATION = OFF;                               //
+      EDM_ANIMATION = OFF;                            //
+                                                              //
+      BASE_COLOR_THICKNESS = 255;                             //
+      BASE_BLACK_THICKNESS = 255;                             //
+      show_parameters[BASE_INTRA_RING_MOTION_INDEX] = CCW;    //
+      BASE_INTRA_RING_SPEED = 255;                            //
+      show_parameters[BASE_INTER_RING_MOTION_INDEX] = NONE;   //
+      BASE_INTER_RING_SPEED = 0;                              //
+      show_parameters[BASE_RING_OFFSET_INDEX] = 16;           //
+                                                              //
+      MID_NUM_COLORS = 3;                                     //
+      MID_COLOR_THICKNESS = 100;                              //
+      MID_BLACK_THICKNESS = 255;                              //
+      show_parameters[MID_INTRA_RING_MOTION_INDEX] = ALTERNATE;    //
+      MID_INTRA_RING_SPEED = 120;                             //
+      show_parameters[MID_INTER_RING_MOTION_INDEX] = NONE;    //
+      MID_INTER_RING_SPEED = 0;                               //
+      show_parameters[MID_RING_OFFSET_INDEX] = 32;            //
+                                                              //
+      SPARKLE_PORTION = 100;                                   //
+      SPARKLE_COLOR_THICKNESS = 100;                            //
+      show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = UP;  //
+      SPARKLE_INTRA_RING_SPEED = 128;                         //
+      show_parameters[SPARKLE_INTER_RING_MOTION_INDEX] = DOWN;//
+      SPARKLE_INTER_RING_SPEED = 0;                           //
+      SPARKLE_MIN_DIM = 0;                                    //
+      SPARKLE_MAX_DIM = 255;                                  //
+      SPARKLE_RANGE = 0;                                      //
+      SPARKLE_SPAWN_FREQUENCY = 0;                            //
+                                                              //
+      PALETTE_CHANGE = PALETTE_CHANGE_SLOW_BLEND;              //
+      BEAT_EFFECT = NONE;                                     //
+      show_parameters[ART_CAR_RING_INDEX] = NO_ART_CAR;       //
+                                                              //
+      BASE_TRANSITION = TRANSITION_BY_ALPHA;                  //
+      BASE_TRANSITION_SPEED = MEDIUM_TRANSITION;                //
+                                                              //
+      MID_TRANSITION = TRANSITION_BY_ALPHA;                   //
+      MID_TRANSITION_SPEED = SLOW_TRANSITION;               //
+                                                              //
+      SPARKLE_TRANSITION = TRANSITION_BY_ALPHA;               //
+      SPARKLE_TRANSITION_SPEED = SLOW_TRANSITION;             //
+                                                              //
+      EDM_TRANSITION = NONE;                                  //
+      EDM_TRANSITION_SPEED = VERY_SLOW_TRANSITION;            //
 
-    case 3:
-      break;
+      #define MID_ANIMATION_TIME 900000
+#elif NODE_NUMBER == 3
 
-    case 4:
-      break;
+#elif NODE_NUMBER == 0
+      BASE_ANIMATION = OFF;                                  //  // Lee: use LEE_COLOR_RANGE, LEE_BRIGHTNESS, LEE_CHECK, LEE_PICK_HSV
+      MID_ANIMATION = 1;                                   //  //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+      SPARKLE_ANIMATION = OFF;                               //
+      EDM_ANIMATION = OFF;                            //
+                                                              //
+      BASE_COLOR_THICKNESS = 255;                             //
+      BASE_BLACK_THICKNESS = 255;                             //
+      show_parameters[BASE_INTRA_RING_MOTION_INDEX] = CCW;    //
+      BASE_INTRA_RING_SPEED = 255;                            //
+      show_parameters[BASE_INTER_RING_MOTION_INDEX] = NONE;   //
+      BASE_INTER_RING_SPEED = 0;                              //
+      show_parameters[BASE_RING_OFFSET_INDEX] = 16;           //
+                                                              //
+      MID_NUM_COLORS = 3;                                     //
+      MID_COLOR_THICKNESS = 100;                              //
+      MID_BLACK_THICKNESS = 255;                              //
+      show_parameters[MID_INTRA_RING_MOTION_INDEX] = UP;    //
+      MID_INTRA_RING_SPEED = 120;                             //
+      show_parameters[MID_INTER_RING_MOTION_INDEX] = NONE;    //
+      MID_INTER_RING_SPEED = 0;                               //
+      show_parameters[MID_RING_OFFSET_INDEX] = 32;            //
+                                                              //
+      SPARKLE_PORTION = 100;                                   //
+      SPARKLE_COLOR_THICKNESS = 100;                            //
+      show_parameters[SPARKLE_INTRA_RING_MOTION_INDEX] = UP;  //
+      SPARKLE_INTRA_RING_SPEED = 128;                         //
+      show_parameters[SPARKLE_INTER_RING_MOTION_INDEX] = DOWN;//
+      SPARKLE_INTER_RING_SPEED = 0;                           //
+      SPARKLE_MIN_DIM = 0;                                    //
+      SPARKLE_MAX_DIM = 255;                                  //
+      SPARKLE_RANGE = 0;                                      //
+      SPARKLE_SPAWN_FREQUENCY = 0;                            //
+                                                              //
+      PALETTE_CHANGE = PALETTE_CHANGE_SLOW_BLEND;              //
+      BEAT_EFFECT = NONE;                                     //
+      show_parameters[ART_CAR_RING_INDEX] = NO_ART_CAR;       //
+                                                              //
+      BASE_TRANSITION = TRANSITION_BY_ALPHA;                  //
+      BASE_TRANSITION_SPEED = MEDIUM_TRANSITION;                //
+                                                              //
+      MID_TRANSITION = TRANSITION_BY_ALPHA;                   //
+      MID_TRANSITION_SPEED = SLOW_TRANSITION;               //
+                                                              //
+      SPARKLE_TRANSITION = TRANSITION_BY_ALPHA;               //
+      SPARKLE_TRANSITION_SPEED = SLOW_TRANSITION;             //
+                                                              //
+      EDM_TRANSITION = NONE;                                  //
+      EDM_TRANSITION_SPEED = VERY_SLOW_TRANSITION;            //
 
-  }
+      #define MID_ANIMATION_TIME 900000
+
+      
+#endif
 }
 
 // the setup function runs once when you press reset or power the board
@@ -137,7 +234,11 @@ void setup() {
   delay(1000);
 
   // Initialize FastLED parallel output controller (must be 8, even if we use fewer)
+#if NODE_NUMBER == 2
+  LEDS.addLeds<WS2811_PORTD, 8>(leds, LEDS_PER_STRIP);
+#else  
   LEDS.addLeds<WS2811_PORTD, 8>(leds, LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
+#endif
 
   //  Clear all LEDs
   LEDS.clear(true);
@@ -231,11 +332,13 @@ void loop() {
 
 
   // Blend smoothly between palettes
-  transition_palette();
-  #ifdef DEBUG_TIMING
-    now = millis();
-    serial_val[3] = now - last_debug_time;
-    last_debug_time = now;
+  #if NODE_NUMBER != 0 && NODE_NUMBER != 2
+    transition_palette();
+    #ifdef DEBUG_TIMING
+      now = millis();
+      serial_val[3] = now - last_debug_time;
+      last_debug_time = now;
+    #endif
   #endif
 
 /*
@@ -259,7 +362,9 @@ void loop() {
 */
 
   // Transition smoothly between animations
+  #if NODE_NUMBER == 4
   transition_animations();
+  #endif
   #ifdef DEBUG_TIMING
     now = millis();
     serial_val[5] = now - last_debug_time;
@@ -547,12 +652,14 @@ inline void cycle_through_animations() {
 
     // Re-purposing initial_palette here as current_palette
     #ifdef CYCLE_RANDOM
-      uint8_t r = random8(3);
-      initial_palette = r == 0 ? icy_bright : r == 1 ? watermelon : fruit_loop;
+      uint8_t r = random8(5);
+      initial_palette = r == 0 ? icy_bright : r == 1 ? watermelon : r == 2 ? fruit_loop: r == 3 ? palette4 : palette5;
     #else
            if(initial_palette == fruit_loop) { initial_palette = icy_bright; }
       else if(initial_palette == icy_bright) { initial_palette = watermelon; }
-      else if(initial_palette == watermelon) { initial_palette = fruit_loop; }
+      else if(initial_palette == watermelon) { initial_palette = palette4; }
+      else if(initial_palette == palette4) { initial_palette = palette5; }
+      else if(initial_palette == palette5) { initial_palette = fruit_loop; }
       else {
         #ifdef DEBUG
           Serial.println("Undefined palette loaded!");
@@ -599,8 +706,8 @@ inline void cycle_through_animations() {
   if(MID_ANIMATION <= NUM_MID_ANIMATIONS) {
     if ((current_time - mid_start_time >= MID_ANIMATION_TIME) && !(transition_out_mid_animation || transition_in_mid_animation)) {
       transition_out_mid_animation = true;
-
       #ifdef CYCLE_RANDOM
+
         next_mid_animation = 1 + random8(NUM_MID_ANIMATIONS);
         //MID_TRANSITION = 1 + random8(NUM_MID_TRANSITION_MODES);
         //MID_TRANSITION_SPEED = 1 + random8(MAX_TRANSITION_SPEED);

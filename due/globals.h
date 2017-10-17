@@ -8,8 +8,38 @@
 #endif                                        //
 //--------------------------------------------//
 
+#if NODE_NUMBER == 0
 //------------------ Built-in color palettes -----------------------//
 // Palettes for YOUtopia 2017
+CRGB fruit_loop[7] = {                                              //
+    //CRGB(188,0,208), CRGB(255,73,0),                    // dark   //
+    //CRGB(178,6,88), CRGB(162,80,204), CRGB(255,65,65),  // medium //
+    //CRGB(255,247,0), CRGB(255,127,14)};                 // light  //
+    CRGB(10,0,25), CRGB(8,8,25),                         // dark   //
+    CRGB(255,230,200), CRGB(255,200,200), CRGB(255,255,200),   // medium      //
+    CRGB(200,200,200), CRGB(200,200,200)};                // light     //
+                                                                    //
+  CRGB icy_bright[7] = {                                            //
+    CRGB(0,0,30), CRGB(0,15,20),                         // dark   //
+    CRGB(200,200,200), CRGB(200,200,200), CRGB(200,200,200),   // medium      //
+    CRGB(200,200,200), CRGB(200,200,200)};                // light     //
+                                                                    //
+  CRGB watermelon[7] = {                                            //
+    CRGB(0,0,30), CRGB(5,5,10),                         // dark   //
+    CRGB(200,200,200), CRGB(200,200,200), CRGB(200,200,200),   // medium      //
+    CRGB(200,200,200), CRGB(200,200,200)};                // light     //
+
+  CRGB palette4[7] = {                                            //
+    CRGB(0,0,30), CRGB(5,5,10),                         // dark   //
+    CRGB(200,200,200), CRGB(200,200,200), CRGB(200,200,200),   // medium      //
+    CRGB(200,200,200), CRGB(200,200,200)};                // light     //
+
+  CRGB palette5[7] = {                                            //
+    CRGB(0,20,10), CRGB(5,15,10),                         // dark   //
+    CRGB(200,200,200), CRGB(200,200,200), CRGB(200,200,200),   // medium      //
+    CRGB(200,200,200), CRGB(200,200,200)};                // light     //
+
+#elif NODE_NUMBER == 1
 CRGB fruit_loop[7] = {                                              //
     //CRGB(188,0,208), CRGB(255,73,0),                    // dark   //
     //CRGB(178,6,88), CRGB(162,80,204), CRGB(255,65,65),  // medium //
@@ -27,6 +57,109 @@ CRGB fruit_loop[7] = {                                              //
     CRGB(0,0,30), CRGB(5,5,10),                         // dark   //
     CRGB(80,0,160), CRGB(0,80,160), CRGB(70,70,150),   // medium      //
     CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+
+  CRGB palette4[7] = {                                            //
+    CRGB(0,0,30), CRGB(5,5,10),                         // dark   //
+    CRGB(80,0,160), CRGB(0,80,160), CRGB(70,70,150),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+
+  CRGB palette5[7] = {                                            //
+    CRGB(0,0,30), CRGB(5,5,10),                         // dark   //
+    CRGB(80,0,160), CRGB(0,80,160), CRGB(70,70,150),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+
+
+#elif NODE_NUMBER == 2
+CRGB fruit_loop[7] = {                                              //
+    //CRGB(188,0,208), CRGB(255,73,0),                    // dark   //
+    //CRGB(178,6,88), CRGB(162,80,204), CRGB(255,65,65),  // medium //
+    //CRGB(255,247,0), CRGB(255,127,14)};                 // light  //
+    CRGB(230,255,230), CRGB(255,255,255),                         // dark   //
+    CRGB(200,255,200), CRGB(210,255,210), CRGB(220,255,220),   // medium      //
+    CRGB(180,255,180), CRGB(190,255,190)};                // light     //
+                                                                    //
+  CRGB icy_bright[7] = {                                            //
+    CRGB(10,0,25), CRGB(8,8,25),                         // dark   //
+    CRGB(200,200,200), CRGB(200,255,200), CRGB(215,255,200),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+                                                                    //
+  CRGB watermelon[7] = {                                            //
+    CRGB(10,0,25), CRGB(8,8,25),                         // dark   //
+    CRGB(200,200,200), CRGB(200,255,200), CRGB(215,255,200),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+    
+  CRGB palette4[7] = {                                            //
+    CRGB(10,0,25), CRGB(8,8,25),                         // dark   //
+    CRGB(200,200,200), CRGB(200,255,200), CRGB(215,255,200),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+    
+  CRGB palette5[7] = {                                            //
+    CRGB(10,0,25), CRGB(8,8,25),                         // dark   //
+    CRGB(200,200,200), CRGB(200,255,200), CRGB(215,255,200),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+    
+
+#elif NODE_NUMBER == 3
+CRGB fruit_loop[7] = {                                              //
+    //CRGB(188,0,208), CRGB(255,73,0),                    // dark   //
+    //CRGB(178,6,88), CRGB(162,80,204), CRGB(255,65,65),  // medium //
+    //CRGB(255,247,0), CRGB(255,127,14)};                 // light  //
+    CRGB(10,0,25), CRGB(8,8,25),                         // dark   //
+    CRGB(0,0,180), CRGB(130,30,160), CRGB(90,70,160),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+                                                                    //
+  CRGB icy_bright[7] = {                                            //
+    CRGB(0,0,30), CRGB(0,15,20),                         // dark   //
+    CRGB(20,80,160), CRGB(30,100,100), CRGB(0,30,160),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+                                                                    //
+  CRGB watermelon[7] = {                                            //
+    CRGB(0,0,30), CRGB(5,5,10),                         // dark   //
+    CRGB(80,0,160), CRGB(0,80,160), CRGB(70,70,150),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+
+  CRGB palette4[7] = {                                            //
+    CRGB(0,0,30), CRGB(5,5,10),                         // dark   //
+    CRGB(80,0,160), CRGB(0,80,160), CRGB(70,70,150),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+
+  CRGB palette5[7] = {                                            //
+    CRGB(0,0,30), CRGB(5,5,10),                         // dark   //
+    CRGB(80,0,160), CRGB(0,80,160), CRGB(70,70,150),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+
+
+#elif NODE_NUMBER == 4
+CRGB fruit_loop[7] = {                                              //
+    //CRGB(188,0,208), CRGB(255,73,0),                    // dark   //
+    //CRGB(178,6,88), CRGB(162,80,204), CRGB(255,65,65),  // medium //
+    //CRGB(255,247,0), CRGB(255,127,14)};                 // light  //
+    CRGB(30,25,30), CRGB(20,20,25),                         // dark   //
+    CRGB(200,220,255), CRGB(200,200,255), CRGB(255,200,255),   // medium      //
+        CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+                                                                    //
+  CRGB icy_bright[7] = {                                            //
+    CRGB(25,30,30), CRGB(25,25,30),                         // dark   //
+    CRGB(200,255,200), CRGB(200,255,255), CRGB(200,200,255),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+                                                                    //
+  CRGB watermelon[7] = {                                            //
+    CRGB(30,30,35), CRGB(20,20,23),                         // dark   //
+    CRGB(200,200,255), CRGB(200,200,200), CRGB(200,230,255),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+
+  CRGB palette4[7] = {                                            //
+    CRGB(30,24,30), CRGB(20,20,25),                         // dark   //
+    CRGB(210,210,255), CRGB(255,200,240), CRGB(230,200,255),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+
+  CRGB palette5[7] = {                                            //
+    CRGB(24,30,24), CRGB(25,20,25),                         // dark   //
+    CRGB(200,255,200), CRGB(200,200,255), CRGB(255,200,255),   // medium      //
+    CRGB(0,0,0), CRGB(0,0,0)};                // light     //
+
+
+#endif
 /*
 CRGB fruit_loop[7] = {                                              //
     //CRGB(188,0,208), CRGB(255,73,0),                    // dark   //
@@ -101,23 +234,63 @@ uint8_t art_car = NO_ART_CAR;                                           //
 #define LEE_CHECK 248                                         //
 #define LEE_PICK_HSV 247                                      //
 #define NUM_BASE_ANIMATIONS 3  // Equal to last animation     //
-                                                              //
+
+                                                              
+#if NODE_NUMBER == 4                                                              //
 // Mid layer                                                  //
 #define MID_SCROLLING_DIM2 1                                  //
 #define MID_SCROLLING_DIM3 2                                  //
 #define MID_SCROLLING_DIM4 3                                  //
 #define MID_SCROLLING_DIM5 4                                  //
 #define SNAKE 5                                               //
-#define FIRE 6                                                //
-#define DISCO_FIRE 7                                          //
+#define ARROW 6                                               //
+#define NUM_MID_ANIMATIONS 5  // Equal to last animation     //
+
+#define FIRE 7                                                //
+#define DISCO_FIRE 8                                          //
 #define FIRE_ONE_SIDED 254  // Only used with EDM animation   //
 #define DISCO_FIRE_ONE_SIDED 253                              //
-#define ARROW 8                                               //
 #define RADIATION 9                                          //
 #define SQUARE 10                                             //
 #define SQUARE2 11                                            //
-#define WAVE 12                                               //
-#define NUM_MID_ANIMATIONS 4  // Equal to last animation     //
+#define WAVE 12                  
+
+#elif NODE_NUMBER == 0
+#define MID_SCROLLING_DIM2 7                                  //
+#define MID_SCROLLING_DIM3 2                                  //
+#define MID_SCROLLING_DIM4 3                                  //
+#define MID_SCROLLING_DIM5 4                                  //
+#define SNAKE 5                                               //
+#define ARROW 6                                               //
+#define NUM_MID_ANIMATIONS 1  // Equal to last animation     //
+
+#define FIRE 1                                                //
+#define DISCO_FIRE 8                                          //
+#define FIRE_ONE_SIDED 254  // Only used with EDM animation   //
+#define DISCO_FIRE_ONE_SIDED 253                              //
+#define RADIATION 9                                          //
+#define SQUARE 10                                             //
+#define SQUARE2 11                                            //
+#define WAVE 12  
+
+#else
+#define MID_SCROLLING_DIM2 7                                  //
+#define MID_SCROLLING_DIM3 2                                  //
+#define MID_SCROLLING_DIM4 3                                  //
+#define MID_SCROLLING_DIM5 4                                  //
+#define SNAKE 5                                               //
+#define ARROW 6                                               //
+#define NUM_MID_ANIMATIONS 1  // Equal to last animation     //
+
+#define FIRE 13                                                //
+#define DISCO_FIRE 8                                          //
+#define FIRE_ONE_SIDED 254  // Only used with EDM animation   //
+#define DISCO_FIRE_ONE_SIDED 1                              //
+#define RADIATION 9                                          //
+#define SQUARE 10                                             //
+#define SQUARE2 11                                            //
+#define WAVE 12  
+#endif
                                                               //
 // Sparkle layer                                              //
 #define GLITTER 1                                             //
@@ -326,11 +499,16 @@ int8_t blacken_node_number = 0;                               //
 //------------------------------------------------------------//
 
 //------------------- Physical structure ---------------------------------//
-#define NUM_NODES 6                                                       //
+#if NODE_NUMBER == 0 || NODE_NUMBER == 2
+#define NUM_NODES 4
+#else
+#define NUM_NODES 1                                                       //
+#endif
+
 #define RINGS_PER_NODE 12                                                 //
 #define STRIPS_PER_NODE 6 // Everyone should update this to 6! Leaving it at 4 to not impose, since it may require re-wiring your LED strips. //
 #define PHYSICAL_LEDS_PER_RING 420                                        //
-#define LEDS_PER_RING 400                                                 //
+#define LEDS_PER_RING 408                                                 //
                                                                           //
 #if STRIPS_PER_NODE == 4                                                  //
   #define LEDS_PER_STRIP (2*PHYSICAL_LEDS_PER_RING + LEDS_PER_RING + 1)   //

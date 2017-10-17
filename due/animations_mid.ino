@@ -82,21 +82,29 @@ inline void snake(uint8_t min_ring, uint8_t max_ring) {
 // MID_INTRA_RING_MOTION: UP or DOWN; DOWN will spawn fire at the top and heat travels downwardl; ALTERNATE will do both directions
 // MID_INTER_RING_SPEED(8) == wind speed, MID_RING_OFFSET(96) == wind decay amount in neighboring rings
 // not using: everything else
-#define SPARKING_RANGE 10   // How far from bottom sparks will form
-#define MAX_WIND_COOLING 70 // Largest extra cooling, at center of the wind
+#define SPARKING_RANGE 20   // How far from bottom sparks will form
+
+#if NODE_NUMBER == 2
+#define MAX_WIND_COOLING 12 // Largest extra cooling, at center of the wind
+#else
+#define MAX_WIND_COOLING 7 // Largest extra cooling, at center of the wind
+#endif
+
 #define MAX_WIND_RANGE 6    // Wind cooling reaches 6 rings in either direction from center
 inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, uint8_t max_ring) {
   fire(palette_type, draw_inner_half, min_ring, max_ring, 0);
 }
 
 inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, uint8_t max_ring, uint8_t extra_cooling) {
-  uint8_t cooling = palette_type == FIRE_PALETTE_DISABLED ? 18 : 10;//scale_param(MID_BLACK_THICKNESS, 15, 15);
-  if(MID_INTRA_RING_MOTION == ALTERNATE) { cooling += 6; }
-  uint8_t sparking_chance = 180;//scale_param(MID_COLOR_THICKNESS, 130, 130);
-  uint8_t min_spark_size = 150;//scale_param(MID_NUM_COLORS, 150, 150);
-  uint8_t wind_speed = 8;//scale_param(MID_INTER_RING_SPEED, 8, 8);
-  uint8_t wind_decay = 96;//scale_param(MID_RING_OFFSET, 96, 96);
+  
+  uint8_t cooling = palette_type == FIRE_PALETTE_DISABLED ? 13 : 5;//scale_param(MID_BLACK_THICKNESS, 15, 15);
+  //if(MID_INTRA_RING_MOTION == ALTERNATE) { cooling += 6; }
+  uint8_t sparking_chance = 220;//scale_param(MID_COLOR_THICKNESS, 130, 130);
+  uint8_t min_spark_size = 170;//scale_param(MID_NUM_COLORS, 150, 150);
+  uint8_t wind_speed = 5;//scale_param(MID_INTER_RING_SPEED, 8, 8);
+  uint8_t wind_decay = 128;//scale_param(MID_RING_OFFSET, 96, 96);
 
+  //draw_inner_half = true;
   random16_add_entropy(loop_count);
   
   if(palette_type != FIRE_PALETTE_DISABLED) {
@@ -107,7 +115,14 @@ inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, u
   if((node_number+1)*RINGS_PER_NODE < max_ring) { max_ring = (node_number+1)*RINGS_PER_NODE; }
   
   // Step 1.  Cool down every 4th cell a little, and add an extra cooling wind that moves around the structure
-  uint8_t coldest_ring = (mid_count * wind_speed / THROTTLE) % NUM_RINGS;
+  
+  
+  // Other direction
+  //uint8_t coldest_ring = (mid_count * wind_speed / THROTTLE) % NUM_RINGS;
+
+  // New direction
+  uint8_t coldest_ring = NUM_RINGS - ((mid_count * wind_speed / THROTTLE) % NUM_RINGS);
+  
   for(uint8_t ring = min_ring; ring < max_ring; ring++) {
     uint8_t dist = ring > coldest_ring ? ring - coldest_ring : coldest_ring - ring;
     if(dist > NUM_RINGS/2) { dist = NUM_RINGS - dist; }
@@ -121,11 +136,15 @@ inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, u
       }
     }
     
-    for(uint16_t pixel = 0; pixel < HALF_RING; pixel+=4) {
-      mid_layer[ring][pixel] = qsub8(mid_layer[ring][pixel], random8(0, cooling+wind_cooling+extra_cooling));
+    for(uint16_t pixel = 0; pixel < HALF_RING; pixel++) {
+      mid_layer[ring][LEDS_PER_RING - 1 - pixel] = qsub8(mid_layer[ring][LEDS_PER_RING - 1 - pixel],  random8(0, cooling+wind_cooling+extra_cooling));
       if(draw_inner_half) {
-        mid_layer[ring][LEDS_PER_RING - 1 - pixel] = qsub8(mid_layer[ring][LEDS_PER_RING - 1 - pixel],  random8(0, cooling+wind_cooling+extra_cooling));
+        mid_layer[ring][pixel] = qsub8(mid_layer[ring][pixel], random8(0, cooling+wind_cooling+extra_cooling));
       }
+
+      #if NODE_NUMBER == 2
+        pixel ++;
+      #endif
     }
 
     // Cool down cells that otherwise are never cooled and don't inherit heat from below
@@ -152,23 +171,23 @@ inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, u
     
       for(uint16_t pixel = lower_limit; pixel < HALF_RING - 1; pixel++) {
         // Outer half
-        mid_layer[ring][HALF_RING - pixel] = (mid_layer[ring][HALF_RING - pixel - 1] + mid_layer[ring][HALF_RING - pixel - 2]) / 2;
+        mid_layer[ring][HALF_RING + pixel - 1] = (mid_layer[ring][HALF_RING + pixel] + mid_layer[ring][HALF_RING + pixel + 1]) / 2;
         
         // Inner half
         if(draw_inner_half) { 
-          mid_layer[ring][HALF_RING + pixel - 1] = (mid_layer[ring][HALF_RING + pixel] + mid_layer[ring][HALF_RING + pixel + 1]) / 2;
+          mid_layer[ring][HALF_RING - pixel] = (mid_layer[ring][HALF_RING - pixel - 1] + mid_layer[ring][HALF_RING - pixel - 2]) / 2;
         }
       }
 
       // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
       if(MID_INTRA_RING_MOTION == UP || MID_INTRA_RING_MOTION == ALTERNATE) {
         
-        if(random8() < sparking_chance) {
+        if(draw_inner_half && random8() < sparking_chance) {
           uint8_t pixel = random8(SPARKING_RANGE);
           mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random8(min_spark_size, 255));
         }
     
-        if(draw_inner_half && random8() < sparking_chance) {
+        if(random8() < sparking_chance) {
           uint16_t pixel = LEDS_PER_RING - 1 - random8(SPARKING_RANGE);
           mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random8(min_spark_size, 255));
         }
@@ -181,23 +200,23 @@ inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, u
       
       for(uint16_t pixel = lower_limit; pixel < HALF_RING - 1; pixel++) {
         // Outer half
-        mid_layer[ring][pixel - 1] = (mid_layer[ring][pixel] + mid_layer[ring][pixel + 1]) / 2;
+        mid_layer[ring][LEDS_PER_RING - pixel] = (mid_layer[ring][LEDS_PER_RING - pixel - 1] + mid_layer[ring][LEDS_PER_RING - pixel - 2]) / 2;
         
         // Inner half
         if(draw_inner_half) {
-          mid_layer[ring][LEDS_PER_RING - pixel] = (mid_layer[ring][LEDS_PER_RING - pixel - 1] + mid_layer[ring][LEDS_PER_RING - pixel - 2]) / 2;
+          mid_layer[ring][pixel - 1] = (mid_layer[ring][pixel] + mid_layer[ring][pixel + 1]) / 2;
         }
       }
       
       
       // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
       if(MID_INTRA_RING_MOTION == DOWN || MID_INTRA_RING_MOTION == ALTERNATE) {
-        if(random8() < sparking_chance) {
+        if(draw_inner_half && random8() < sparking_chance) {
           uint16_t pixel = HALF_RING - 1 - random8(SPARKING_RANGE);
           mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random8(min_spark_size, 255));
         }
         
-        if(draw_inner_half && random8() < sparking_chance) {
+        if(random8() < sparking_chance) {
           uint8_t pixel = HALF_RING + random8(SPARKING_RANGE);
           mid_layer[ring][pixel] = qadd8(mid_layer[ring][pixel], random8(min_spark_size, 255));
         }
@@ -219,7 +238,7 @@ inline void set_fire_palette() {
   steps[0] %= 64; // Set to 1/4 of max brightness
   steps[1] %= 64;// Set to 1/4 of max brightness
 
-  while(steps[0].r > 5 && steps[0].g > 5 && steps[0].b > 5) { steps[0]--; } // Manually increase saturation
+  while(steps[0].r > 25 && steps[0].g > 25 && steps[0].b > 25) { steps[0]--; } // Manually increase saturation
   //while(steps[2].r < 255 && steps[2].g < 255 && steps[3].b < 255) { steps[2]++; }
   steps[2] |= CRGB(40, 40, 40); // Raise each channel to a minimum of 60
   steps[2].maximizeBrightness();
@@ -252,7 +271,7 @@ inline void set_fire_palette() {
   }
 
   // Step 4: blend into (almost) fully bright white
-  target = CRGB(255, 255, 255);
+  target = CRGB(255, 240, 230);
   tjp_nblend(target, steps[2], 100); // ~60% white
   for(uint16_t i = 240; i < 256; i++) {
     start = steps[2];
@@ -517,7 +536,7 @@ void init_arrow() {
 }
 
 void arrow() {
-  uint8_t throttle = 5 - scale_param(MID_INTER_RING_SPEED, 0, 5); //only rotate every this mid_count
+  uint8_t throttle = 5 - scale_param(MID_INTER_RING_SPEED, 0, 4); //only rotate every this mid_count
   if(throttle == 0) {
     move_mid_layer_inter_ring(MID_INTER_RING_MOTION == CW ? CW : CCW);
     move_mid_layer_inter_ring(MID_INTER_RING_MOTION == CW ? CW : CCW);
