@@ -87,7 +87,7 @@ inline void snake(uint8_t min_ring, uint8_t max_ring) {
 #if NODE_NUMBER == 2
 #define MAX_WIND_COOLING 12 // Largest extra cooling, at center of the wind
 #else
-#define MAX_WIND_COOLING 7 // Largest extra cooling, at center of the wind
+#define MAX_WIND_COOLING 11 // Largest extra cooling, at center of the wind
 #endif
 
 #define MAX_WIND_RANGE 6    // Wind cooling reaches 6 rings in either direction from center
@@ -97,7 +97,7 @@ inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, u
 
 inline void fire(uint8_t palette_type, bool draw_inner_half, uint8_t min_ring, uint8_t max_ring, uint8_t extra_cooling) {
   
-  uint8_t cooling = palette_type == FIRE_PALETTE_DISABLED ? 13 : 5;//scale_param(MID_BLACK_THICKNESS, 15, 15);
+  uint8_t cooling = palette_type == FIRE_PALETTE_DISABLED ? 13 : 3;//scale_param(MID_BLACK_THICKNESS, 15, 15);
   //if(MID_INTRA_RING_MOTION == ALTERNATE) { cooling += 6; }
   uint8_t sparking_chance = 220;//scale_param(MID_COLOR_THICKNESS, 130, 130);
   uint8_t min_spark_size = 170;//scale_param(MID_NUM_COLORS, 150, 150);

@@ -16,28 +16,28 @@ CRGB fruit_loop[7] = {                                              //
     //CRGB(178,6,88), CRGB(162,80,204), CRGB(255,65,65),  // medium //
     //CRGB(255,247,0), CRGB(255,127,14)};                 // light  //
     CRGB(10,0,25), CRGB(8,8,25),                         // dark   //
-    CRGB(255,230,200), CRGB(255,200,200), CRGB(255,255,200),   // medium      //
-    CRGB(200,200,200), CRGB(200,200,200)};                // light     //
+    CRGB(255,140,130), CRGB(255,130,130), CRGB(255,155,145),   // medium      //
+    CRGB(255,130,130), CRGB(255,130,130)};                // light     //
                                                                     //
   CRGB icy_bright[7] = {                                            //
     CRGB(0,0,30), CRGB(0,15,20),                         // dark   //
-    CRGB(200,200,200), CRGB(200,200,200), CRGB(200,200,200),   // medium      //
-    CRGB(200,200,200), CRGB(200,200,200)};                // light     //
+    CRGB(170,140,130), CRGB(170,130,130), CRGB(180,155,145),   // medium      //
+    CRGB(160,130,130), CRGB(160,130,130)};                // light     //
                                                                     //
   CRGB watermelon[7] = {                                            //
     CRGB(0,0,30), CRGB(5,5,10),                         // dark   //
-    CRGB(200,200,200), CRGB(200,200,200), CRGB(200,200,200),   // medium      //
-    CRGB(200,200,200), CRGB(200,200,200)};                // light     //
+    CRGB(170,140,130), CRGB(170,130,130), CRGB(180,155,145),   // medium      //
+    CRGB(160,130,130), CRGB(160,130,130)};                // light     //
 
   CRGB palette4[7] = {                                            //
     CRGB(0,0,30), CRGB(5,5,10),                         // dark   //
-    CRGB(200,200,200), CRGB(200,200,200), CRGB(200,200,200),   // medium      //
-    CRGB(200,200,200), CRGB(200,200,200)};                // light     //
+    CRGB(170,140,130), CRGB(170,130,130), CRGB(180,155,145),   // medium      //
+    CRGB(160,130,130), CRGB(160,130,130)};                // light     //
 
   CRGB palette5[7] = {                                            //
     CRGB(0,20,10), CRGB(5,15,10),                         // dark   //
-    CRGB(200,200,200), CRGB(200,200,200), CRGB(200,200,200),   // medium      //
-    CRGB(200,200,200), CRGB(200,200,200)};                // light     //
+    CRGB(170,140,130), CRGB(170,130,130), CRGB(180,155,145),   // medium      //
+    CRGB(160,130,130), CRGB(160,130,130)};                // light     //
 
 #elif NODE_NUMBER == 1
 CRGB fruit_loop[7] = {                                              //

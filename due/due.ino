@@ -412,7 +412,6 @@ void loop() {
     last_debug_time = now;
   #endif
 
-
   // Output LED data (debugging tool)
   #ifdef DEBUG_LED_WRITE_DATA
     if(loop_count % DEBUG_LED_WRITE_DATA == 0) {
@@ -425,6 +424,13 @@ void loop() {
       }
     }
   #endif
+
+
+if(NODE_NUMBER == 2) {
+  delay(3
+  0);
+  leds_all.fadeToBlackBy(80);
+}
 
   // Write current node's LEDs
   if ((BEAT_EFFECT != JERKY_MOTION) || is_beat) { LEDS.show(); }
@@ -446,6 +452,8 @@ void loop() {
     Serial.println();
     Serial.flush(); // Guarantees buffer will write if future code hangs
   #endif
+
+
 
 
   // Increment loop counters
