@@ -154,6 +154,7 @@ control_messages = {
     'led':		(do_simple, 'program', None),
     'list':		(do_list, None, None),
     'node':		(do_simple, None, None),
+    'party':		(do_auto, None, party_program),
     'pause':		(do_auto, None, None),
     'playa':		(do_auto, None, playa_program),
     'quit':		(do_quit, None, None),
@@ -183,8 +184,8 @@ listener.listen(6)		# maximum connection backlog
 sources = []
 if len(sys.argv) <= 1:	# interactive when no command line parameters
     sources += [sys.stdin]
-else:			# noninteractive, run playa program
-    do_auto(None, playa_program)
+else:			# noninteractive, run party program
+    do_auto(None, party_program)
     do_date(None, ' '.join(sys.argv[1:]))
 sources += [listener]	# read from these
 writing = []		# write to these sockets
