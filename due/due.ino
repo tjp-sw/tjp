@@ -14,7 +14,7 @@
 #include "globals.h"        // Leave this here, for #define order    //
                                                                      //
 // Testing tools                                                     //
-//#define DEBUG                     // Enables serial output         //
+#define DEBUG                       // Enables serial output         //
 #ifdef DEBUG                                                         //
   //#define DEBUG_TIMING            // Times each step in loop()     //
   //#define DEBUG_SPECTRUM_SHIELD     // Output all read values        //
