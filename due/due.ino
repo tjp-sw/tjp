@@ -427,8 +427,7 @@ void loop() {
 
 
 if(NODE_NUMBER == 2) {
-  delay(3
-  0);
+  delay(30);
   leds_all.fadeToBlackBy(80);
 }
 
